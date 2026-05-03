@@ -171,10 +171,10 @@ export async function withOrgContext<T>(
 
 ### Task 14: Audit-log immutability
 
-- [ ] In a new migration `0002_audit_immutable.sql` revoke `UPDATE` and `DELETE` on `audit_log` from the application role; only `INSERT` and `SELECT` allowed
-- [ ] Define helper `src/lib/db/audit.ts` with `recordAudit({ orgId, actorUserId, actorType, action, subjectType, subjectId, metadata })` invoked from inside transactions
-- [ ] Add unit tests confirming an attempted UPDATE on `audit_log` fails
-- [ ] Mark completed
+- [x] In a new migration `0002_audit_immutable.sql` revoke `UPDATE` and `DELETE` on `audit_log` from the application role; only `INSERT` and `SELECT` allowed
+- [x] Define helper `src/lib/db/audit.ts` with `recordAudit({ orgId, actorUserId, actorType, action, subjectType, subjectId, metadata })` invoked from inside transactions
+- [x] Add unit tests confirming an attempted UPDATE on `audit_log` fails
+- [x] Mark completed
 
 ### Task 15: Materialised credit balance trigger
 
