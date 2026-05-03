@@ -78,7 +78,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## CI Status
 
-![CI](https://github.com/owner/voiceflow/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/iFralex/VoiceFlow/actions/workflows/ci.yml/badge.svg)
 
 ## License
 

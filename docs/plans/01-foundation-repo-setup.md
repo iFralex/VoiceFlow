@@ -158,16 +158,16 @@ export type DB = typeof db;
 
 ### Task 10: GitHub Actions CI pipeline
 
-- [ ] Create `.github/workflows/ci.yml` that runs on every PR and push to `main`:
+- [x] Create `.github/workflows/ci.yml` that runs on every PR and push to `main`:
   - matrix Node 20 only
   - cache pnpm store and `~/.cache/ms-playwright`
   - install dependencies with `--frozen-lockfile`
   - run `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` in sequence
   - upload coverage report as artifact
-- [ ] Create separate workflow `.github/workflows/e2e.yml` running on PR and on a schedule (nightly), executing `pnpm test:e2e` against a Vercel preview URL via `vercel-deploy-action`
-- [ ] Add status badge to `README.md`
-- [ ] Add a CODEOWNERS file (founder for the moment)
-- [ ] Mark completed
+- [x] Create separate workflow `.github/workflows/e2e.yml` running on PR and on a schedule (nightly), executing `pnpm test:e2e` against a Vercel preview URL via `vercel-deploy-action`
+- [x] Add status badge to `README.md`
+- [x] Add a CODEOWNERS file (founder for the moment)
+- [x] Mark completed
 
 ### Task 11: Vercel project setup
 
