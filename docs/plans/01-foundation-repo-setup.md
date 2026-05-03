@@ -192,12 +192,12 @@ export type DB = typeof db;
 
 ### Task 12: Documentation skeleton
 
-- [ ] Create `docs/` directory; move/create the `technical_spec.md` (already authored separately)
-- [ ] Create `docs/plans/` directory and place the index + 14 plan files (this plan and siblings)
-- [ ] Create `docs/runbooks/` empty directory (populated in plan 14)
-- [ ] Create `docs/architecture-decisions/` directory with `0001-monolith-nextjs.md` capturing the choice to keep everything in a single Next.js app
-- [ ] Add a `CONTRIBUTING.md` describing the branch-per-plan model and PR conventions
-- [ ] Mark completed
+- [x] Create `docs/` directory; move/create the `technical_spec.md` (already authored separately)
+- [x] Create `docs/plans/` directory and place the index + 14 plan files (this plan and siblings)
+- [x] Create `docs/runbooks/` empty directory (populated in plan 14)
+- [x] Create `docs/architecture-decisions/` directory with `0001-monolith-nextjs.md` capturing the choice to keep everything in a single Next.js app
+- [x] Add a `CONTRIBUTING.md` describing the branch-per-plan model and PR conventions
+- [x] Mark completed
 
 ### Task 13: Pre-commit and editor hooks
 
