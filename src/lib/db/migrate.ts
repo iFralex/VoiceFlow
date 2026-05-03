@@ -15,6 +15,11 @@ try {
   console.error('Migration failed:', err);
   exitCode = 1;
 } finally {
-  await migrationClient.end();
+  try {
+    await migrationClient.end();
+  } catch (endErr) {
+    console.error('Failed to close migration connection:', endErr);
+    exitCode = 1;
+  }
 }
 process.exit(exitCode);
