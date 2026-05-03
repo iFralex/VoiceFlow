@@ -214,12 +214,12 @@ export async function requireCapability(capability: Capability): Promise<void>;
 
 ### Task 16: Integration tests for multi-tenant isolation
 
-- [ ] Test scenarios in `src/lib/auth/multitenancy.integration.test.ts`:
+- [x] Test scenarios in `src/lib/auth/multitenancy.integration.test.ts`:
   - User A in Org 1 cannot SELECT contacts of Org 2 even with raw SQL through the request-bound client
   - User A who is not a member cannot read Org 1
   - Service-role context can read across orgs (used by cron jobs)
   - PAT scoped to Org 1 cannot mutate Org 2 even if user has access to both
-- [ ] Mark completed
+- [x] Mark completed
 
 ### Task 17: E2E auth flow
 
