@@ -66,6 +66,28 @@ const config = [
       ],
     },
   },
+  // ─── (app)/ server code: forbid bare `db` import ──────────────────────────
+  // Use dbForRequest() so every query runs under org-scoped RLS context.
+  {
+    files: ['src/app/(app)/**/*.{ts,tsx}', 'src/actions/**/*.ts'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            "ImportDeclaration[source.value='@/lib/db/client'] > ImportSpecifier[imported.name='db']",
+          message:
+            'Use dbForRequest() from @/lib/db/client instead of the bare db in (app)/ server code. Direct db usage bypasses RLS org context.',
+        },
+        {
+          selector:
+            "ImportDeclaration[source.value='@/lib/db'] > ImportSpecifier[imported.name='db']",
+          message:
+            'Use dbForRequest() from @/lib/db/client instead of the bare db in (app)/ server code. Direct db usage bypasses RLS org context.',
+        },
+      ],
+    },
+  },
   {
     ignores: [
       'node_modules/**',

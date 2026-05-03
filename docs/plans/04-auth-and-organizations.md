@@ -207,10 +207,10 @@ export async function requireCapability(capability: Capability): Promise<void>;
 
 ### Task 15: RLS context wiring in Server Components
 
-- [ ] Update `src/lib/db/client.ts` to expose `dbForRequest()` that resolves the org from middleware headers and wraps every operation in `withOrgContext` automatically
-- [ ] All page Server Components and Server Actions inside `(app)/` use `dbForRequest()` instead of the bare `db`
-- [ ] Add ESLint rule (custom or comment-based) flagging direct `db.query.*` usage inside `(app)/` server code
-- [ ] Mark completed
+- [x] Update `src/lib/db/client.ts` to expose `dbForRequest()` that resolves the org from middleware headers and wraps every operation in `withOrgContext` automatically
+- [x] All page Server Components and Server Actions inside `(app)/` use `dbForRequest()` instead of the bare `db`
+- [x] Add ESLint rule (custom or comment-based) flagging direct `db.query.*` usage inside `(app)/` server code
+- [x] Mark completed
 
 ### Task 16: Integration tests for multi-tenant isolation
 

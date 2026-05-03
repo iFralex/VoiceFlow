@@ -2,7 +2,7 @@ import { count, eq } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
 
 import { getAuthContext } from '@/lib/auth/context';
-import { withOrgContext } from '@/lib/db/context';
+import { dbForRequest } from '@/lib/db/client';
 import { memberships } from '@/lib/db/schema';
 import { getOrganization } from '@/lib/services/organizations';
 
@@ -15,7 +15,8 @@ export default async function OrganizationSettingsPage() {
   const org = await getOrganization(orgId);
   if (!org) notFound();
 
-  const memberCount = await withOrgContext(orgId, async (tx) => {
+  const { withOrgContext } = await dbForRequest();
+  const memberCount = await withOrgContext(async (tx) => {
     const [row] = await tx
       .select({ count: count() })
       .from(memberships)
