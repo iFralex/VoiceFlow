@@ -157,8 +157,7 @@ export function UserMenu({ user }: UserMenuProps) {
           className="text-destructive focus:text-destructive"
           data-testid="user-menu-signout"
           onClick={() => {
-            // Auth sign-out wired in plan 04
-            window.location.href = '/api/auth/signout';
+            // Sign-out route implemented in plan 04
           }}
         >
           <Icons.LogOut className="mr-2" />

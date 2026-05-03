@@ -32,6 +32,7 @@
   },
   "nav": {
     "dashboard": "Dashboard",
+    "dashboard_welcome": "Benvenuto in VoiceFlow.",
     "campaigns": "Campagne",
     "contacts": "Contatti",
     "scripts": "Script",
@@ -160,6 +161,11 @@
     "prev_page": "Pagina precedente",
     "next_page": "Pagina successiva",
     "last_page": "Ultima pagina"
+  },
+  "errors": {
+    "title": "Errore",
+    "message": "Si è verificato un errore imprevisto.",
+    "retry": "Riprova"
   },
   "status": {
     "draft": "Bozza",

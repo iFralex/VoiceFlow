@@ -94,6 +94,11 @@ const _italianStrings: Record<string, Record<string, string>> = {
     next_page: 'Pagina successiva',
     last_page: 'Ultima pagina',
   },
+  errors: {
+    title: 'Errore',
+    message: 'Si è verificato un errore imprevisto.',
+    retry: 'Riprova',
+  },
   status: {
     draft: 'Bozza',
     scheduled: 'Pianificata',
