@@ -20,12 +20,12 @@ describe('script_templates schema', () => {
 
   it('defaults default_language to it-IT', () => {
     const col = (scriptTemplates as any).default_language;
-    expect(col.defaultFn ?? col.default).toBeDefined();
+    expect(col.default).toBe('it-IT');
   });
 
   it('defaults version to 1', () => {
     const col = (scriptTemplates as any).version;
-    expect(col.defaultFn ?? col.default).toBeDefined();
+    expect(col.default).toBe(1);
   });
 });
 

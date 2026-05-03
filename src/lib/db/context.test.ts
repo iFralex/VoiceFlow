@@ -70,6 +70,11 @@ describe('withOrgContext', () => {
     expect(order).toEqual(['set-guc', 'fn-body']);
   });
 
+  it('propagates errors thrown by fn', async () => {
+    const boom = new Error('db error');
+    await expect(withOrgContext('org-1', async () => { throw boom; })).rejects.toThrow('db error');
+  });
+
   it('GUC is SET LOCAL (only inside transaction) — verified via call sequencing', async () => {
     // SET LOCAL is a Postgres guarantee. Here we verify that execute() is
     // only called inside the transaction callback (not before or after it).
@@ -126,5 +131,10 @@ describe('withSystemContext', () => {
   it('returns the value produced by fn', async () => {
     const result = await withSystemContext(async () => 99);
     expect(result).toBe(99);
+  });
+
+  it('propagates errors thrown by fn', async () => {
+    const boom = new Error('system error');
+    await expect(withSystemContext(async () => { throw boom; })).rejects.toThrow('system error');
   });
 });

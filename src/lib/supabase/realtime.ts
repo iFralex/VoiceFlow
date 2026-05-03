@@ -42,7 +42,7 @@ export interface SupabaseClientLike {
   removeChannel(channel: RealtimeChannelLike): Promise<unknown>;
 }
 
-export type RealtimeCallPayload = {
+export type RealtimePayload = {
   eventType: 'INSERT' | 'UPDATE' | 'DELETE';
   new: Record<string, unknown>;
   old: Record<string, unknown>;
@@ -51,14 +51,36 @@ export type RealtimeCallPayload = {
   commit_timestamp: string;
 };
 
-export type RealtimeCampaignPayload = {
-  eventType: 'INSERT' | 'UPDATE' | 'DELETE';
-  new: Record<string, unknown>;
-  old: Record<string, unknown>;
-  schema: string;
-  table: string;
-  commit_timestamp: string;
-};
+// Named aliases kept for backward compatibility with typed call sites.
+export type RealtimeCallPayload = RealtimePayload;
+export type RealtimeCampaignPayload = RealtimePayload;
+
+function subscribeToTable(
+  supabase: SupabaseClientLike,
+  table: string,
+  orgId: string,
+  onPayload: (payload: RealtimePayload) => void,
+): () => void {
+  const channel = supabase
+    .channel(`${table}:org:${orgId}`)
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table,
+        filter: `org_id=eq.${orgId}`,
+      },
+      (payload) => {
+        onPayload(payload as RealtimePayload);
+      },
+    )
+    .subscribe();
+
+  return () => {
+    void supabase.removeChannel(channel);
+  };
+}
 
 /**
  * Subscribe to all changes on the `calls` table for a given org.
@@ -73,25 +95,7 @@ export function subscribeToCalls(
   orgId: string,
   onPayload: (payload: RealtimeCallPayload) => void,
 ): () => void {
-  const channel = supabase
-    .channel(`calls:org:${orgId}`)
-    .on(
-      'postgres_changes',
-      {
-        event: '*',
-        schema: 'public',
-        table: 'calls',
-        filter: `org_id=eq.${orgId}`,
-      },
-      (payload) => {
-        onPayload(payload as RealtimeCallPayload);
-      },
-    )
-    .subscribe();
-
-  return () => {
-    void supabase.removeChannel(channel);
-  };
+  return subscribeToTable(supabase, 'calls', orgId, onPayload);
 }
 
 /**
@@ -107,23 +111,5 @@ export function subscribeToCampaigns(
   orgId: string,
   onPayload: (payload: RealtimeCampaignPayload) => void,
 ): () => void {
-  const channel = supabase
-    .channel(`campaigns:org:${orgId}`)
-    .on(
-      'postgres_changes',
-      {
-        event: '*',
-        schema: 'public',
-        table: 'campaigns',
-        filter: `org_id=eq.${orgId}`,
-      },
-      (payload) => {
-        onPayload(payload as RealtimeCampaignPayload);
-      },
-    )
-    .subscribe();
-
-  return () => {
-    void supabase.removeChannel(channel);
-  };
+  return subscribeToTable(supabase, 'campaigns', orgId, onPayload);
 }

@@ -24,17 +24,17 @@ describe('campaigns schema', () => {
 
   it('status defaults to draft', () => {
     const col = (campaigns as any).status;
-    expect(col.defaultFn ?? col.default).toBeDefined();
+    expect(col.default).toBe('draft');
   });
 
   it('concurrency_limit defaults to 5', () => {
     const col = (campaigns as any).concurrency_limit;
-    expect(col.defaultFn ?? col.default).toBeDefined();
+    expect(col.default).toBe(5);
   });
 
   it('actual_cents defaults to 0', () => {
     const col = (campaigns as any).actual_cents;
-    expect(col.defaultFn ?? col.default).toBeDefined();
+    expect(col.default).toBe(0);
   });
 
   it('estimated_max_cents is nullable', () => {
@@ -77,12 +77,12 @@ describe('calls schema', () => {
 
   it('status defaults to pending', () => {
     const col = (calls as any).status;
-    expect(col.defaultFn ?? col.default).toBeDefined();
+    expect(col.default).toBe('pending');
   });
 
   it('transferred_to_agent defaults to false', () => {
     const col = (calls as any).transferred_to_agent;
-    expect(col.defaultFn ?? col.default).toBeDefined();
+    expect(col.default).toBe(false);
   });
 
   it('nullable optional fields', () => {
@@ -154,7 +154,7 @@ describe('appointments schema', () => {
 
   it('status defaults to booked', () => {
     const col = (appointments as any).status;
-    expect(col.defaultFn ?? col.default).toBeDefined();
+    expect(col.default).toBe('booked');
   });
 
   it('appointmentStatusEnum has correct values', () => {

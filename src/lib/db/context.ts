@@ -7,7 +7,7 @@ export type { DB } from './client';
 // The type of the transactional client passed to db.transaction callbacks.
 // It exposes the same query API as the full db client but is scoped to the
 // active transaction and lacks the $client connection property.
-type DbTx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+export type DbTx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 /**
  * Runs `fn` inside a transaction with `app.current_org_id` set via SET LOCAL.
@@ -31,5 +31,5 @@ export async function withOrgContext<T>(
  * the service layer — never from request handlers.
  */
 export async function withSystemContext<T>(fn: (tx: DbTx) => Promise<T>): Promise<T> {
-  return db.transaction(async (tx) => fn(tx));
+  return db.transaction(fn);
 }

@@ -39,11 +39,11 @@ export async function seedCreditPackages(): Promise<void> {
 export async function seed(): Promise<void> {
   console.log('Seeding script templates...');
   await seedScriptTemplates();
-  console.log('  ✓ 5 script templates upserted');
+  console.log(`  ✓ ${scriptTemplateSeedData.length} script templates upserted`);
 
   console.log('Seeding credit packages...');
   await seedCreditPackages();
-  console.log('  ✓ 5 credit packages upserted');
+  console.log(`  ✓ ${creditPackageSeedData.length} credit packages upserted`);
 
   console.log('Seed complete.');
 }

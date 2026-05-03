@@ -1,4 +1,4 @@
-import { db } from './client';
+import { type DbTx } from './context';
 import { auditLog } from './schema';
 
 type ActorType = 'user' | 'system' | 'webhook';
@@ -12,8 +12,6 @@ interface RecordAuditParams {
   subjectId: string;
   metadata?: Record<string, unknown>;
 }
-
-type DbTx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 /**
  * Inserts an entry into the append-only audit_log table.

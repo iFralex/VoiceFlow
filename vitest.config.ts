@@ -2,18 +2,18 @@ import { resolve } from 'path';
 
 import { defineConfig } from 'vitest/config';
 
+const alias = {
+  '@/db': resolve(__dirname, './src/lib/db'),
+  '@/lib': resolve(__dirname, './src/lib'),
+  '@/components': resolve(__dirname, './src/components'),
+  '@/services': resolve(__dirname, './src/lib/services'),
+  '@/inngest': resolve(__dirname, './src/lib/inngest'),
+  '@/voice': resolve(__dirname, './src/lib/voice'),
+  '@': resolve(__dirname, './src'),
+};
+
 export default defineConfig({
-  resolve: {
-    alias: {
-      '@/db': resolve(__dirname, './src/lib/db'),
-      '@/lib': resolve(__dirname, './src/lib'),
-      '@/components': resolve(__dirname, './src/components'),
-      '@/services': resolve(__dirname, './src/lib/services'),
-      '@/inngest': resolve(__dirname, './src/lib/inngest'),
-      '@/voice': resolve(__dirname, './src/lib/voice'),
-      '@': resolve(__dirname, './src'),
-    },
-  },
+  resolve: { alias },
   test: {
     coverage: {
       provider: 'v8',
@@ -37,17 +37,7 @@ export default defineConfig({
         },
       },
       {
-        resolve: {
-          alias: {
-            '@/db': resolve(__dirname, './src/lib/db'),
-            '@/lib': resolve(__dirname, './src/lib'),
-            '@/components': resolve(__dirname, './src/components'),
-            '@/services': resolve(__dirname, './src/lib/services'),
-            '@/inngest': resolve(__dirname, './src/lib/inngest'),
-            '@/voice': resolve(__dirname, './src/lib/voice'),
-            '@': resolve(__dirname, './src'),
-          },
-        },
+        resolve: { alias },
         test: {
           name: 'integration',
           environment: 'node',

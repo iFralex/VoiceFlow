@@ -18,7 +18,7 @@ describe('credit_packages schema', () => {
 
   it('active defaults to true', () => {
     const col = (creditPackages as any).active;
-    expect(col.defaultFn ?? col.default).toBeDefined();
+    expect(col.default).toBe(true);
   });
 
   it('stripe_price_id is nullable', () => {
@@ -83,12 +83,12 @@ describe('payments schema', () => {
 
   it('currency defaults to eur', () => {
     const col = (payments as any).currency;
-    expect(col.defaultFn ?? col.default).toBeDefined();
+    expect(col.default).toBe('eur');
   });
 
   it('status defaults to pending', () => {
     const col = (payments as any).status;
-    expect(col.defaultFn ?? col.default).toBeDefined();
+    expect(col.default).toBe('pending');
   });
 
   it('paymentStatusEnum has correct values', () => {

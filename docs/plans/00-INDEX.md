@@ -10,7 +10,7 @@ Each plan file follows a uniform structure: branch name, wave, dependencies, ove
 
 ## Validation Commands
 
-- `ls docs/plans/*.md | wc -l` (must return 15: index + 14 plans)
+- `ls docs/plans/*.md docs/plans/completed/*.md 2>/dev/null | wc -l` (must return 15: index + 14 plans)
 - `grep -L "## Validation Commands" docs/plans/*.md` (must return empty: every plan has its validation section)
 - `grep -L "Mark completed" docs/plans/*.md` (must return only `00-INDEX.md`)
 
@@ -35,7 +35,7 @@ Three plans bootstrap the workspace, the database, and the design system. Nothin
 | File                               | Branch                               | Description                                                                                        |
 | ---------------------------------- | ------------------------------------ | -------------------------------------------------------------------------------------------------- |
 | `01-foundation-repo-setup.md`      | `feat/01-foundation-repo-setup`      | Monorepo scaffolding, Next.js app, Vercel project, CI base, lint/format/typecheck, env scaffolding |
-| `02-foundation-supabase-schema.md` | `feat/02-foundation-supabase-schema` | Supabase project, full Drizzle schema (16 tables), RLS policies, seed data, migration tooling      |
+| `02-foundation-supabase-schema.md` | `feat/02-foundation-supabase-schema` | Supabase project, full Drizzle schema (20 tables), RLS policies, seed data, migration tooling      |
 | `03-foundation-design-system.md`   | `feat/03-foundation-design-system`   | Tailwind, shadcn/ui, layout shell, navigation, theme tokens, IT/EN i18n scaffolding                |
 
 **Wave 2 — Core platform (weeks 2–3, parallel after Wave 1)**

@@ -7,7 +7,7 @@
 
 ## Overview
 
-Provisions Supabase projects (dev, staging, production), authors the full Drizzle schema for all 16 tables described in spec §7.2, applies Row Level Security policies on every org-scoped table per spec §7.3, ships the seed data (script templates and credit packages), and provides a transactional test harness used by every later plan.
+Provisions Supabase projects (dev, staging, production), authors the full Drizzle schema for all 20 tables described in spec §7.2, applies Row Level Security policies on every org-scoped table per spec §7.3, ships the seed data (script templates and credit packages), and provides a transactional test harness used by every later plan.
 
 ## Context
 
@@ -21,7 +21,7 @@ The data model has four invariants (tenancy, money-as-cents, time-as-UTC-timesta
 - `pnpm db:seed`
 - `pnpm test src/lib/db`
 - `pnpm test:integration`
-- `psql $DATABASE_URL -c "SELECT tablename FROM pg_tables WHERE schemaname='public' ORDER BY tablename"` (must show all 16 tables)
+- `psql $DATABASE_URL -c "SELECT tablename FROM pg_tables WHERE schemaname='public' ORDER BY tablename"` (must show all 20 tables)
 - `psql $DATABASE_URL -c "SELECT tablename FROM pg_tables WHERE schemaname='public' AND rowsecurity = false AND tablename NOT IN ('script_templates','credit_packages','rpo_snapshots','webhook_events','audit_log')"` (must return zero rows)
 
 ### Task 1: Provision Supabase projects

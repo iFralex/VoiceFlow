@@ -141,6 +141,12 @@ describe('subscribeToCalls', () => {
     expect(options.event).toBe('*');
   });
 
+  it('calls subscribe() to activate the channel', () => {
+    const { supabase, channel } = makeMockSupabase();
+    subscribeToCalls(supabase, 'org-123', vi.fn());
+    expect(channel.subscribe).toHaveBeenCalledOnce();
+  });
+
   it('returns a cleanup function that removes the channel', () => {
     const { supabase, channel } = makeMockSupabase();
     const unsub = subscribeToCalls(supabase, 'org-123', vi.fn());
@@ -205,6 +211,12 @@ describe('subscribeToCampaigns', () => {
     expect(call).toBeDefined();
     const options = call![1] as { event: string };
     expect(options.event).toBe('*');
+  });
+
+  it('calls subscribe() to activate the channel', () => {
+    const { supabase, channel } = makeMockSupabase();
+    subscribeToCampaigns(supabase, 'org-456', vi.fn());
+    expect(channel.subscribe).toHaveBeenCalledOnce();
   });
 
   it('returns a cleanup function that removes the channel', () => {

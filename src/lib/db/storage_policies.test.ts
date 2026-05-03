@@ -55,19 +55,22 @@ describe('migration 0004_storage_policies.sql', () => {
 
       it(`INSERT policy uses WITH CHECK (not USING)`, () => {
         const content = getMigration();
-        // Find the INSERT policy block for this bucket
+        const normalised = bucket.replace(/-/g, '_');
+        // Find the specific INSERT policy for this bucket and confirm it has WITH CHECK
         const insertPolicyPattern = new RegExp(
-          `FOR INSERT[\\s\\S]*?bucket_id = '${bucket.replace('-', '-')}'`,
+          `CREATE POLICY "[^"]*${normalised}[^"]*_insert"[\\s\\S]*?WITH CHECK`,
         );
         expect(insertPolicyPattern.test(content)).toBe(true);
-        // The file has WITH CHECK blocks
-        expect(content).toContain('WITH CHECK');
       });
 
       it(`UPDATE policy has both USING and WITH CHECK`, () => {
-        // Check that USING appears multiple times (once per UPDATE policy)
-        const usingCount = (getMigration().match(/FOR UPDATE/g) ?? []).length;
-        expect(usingCount).toBeGreaterThanOrEqual(BUCKETS.length);
+        const content = getMigration();
+        const normalised = bucket.replace(/-/g, '_');
+        // Find the specific UPDATE policy for this bucket and confirm both clauses are present
+        const updatePolicyPattern = new RegExp(
+          `CREATE POLICY "[^"]*${normalised}[^"]*_update"[\\s\\S]*?USING[\\s\\S]*?WITH CHECK`,
+        );
+        expect(updatePolicyPattern.test(content)).toBe(true);
       });
     });
   }

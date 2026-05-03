@@ -24,8 +24,8 @@ describe('contact_lists schema', () => {
   it('total_count and valid_count default to 0', () => {
     const total = (contactLists as any).total_count;
     const valid = (contactLists as any).valid_count;
-    expect(total.defaultFn ?? total.default).toBeDefined();
-    expect(valid.defaultFn ?? valid.default).toBeDefined();
+    expect(total.default).toBe(0);
+    expect(valid.default).toBe(0);
   });
 
   it('listSourceEnum has correct values', () => {
@@ -65,17 +65,17 @@ describe('contacts schema', () => {
 
   it('contact_type defaults to b2c', () => {
     const col = (contacts as any).contact_type;
-    expect(col.defaultFn ?? col.default).toBeDefined();
+    expect(col.default).toBe('b2c');
   });
 
   it('rpo_status defaults to unchecked', () => {
     const col = (contacts as any).rpo_status;
-    expect(col.defaultFn ?? col.default).toBeDefined();
+    expect(col.default).toBe('unchecked');
   });
 
   it('opt_out defaults to false', () => {
     const col = (contacts as any).opt_out;
-    expect(col.defaultFn ?? col.default).toBeDefined();
+    expect(col.default).toBe(false);
   });
 
   it('consentBasisEnum has correct values', () => {
