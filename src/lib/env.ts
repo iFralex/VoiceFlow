@@ -45,8 +45,12 @@ const Env = z.object({
 
 // Convert empty strings to undefined so optional validators don't reject blank env vars
 const rawEnv = Object.fromEntries(
-  Object.entries(process.env).map(([k, v]) => [k, v === '' ? undefined : v])
+  Object.entries(process.env).map(([k, v]) => [k, v === '' ? undefined : v]),
 );
+
+if (process.env['SKIP_ENV_VALIDATION'] === 'true' && process.env['NODE_ENV'] === 'production') {
+  throw new Error('SKIP_ENV_VALIDATION must not be set in production');
+}
 
 export const env =
   process.env['SKIP_ENV_VALIDATION'] === 'true'
