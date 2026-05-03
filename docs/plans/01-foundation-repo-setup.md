@@ -40,11 +40,11 @@ The technical spec specifies Next.js 15 + App Router + TypeScript strict + Tailw
 - [x] Mark completed
 
 ### Task 3: TypeScript strict configuration
-- [ ] Update `tsconfig.json` with `"strict": true`, `"noUncheckedIndexedAccess": true`, `"exactOptionalPropertyTypes": true`, `"noImplicitOverride": true`, `"noFallthroughCasesInSwitch": true`
-- [ ] Add path aliases for `@/*` (src), `@/db/*`, `@/lib/*`, `@/components/*`, `@/services/*`, `@/inngest/*`, `@/voice/*`
-- [ ] Add `tsc --noEmit` as `pnpm typecheck` script
-- [ ] Verify `pnpm typecheck` returns clean
-- [ ] Mark completed
+- [x] Update `tsconfig.json` with `"strict": true`, `"noUncheckedIndexedAccess": true`, `"exactOptionalPropertyTypes": true`, `"noImplicitOverride": true`, `"noFallthroughCasesInSwitch": true`
+- [x] Add path aliases for `@/*` (src), `@/db/*`, `@/lib/*`, `@/components/*`, `@/services/*`, `@/inngest/*`, `@/voice/*`
+- [x] Add `tsc --noEmit` as `pnpm typecheck` script
+- [x] Verify `pnpm typecheck` returns clean
+- [x] Mark completed
 
 ### Task 4: ESLint + Prettier
 - [ ] Install ESLint with `eslint-config-next`, `@typescript-eslint/eslint-plugin`, `eslint-plugin-import`, `eslint-plugin-unused-imports`
