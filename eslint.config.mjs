@@ -1,8 +1,8 @@
-import nextConfig from 'eslint-config-next';
 import typescriptEslint from '@typescript-eslint/eslint-plugin';
+import nextConfig from 'eslint-config-next';
+import importPlugin from 'eslint-plugin-import';
 import reactHooks from 'eslint-plugin-react-hooks';
 import unusedImports from 'eslint-plugin-unused-imports';
-import importPlugin from 'eslint-plugin-import';
 
 /** @type {import("eslint").Linter.Config[]} */
 const config = [
