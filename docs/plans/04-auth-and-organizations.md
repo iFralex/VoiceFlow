@@ -23,10 +23,10 @@ Supabase Auth with magic link is the primary authentication. The application kee
 
 ### Task 1: Supabase client wrappers
 
-- [ ] Create `src/lib/supabase/server.ts` with `createServerSupabaseClient()` that reads cookies via `next/headers` and returns an authenticated server client; uses anon key plus session cookie
-- [ ] Create `src/lib/supabase/admin.ts` exporting `supabaseAdmin` using service role key — for trusted server-only operations (user creation hooks, manual support actions)
-- [ ] Create `src/lib/supabase/browser.ts` returning a singleton browser client for client components needing realtime subscriptions
-- [ ] Mark completed
+- [x] Create `src/lib/supabase/server.ts` with `createServerSupabaseClient()` that reads cookies via `next/headers` and returns an authenticated server client; uses anon key plus session cookie
+- [x] Create `src/lib/supabase/admin.ts` exporting `supabaseAdmin` using service role key — for trusted server-only operations (user creation hooks, manual support actions)
+- [x] Create `src/lib/supabase/browser.ts` returning a singleton browser client for client components needing realtime subscriptions
+- [x] Mark completed
 
 ### Task 2: Auth pages — login and signup
 
