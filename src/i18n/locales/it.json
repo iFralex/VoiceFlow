@@ -61,7 +61,20 @@
     "forgot_password": "Password dimenticata?",
     "or_continue_with": "o continua con",
     "already_have_account": "Hai già un account?",
-    "no_account_yet": "Non hai ancora un account?"
+    "no_account_yet": "Non hai ancora un account?",
+    "magic_link_title": "Accedi",
+    "magic_link_description": "Inserisci la tua email e ti invieremo un link di accesso",
+    "send_link": "Invia link di accesso",
+    "signup_title": "Crea account",
+    "signup_description": "Inserisci la tua email per creare un nuovo account",
+    "verify_title": "Controlla la tua email",
+    "verify_description": "Abbiamo inviato un link di accesso a {email}. Clicca sul link per accedere.",
+    "verify_description_generic": "Ti abbiamo inviato un link di accesso. Controlla la tua email e clicca sul link.",
+    "back_to_login": "Torna al login",
+    "email_required": "L'email è obbligatoria",
+    "email_invalid": "Inserisci un indirizzo email valido",
+    "link_sent": "Link inviato! Controlla la tua casella.",
+    "sending": "Invio in corso…"
   },
   "campaigns": {
     "title": "Campagne",

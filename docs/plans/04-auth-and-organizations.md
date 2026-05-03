@@ -30,13 +30,13 @@ Supabase Auth with magic link is the primary authentication. The application kee
 
 ### Task 2: Auth pages — login and signup
 
-- [ ] Create `src/app/(auth)/login/page.tsx` with a single email input, "Invia link di accesso" button → calls `signInWithOtp`
-- [ ] Create `src/app/(auth)/signup/page.tsx` mirroring login but recording the signup intent (we treat magic link signin and signup identically; new users get a fresh `users` row via the auth trigger in Task 4)
-- [ ] Create `src/app/(auth)/verify/page.tsx` informing the user the link has been sent
-- [ ] Create `src/app/auth/callback/route.ts` handling the magic-link redirect: exchanges the code for a session, then redirects to `/dashboard` (or to `/onboarding` if no organization)
-- [ ] All pages use the marketing-layout shell (no sidebar)
-- [ ] Form validation with Zod and React Hook Form; localised error messages
-- [ ] Mark completed
+- [x] Create `src/app/(auth)/login/page.tsx` with a single email input, "Invia link di accesso" button → calls `signInWithOtp`
+- [x] Create `src/app/(auth)/signup/page.tsx` mirroring login but recording the signup intent (we treat magic link signin and signup identically; new users get a fresh `users` row via the auth trigger in Task 4)
+- [x] Create `src/app/(auth)/verify/page.tsx` informing the user the link has been sent
+- [x] Create `src/app/auth/callback/route.ts` handling the magic-link redirect: exchanges the code for a session, then redirects to `/dashboard` (or to `/onboarding` if no organization)
+- [x] All pages use the marketing-layout shell (no sidebar)
+- [x] Form validation with Zod and React Hook Form; localised error messages
+- [x] Mark completed
 
 ### Task 3: Auth Server Actions
 
