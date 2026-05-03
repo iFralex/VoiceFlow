@@ -1,0 +1,10 @@
+{
+  "buildCommand": "pnpm build",
+  "outputDirectory": ".next",
+  "crons": [
+    { "path": "/api/cron/daily-report", "schedule": "0 19 * * *" },
+    { "path": "/api/cron/retention-purge", "schedule": "0 3 * * *" },
+    { "path": "/api/cron/cli-watchdog", "schedule": "0 2 * * *" },
+    { "path": "/api/cron/aggregate-campaigns", "schedule": "*/5 * * * *" }
+  ]
+}

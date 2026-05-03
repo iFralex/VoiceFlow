@@ -6,76 +6,122 @@
 **Estimated effort:** 3–5 days
 
 ## Overview
+
 Implements the contact ingestion pipeline described in spec §5.4 (CSV upload UX), §6.5 (Inngest job for parsing), §7.2 (`contact_lists` and `contacts` tables) and §12.4 (data minimisation, consent basis). After this plan merges, a dealer can upload a CSV from the dashboard, the file is parsed asynchronously with progress feedback, contacts are normalised to E.164, deduplicated within the org, validated against the opt-out registry (RPO and the per-org opt-out registry come fully online in plan 11), and ready for use in campaigns.
 
 ## Context
+
 The browser uploads directly to Supabase Storage via a pre-signed URL — the file never touches the Next.js server (spec §5.4). An Inngest function then parses, validates, and ingests in batches. The `(org_id, phone_e164)` partial unique index from plan 02 prevents duplicates; ingestion uses INSERT ... ON CONFLICT to keep the upload idempotent if retried.
 
 ## Validation Commands
+
 - `pnpm typecheck`
 - `pnpm test src/lib/services/contacts src/lib/services/csv src/lib/utils/phone`
 - `pnpm test:integration src/lib/services/contacts`
 - `pnpm test:e2e e2e/contacts.spec.ts`
 
 ### Task 1: Phone-number normalisation utility
+
 - [ ] Install `libphonenumber-js`
 - [ ] Create `src/lib/utils/phone.ts` with:
-```typescript
-import { parsePhoneNumberFromString, type CountryCode } from "libphonenumber-js";
 
-export function normaliseToE164(input: string, defaultCountry: CountryCode = "IT"): string | null {
-  const cleaned = input.replace(/\s+/g, "");
+```typescript
+import { parsePhoneNumberFromString, type CountryCode } from 'libphonenumber-js';
+
+export function normaliseToE164(input: string, defaultCountry: CountryCode = 'IT'): string | null {
+  const cleaned = input.replace(/\s+/g, '');
   const parsed = parsePhoneNumberFromString(cleaned, defaultCountry);
   if (!parsed?.isValid()) return null;
   return parsed.number; // E.164
 }
 
-export function classifyLineType(e164: string): "mobile" | "fixed" | "unknown";
+export function classifyLineType(e164: string): 'mobile' | 'fixed' | 'unknown';
 export function formatItalianDisplay(e164: string): string;
 ```
+
 - [ ] Add unit tests covering: leading zero, "0039" prefix, "+39" prefix, missing country code with IT fallback, mobile vs fixed, malformed input
 - [ ] Mark completed
 
 ### Task 2: Contact list service
+
 - [ ] Create `src/lib/services/contact_lists.ts` with:
+
 ```typescript
-export async function createContactList(orgId: string, byUserId: string, input: {
-  name: string;
-  source: "csv-upload" | "zapier" | "api";
-  sourceFilePath?: string;
-}): Promise<ContactList>;
+export async function createContactList(
+  orgId: string,
+  byUserId: string,
+  input: {
+    name: string;
+    source: 'csv-upload' | 'zapier' | 'api';
+    sourceFilePath?: string;
+  },
+): Promise<ContactList>;
 
 export async function listContactLists(orgId: string): Promise<ContactList[]>;
 
 export async function getContactList(orgId: string, listId: string): Promise<ContactList | null>;
 
-export async function deleteContactList(orgId: string, byUserId: string, listId: string): Promise<void>;
+export async function deleteContactList(
+  orgId: string,
+  byUserId: string,
+  listId: string,
+): Promise<void>;
 
-export async function updateListCounts(orgId: string, listId: string, total: number, valid: number): Promise<void>;
+export async function updateListCounts(
+  orgId: string,
+  listId: string,
+  total: number,
+  valid: number,
+): Promise<void>;
 ```
+
 - [ ] Mark completed
 
 ### Task 3: Contact service
+
 - [ ] Create `src/lib/services/contacts.ts` with:
+
 ```typescript
-export async function upsertContact(orgId: string, input: NewContact): Promise<{ inserted: boolean; contact: Contact }>;
+export async function upsertContact(
+  orgId: string,
+  input: NewContact,
+): Promise<{ inserted: boolean; contact: Contact }>;
 
-export async function bulkUpsertContacts(orgId: string, contacts: NewContact[]): Promise<{ insertedCount: number; updatedCount: number; skippedCount: number }>;
+export async function bulkUpsertContacts(
+  orgId: string,
+  contacts: NewContact[],
+): Promise<{ insertedCount: number; updatedCount: number; skippedCount: number }>;
 
-export async function listContacts(orgId: string, filters: { listId?: string; optOut?: boolean; rpoStatus?: RpoStatus; search?: string; }, page: { limit: number; cursor?: string }): Promise<{ items: Contact[]; nextCursor?: string }>;
+export async function listContacts(
+  orgId: string,
+  filters: { listId?: string; optOut?: boolean; rpoStatus?: RpoStatus; search?: string },
+  page: { limit: number; cursor?: string },
+): Promise<{ items: Contact[]; nextCursor?: string }>;
 
-export async function softDeleteContact(orgId: string, byUserId: string, contactId: string): Promise<void>;
+export async function softDeleteContact(
+  orgId: string,
+  byUserId: string,
+  contactId: string,
+): Promise<void>;
 
-export async function markOptOut(orgId: string, phoneE164: string, source: OptOutSource, reason?: string): Promise<void>;
+export async function markOptOut(
+  orgId: string,
+  phoneE164: string,
+  source: OptOutSource,
+  reason?: string,
+): Promise<void>;
 ```
+
 - [ ] `bulkUpsertContacts` uses `INSERT ... ON CONFLICT (org_id, phone_e164) DO UPDATE SET ...` to be idempotent on re-uploads, in batches of 500
 - [ ] `softDeleteContact` sets `deleted_at` and removes recordings/transcripts of past calls per spec §12.4 (full erasure logic in plan 11; here we only mark the contact)
 - [ ] All operations wrapped in `withOrgContext`
 - [ ] Mark completed
 
 ### Task 4: CSV parser
+
 - [ ] Install `papaparse`
 - [ ] Create `src/lib/services/csv.ts` exposing:
+
 ```typescript
 export type CsvParseResult = {
   totalRows: number;
@@ -84,14 +130,18 @@ export type CsvParseResult = {
   detectedColumns: { phone: string; firstName?: string; lastName?: string; email?: string };
 };
 
-export async function parseContactsCsv(input: ReadableStream | Buffer | string, options: {
-  defaultCountry?: "IT";
-  consentBasis: ConsentBasis;
-  contactType?: "b2c" | "b2b";
-  sourceListId: string;
-  orgId: string;
-}): Promise<CsvParseResult>;
+export async function parseContactsCsv(
+  input: ReadableStream | Buffer | string,
+  options: {
+    defaultCountry?: 'IT';
+    consentBasis: ConsentBasis;
+    contactType?: 'b2c' | 'b2b';
+    sourceListId: string;
+    orgId: string;
+  },
+): Promise<CsvParseResult>;
 ```
+
 - [ ] Auto-detect columns by header name (Italian + English variants): `telefono`, `cellulare`, `numero`, `phone`, `mobile` for phone; similar for `nome`/`first_name`, `cognome`/`last_name`, `email`
 - [ ] If headers can't be detected emit an error result demanding explicit column mapping (UI in Task 7)
 - [ ] Per-row validation: phone normalisation, email format, length limits on names
@@ -99,6 +149,7 @@ export async function parseContactsCsv(input: ReadableStream | Buffer | string, 
 - [ ] Mark completed
 
 ### Task 5: CSV upload — pre-signed URL endpoint
+
 - [ ] Create `src/app/api/uploads/contacts/route.ts` (POST): authenticated, requires capability `contacts.upload`
 - [ ] Body: `{ filename: string; sizeBytes: number; contentType: string; }`
 - [ ] Validate: `contentType ∈ ['text/csv', 'application/vnd.ms-excel', 'text/plain']`, `sizeBytes ≤ 50 * 1024 * 1024`
@@ -108,6 +159,7 @@ export async function parseContactsCsv(input: ReadableStream | Buffer | string, 
 - [ ] Mark completed
 
 ### Task 6: Inngest function — parse and ingest
+
 - [ ] Create `src/lib/inngest/contacts/import.ts` triggered by event `contacts.import-requested` with `{ orgId, listId, storagePath, columnMapping?, consentBasis, contactType }`
 - [ ] Steps:
   1. `download-file`: fetch the CSV from Supabase Storage to memory or stream-process
@@ -121,6 +173,7 @@ export async function parseContactsCsv(input: ReadableStream | Buffer | string, 
 - [ ] Mark completed
 
 ### Task 7: Upload UI — three-step wizard
+
 - [ ] Create `src/app/(app)/contacts/upload/page.tsx` with three steps:
   1. **File**: drag-and-drop or file picker; client requests pre-signed URL, uploads via XHR with progress bar; emits `contacts.import-requested` event server-side once upload completes
   2. **Mapping** (optional, only if auto-detect failed): show first 10 rows; user assigns columns to phone/first_name/last_name/email
@@ -129,6 +182,7 @@ export async function parseContactsCsv(input: ReadableStream | Buffer | string, 
 - [ ] Mark completed
 
 ### Task 8: List detail page with live progress
+
 - [ ] Create `src/app/(app)/contacts/lists/[id]/page.tsx`:
   - header: list name, source, total/valid counts, status badge
   - if `import_status='parsing'`: progress card with live updates from Realtime subscription on `contact_lists` row + a separate `contacts` count subscription
@@ -140,6 +194,7 @@ export async function parseContactsCsv(input: ReadableStream | Buffer | string, 
 - [ ] Mark completed
 
 ### Task 9: All-contacts view
+
 - [ ] Create `src/app/(app)/contacts/page.tsx`:
   - tabs: "Liste" (default), "Tutti i contatti", "Opt-out"
   - "Liste" lists all contact lists with counts and creation date; CTA "Carica nuova lista"
@@ -148,29 +203,34 @@ export async function parseContactsCsv(input: ReadableStream | Buffer | string, 
 - [ ] Mark completed
 
 ### Task 10: Manual contact addition
+
 - [ ] Add "Aggiungi contatto manualmente" dialog on the list detail page
 - [ ] Form fields: phone (validated), first/last name, email, consent basis, evidence
 - [ ] On submit, calls `upsertContact`; on conflict show warning "Contatto già presente"
 - [ ] Mark completed
 
 ### Task 11: Manual opt-out import (do-not-call CSV)
+
 - [ ] Add "Importa lista do-not-call" dialog accepting a single-column CSV of phone numbers
 - [ ] Each number is normalised, then `markOptOut(orgId, phoneE164, 'dealer_input')` is called
 - [ ] No new contacts are created via this path — only opt-outs added to `opt_out_registry`
 - [ ] Mark completed
 
 ### Task 12: Storage signed-URL helper
+
 - [ ] Create `src/lib/storage/signed.ts` with `getDownloadUrl(path: string, ttlSeconds: number)` and `getUploadUrl(path: string, ttlSeconds: number)`
 - [ ] Capability check: caller must have membership of the org owning the path; util enforces by parsing the first path segment
 - [ ] Mark completed
 
 ### Task 13: CSV export
+
 - [ ] Add `exportContactsCsv(orgId, filters)` Server Action returning a signed URL after writing the export to `<org_id>/exports/contacts-<timestamp>.csv`
 - [ ] Run the heavy export inside an Inngest function for >10k rows
 - [ ] Audit log entry on every export
 - [ ] Mark completed
 
 ### Task 14: Edge cases and limits
+
 - [ ] Hard cap: 100,000 contacts per upload (configurable env)
 - [ ] Hard cap: 1,000,000 contacts per organization (configurable env)
 - [ ] Reject CSVs with >50 columns or >2MB header line (defensive against malformed files)
@@ -178,6 +238,7 @@ export async function parseContactsCsv(input: ReadableStream | Buffer | string, 
 - [ ] Mark completed
 
 ### Task 15: Integration tests
+
 - [ ] Test: a 5,000-row CSV uploads, parses, ingests within 60s in CI
 - [ ] Test: re-upload of the same CSV results in zero new rows (idempotency)
 - [ ] Test: rows with malformed phones are reported in the errors artifact
@@ -187,6 +248,7 @@ export async function parseContactsCsv(input: ReadableStream | Buffer | string, 
 - [ ] Mark completed
 
 ### Task 16: E2E
+
 - [ ] Playwright `e2e/contacts.spec.ts`:
   - upload CSV with 100 rows containing 5 invalid phones
   - assert 95 valid contacts after parsing
@@ -195,6 +257,7 @@ export async function parseContactsCsv(input: ReadableStream | Buffer | string, 
 - [ ] Mark completed
 
 ### Task 17: Definition of Done
+
 - [ ] Direct-to-Storage upload works without proxying through Next.js server
 - [ ] Parsing/ingestion runs as Inngest function with progress observable from UI
 - [ ] All contacts normalised to E.164 IT format

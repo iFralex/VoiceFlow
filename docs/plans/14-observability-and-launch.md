@@ -6,12 +6,15 @@
 **Estimated effort:** 3–5 days
 
 ## Overview
+
 The final wave that turns a feature-complete platform into a production-ready service. Wires Sentry for error tracking with privacy-aware before-send filters, Axiom for structured logging with org/call correlation, alerting tiers across channels, the feature-flag system, the backup and disaster-recovery drill, the operational runbooks, the launch smoke-test checklist, and the go-live procedure. After this plan merges, the platform can carry real customers.
 
 ## Context
+
 Phase 1 is bootstrap: alerting must be loud enough to catch real issues but quiet enough not to drown the founder. Three tiers (critical, high, info) with distinct channels (PagerDuty/SMS, email, Slack-stub). Feature flags via PostHog (or Statsig) enable safe rollouts of risky features (Phase 2 voice-stack canary). Backups: Supabase point-in-time recovery is enabled but we still test a real restore quarterly. Runbooks: every operational task a non-engineer might attempt is written down.
 
 ## Validation Commands
+
 - `pnpm typecheck`
 - `pnpm test src/lib/observability src/lib/feature-flags`
 - `pnpm test:integration src/lib/observability`
@@ -20,9 +23,11 @@ Phase 1 is bootstrap: alerting must be loud enough to catch real issues but quie
 - `pnpm exec tsx scripts/axiom-test-log.ts` (manual: emits a test log batch)
 
 ### Task 1: Sentry setup
+
 - [ ] Install `@sentry/nextjs`; run `pnpm dlx @sentry/wizard@latest -i nextjs --skip-connect` and accept config
 - [ ] Configure `sentry.client.config.ts`, `sentry.server.config.ts`, `sentry.edge.config.ts` with `dsn` from env, traces sample rate 0.1 in production, 1.0 in staging
 - [ ] Configure `beforeSend` filter to scrub PII per spec §15.2:
+
 ```typescript
 beforeSend(event, hint) {
   const text = JSON.stringify(event);
@@ -33,38 +38,50 @@ beforeSend(event, hint) {
   return event;
 }
 ```
+
 - [ ] Configure user context: attach `userId` and `orgId` from auth context but NOT email
 - [ ] Source maps uploaded automatically on Vercel build via `withSentryConfig`
 - [ ] Mark completed
 
 ### Task 2: Axiom logging
+
 - [ ] Install `@axiomhq/js`; create `src/lib/observability/logger.ts`:
+
 ```typescript
-import { Axiom } from "@axiomhq/js";
+import { Axiom } from '@axiomhq/js';
 const axiom = env.AXIOM_TOKEN ? new Axiom({ token: env.AXIOM_TOKEN }) : null;
 
 export const logger = {
-  info(msg: string, ctx?: Record<string, unknown>) { write("info", msg, ctx); },
-  warn(msg: string, ctx?: Record<string, unknown>) { write("warn", msg, ctx); },
-  error(msg: string, ctx?: Record<string, unknown>) { write("error", msg, ctx); },
+  info(msg: string, ctx?: Record<string, unknown>) {
+    write('info', msg, ctx);
+  },
+  warn(msg: string, ctx?: Record<string, unknown>) {
+    write('warn', msg, ctx);
+  },
+  error(msg: string, ctx?: Record<string, unknown>) {
+    write('error', msg, ctx);
+  },
 };
 
 async function write(level: string, message: string, ctx: Record<string, unknown> = {}) {
   const enriched = { level, message, ts: new Date().toISOString(), ...ctx };
-  if (env.NODE_ENV !== "production") console.log(enriched);
+  if (env.NODE_ENV !== 'production') console.log(enriched);
   if (axiom) await axiom.ingest(env.AXIOM_DATASET!, [enriched]);
 }
 ```
+
 - [ ] Mandatory context for every log: `org_id`, `user_id`, `call_id` (if present), `campaign_id` (if present), `request_id`
 - [ ] Add a request middleware that injects a `request_id` header (UUID v4) on inbound requests; propagate via `AsyncLocalStorage` so nested logs include it automatically
 - [ ] Mark completed
 
 ### Task 3: Replace ad-hoc logs with structured logger
+
 - [ ] Sweep `src/` for `console.log`, `console.error`; replace with `logger.info`/`logger.error` carrying structured context
 - [ ] ESLint rule `no-console` upgraded from warn to error (with `allow: ['warn']` reserved for known-safe edges)
 - [ ] Mark completed
 
 ### Task 4: Alerting tiers
+
 - [ ] Define three tiers in `docs/runbooks/alerting.md`:
   - **CRITICAL** (page founder via SMS/PagerDuty): system outage, payment processor outage, RPO check fully unavailable >15 min, voice provider 5xx >5%, DB connection failures, security incidents
   - **HIGH** (email + Slack channel): elevated voice-provider error rate <5%, AI Act disclosure failure rate >2% over 1h, CLI pool >50% in cooling-down, webhook deactivation >5 in a day
@@ -75,6 +92,7 @@ async function write(level: string, message: string, ctx: Record<string, unknown
 - [ ] Mark completed
 
 ### Task 5: Health and readiness endpoints
+
 - [ ] Create `src/app/api/health/route.ts` returning `{ status: "ok" }` cheaply (no DB)
 - [ ] Create `src/app/api/ready/route.ts` checking: DB SELECT 1, Stripe API ping, Vapi API ping, Resend ping; aggregates and returns 200 if all green, 503 otherwise
 - [ ] Document in `docs/operations.md` how to use these endpoints (Vercel internal monitoring, uptime services)
@@ -82,6 +100,7 @@ async function write(level: string, message: string, ctx: Record<string, unknown
 - [ ] Mark completed
 
 ### Task 6: Feature flags
+
 - [ ] Sign up for PostHog (free tier sufficient for MVP) — alternative: Statsig
 - [ ] Install `posthog-node` and `posthog-js`
 - [ ] Create `src/lib/feature-flags/client.ts` exposing `isFlagEnabled(orgId: string, flagKey: string): Promise<boolean>` server-side and a hook `useFlag(flagKey)` client-side
@@ -96,6 +115,7 @@ async function write(level: string, message: string, ctx: Record<string, unknown
 - [ ] Mark completed
 
 ### Task 7: Backup verification and DR drill
+
 - [ ] Confirm Supabase Point-in-Time Recovery (PITR) is enabled on production project (paid feature; ensure the PostgreSQL plan is at the level that supports it)
 - [ ] Configure daily logical backups (`pg_dump`) to a Backblaze B2 bucket via a Vercel cron `/api/cron/backup` running 03:30 Europe/Rome:
   - dumps schema + data
@@ -107,6 +127,7 @@ async function write(level: string, message: string, ctx: Record<string, unknown
 - [ ] Mark completed
 
 ### Task 8: Runbook — credential rotation
+
 - [ ] Author `docs/runbooks/credential-rotation.md` covering:
   - Stripe API keys (every 12 months)
   - Vapi/Retell API keys (every 6 months)
@@ -119,6 +140,7 @@ async function write(level: string, message: string, ctx: Record<string, unknown
 - [ ] Mark completed
 
 ### Task 9: Runbook — webhook replay
+
 - [ ] Author `docs/runbooks/webhook-replay.md`:
   - locating the failed delivery in the Stripe/Vapi dashboard
   - using the admin replay endpoint (or the Stripe CLI for Stripe events)
@@ -127,6 +149,7 @@ async function write(level: string, message: string, ctx: Record<string, unknown
 - [ ] Mark completed
 
 ### Task 10: Runbook — manual credit adjustment
+
 - [ ] Author `docs/runbooks/credit-adjustment.md` documenting plan 05's `/api/admin/credit-adjustment` endpoint:
   - approval flow (founder writes a brief in a Notion / shared doc)
   - executing the adjustment
@@ -135,6 +158,7 @@ async function write(level: string, message: string, ctx: Record<string, unknown
 - [ ] Mark completed
 
 ### Task 11: Runbook — GDPR erasure
+
 - [ ] Author `docs/runbooks/gdpr-erasure.md`:
   - intake (where the request comes from: in-app, email, postal)
   - identity verification of the requestor
@@ -144,6 +168,7 @@ async function write(level: string, message: string, ctx: Record<string, unknown
 - [ ] Mark completed
 
 ### Task 12: Runbook — Twilio/Vapi incident
+
 - [ ] Author `docs/runbooks/voice-provider-incident.md`:
   - detection (alerts, dashboard observation)
   - immediate triage (check provider status pages, error rate trend)
@@ -153,6 +178,7 @@ async function write(level: string, message: string, ctx: Record<string, unknown
 - [ ] Mark completed
 
 ### Task 13: Smoke test e2e — launch-readiness
+
 - [ ] Playwright `e2e/launch-smoke.spec.ts` running against production-equivalent staging:
   - sign up via magic link with a fresh email
   - create org through onboarding (with DPA acceptance)
@@ -171,6 +197,7 @@ async function write(level: string, message: string, ctx: Record<string, unknown
 - [ ] Mark completed
 
 ### Task 14: Pre-launch checklist
+
 - [ ] Author `docs/runbooks/launch-checklist.md` enumerating every item that must be true before the first paying customer:
   - all 14 plans merged
   - Vercel production env vars filled (cross-check against `.env.example`)
@@ -190,6 +217,7 @@ async function write(level: string, message: string, ctx: Record<string, unknown
 - [ ] Mark completed
 
 ### Task 15: Customer-facing status page
+
 - [ ] Set up a status page (Statuspage by Atlassian, Better Stack, or self-hosted Cachet) with components:
   - Web app (Vercel)
   - API
@@ -203,6 +231,7 @@ async function write(level: string, message: string, ctx: Record<string, unknown
 - [ ] Mark completed
 
 ### Task 16: Quality monitoring of calls
+
 - [ ] Create `/admin/quality` (founder-only) page surfacing per spec §15.5:
   - sample 1% of completed calls per day for human review
   - QA checklist: disclosure verified, transcript readable, outcome correctly classified, no offensive language, no privacy leak
@@ -213,6 +242,7 @@ async function write(level: string, message: string, ctx: Record<string, unknown
 - [ ] Mark completed
 
 ### Task 17: Phase 2 readiness scaffolding
+
 - [ ] Although Phase 2 (proprietary voice stack) is post-launch work, drop placeholders that make the future migration cheap:
   - `VOICE_PROVIDER` env supports `proprietary` value (factory throws explanatory error in Phase 1)
   - `voice_catalogue.provider` enum already includes `proprietary`
@@ -221,6 +251,7 @@ async function write(level: string, message: string, ctx: Record<string, unknown
 - [ ] Mark completed
 
 ### Task 18: Founder operations dashboard
+
 - [ ] Create `/admin/operations` (founder-only) consolidating:
   - active orgs count, MRR-equivalent (sum of credit consumed last 30d × per-minute pricing)
   - active campaigns count
@@ -234,6 +265,7 @@ async function write(level: string, message: string, ctx: Record<string, unknown
 - [ ] Mark completed
 
 ### Task 19: Final go-live procedure
+
 - [ ] Author `docs/runbooks/go-live.md`:
   - day -7: complete pre-launch checklist
   - day -3: invite first 3 pilot dealers; manual onboarding call
@@ -244,6 +276,7 @@ async function write(level: string, message: string, ctx: Record<string, unknown
 - [ ] Mark completed
 
 ### Task 20: Definition of Done
+
 - [ ] Sentry receives errors from production with PII scrubbed
 - [ ] Axiom receives structured logs with org/call correlation
 - [ ] All alerts configured and verified by injected test conditions

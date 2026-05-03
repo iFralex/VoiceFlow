@@ -1,17 +1,106 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+.yarn/install-state.gz
 
-# ralphex progress logs
-.ralphex/progress/
-
-# dependencies
-node_modules
+# pnpm
 .pnpm-store/
 
 # Next.js
 .next/
-next-env.d.ts
+out/
+build/
+
+# Production
+dist/
+
+# Testing
+coverage/
+playwright-report/
+test-results/
+.vitest/
+
+# Environment variables — never commit real secrets
+.env
+.env.*
+!.env.example
+!.env.local.example
+
+# Vercel
+.vercel/
 
 # TypeScript
-tsconfig.tsbuildinfo
+*.tsbuildinfo
+next-env.d.ts
 
-# ralphex progress logs
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Editor / IDE
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Drizzle — snapshots are transient; the journal and migration SQL are versioned
+drizzle/migrations/meta/*
+!drizzle/migrations/meta/_journal.json
+
+# Debug
+*.log
+
+# ralphex workspace artifacts
+.ralphex/progress/
 .ralphex/worktrees/
+.playwright-browsers/
+.pnpm-home/
+.npmrc
+pnpm
