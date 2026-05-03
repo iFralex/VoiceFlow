@@ -150,7 +150,7 @@ CREATE POLICY organizations_member_visibility ON organizations
 
 ### Task 13: RLS context setter helper
 
-- [ ] Create `src/lib/db/context.ts` exposing `withOrgContext(orgId, fn)` that opens a transaction, calls `SET LOCAL app.current_org_id = ...` and runs `fn` with a transactional db client. Example:
+- [x] Create `src/lib/db/context.ts` exposing `withOrgContext(orgId, fn)` that opens a transaction, calls `SET LOCAL app.current_org_id = ...` and runs `fn` with a transactional db client. Example:
 
 ```typescript
 import { db } from './client';
@@ -165,9 +165,9 @@ export async function withOrgContext<T>(
 }
 ```
 
-- [ ] Add a `withSystemContext(fn)` for service-role operations that intentionally cross orgs (cron jobs, retention, RPO bulk checks)
-- [ ] Add unit tests verifying the GUC is set inside the transaction and reset outside
-- [ ] Mark completed
+- [x] Add a `withSystemContext(fn)` for service-role operations that intentionally cross orgs (cron jobs, retention, RPO bulk checks)
+- [x] Add unit tests verifying the GUC is set inside the transaction and reset outside
+- [x] Mark completed
 
 ### Task 14: Audit-log immutability
 
