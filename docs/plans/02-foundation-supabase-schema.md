@@ -102,8 +102,8 @@ The data model has four invariants (tenancy, money-as-cents, time-as-UTC-timesta
 
 ### Task 10: Schema barrel export and types
 
-- [ ] Update `src/lib/db/schema/index.ts` to re-export every table and every enum
-- [ ] Define typed inference helpers per table:
+- [x] Update `src/lib/db/schema/index.ts` to re-export every table and every enum
+- [x] Define typed inference helpers per table:
 
 ```typescript
 export type Organization = typeof organizations.$inferSelect;
@@ -111,8 +111,8 @@ export type NewOrganization = typeof organizations.$inferInsert;
 // ...repeat for every table
 ```
 
-- [ ] Confirm `pnpm typecheck` is clean
-- [ ] Mark completed
+- [x] Confirm `pnpm typecheck` is clean
+- [x] Mark completed
 
 ### Task 11: Generate first migration
 
