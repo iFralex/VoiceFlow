@@ -19,10 +19,10 @@ REVOKE ALL ON TABLE "audit_log" FROM anon;
 -- Verification query (run manually after applying):
 --
 --   SET ROLE authenticated;
---   -- This should succeed:
+--   -- This should FAIL with ERROR 42501 (insufficient_privilege):
 --   INSERT INTO audit_log (actor_type, action, subject_type, subject_id)
 --     VALUES ('system', 'test.insert', 'migration', '0002');
---   -- This should fail with ERROR 42501 (insufficient_privilege):
+--   -- This should also fail with ERROR 42501 (insufficient_privilege):
 --   UPDATE audit_log SET action = 'tampered' WHERE action = 'test.insert';
 --   -- This should also fail with ERROR 42501:
 --   DELETE FROM audit_log WHERE action = 'test.insert';

@@ -23,7 +23,7 @@ export const creditLedger = pgTable(
       .references(() => organizations.id, { onDelete: 'cascade' }),
     entry_type: creditEntryTypeEnum('entry_type').notNull(),
     delta_cents: integer('delta_cents').notNull(),
-    balance_after_cents: integer('balance_after_cents').notNull(),
+    balance_after_cents: integer('balance_after_cents').notNull().default(0),
     reference_type: text('reference_type'),
     reference_id: text('reference_id'),
     description: text('description'),

@@ -34,6 +34,7 @@ CREATE POLICY "recordings_org_select" ON storage.objects
   FOR SELECT
   USING (
     bucket_id = 'recordings'
+    AND current_setting('app.current_org_id', true) <> ''
     AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
   );
 
@@ -41,6 +42,7 @@ CREATE POLICY "recordings_org_insert" ON storage.objects
   FOR INSERT
   WITH CHECK (
     bucket_id = 'recordings'
+    AND current_setting('app.current_org_id', true) <> ''
     AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
   );
 
@@ -48,10 +50,12 @@ CREATE POLICY "recordings_org_update" ON storage.objects
   FOR UPDATE
   USING (
     bucket_id = 'recordings'
+    AND current_setting('app.current_org_id', true) <> ''
     AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
   )
   WITH CHECK (
     bucket_id = 'recordings'
+    AND current_setting('app.current_org_id', true) <> ''
     AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
   );
 
@@ -59,6 +63,7 @@ CREATE POLICY "recordings_org_delete" ON storage.objects
   FOR DELETE
   USING (
     bucket_id = 'recordings'
+    AND current_setting('app.current_org_id', true) <> ''
     AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
   );
 
@@ -71,6 +76,7 @@ CREATE POLICY "transcripts_org_select" ON storage.objects
   FOR SELECT
   USING (
     bucket_id = 'transcripts'
+    AND current_setting('app.current_org_id', true) <> ''
     AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
   );
 
@@ -78,6 +84,7 @@ CREATE POLICY "transcripts_org_insert" ON storage.objects
   FOR INSERT
   WITH CHECK (
     bucket_id = 'transcripts'
+    AND current_setting('app.current_org_id', true) <> ''
     AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
   );
 
@@ -85,10 +92,12 @@ CREATE POLICY "transcripts_org_update" ON storage.objects
   FOR UPDATE
   USING (
     bucket_id = 'transcripts'
+    AND current_setting('app.current_org_id', true) <> ''
     AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
   )
   WITH CHECK (
     bucket_id = 'transcripts'
+    AND current_setting('app.current_org_id', true) <> ''
     AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
   );
 
@@ -96,6 +105,7 @@ CREATE POLICY "transcripts_org_delete" ON storage.objects
   FOR DELETE
   USING (
     bucket_id = 'transcripts'
+    AND current_setting('app.current_org_id', true) <> ''
     AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
   );
 
@@ -108,6 +118,7 @@ CREATE POLICY "csv_uploads_org_select" ON storage.objects
   FOR SELECT
   USING (
     bucket_id = 'csv-uploads'
+    AND current_setting('app.current_org_id', true) <> ''
     AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
   );
 
@@ -115,6 +126,7 @@ CREATE POLICY "csv_uploads_org_insert" ON storage.objects
   FOR INSERT
   WITH CHECK (
     bucket_id = 'csv-uploads'
+    AND current_setting('app.current_org_id', true) <> ''
     AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
   );
 
@@ -122,10 +134,12 @@ CREATE POLICY "csv_uploads_org_update" ON storage.objects
   FOR UPDATE
   USING (
     bucket_id = 'csv-uploads'
+    AND current_setting('app.current_org_id', true) <> ''
     AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
   )
   WITH CHECK (
     bucket_id = 'csv-uploads'
+    AND current_setting('app.current_org_id', true) <> ''
     AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
   );
 
@@ -133,6 +147,7 @@ CREATE POLICY "csv_uploads_org_delete" ON storage.objects
   FOR DELETE
   USING (
     bucket_id = 'csv-uploads'
+    AND current_setting('app.current_org_id', true) <> ''
     AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
   );
 
@@ -145,6 +160,7 @@ CREATE POLICY "exports_org_select" ON storage.objects
   FOR SELECT
   USING (
     bucket_id = 'exports'
+    AND current_setting('app.current_org_id', true) <> ''
     AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
   );
 
@@ -152,6 +168,7 @@ CREATE POLICY "exports_org_insert" ON storage.objects
   FOR INSERT
   WITH CHECK (
     bucket_id = 'exports'
+    AND current_setting('app.current_org_id', true) <> ''
     AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
   );
 
@@ -159,10 +176,12 @@ CREATE POLICY "exports_org_update" ON storage.objects
   FOR UPDATE
   USING (
     bucket_id = 'exports'
+    AND current_setting('app.current_org_id', true) <> ''
     AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
   )
   WITH CHECK (
     bucket_id = 'exports'
+    AND current_setting('app.current_org_id', true) <> ''
     AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
   );
 
@@ -170,6 +189,7 @@ CREATE POLICY "exports_org_delete" ON storage.objects
   FOR DELETE
   USING (
     bucket_id = 'exports'
+    AND current_setting('app.current_org_id', true) <> ''
     AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
   );
 
