@@ -176,10 +176,10 @@ type NavItem = {
 
 ### Task 15: Toaster and confirmations
 
-- [ ] Add Sonner toaster at the root of `(app)/layout.tsx`
-- [ ] Convention: Server Actions return `{ ok: true } | { ok: false, message }`; client components surface success/error toasts
-- [ ] For destructive actions add `<ConfirmDialog>` wrapper requiring explicit confirmation (member removal, contact deletion, campaign cancellation)
-- [ ] Mark completed
+- [x] Add Sonner toaster at the root of `(app)/layout.tsx`
+- [x] Convention: Server Actions return `{ ok: true } | { ok: false, message }`; client components surface success/error toasts
+- [x] For destructive actions add `<ConfirmDialog>` wrapper requiring explicit confirmation (member removal, contact deletion, campaign cancellation)
+- [x] Mark completed
 
 ### Task 16: Empty and skeleton states
 
