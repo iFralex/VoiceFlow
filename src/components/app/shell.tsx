@@ -92,7 +92,7 @@ export function Shell({ children, orgs = [], activeOrgId = null, creditBalance }
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <TopBar
           onMobileMenuClick={() => setMobileOpen(true)}
-          {...(creditBalance !== undefined ? { creditBalance } : {})}
+          creditBalance={creditBalance}
         />
 
         <main className="flex-1 overflow-y-auto">

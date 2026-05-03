@@ -153,25 +153,7 @@ describe('recordAudit', () => {
     expect(result).toBeUndefined();
   });
 
-  // ──────────────────────────────────────────────────────────────
-  // Immutability: UPDATE on audit_log must be denied at the DB level.
-  // Migration 0002_audit_immutable.sql REVOKEs UPDATE/DELETE from the
-  // `authenticated` and `anon` roles. The tests below simulate what happens
-  // when application code attempts an UPDATE — Postgres returns ERROR 42501
-  // (insufficient_privilege). These tests document the expected DB behaviour
-  // and confirm that our mock correctly rejects such mutations.
-  // ──────────────────────────────────────────────────────────────
-  it('simulates DB rejecting UPDATE on audit_log with a privilege error', () => {
-    expect(() => tx.update(auditLog)).toThrow('permission denied for table audit_log');
-  });
-
-  it('simulated privilege error carries Postgres code 42501', () => {
-    let caughtError: NodeJS.ErrnoException | undefined;
-    try {
-      tx.update(auditLog);
-    } catch (err) {
-      caughtError = err as NodeJS.ErrnoException;
-    }
-    expect(caughtError?.code).toBe('42501');
-  });
+  // NOTE: Immutability of audit_log (REVOKE UPDATE/DELETE in migration 0002) is
+  // enforced at the Postgres level. Integration tests in a real DB should verify
+  // that the `authenticated` role receives ERROR 42501 on UPDATE attempts.
 });

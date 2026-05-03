@@ -19,7 +19,15 @@
     "marketing_copyright": "© {year} VoiceFlow. All rights reserved.",
     "marketing_privacy": "Privacy Policy",
     "marketing_terms": "Terms of Service",
-    "marketing_cookies": "Cookie Policy"
+    "marketing_cookies": "Cookie Policy",
+    "command_palette_title": "Quick search",
+    "command_palette_description": "Search actions and navigate the application",
+    "command_palette_placeholder": "Search actions...",
+    "command_palette_no_results": "No results found.",
+    "command_palette_nav_group": "Navigation",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "loading": "Please wait…"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -91,7 +99,11 @@
     "total_purchased": "Total purchased",
     "low_balance_warning": "Low balance",
     "packages": "Packages",
-    "transaction_history": "Transaction history"
+    "transaction_history": "Transaction history",
+    "credit_balance_label": "Credit balance",
+    "reserved_active_calls": "Reserved (active calls)",
+    "available": "Available",
+    "pill_aria_label": "Credit balance: {minutes} minutes remaining"
   },
   "settings": {
     "title": "Settings",
@@ -105,7 +117,8 @@
     "remove_member": "Remove member",
     "role_owner": "Owner",
     "role_admin": "Administrator",
-    "role_agent": "Agent"
+    "role_operator": "Operator",
+    "role_viewer": "Viewer"
   },
   "compliance": {
     "gdpr_notice": "Data is processed in accordance with GDPR.",
@@ -134,5 +147,42 @@
     "pricing_description": "Pay only for the minutes you use. No annual contracts, no hidden costs.",
     "pricing_cta": "See full pricing",
     "pricing_href": "/pricing"
+  },
+  "table": {
+    "columns": "Columns",
+    "visible_columns": "Visible columns",
+    "rows_per_page": "Rows per page",
+    "rows_selected": "{selected} of {total} row(s) selected",
+    "total_rows": "{total} total row(s)",
+    "page_of": "Page {page} of {total}",
+    "first_page": "First page",
+    "prev_page": "Previous page",
+    "next_page": "Next page",
+    "last_page": "Last page"
+  },
+  "status": {
+    "draft": "Draft",
+    "scheduled": "Scheduled",
+    "running": "Running",
+    "paused": "Paused",
+    "completed": "Completed",
+    "cancelled": "Cancelled",
+    "error": "Error",
+    "pending": "Pending",
+    "dialing": "Dialing",
+    "in_progress": "In progress",
+    "failed": "Failed",
+    "no_answer": "No answer",
+    "busy": "Busy",
+    "processing": "Processing",
+    "succeeded": "Succeeded",
+    "refunded": "Refunded",
+    "active": "Active",
+    "opted_out": "Opted out",
+    "pending_review": "Pending review",
+    "compliant": "Compliant",
+    "warning": "Warning",
+    "blocked": "Blocked",
+    "expired": "Expired"
   }
 }

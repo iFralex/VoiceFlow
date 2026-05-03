@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import * as React from 'react';
 
 import { cn } from '@/lib/utils/index';
@@ -49,18 +50,15 @@ export function EmptyState({
         )}
       </div>
       {action && (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={action.onClick}
-          {...(action.href ? { asChild: false } : {})}
-        >
-          {action.href ? (
-            <a href={action.href}>{action.label}</a>
-          ) : (
-            action.label
-          )}
-        </Button>
+        action.href ? (
+          <Button asChild variant="outline" size="sm">
+            <Link href={action.href}>{action.label}</Link>
+          </Button>
+        ) : (
+          <Button variant="outline" size="sm" onClick={action.onClick}>
+            {action.label}
+          </Button>
+        )
       )}
     </div>
   );

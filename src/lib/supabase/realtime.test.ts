@@ -6,8 +6,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   subscribeToCalls,
   subscribeToCampaigns,
-  type RealtimeCallPayload,
-  type RealtimeCampaignPayload,
+  type RealtimePayload,
   type SupabaseClientLike,
   type RealtimeChannelLike,
 } from './realtime';
@@ -161,8 +160,8 @@ describe('subscribeToCalls', () => {
     subscribeToCalls(supabase, 'org-123', onPayload);
     const call = channel.on.mock.calls[0];
     expect(call).toBeDefined();
-    const handler = call![2] as (p: RealtimeCallPayload) => void;
-    const mockPayload: RealtimeCallPayload = {
+    const handler = call![2] as (p: RealtimePayload) => void;
+    const mockPayload: RealtimePayload = {
       eventType: 'INSERT',
       new: { id: 'call-1' },
       old: {},
@@ -233,8 +232,8 @@ describe('subscribeToCampaigns', () => {
     subscribeToCampaigns(supabase, 'org-456', onPayload);
     const call = channel.on.mock.calls[0];
     expect(call).toBeDefined();
-    const handler = call![2] as (p: RealtimeCampaignPayload) => void;
-    const mockPayload: RealtimeCampaignPayload = {
+    const handler = call![2] as (p: RealtimePayload) => void;
+    const mockPayload: RealtimePayload = {
       eventType: 'UPDATE',
       new: { id: 'campaign-1', status: 'running' },
       old: { status: 'scheduled' },

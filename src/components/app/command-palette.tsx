@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import * as React from 'react';
 
 import {
@@ -12,20 +13,8 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command';
-import { Icons } from '@/components/ui/icon';
 
-// ---------------------------------------------------------------------------
-// Static navigation actions — Phase 1
-// Full data-search comes in plan 12
-// ---------------------------------------------------------------------------
-const NAV_ACTIONS = [
-  { href: '/dashboard', label: 'Dashboard', shortcut: undefined, Icon: Icons.LayoutDashboard },
-  { href: '/campagne', label: 'Campagne', shortcut: undefined, Icon: Icons.Megaphone },
-  { href: '/contatti', label: 'Contatti', shortcut: undefined, Icon: Icons.Users },
-  { href: '/script', label: 'Script', shortcut: undefined, Icon: Icons.FileText },
-  { href: '/credito', label: 'Credito', shortcut: undefined, Icon: Icons.CreditCard },
-  { href: '/impostazioni', label: 'Impostazioni', shortcut: undefined, Icon: Icons.Settings },
-] as const;
+import { PRIMARY_NAV_ITEMS } from './nav';
 
 interface CommandPaletteProps {
   open: boolean;
@@ -34,6 +23,8 @@ interface CommandPaletteProps {
 
 export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const router = useRouter();
+  const t = useTranslations('common');
+  const tNav = useTranslations('nav');
 
   function handleSelect(href: string) {
     onOpenChange(false);
@@ -44,23 +35,23 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
     <CommandDialog
       open={open}
       onOpenChange={onOpenChange}
-      title="Ricerca rapida"
-      description="Cerca azioni e naviga nell'applicazione"
+      title={t('command_palette_title')}
+      description={t('command_palette_description')}
     >
       <Command>
-        <CommandInput placeholder="Cerca azioni..." />
+        <CommandInput placeholder={t('command_palette_placeholder')} />
         <CommandList>
-          <CommandEmpty>Nessun risultato trovato.</CommandEmpty>
-          <CommandGroup heading="Navigazione">
-            {NAV_ACTIONS.map(({ href, label, Icon }) => (
+          <CommandEmpty>{t('command_palette_no_results')}</CommandEmpty>
+          <CommandGroup heading={t('command_palette_nav_group')}>
+            {PRIMARY_NAV_ITEMS.map(({ href, labelKey, icon: Icon }) => (
               <CommandItem
                 key={href}
-                value={label}
+                value={tNav(labelKey)}
                 onSelect={() => handleSelect(href)}
                 data-testid={`cmd-nav-${href.slice(1)}`}
               >
                 <Icon />
-                <span>{label}</span>
+                <span>{tNav(labelKey)}</span>
               </CommandItem>
             ))}
           </CommandGroup>

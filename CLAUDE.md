@@ -8,6 +8,7 @@
 - `pnpm lint` — ESLint
 - `pnpm test` — unit tests (vitest, jsdom)
 - `pnpm test:integration` — integration tests (requires Docker on port 5433)
+- `pnpm test:e2e` — Playwright end-to-end tests (requires running app on port 3000)
 - `pnpm db:generate` — generate Drizzle migration from schema changes
 - `pnpm db:migrate` — apply all migrations via `DATABASE_DIRECT_URL` (not pooler)
 - `pnpm db:seed` — upsert seed data (script templates + credit packages)
@@ -76,3 +77,92 @@ Migration files live in `drizzle/migrations/` as `000N_<slug>.sql`. All files mu
 - `DATABASE_URL` — pgBouncer pooler (port 6543); used by the app at runtime
 - `DATABASE_DIRECT_URL` — direct Postgres (port 5432); used by `pnpm db:migrate` only
 - `TEST_DATABASE_URL` — Docker test database (port 5433); used by integration tests
+
+## i18n Conventions
+
+Every UI string must pass through `next-intl`. No inline strings in components.
+
+**Client component:**
+```tsx
+'use client';
+import { useTranslations } from 'next-intl';
+
+export function MyComponent() {
+  const t = useTranslations('campaigns');
+  return <p>{t('new_campaign')}</p>;
+}
+```
+
+**Server component:**
+```tsx
+import { t } from '@/i18n/server';
+
+export default async function MyPage() {
+  const translate = await t('campaigns');
+  return <h1>{translate('title')}</h1>;
+}
+```
+
+Add all new string keys to **both** `src/i18n/locales/it.json` and `src/i18n/locales/en.json`. The test setup mock in `src/test/setup.ts` must also be updated with new namespaces/keys so unit tests continue to pass. See `docs/i18n.md` for the full guide.
+
+Locale is resolved from the `locale` cookie (set by `src/actions/locale.ts`) via `src/middleware.ts` — no URL prefixes.
+
+## Server Action Result Convention
+
+All Server Actions that can fail must return `ActionResult` from `@/lib/utils/action-toast`:
+
+```ts
+import type { ActionResult } from '@/lib/utils/action-toast';
+
+export async function myAction(): Promise<ActionResult> {
+  try {
+    // ...
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, message: 'Messaggio di errore' };
+  }
+}
+```
+
+Client components surface results as toasts:
+
+```ts
+import { toastResult } from '@/lib/utils/action-toast';
+
+const result = await myAction();
+toastResult(result); // shows success or error toast
+```
+
+For destructive actions, wrap the trigger in `<ConfirmDialog>` from `@/components/ui/confirm-dialog`.
+
+## Library Layer Architecture
+
+`src/lib/` is a three-layer architecture (see `src/lib/README.md`):
+- **Adapters** (`db/`, `supabase/`, `stripe/`, `email/`, `inngest/`, `voice/`, `storage/`, `compliance/`, `auth/`) — wrap external SDKs
+- **Services** (`services/`) — orchestrate multiple adapters; never called by adapters
+- **Utils** (`utils/`) — pure functions, no side effects, usable at any layer
+
+Rules:
+1. Route handlers and Server Actions import from adapters and services, never directly from external SDKs.
+2. `utils/` has no side effects and no imports from adapters.
+
+## Theme
+
+Theme switching uses `next-themes`. The `ThemeProvider` is in `src/components/providers.tsx` with `defaultTheme="light"`. Use `useTheme()` in client components. Do not apply theme classes manually.
+
+## Shared UI Primitives
+
+**Status badges:** Use `<StatusBadge status={...} />` from `@/components/ui/status-badge` for all status displays. It maps domain enum values (`CampaignStatus`, `CallStatus`, `PaymentStatus`, `OptOutStatus`, `RpoStatus`) to design-system colours automatically via the `status` i18n namespace. Labels are translated; pass `label` prop to override.
+
+**Empty states:** Use `<EmptyState>` from `@/components/ui/empty-state` for empty-list and zero-data states.
+
+**Suspense fallbacks:** Use skeletons from `@/components/ui/page-skeleton`:
+- `<KpiRowSkeleton>` — row of KPI cards
+- `<ListPageSkeleton>` — toolbar + rows + pagination
+- `<DetailPageSkeleton>` — page header + body cards
+
+**Data tables:** Use `<DataTable>` from `@/components/data-table`. Pass `rowCount` + `onStateChange` for server-side pagination; omit both for client-side.
+
+## Security Notes
+
+`src/actions/org.ts#switchOrg` does **not** verify org membership — the fix is deferred to plan 04 (auth integration). Until then, do not rely on this action for access control.

@@ -229,7 +229,7 @@ describe('DataTable', () => {
 
   it('renders pagination by default', () => {
     const { container } = render(<DataTable columns={COLUMNS} data={DATA} />);
-    expect(within(container as HTMLElement).getByLabelText('Prima pagina')).toBeInTheDocument();
+    expect(within(container as HTMLElement).getByLabelText('Prima pagina')).toBeInTheDocument(); // mock returns Italian
   });
 
   it('hides pagination when showPagination=false', () => {

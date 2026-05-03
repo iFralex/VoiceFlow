@@ -22,7 +22,6 @@ export type NavItem = {
   /** Key in the 'nav' i18n namespace (e.g. 'campaigns', 'contacts'). */
   labelKey: string;
   icon: React.ComponentType<LucideProps>;
-  badge?: () => Promise<string | null>;
   requireRole?: MemberRole[];
 };
 

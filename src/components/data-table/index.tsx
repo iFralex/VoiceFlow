@@ -3,6 +3,7 @@
 import {
   flexRender,
   getCoreRowModel,
+  getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
@@ -97,20 +98,18 @@ export function DataTable<TData>({
     externalState?.pagination ?? { pageIndex: 0, pageSize: 20 },
   );
 
-  // Notify parent when server-side state changes
-  const notifyParent = React.useCallback<OnChangeFn<unknown>>(
-    () => {
-      onStateChange?.({ pagination, sorting, columnFilters });
-    },
-    [onStateChange, pagination, sorting, columnFilters],
-  );
+  // When externalState is provided (server-side mode), prefer it over stale
+  // internal state so URL-driven navigation reflects immediately.
+  const effectiveSorting = externalState?.sorting ?? sorting;
+  const effectiveColumnFilters = externalState?.columnFilters ?? columnFilters;
+  const effectivePagination = externalState?.pagination ?? pagination;
 
   const handleSortingChange: OnChangeFn<SortingState> = (updater) => {
     const next =
-      typeof updater === 'function' ? updater(sorting) : updater;
+      typeof updater === 'function' ? updater(effectiveSorting) : updater;
     setSorting(next);
     if (onStateChange) {
-      onStateChange({ pagination, sorting: next, columnFilters });
+      onStateChange({ pagination: effectivePagination, sorting: next, columnFilters: effectiveColumnFilters });
     }
   };
 
@@ -118,19 +117,19 @@ export function DataTable<TData>({
     updater,
   ) => {
     const next =
-      typeof updater === 'function' ? updater(columnFilters) : updater;
+      typeof updater === 'function' ? updater(effectiveColumnFilters) : updater;
     setColumnFilters(next);
     if (onStateChange) {
-      onStateChange({ pagination, sorting, columnFilters: next });
+      onStateChange({ pagination: effectivePagination, sorting: effectiveSorting, columnFilters: next });
     }
   };
 
   const handlePaginationChange: OnChangeFn<PaginationState> = (updater) => {
     const next =
-      typeof updater === 'function' ? updater(pagination) : updater;
+      typeof updater === 'function' ? updater(effectivePagination) : updater;
     setPagination(next);
     if (onStateChange) {
-      onStateChange({ pagination: next, sorting, columnFilters });
+      onStateChange({ pagination: next, sorting: effectiveSorting, columnFilters: effectiveColumnFilters });
     }
   };
 
@@ -140,10 +139,10 @@ export function DataTable<TData>({
     columns,
     ...(rowCount !== undefined ? { rowCount } : {}),
     state: {
-      sorting,
-      columnFilters,
+      sorting: effectiveSorting,
+      columnFilters: effectiveColumnFilters,
       columnVisibility,
-      pagination,
+      pagination: effectivePagination,
     },
     // Use manual pagination/sorting/filtering when rowCount is provided (server-side)
     manualPagination: rowCount !== undefined,
@@ -157,9 +156,8 @@ export function DataTable<TData>({
     ...(rowCount === undefined ? {
       getPaginationRowModel: getPaginationRowModel(),
       getSortedRowModel: getSortedRowModel(),
+      getFilteredRowModel: getFilteredRowModel(),
     } : {}),
-    // Suppress unused warning
-    meta: { notifyParent },
   });
 
   return (

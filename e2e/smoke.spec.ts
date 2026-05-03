@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test('marketing page renders placeholder title', async ({ page }) => {
+test('marketing landing page loads', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'VoiceFlow' })).toBeVisible();
+  await expect(page.getByTestId('landing-hero')).toBeVisible();
 });

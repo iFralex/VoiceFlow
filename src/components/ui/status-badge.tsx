@@ -1,3 +1,6 @@
+'use client';
+
+import { useTranslations } from 'next-intl';
 import * as React from 'react';
 
 import { cn } from '@/lib/utils/index';
@@ -42,152 +45,52 @@ export type StatusKind =
   | OptOutStatus
   | RpoStatus;
 
-// ─── Colour + label mapping ───────────────────────────────────────────────────
+// ─── Colour mapping ───────────────────────────────────────────────────────────
 
-type StatusConfig = {
-  label: string;
-  colorClass: string;
-};
-
-const STATUS_MAP: Record<string, StatusConfig> = {
+export const STATUS_MAP: Record<string, { colorClass: string }> = {
   // Campaign statuses
-  draft: {
-    label: 'Bozza',
-    colorClass:
-      'bg-[hsl(var(--status-neutral)/0.12)] text-[hsl(var(--status-neutral))] border-[hsl(var(--status-neutral)/0.3)]',
-  },
-  scheduled: {
-    label: 'Pianificata',
-    colorClass:
-      'bg-[hsl(var(--status-info)/0.12)] text-[hsl(var(--status-info))] border-[hsl(var(--status-info)/0.3)]',
-  },
-  running: {
-    label: 'In corso',
-    colorClass:
-      'bg-[hsl(var(--status-success)/0.12)] text-[hsl(var(--status-success))] border-[hsl(var(--status-success)/0.3)]',
-  },
-  paused: {
-    label: 'In pausa',
-    colorClass:
-      'bg-[hsl(var(--status-warning)/0.12)] text-[hsl(var(--status-warning))] border-[hsl(var(--status-warning)/0.3)]',
-  },
-  completed: {
-    label: 'Completata',
-    colorClass:
-      'bg-[hsl(var(--status-success)/0.12)] text-[hsl(var(--status-success))] border-[hsl(var(--status-success)/0.3)]',
-  },
-  cancelled: {
-    label: 'Annullata',
-    colorClass:
-      'bg-[hsl(var(--status-neutral)/0.12)] text-[hsl(var(--status-neutral))] border-[hsl(var(--status-neutral)/0.3)]',
-  },
-  error: {
-    label: 'Errore',
-    colorClass:
-      'bg-[hsl(var(--status-danger)/0.12)] text-[hsl(var(--status-danger))] border-[hsl(var(--status-danger)/0.3)]',
-  },
-
+  draft: { colorClass: 'bg-[hsl(var(--status-neutral)/0.12)] text-[hsl(var(--status-neutral))] border-[hsl(var(--status-neutral)/0.3)]' },
+  scheduled: { colorClass: 'bg-[hsl(var(--status-info)/0.12)] text-[hsl(var(--status-info))] border-[hsl(var(--status-info)/0.3)]' },
+  running: { colorClass: 'bg-[hsl(var(--status-success)/0.12)] text-[hsl(var(--status-success))] border-[hsl(var(--status-success)/0.3)]' },
+  paused: { colorClass: 'bg-[hsl(var(--status-warning)/0.12)] text-[hsl(var(--status-warning))] border-[hsl(var(--status-warning)/0.3)]' },
+  completed: { colorClass: 'bg-[hsl(var(--status-success)/0.12)] text-[hsl(var(--status-success))] border-[hsl(var(--status-success)/0.3)]' },
+  cancelled: { colorClass: 'bg-[hsl(var(--status-neutral)/0.12)] text-[hsl(var(--status-neutral))] border-[hsl(var(--status-neutral)/0.3)]' },
+  error: { colorClass: 'bg-[hsl(var(--status-danger)/0.12)] text-[hsl(var(--status-danger))] border-[hsl(var(--status-danger)/0.3)]' },
   // Call statuses
-  pending: {
-    label: 'In attesa',
-    colorClass:
-      'bg-[hsl(var(--status-neutral)/0.12)] text-[hsl(var(--status-neutral))] border-[hsl(var(--status-neutral)/0.3)]',
-  },
-  dialing: {
-    label: 'In chiamata',
-    colorClass:
-      'bg-[hsl(var(--status-info)/0.12)] text-[hsl(var(--status-info))] border-[hsl(var(--status-info)/0.3)]',
-  },
-  in_progress: {
-    label: 'In corso',
-    colorClass:
-      'bg-[hsl(var(--status-success)/0.12)] text-[hsl(var(--status-success))] border-[hsl(var(--status-success)/0.3)]',
-  },
-  failed: {
-    label: 'Fallita',
-    colorClass:
-      'bg-[hsl(var(--status-danger)/0.12)] text-[hsl(var(--status-danger))] border-[hsl(var(--status-danger)/0.3)]',
-  },
-  no_answer: {
-    label: 'Senza risposta',
-    colorClass:
-      'bg-[hsl(var(--status-warning)/0.12)] text-[hsl(var(--status-warning))] border-[hsl(var(--status-warning)/0.3)]',
-  },
-  busy: {
-    label: 'Occupato',
-    colorClass:
-      'bg-[hsl(var(--status-warning)/0.12)] text-[hsl(var(--status-warning))] border-[hsl(var(--status-warning)/0.3)]',
-  },
-
+  pending: { colorClass: 'bg-[hsl(var(--status-neutral)/0.12)] text-[hsl(var(--status-neutral))] border-[hsl(var(--status-neutral)/0.3)]' },
+  dialing: { colorClass: 'bg-[hsl(var(--status-info)/0.12)] text-[hsl(var(--status-info))] border-[hsl(var(--status-info)/0.3)]' },
+  in_progress: { colorClass: 'bg-[hsl(var(--status-success)/0.12)] text-[hsl(var(--status-success))] border-[hsl(var(--status-success)/0.3)]' },
+  failed: { colorClass: 'bg-[hsl(var(--status-danger)/0.12)] text-[hsl(var(--status-danger))] border-[hsl(var(--status-danger)/0.3)]' },
+  no_answer: { colorClass: 'bg-[hsl(var(--status-warning)/0.12)] text-[hsl(var(--status-warning))] border-[hsl(var(--status-warning)/0.3)]' },
+  busy: { colorClass: 'bg-[hsl(var(--status-warning)/0.12)] text-[hsl(var(--status-warning))] border-[hsl(var(--status-warning)/0.3)]' },
   // Payment statuses
-  processing: {
-    label: 'In elaborazione',
-    colorClass:
-      'bg-[hsl(var(--status-info)/0.12)] text-[hsl(var(--status-info))] border-[hsl(var(--status-info)/0.3)]',
-  },
-  succeeded: {
-    label: 'Completato',
-    colorClass:
-      'bg-[hsl(var(--status-success)/0.12)] text-[hsl(var(--status-success))] border-[hsl(var(--status-success)/0.3)]',
-  },
-  refunded: {
-    label: 'Rimborsato',
-    colorClass:
-      'bg-[hsl(var(--status-neutral)/0.12)] text-[hsl(var(--status-neutral))] border-[hsl(var(--status-neutral)/0.3)]',
-  },
-
+  processing: { colorClass: 'bg-[hsl(var(--status-info)/0.12)] text-[hsl(var(--status-info))] border-[hsl(var(--status-info)/0.3)]' },
+  succeeded: { colorClass: 'bg-[hsl(var(--status-success)/0.12)] text-[hsl(var(--status-success))] border-[hsl(var(--status-success)/0.3)]' },
+  refunded: { colorClass: 'bg-[hsl(var(--status-neutral)/0.12)] text-[hsl(var(--status-neutral))] border-[hsl(var(--status-neutral)/0.3)]' },
   // Opt-out statuses
-  active: {
-    label: 'Attivo',
-    colorClass:
-      'bg-[hsl(var(--status-success)/0.12)] text-[hsl(var(--status-success))] border-[hsl(var(--status-success)/0.3)]',
-  },
-  opted_out: {
-    label: 'Opt-out',
-    colorClass:
-      'bg-[hsl(var(--status-danger)/0.12)] text-[hsl(var(--status-danger))] border-[hsl(var(--status-danger)/0.3)]',
-  },
-  pending_review: {
-    label: 'In revisione',
-    colorClass:
-      'bg-[hsl(var(--status-warning)/0.12)] text-[hsl(var(--status-warning))] border-[hsl(var(--status-warning)/0.3)]',
-  },
-
+  active: { colorClass: 'bg-[hsl(var(--status-success)/0.12)] text-[hsl(var(--status-success))] border-[hsl(var(--status-success)/0.3)]' },
+  opted_out: { colorClass: 'bg-[hsl(var(--status-danger)/0.12)] text-[hsl(var(--status-danger))] border-[hsl(var(--status-danger)/0.3)]' },
+  pending_review: { colorClass: 'bg-[hsl(var(--status-warning)/0.12)] text-[hsl(var(--status-warning))] border-[hsl(var(--status-warning)/0.3)]' },
   // RPO statuses
-  compliant: {
-    label: 'Conforme',
-    colorClass:
-      'bg-[hsl(var(--status-success)/0.12)] text-[hsl(var(--status-success))] border-[hsl(var(--status-success)/0.3)]',
-  },
-  warning: {
-    label: 'Avviso',
-    colorClass:
-      'bg-[hsl(var(--status-warning)/0.12)] text-[hsl(var(--status-warning))] border-[hsl(var(--status-warning)/0.3)]',
-  },
-  blocked: {
-    label: 'Bloccato',
-    colorClass:
-      'bg-[hsl(var(--status-danger)/0.12)] text-[hsl(var(--status-danger))] border-[hsl(var(--status-danger)/0.3)]',
-  },
-  expired: {
-    label: 'Scaduto',
-    colorClass:
-      'bg-[hsl(var(--status-danger)/0.12)] text-[hsl(var(--status-danger))] border-[hsl(var(--status-danger)/0.3)]',
-  },
+  compliant: { colorClass: 'bg-[hsl(var(--status-success)/0.12)] text-[hsl(var(--status-success))] border-[hsl(var(--status-success)/0.3)]' },
+  warning: { colorClass: 'bg-[hsl(var(--status-warning)/0.12)] text-[hsl(var(--status-warning))] border-[hsl(var(--status-warning)/0.3)]' },
+  blocked: { colorClass: 'bg-[hsl(var(--status-danger)/0.12)] text-[hsl(var(--status-danger))] border-[hsl(var(--status-danger)/0.3)]' },
+  expired: { colorClass: 'bg-[hsl(var(--status-danger)/0.12)] text-[hsl(var(--status-danger))] border-[hsl(var(--status-danger)/0.3)]' },
 };
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 type StatusBadgeProps = {
   status: StatusKind;
-  /** Override the label derived from the status map */
+  /** Override the label derived from the status translation */
   label?: string;
   className?: string;
 };
 
-function StatusBadge({ status, label, className }: StatusBadgeProps) {
+export function StatusBadge({ status, label, className }: StatusBadgeProps) {
+  const t = useTranslations('status');
   const config = STATUS_MAP[status as string];
-  const displayLabel = label ?? config?.label ?? status;
+  const displayLabel = label ?? t(status as string);
   const colorClass =
     config?.colorClass ??
     'bg-[hsl(var(--status-neutral)/0.12)] text-[hsl(var(--status-neutral))] border-[hsl(var(--status-neutral)/0.3)]';
@@ -206,5 +109,3 @@ function StatusBadge({ status, label, className }: StatusBadgeProps) {
     </span>
   );
 }
-
-export { StatusBadge, STATUS_MAP };

@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useTheme } from 'next-themes';
 import * as React from 'react';
@@ -32,8 +33,10 @@ interface UserMenuProps {
 }
 
 function getInitials(name: string): string {
+  if (!name.trim()) return '?';
   return name
     .split(' ')
+    .filter(Boolean)
     .map((part) => part[0])
     .join('')
     .toUpperCase()
@@ -43,6 +46,7 @@ function getInitials(name: string): string {
 export function UserMenu({ user }: UserMenuProps) {
   const { theme, setTheme } = useTheme();
   const t = useTranslations('auth');
+  const router = useRouter();
   const [locale, setLocaleState] = React.useState<Locale>('it');
 
   const displayName = user?.name ?? t('default_user');
@@ -53,6 +57,7 @@ export function UserMenu({ user }: UserMenuProps) {
     const next = value as Locale;
     setLocaleState(next);
     await setLocale(next);
+    router.refresh();
   }
 
   return (

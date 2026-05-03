@@ -19,7 +19,15 @@
     "marketing_copyright": "© {year} VoiceFlow. Tutti i diritti riservati.",
     "marketing_privacy": "Privacy Policy",
     "marketing_terms": "Termini di Servizio",
-    "marketing_cookies": "Cookie Policy"
+    "marketing_cookies": "Cookie Policy",
+    "command_palette_title": "Ricerca rapida",
+    "command_palette_description": "Cerca azioni e naviga nell'applicazione",
+    "command_palette_placeholder": "Cerca azioni...",
+    "command_palette_no_results": "Nessun risultato trovato.",
+    "command_palette_nav_group": "Navigazione",
+    "confirm": "Conferma",
+    "cancel": "Annulla",
+    "loading": "Attendere…"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -91,7 +99,11 @@
     "total_purchased": "Totale acquistati",
     "low_balance_warning": "Saldo basso",
     "packages": "Pacchetti",
-    "transaction_history": "Storico transazioni"
+    "transaction_history": "Storico transazioni",
+    "credit_balance_label": "Saldo crediti",
+    "reserved_active_calls": "Riservati (chiamate attive)",
+    "available": "Disponibili",
+    "pill_aria_label": "Saldo crediti: {minutes} minuti rimanenti"
   },
   "settings": {
     "title": "Impostazioni",
@@ -105,7 +117,8 @@
     "remove_member": "Rimuovi membro",
     "role_owner": "Proprietario",
     "role_admin": "Amministratore",
-    "role_agent": "Agente"
+    "role_operator": "Operatore",
+    "role_viewer": "Visualizzatore"
   },
   "compliance": {
     "gdpr_notice": "I dati sono trattati in conformità al GDPR.",
@@ -134,5 +147,42 @@
     "pricing_description": "Paga solo per i minuti utilizzati. Nessun contratto annuale, nessun costo nascosto.",
     "pricing_cta": "Vedi i prezzi completi",
     "pricing_href": "/prezzi"
+  },
+  "table": {
+    "columns": "Colonne",
+    "visible_columns": "Colonne visibili",
+    "rows_per_page": "Righe per pagina",
+    "rows_selected": "{selected} di {total} riga/e selezionata/e",
+    "total_rows": "{total} riga/e totali",
+    "page_of": "Pagina {page} di {total}",
+    "first_page": "Prima pagina",
+    "prev_page": "Pagina precedente",
+    "next_page": "Pagina successiva",
+    "last_page": "Ultima pagina"
+  },
+  "status": {
+    "draft": "Bozza",
+    "scheduled": "Pianificata",
+    "running": "In corso",
+    "paused": "In pausa",
+    "completed": "Completata",
+    "cancelled": "Annullata",
+    "error": "Errore",
+    "pending": "In attesa",
+    "dialing": "In chiamata",
+    "in_progress": "In corso",
+    "failed": "Fallita",
+    "no_answer": "Senza risposta",
+    "busy": "Occupato",
+    "processing": "In elaborazione",
+    "succeeded": "Completato",
+    "refunded": "Rimborsato",
+    "active": "Attivo",
+    "opted_out": "Opt-out",
+    "pending_review": "In revisione",
+    "compliant": "Conforme",
+    "warning": "Avviso",
+    "blocked": "Bloccato",
+    "expired": "Scaduto"
   }
 }

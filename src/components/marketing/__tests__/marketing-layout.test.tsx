@@ -13,11 +13,11 @@ describe('MarketingNav', () => {
     expect(screen.getByText('VoiceFlow')).toBeTruthy();
   });
 
-  it('renders the Accedi CTA linking to /login', () => {
+  it('renders the Accedi CTA linking to /accedi', () => {
     render(<MarketingNav />);
     const accediLink = screen.getByRole('link', { name: /accedi/i });
     expect(accediLink).toBeTruthy();
-    expect(accediLink.getAttribute('href')).toBe('/login');
+    expect(accediLink.getAttribute('href')).toBe('/accedi');
   });
 
   it('renders the marketing nav landmark', () => {

@@ -15,6 +15,11 @@ vi.mock('@/actions/locale', () => ({
   setLocale: vi.fn().mockResolvedValue(undefined),
 }));
 
+const mockRouterRefresh = vi.fn();
+vi.mock('next/navigation', () => ({
+  useRouter: vi.fn(() => ({ push: vi.fn(), refresh: mockRouterRefresh })),
+}));
+
 const testUser = {
   name: 'Mario Rossi',
   email: 'mario.rossi@example.com',

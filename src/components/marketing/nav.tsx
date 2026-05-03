@@ -24,7 +24,7 @@ export function MarketingNav() {
         {/* CTA */}
         <nav aria-label={t('marketing_nav_label')}>
           <Button asChild size="sm">
-            <Link href="/login">{t('marketing_sign_in')}</Link>
+            <Link href="/accedi">{t('marketing_sign_in')}</Link>
           </Button>
         </nav>
       </div>

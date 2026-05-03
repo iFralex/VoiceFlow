@@ -25,8 +25,8 @@ describe('Nav', () => {
     expect(screen.getByText('Impostazioni')).toBeTruthy();
   });
 
-  it('hides role-restricted items for agent role', () => {
-    render(<Nav role="agent" />);
+  it('hides role-restricted items for operator role', () => {
+    render(<Nav role="operator" />);
     expect(screen.getByText('Dashboard')).toBeTruthy();
     expect(screen.getByText('Campagne')).toBeTruthy();
     // Credito and Impostazioni require owner/admin

@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import * as React from 'react';
 
 import {
@@ -21,9 +22,9 @@ interface ConfirmDialogProps {
   title: string;
   /** Descriptive text explaining the consequence, e.g. "Questa operazione non può essere annullata." */
   description: string;
-  /** Label for the confirm button. Defaults to "Conferma". */
+  /** Label for the confirm button. Defaults to the common.confirm translation. */
   confirmLabel?: string;
-  /** Label for the cancel button. Defaults to "Annulla". */
+  /** Label for the cancel button. Defaults to the common.cancel translation. */
   cancelLabel?: string;
   /** Called when the user clicks the confirm button. */
   onConfirm: () => void | Promise<void>;
@@ -46,13 +47,17 @@ export function ConfirmDialog({
   trigger,
   title,
   description,
-  confirmLabel = 'Conferma',
-  cancelLabel = 'Annulla',
+  confirmLabel,
+  cancelLabel,
   onConfirm,
   loading = false,
 }: ConfirmDialogProps) {
+  const t = useTranslations('common');
   const [open, setOpen] = React.useState(false);
   const [pending, setPending] = React.useState(false);
+
+  const confirmText = confirmLabel ?? t('confirm');
+  const cancelText = cancelLabel ?? t('cancel');
 
   const isDisabled = loading || pending;
 
@@ -60,9 +65,11 @@ export function ConfirmDialog({
     setPending(true);
     try {
       await onConfirm();
+      setOpen(false);
+    } catch (err) {
+      console.error('ConfirmDialog: onConfirm threw an error', err);
     } finally {
       setPending(false);
-      setOpen(false);
     }
   }
 
@@ -75,7 +82,7 @@ export function ConfirmDialog({
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isDisabled}>{cancelLabel}</AlertDialogCancel>
+          <AlertDialogCancel disabled={isDisabled}>{cancelText}</AlertDialogCancel>
           <AlertDialogAction
             variant="destructive"
             disabled={isDisabled}
@@ -84,7 +91,7 @@ export function ConfirmDialog({
               void handleConfirm();
             }}
           >
-            {pending ? 'Attendere…' : confirmLabel}
+            {pending ? t('loading') : confirmText}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

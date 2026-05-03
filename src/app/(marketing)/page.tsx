@@ -7,16 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Icons } from '@/components/ui/icon';
 
 const VALUE_PROPS = [
-  { key: 'vp1', icon: 'Users' },
-  { key: 'vp2', icon: 'Calendar' },
-  { key: 'vp3', icon: 'HeartHandshake' },
+  { key: 'vp1', Icon: Icons.Users },
+  { key: 'vp2', Icon: Icons.Calendar },
+  { key: 'vp3', Icon: Icons.Phone },
 ] as const;
-
-function ValuePropIcon({ name }: { name: (typeof VALUE_PROPS)[number]['icon'] }) {
-  if (name === 'Users') return <Icons.Users size={28} className="text-primary" />;
-  if (name === 'Calendar') return <Icons.Calendar size={28} className="text-primary" />;
-  return <Icons.Phone size={28} className="text-primary" />;
-}
 
 export default function MarketingPage() {
   const t = useTranslations('landing');
@@ -53,14 +47,14 @@ export default function MarketingPage() {
           {t('value_props_title')}
         </h2>
         <div className="grid gap-8 sm:grid-cols-3">
-          {VALUE_PROPS.map(({ key, icon }) => (
+          {VALUE_PROPS.map(({ key, Icon }) => (
             <article
               key={key}
               data-testid={`value-prop-${key}`}
               className="rounded-lg border bg-card p-6 text-card-foreground shadow-sm"
             >
               <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-md bg-muted">
-                <ValuePropIcon name={icon} />
+                <Icon size={28} className="text-primary" />
               </div>
               <h3 className="mb-2 text-lg font-semibold">
                 {t(`${key}_title` as 'vp1_title' | 'vp2_title' | 'vp3_title')}

@@ -45,11 +45,8 @@ export function TopBar({ onMobileMenuClick, creditBalance, user, className }: To
         <Icons.Menu size={18} />
       </Button>
 
-      {/* Page title / breadcrumbs slot */}
-      <div className="flex flex-1 items-center gap-2">
-        {/* Children can inject a page title via a context or portal in a future task */}
-        <PageTitleSlot />
-      </div>
+      {/* Page title / breadcrumbs slot — wired in Task 12 */}
+      <div className="flex flex-1 items-center gap-2" />
 
       <div className="flex items-center gap-1">
         {/* Command palette */}
@@ -91,13 +88,8 @@ export function TopBar({ onMobileMenuClick, creditBalance, user, className }: To
         </Button>
 
         {/* User menu */}
-        <UserMenu {...(user !== undefined ? { user } : {})} />
+        <UserMenu user={user} />
       </div>
     </header>
   );
-}
-
-/** Slot for pages to inject their title/breadcrumbs — wired in Task 12 via context */
-function PageTitleSlot() {
-  return <span className="sr-only" aria-hidden />;
 }

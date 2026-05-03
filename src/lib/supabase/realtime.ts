@@ -51,10 +51,6 @@ export type RealtimePayload = {
   commit_timestamp: string;
 };
 
-// Named aliases kept for backward compatibility with typed call sites.
-export type RealtimeCallPayload = RealtimePayload;
-export type RealtimeCampaignPayload = RealtimePayload;
-
 function subscribeToTable(
   supabase: SupabaseClientLike,
   table: string,
@@ -93,7 +89,7 @@ function subscribeToTable(
 export function subscribeToCalls(
   supabase: SupabaseClientLike,
   orgId: string,
-  onPayload: (payload: RealtimeCallPayload) => void,
+  onPayload: (payload: RealtimePayload) => void,
 ): () => void {
   return subscribeToTable(supabase, 'calls', orgId, onPayload);
 }
@@ -109,7 +105,7 @@ export function subscribeToCalls(
 export function subscribeToCampaigns(
   supabase: SupabaseClientLike,
   orgId: string,
-  onPayload: (payload: RealtimeCampaignPayload) => void,
+  onPayload: (payload: RealtimePayload) => void,
 ): () => void {
   return subscribeToTable(supabase, 'campaigns', orgId, onPayload);
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import * as React from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -40,6 +41,7 @@ const STATUS_CLASSES: Record<StatusTier, string> = {
 export function CreditPill({ balance, className }: CreditPillProps) {
   const { remainingMinutes, reservedMinutes = 0, totalMinutes } = balance;
   const tier = getStatusTier(remainingMinutes);
+  const t = useTranslations('credit');
 
   return (
     <Popover>
@@ -49,7 +51,7 @@ export function CreditPill({ balance, className }: CreditPillProps) {
           size="sm"
           data-testid="credit-pill"
           data-status={tier}
-          aria-label={`Saldo crediti: ${remainingMinutes} minuti rimanenti`}
+          aria-label={t('pill_aria_label', { minutes: remainingMinutes })}
           className={cn(
             'h-8 gap-1.5 rounded-full px-3 text-xs font-medium transition-colors',
             STATUS_CLASSES[tier],
@@ -63,7 +65,7 @@ export function CreditPill({ balance, className }: CreditPillProps) {
 
       <PopoverContent align="end" className="w-64 p-0" data-testid="credit-popover">
         <div className="px-4 py-3">
-          <p className="text-xs font-medium text-muted-foreground">Saldo crediti</p>
+          <p className="text-xs font-medium text-muted-foreground">{t('credit_balance_label')}</p>
           <p className="mt-1 text-2xl font-semibold tabular-nums">{remainingMinutes} min</p>
         </div>
 
@@ -72,18 +74,18 @@ export function CreditPill({ balance, className }: CreditPillProps) {
         <div className="px-4 py-3 space-y-1.5 text-sm">
           {reservedMinutes > 0 && (
             <div className="flex justify-between text-muted-foreground">
-              <span>Riservati (chiamate attive)</span>
+              <span>{t('reserved_active_calls')}</span>
               <span className="tabular-nums">{reservedMinutes} min</span>
             </div>
           )}
           {totalMinutes !== undefined && (
             <div className="flex justify-between text-muted-foreground">
-              <span>Totale acquistati</span>
+              <span>{t('total_purchased')}</span>
               <span className="tabular-nums">{totalMinutes} min</span>
             </div>
           )}
           <div className="flex justify-between font-medium">
-            <span>Disponibili</span>
+            <span>{t('available')}</span>
             <span
               data-testid="credit-available"
               className={cn('tabular-nums', {
@@ -101,7 +103,7 @@ export function CreditPill({ balance, className }: CreditPillProps) {
 
         <div className="p-3">
           <Button asChild size="sm" className="w-full">
-            <Link href="/credit/topup">Ricarica</Link>
+            <Link href="/credit/topup">{t('top_up')}</Link>
           </Button>
         </div>
       </PopoverContent>
