@@ -199,14 +199,14 @@ export async function withOrgContext<T>(
 
 ### Task 17: Seed — credit packages
 
-- [ ] Create `src/lib/db/seed/credit_packages.ts` with the five packages per spec §11 and business plan §6.1:
+- [x] Create `src/lib/db/seed/credit_packages.ts` with the five packages per spec §11 and business plan §6.1:
   - `test`: €99, 200 minutes, slug `test`
   - `starter`: €299, 700 minutes
   - `growth`: €799, 2000 minutes
   - `scale`: €1999, 5500 minutes
   - `enterprise`: marked `active = false` (custom only)
-- [ ] Leave `stripe_price_id` empty initially (populated by plan 05 after Stripe products are created)
-- [ ] Mark completed
+- [x] Leave `stripe_price_id` empty initially (populated by plan 05 after Stripe products are created)
+- [x] Mark completed
 
 ### Task 18: Seed runner
 
