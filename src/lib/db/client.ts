@@ -5,6 +5,6 @@ import { env } from '@/lib/env';
 
 import * as schema from './schema';
 
-const queryClient = postgres(env.DATABASE_URL, { prepare: false, max: 1 });
+const queryClient = postgres(env.DATABASE_URL, { prepare: false });
 export const db = drizzle(queryClient, { schema });
 export type DB = typeof db;
