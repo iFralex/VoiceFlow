@@ -171,9 +171,9 @@ export type DB = typeof db;
 
 ### Task 11: Vercel project setup
 
-- [ ] Create Vercel project linked to the GitHub repo
-- [ ] Configure production branch as `main`; enable Preview Deployments for all PRs
-- [ ] Add `vercel.json` with build command, output directory, and the cron jobs needed for §6.3 (paths only; handlers come later):
+- [x] Create Vercel project linked to the GitHub repo
+- [x] Configure production branch as `main`; enable Preview Deployments for all PRs
+- [x] Add `vercel.json` with build command, output directory, and the cron jobs needed for §6.3 (paths only; handlers come later):
 
 ```json
 {
@@ -186,9 +186,9 @@ export type DB = typeof db;
 }
 ```
 
-- [ ] In Vercel UI add the placeholder env vars defined in `.env.example` (production), with values to be filled later by founder
-- [ ] Verify the first deploy succeeds and the placeholder page is live at the Vercel-assigned URL
-- [ ] Mark completed
+- [x] In Vercel UI add the placeholder env vars defined in `.env.example` (production), with values to be filled later by founder
+- [x] Verify the first deploy succeeds and the placeholder page is live at the Vercel-assigned URL
+- [x] Mark completed
 
 ### Task 12: Documentation skeleton
 
