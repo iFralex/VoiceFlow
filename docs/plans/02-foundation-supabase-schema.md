@@ -71,12 +71,12 @@ The data model has four invariants (tenancy, money-as-cents, time-as-UTC-timesta
 
 ### Task 6: Drizzle schema — billing
 
-- [ ] Create `src/lib/db/schema/credit_packages.ts` (system-owned) with `id`, `slug` UNIQUE, `display_name`, `price_cents`, `included_minutes`, `stripe_price_id`, `active` boolean
-- [ ] Create `src/lib/db/schema/credit_ledger.ts` with `id`, `org_id`, `entry_type` enum (`topup|reservation|release|charge|refund|adjustment`), `delta_cents` int, `balance_after_cents` int, `reference_type`, `reference_id`, `description`, `created_at`
-- [ ] Add unique index on `credit_ledger(org_id, reference_type, reference_id, entry_type)` enforcing idempotency per spec §11.1
-- [ ] Add index `credit_ledger(org_id, created_at DESC)` for fast balance queries
-- [ ] Create `src/lib/db/schema/payments.ts` with `id`, `org_id`, `package_id`, `stripe_session_id` UNIQUE, `stripe_payment_intent_id`, `amount_cents`, `currency` default `eur`, `status` enum (`pending|succeeded|failed|refunded`), `invoice_url`, `created_at`, `completed_at`
-- [ ] Mark completed
+- [x] Create `src/lib/db/schema/credit_packages.ts` (system-owned) with `id`, `slug` UNIQUE, `display_name`, `price_cents`, `included_minutes`, `stripe_price_id`, `active` boolean
+- [x] Create `src/lib/db/schema/credit_ledger.ts` with `id`, `org_id`, `entry_type` enum (`topup|reservation|release|charge|refund|adjustment`), `delta_cents` int, `balance_after_cents` int, `reference_type`, `reference_id`, `description`, `created_at`
+- [x] Add unique index on `credit_ledger(org_id, reference_type, reference_id, entry_type)` enforcing idempotency per spec §11.1
+- [x] Add index `credit_ledger(org_id, created_at DESC)` for fast balance queries
+- [x] Create `src/lib/db/schema/payments.ts` with `id`, `org_id`, `package_id`, `stripe_session_id` UNIQUE, `stripe_payment_intent_id`, `amount_cents`, `currency` default `eur`, `status` enum (`pending|succeeded|failed|refunded`), `invoice_url`, `created_at`, `completed_at`
+- [x] Mark completed
 
 ### Task 7: Drizzle schema — compliance
 

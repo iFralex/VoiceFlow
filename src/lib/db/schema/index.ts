@@ -8,3 +8,6 @@ export * from './contacts';
 export * from './campaigns';
 export * from './calls';
 export * from './appointments';
+export * from './credit_packages';
+export * from './credit_ledger';
+export * from './payments';
