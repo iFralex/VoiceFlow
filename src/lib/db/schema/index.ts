@@ -18,3 +18,4 @@ export * from './webhook_events';
 export * from './phone_numbers';
 export * from './webhooks_outgoing';
 export * from './webhook_deliveries';
+export * from './personal_access_tokens';

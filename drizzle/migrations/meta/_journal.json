@@ -85,6 +85,13 @@
       "when": 1777800275495,
       "tag": "0011_memberships_self_visibility",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1777800275496,
+      "tag": "0012_personal_access_tokens",
+      "breakpoints": true
     }
   ]
 }

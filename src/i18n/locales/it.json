@@ -238,6 +238,28 @@
     "vat_invalid": "Partita IVA non valida (deve essere 11 cifre con checksum valido)",
     "dpa_required": "Devi accettare l'Accordo sul Trattamento dei Dati"
   },
+  "integrations": {
+    "pat_title": "Token di Accesso Personale",
+    "pat_description": "Token per accesso programmatico all'API. Ogni token concede l'accesso a nome del tuo account all'interno di questa organizzazione.",
+    "create_token": "Crea token",
+    "create_token_dialog_title": "Crea Token di Accesso Personale",
+    "token_name_label": "Nome del token",
+    "token_name_placeholder": "es. Integrazione Zapier",
+    "create_token_submit": "Crea",
+    "create_token_submitting": "Creazione in corso…",
+    "token_created_title": "Token creato",
+    "token_created_description": "Copia il token ora. Non potrai vederlo di nuovo.",
+    "copy_token": "Copia token",
+    "revoke": "Revoca",
+    "column_name": "Nome",
+    "column_prefix": "Prefisso",
+    "column_scopes": "Ambiti",
+    "column_last_used": "Ultimo utilizzo",
+    "column_created": "Creato",
+    "column_actions": "Azioni",
+    "no_tokens": "Nessun token di accesso personale",
+    "never_used": "Mai"
+  },
   "errors": {
     "title": "Errore",
     "message": "Si è verificato un errore imprevisto.",

@@ -238,6 +238,28 @@
     "vat_invalid": "Invalid VAT number (must be 11 digits with valid checksum)",
     "dpa_required": "You must accept the Data Processing Agreement"
   },
+  "integrations": {
+    "pat_title": "Personal Access Tokens",
+    "pat_description": "Tokens for programmatic API access. Each token grants access on behalf of your account within this organization.",
+    "create_token": "Create token",
+    "create_token_dialog_title": "Create Personal Access Token",
+    "token_name_label": "Token name",
+    "token_name_placeholder": "e.g. Zapier integration",
+    "create_token_submit": "Create",
+    "create_token_submitting": "Creating…",
+    "token_created_title": "Token created",
+    "token_created_description": "Copy your token now. You will not be able to see it again.",
+    "copy_token": "Copy token",
+    "revoke": "Revoke",
+    "column_name": "Name",
+    "column_prefix": "Prefix",
+    "column_scopes": "Scopes",
+    "column_last_used": "Last used",
+    "column_created": "Created",
+    "column_actions": "Actions",
+    "no_tokens": "No personal access tokens yet",
+    "never_used": "Never"
+  },
   "errors": {
     "title": "Error",
     "message": "An unexpected error has occurred.",

@@ -190,12 +190,12 @@ export async function requireCapability(capability: Capability): Promise<void>;
 
 ### Task 13: Personal Access Tokens (programmatic access scaffolding)
 
-- [ ] Add migration `0006_personal_access_tokens.sql` creating `personal_access_tokens`: `id`, `user_id`, `org_id`, `name`, `token_hash` (sha256), `prefix` (first 8 chars for display), `scopes` text array, `last_used_at`, `expires_at`, `revoked_at`, `created_at`
-- [ ] Drizzle schema entry; add to barrel
-- [ ] Service `src/lib/services/pat.ts` with `createPat`, `revokePat`, `listPats`, `verifyPat(rawToken)` (returns the bound user/org/scopes or null)
-- [ ] Settings UI page `/settings/integrations` listing existing PATs with name, prefix, last used, scopes, "Revoca" button; "Crea token" dialog returns the raw token once with copy-to-clipboard
-- [ ] Extend middleware to accept `Authorization: Bearer <pat>` for `/api/*` routes (in addition to session cookies); attach `userId` and `orgId` from the PAT, deny if scopes do not match
-- [ ] Mark completed
+- [x] Add migration `0006_personal_access_tokens.sql` creating `personal_access_tokens`: `id`, `user_id`, `org_id`, `name`, `token_hash` (sha256), `prefix` (first 8 chars for display), `scopes` text array, `last_used_at`, `expires_at`, `revoked_at`, `created_at`
+- [x] Drizzle schema entry; add to barrel
+- [x] Service `src/lib/services/pat.ts` with `createPat`, `revokePat`, `listPats`, `verifyPat(rawToken)` (returns the bound user/org/scopes or null)
+- [x] Settings UI page `/settings/integrations` listing existing PATs with name, prefix, last used, scopes, "Revoca" button; "Crea token" dialog returns the raw token once with copy-to-clipboard
+- [x] Extend middleware to accept `Authorization: Bearer <pat>` for `/api/*` routes (in addition to session cookies); attach `userId` and `orgId` from the PAT, deny if scopes do not match
+- [x] Mark completed
 
 ### Task 14: Suspicious-login email alert (foundation)
 

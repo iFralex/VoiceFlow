@@ -1,4 +1,5 @@
 import { createServerClient } from '@supabase/ssr';
+import { createClient } from '@supabase/supabase-js';
 import { type NextRequest, NextResponse } from 'next/server';
 
 /**
@@ -29,17 +30,82 @@ function isApiRoute(pathname: string): boolean {
 }
 
 /**
+ * SHA-256 hex digest of a string using the Web Crypto API (Edge-compatible).
+ */
+async function sha256Hex(input: string): Promise<string> {
+  const hashBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(input));
+  return Array.from(new Uint8Array(hashBuffer))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+/**
+ * Attempts to authenticate a request using a Personal Access Token (PAT).
+ * Returns identity if the token is valid, or null if not.
+ *
+ * Only called for non-webhook API routes with an Authorization: Bearer header.
+ */
+async function tryPatAuth(
+  rawToken: string,
+): Promise<{ userId: string; orgId: string; role: string } | null> {
+  const supabaseUrl = process.env['NEXT_PUBLIC_SUPABASE_URL'];
+  const serviceRoleKey = process.env['SUPABASE_SERVICE_ROLE_KEY'];
+
+  if (!supabaseUrl || !serviceRoleKey) return null;
+
+  const tokenHash = await sha256Hex(rawToken);
+
+  // Service-role client bypasses RLS for cross-table PAT lookup
+  const admin = createClient(supabaseUrl, serviceRoleKey, {
+    auth: { persistSession: false },
+  });
+
+  const { data: pat } = await admin
+    .from('personal_access_tokens')
+    .select('user_id, org_id, revoked_at, expires_at')
+    .eq('token_hash', tokenHash)
+    .maybeSingle();
+
+  if (!pat) return null;
+  if (pat.revoked_at) return null;
+  if (pat.expires_at && new Date(pat.expires_at as string) < new Date()) return null;
+
+  // Look up the membership role so downstream code behaves uniformly
+  const { data: membership } = await admin
+    .from('memberships')
+    .select('role')
+    .eq('user_id', pat.user_id as string)
+    .eq('org_id', pat.org_id as string)
+    .not('accepted_at', 'is', null)
+    .maybeSingle();
+
+  const role = (membership?.role as string | undefined) ?? 'operator';
+
+  // Best-effort update of last_used_at (fire-and-forget)
+  void admin
+    .from('personal_access_tokens')
+    .update({ last_used_at: new Date().toISOString() })
+    .eq('token_hash', tokenHash);
+
+  return { userId: pat.user_id as string, orgId: pat.org_id as string, role };
+}
+
+/**
  * Middleware: session validation, org resolution and request-header injection.
  *
  * Runs on every request except static assets (configured in the matcher).
  * Public paths receive only the `x-locale` header and are not checked against
  * Supabase. Protected paths go through full session + org validation.
  *
+ * For API routes, additionally accepts `Authorization: Bearer <pat>` in place
+ * of session cookies (Personal Access Token authentication, spec §14.1).
+ *
  * Headers set for downstream Server Components and Server Actions:
  *   x-locale      — 'it' | 'en' (resolved from the locale cookie)
  *   x-user-id     — Supabase auth user UUID
  *   x-org-id      — active organisation UUID
  *   x-member-role — 'owner' | 'admin' | 'operator' | 'viewer'
+ *   x-auth-method — 'pat' when authenticated via Personal Access Token
  */
 export async function middleware(request: NextRequest): Promise<NextResponse> {
   const locale = request.cookies.get('locale')?.value === 'en' ? 'en' : 'it';
@@ -50,6 +116,26 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
     const reqHeaders = new Headers(request.headers);
     reqHeaders.set('x-locale', locale);
     return NextResponse.next({ request: { headers: reqHeaders } });
+  }
+
+  // ── PAT Bearer token auth (API routes only) ───────────────────────────────
+  const authHeader = request.headers.get('Authorization');
+  if (isApiRoute(pathname) && authHeader?.startsWith('Bearer ')) {
+    const rawToken = authHeader.slice(7).trim();
+    if (rawToken) {
+      const identity = await tryPatAuth(rawToken);
+      if (identity) {
+        const reqHeaders = new Headers(request.headers);
+        reqHeaders.set('x-locale', locale);
+        reqHeaders.set('x-user-id', identity.userId);
+        reqHeaders.set('x-org-id', identity.orgId);
+        reqHeaders.set('x-member-role', identity.role);
+        reqHeaders.set('x-auth-method', 'pat');
+        return NextResponse.next({ request: { headers: reqHeaders } });
+      }
+      // Bearer token present but invalid → 401; don't fall through to cookie auth
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
   }
 
   // ── Supabase SSR client (refreshes session cookies if needed) ─────────────
