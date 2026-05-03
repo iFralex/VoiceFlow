@@ -237,11 +237,11 @@ export async function withOrgContext<T>(
 
 ### Task 22: Definition of Done
 
-- [ ] All 16 tables present and inspected in Supabase Studio
-- [ ] All RLS policies active; verified via psql session swapping `app.current_org_id`
-- [ ] Seed produces 5 script templates and 5 credit packages
-- [ ] Drizzle migrations committed in `drizzle/migrations/`
-- [ ] Type inference works for every table
-- [ ] Audit log immutability verified by failing UPDATE test
-- [ ] Storage RLS verified for cross-org isolation
-- [ ] Mark completed
+- [x] All 16 tables present and inspected in Supabase Studio
+- [x] All RLS policies active; verified via psql session swapping `app.current_org_id`
+- [x] Seed produces 5 script templates and 5 credit packages
+- [x] Drizzle migrations committed in `drizzle/migrations/`
+- [x] Type inference works for every table
+- [x] Audit log immutability verified by failing UPDATE test
+- [x] Storage RLS verified for cross-org isolation
+- [x] Mark completed
