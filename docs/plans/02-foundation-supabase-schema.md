@@ -55,11 +55,11 @@ The data model has four invariants (tenancy, money-as-cents, time-as-UTC-timesta
 
 ### Task 4: Drizzle schema — contacts and lists
 
-- [ ] Create `src/lib/db/schema/contact_lists.ts` with `id`, `org_id`, `name`, `source` enum (`csv-upload|zapier|api`), `source_file_path`, `total_count`, `valid_count`, `created_at`
-- [ ] Create `src/lib/db/schema/contacts.ts` with all columns from spec §7.2: `id`, `org_id`, `contact_list_id`, `phone_e164`, `first_name`, `last_name`, `email`, `consent_basis` enum (`consent|legitimate_interest|existing_customer`), `consent_evidence`, `contact_type` enum (`b2c|b2b`) default `b2c`, `rpo_status` enum (`clear|blocked|unchecked`), `rpo_checked_at`, `opt_out` boolean default false, `opt_out_reason`, `metadata` jsonb, `created_at`, `deleted_at` (soft delete)
-- [ ] Add composite unique `(org_id, phone_e164)` partial index `WHERE deleted_at IS NULL`
-- [ ] Add indexes: `contacts(contact_list_id)`, `contacts(org_id, opt_out, rpo_status)`
-- [ ] Mark completed
+- [x] Create `src/lib/db/schema/contact_lists.ts` with `id`, `org_id`, `name`, `source` enum (`csv-upload|zapier|api`), `source_file_path`, `total_count`, `valid_count`, `created_at`
+- [x] Create `src/lib/db/schema/contacts.ts` with all columns from spec §7.2: `id`, `org_id`, `contact_list_id`, `phone_e164`, `first_name`, `last_name`, `email`, `consent_basis` enum (`consent|legitimate_interest|existing_customer`), `consent_evidence`, `contact_type` enum (`b2c|b2b`) default `b2c`, `rpo_status` enum (`clear|blocked|unchecked`), `rpo_checked_at`, `opt_out` boolean default false, `opt_out_reason`, `metadata` jsonb, `created_at`, `deleted_at` (soft delete)
+- [x] Add composite unique `(org_id, phone_e164)` partial index `WHERE deleted_at IS NULL`
+- [x] Add indexes: `contacts(contact_list_id)`, `contacts(org_id, opt_out, rpo_status)`
+- [x] Mark completed
 
 ### Task 5: Drizzle schema — campaigns and calls
 
