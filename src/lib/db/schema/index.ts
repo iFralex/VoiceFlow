@@ -15,3 +15,4 @@ export * from './opt_out_registry';
 export * from './rpo_snapshots';
 export * from './audit_log';
 export * from './webhook_events';
+export * from './phone_numbers';

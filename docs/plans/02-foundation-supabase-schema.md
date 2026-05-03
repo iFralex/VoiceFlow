@@ -90,9 +90,9 @@ The data model has four invariants (tenancy, money-as-cents, time-as-UTC-timesta
 
 ### Task 8: Drizzle schema — telephony pool
 
-- [ ] Create `src/lib/db/schema/phone_numbers.ts` per spec §9.2 with `id`, `e164` UNIQUE, `org_id` nullable (null = shared pool), `provider` enum (`voiped|twilio|telnyx`), `status` enum (`active|cooling_down|retired`), `last_used_at`, `daily_call_count` int default 0, `spam_score` numeric default 0, `created_at`
-- [ ] Add partial index `phone_numbers(org_id, status) WHERE status = 'active'` for fast pool selection
-- [ ] Mark completed
+- [x] Create `src/lib/db/schema/phone_numbers.ts` per spec §9.2 with `id`, `e164` UNIQUE, `org_id` nullable (null = shared pool), `provider` enum (`voiped|twilio|telnyx`), `status` enum (`active|cooling_down|retired`), `last_used_at`, `daily_call_count` int default 0, `spam_score` numeric default 0, `created_at`
+- [x] Add partial index `phone_numbers(org_id, status) WHERE status = 'active'` for fast pool selection
+- [x] Mark completed
 
 ### Task 9: Drizzle schema — outbound webhooks subscriptions
 
