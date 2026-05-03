@@ -138,10 +138,10 @@ export const env = Env.parse(process.env);
 
 ### Task 9: Drizzle ORM tooling (schema files arrive in plan 02)
 
-- [ ] Install `drizzle-orm`, `drizzle-kit`, `postgres` (postgres-js driver)
-- [ ] Create `drizzle.config.ts` pointing to `src/lib/db/schema/*.ts` and `drizzle/migrations`
-- [ ] Create empty `src/lib/db/schema/index.ts` (will be populated by plan 02)
-- [ ] Create `src/lib/db/client.ts` exporting a Drizzle client factory bound to `DATABASE_URL`:
+- [x] Install `drizzle-orm`, `drizzle-kit`, `postgres` (postgres-js driver)
+- [x] Create `drizzle.config.ts` pointing to `src/lib/db/schema/*.ts` and `drizzle/migrations`
+- [x] Create empty `src/lib/db/schema/index.ts` (will be populated by plan 02)
+- [x] Create `src/lib/db/client.ts` exporting a Drizzle client factory bound to `DATABASE_URL`:
 
 ```typescript
 import { drizzle } from 'drizzle-orm/postgres-js';
@@ -153,8 +153,8 @@ export const db = drizzle(queryClient, { schema });
 export type DB = typeof db;
 ```
 
-- [ ] Add scripts `db:generate` (drizzle-kit generate), `db:migrate` (custom migrate runner), `db:push` (drizzle-kit push for dev), `db:studio` (drizzle-kit studio)
-- [ ] Mark completed
+- [x] Add scripts `db:generate` (drizzle-kit generate), `db:migrate` (custom migrate runner), `db:push` (drizzle-kit push for dev), `db:studio` (drizzle-kit studio)
+- [x] Mark completed
 
 ### Task 10: GitHub Actions CI pipeline
 
