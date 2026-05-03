@@ -224,10 +224,10 @@ export async function withOrgContext<T>(
 
 ### Task 20: Storage bucket policies
 
-- [ ] In Supabase Dashboard, configure Storage RLS policies for the four private buckets so that path prefix `<org_id>/...` is enforced via `(storage.foldername(name))[1] = current_setting('app.current_org_id', true)`
-- [ ] Document the policy SQL in `drizzle/migrations/0004_storage_policies.sql` (commit even if applied via dashboard, for reproducibility)
-- [ ] Verify with a manual upload that cross-org access is blocked
-- [ ] Mark completed
+- [x] In Supabase Dashboard, configure Storage RLS policies for the four private buckets so that path prefix `<org_id>/...` is enforced via `(storage.foldername(name))[1] = current_setting('app.current_org_id', true)`
+- [x] Document the policy SQL in `drizzle/migrations/0004_storage_policies.sql` (commit even if applied via dashboard, for reproducibility)
+- [x] Verify with a manual upload that cross-org access is blocked
+- [x] Mark completed
 
 ### Task 21: Supabase Realtime channels
 
