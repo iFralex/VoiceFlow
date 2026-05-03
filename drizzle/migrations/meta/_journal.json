@@ -92,6 +92,13 @@
       "when": 1777800275496,
       "tag": "0012_personal_access_tokens",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1777800275497,
+      "tag": "0013_auth_signins",
+      "breakpoints": true
     }
   ]
 }

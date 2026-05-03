@@ -199,11 +199,11 @@ export async function requireCapability(capability: Capability): Promise<void>;
 
 ### Task 14: Suspicious-login email alert (foundation)
 
-- [ ] Listen to Supabase `auth` events via webhook (configured at the dashboard level) sending to `/api/webhooks/supabase-auth`
-- [ ] Verify signature, dedupe via `webhook_events`
-- [ ] On `signin` event from a new IP/user-agent combination (compared against last 30 days), enqueue an email alert (template stub; full email in plan 13)
-- [ ] Record the IP/UA fingerprint in a new `auth_signins` table (id, user_id, ip, user_agent, signed_in_at)
-- [ ] Mark completed
+- [x] Listen to Supabase `auth` events via webhook (configured at the dashboard level) sending to `/api/webhooks/supabase-auth`
+- [x] Verify signature, dedupe via `webhook_events`
+- [x] On `signin` event from a new IP/user-agent combination (compared against last 30 days), enqueue an email alert (template stub; full email in plan 13)
+- [x] Record the IP/UA fingerprint in a new `auth_signins` table (id, user_id, ip, user_agent, signed_in_at)
+- [x] Mark completed
 
 ### Task 15: RLS context wiring in Server Components
 

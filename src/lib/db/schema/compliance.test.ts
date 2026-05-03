@@ -105,7 +105,7 @@ describe('webhook_events schema', () => {
   });
 
   it('webhookProviderEnum has correct values', () => {
-    expect(webhookProviderEnum.enumValues).toEqual(['stripe', 'vapi', 'retell', 'twilio']);
+    expect(webhookProviderEnum.enumValues).toEqual(['stripe', 'vapi', 'retell', 'twilio', 'supabase_auth']);
   });
 
   it('processed_at is nullable', () => {

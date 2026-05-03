@@ -7,6 +7,7 @@ export const webhookProviderEnum = pgEnum('webhook_provider', [
   'vapi',
   'retell',
   'twilio',
+  'supabase_auth',
 ]);
 
 export const webhookEvents = pgTable(
