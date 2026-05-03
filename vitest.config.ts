@@ -28,6 +28,7 @@ export default defineConfig({
     },
     projects: [
       {
+        resolve: { alias },
         test: {
           name: 'unit',
           environment: 'jsdom',

@@ -64,17 +64,17 @@ The product is a B2B operational tool for Italian car dealerships, not a consume
 
 ### Task 3: shadcn/ui setup
 
-- [ ] Run `pnpm dlx shadcn@latest init` choosing CSS variables and the `new-york` style
-- [ ] Install the primitives that will be used across the product:
+- [x] Run `pnpm dlx shadcn@latest init` choosing CSS variables and the `new-york` style
+- [x] Install the primitives that will be used across the product:
   - button, input, label, textarea, select, checkbox, radio-group, switch
   - card, dialog, drawer, sheet, popover, tooltip
   - dropdown-menu, command, navigation-menu
   - alert, alert-dialog, toast (sonner), badge, separator
   - table, tabs, accordion, scroll-area, skeleton
   - form (React Hook Form integration), avatar, calendar (date picker)
-- [ ] Configure `components.json` with import alias `@/components/ui`
-- [ ] Verify each primitive renders in a test page at `app/(marketing)/_kitchen-sink/page.tsx` (gated by env, not in production nav)
-- [ ] Mark completed
+- [x] Configure `components.json` with import alias `@/components/ui`
+- [x] Verify each primitive renders in a test page at `app/(marketing)/_kitchen-sink/page.tsx` (gated by env, not in production nav)
+- [x] Mark completed
 
 ### Task 4: Iconography
 
