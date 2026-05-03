@@ -231,9 +231,9 @@ export async function withOrgContext<T>(
 
 ### Task 21: Supabase Realtime channels
 
-- [ ] Enable Realtime publication for tables `calls` and `campaigns` (the dashboard live view in plan 12 will subscribe to row changes)
-- [ ] Document subscription pattern in `src/lib/supabase/realtime.ts` stub
-- [ ] Mark completed
+- [x] Enable Realtime publication for tables `calls` and `campaigns` (the dashboard live view in plan 12 will subscribe to row changes)
+- [x] Document subscription pattern in `src/lib/supabase/realtime.ts` stub
+- [x] Mark completed
 
 ### Task 22: Definition of Done
 
