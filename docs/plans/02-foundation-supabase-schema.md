@@ -217,10 +217,10 @@ export async function withOrgContext<T>(
 
 ### Task 19: Test harness — transactional Postgres
 
-- [ ] Create `src/test/db.ts` exposing `withTestDb(fn)` that runs `fn` inside a transaction and rolls back at the end. Used for integration tests that touch the database without polluting state.
-- [ ] Configure Vitest integration project to spin up a dedicated test database (`vox_auto_test`) using a docker-compose stub; document docker-compose.yml in `infra/test/docker-compose.yml`
-- [ ] Add a sample integration test in `src/lib/db/contacts.integration.test.ts` that inserts a contact, queries it back, and asserts the org_id RLS works
-- [ ] Mark completed
+- [x] Create `src/test/db.ts` exposing `withTestDb(fn)` that runs `fn` inside a transaction and rolls back at the end. Used for integration tests that touch the database without polluting state.
+- [x] Configure Vitest integration project to spin up a dedicated test database (`vox_auto_test`) using a docker-compose stub; document docker-compose.yml in `infra/test/docker-compose.yml`
+- [x] Add a sample integration test in `src/lib/db/contacts.integration.test.ts` that inserts a contact, queries it back, and asserts the org_id RLS works
+- [x] Mark completed
 
 ### Task 20: Storage bucket policies
 
