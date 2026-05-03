@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { creditPackages } from './credit_packages';
 import { creditEntryTypeEnum, creditLedger } from './credit_ledger';
+import { creditPackages } from './credit_packages';
 import { paymentStatusEnum, payments } from './payments';
+
+// Helper for accessing Drizzle column config properties in schema tests
+type Col = Record<string, unknown>;
+type Tbl = Record<string, Col>;
 
 describe('credit_packages schema', () => {
   it('has expected columns', () => {
@@ -17,12 +21,12 @@ describe('credit_packages schema', () => {
   });
 
   it('active defaults to true', () => {
-    const col = (creditPackages as any).active;
+    const col = (creditPackages as Tbl).active;
     expect(col.default).toBe(true);
   });
 
   it('stripe_price_id is nullable', () => {
-    const col = (creditPackages as any).stripe_price_id;
+    const col = (creditPackages as Tbl).stripe_price_id;
     expect(col.notNull).toBeFalsy();
   });
 });
@@ -54,13 +58,13 @@ describe('credit_ledger schema', () => {
 
   it('nullable optional fields', () => {
     for (const field of ['reference_type', 'reference_id', 'description']) {
-      const col = (creditLedger as any)[field];
+      const col = (creditLedger as Tbl)[field];
       expect(col.notNull, `${field} should be nullable`).toBeFalsy();
     }
   });
 
   it('balance_after_cents is not null', () => {
-    const col = (creditLedger as any).balance_after_cents;
+    const col = (creditLedger as Tbl).balance_after_cents;
     expect(col.notNull).toBeTruthy();
   });
 });
@@ -82,12 +86,12 @@ describe('payments schema', () => {
   });
 
   it('currency defaults to eur', () => {
-    const col = (payments as any).currency;
+    const col = (payments as Tbl).currency;
     expect(col.default).toBe('eur');
   });
 
   it('status defaults to pending', () => {
-    const col = (payments as any).status;
+    const col = (payments as Tbl).status;
     expect(col.default).toBe('pending');
   });
 
@@ -102,7 +106,7 @@ describe('payments schema', () => {
 
   it('nullable optional fields', () => {
     for (const field of ['stripe_payment_intent_id', 'invoice_url', 'completed_at']) {
-      const col = (payments as any)[field];
+      const col = (payments as Tbl)[field];
       expect(col.notNull, `${field} should be nullable`).toBeFalsy();
     }
   });

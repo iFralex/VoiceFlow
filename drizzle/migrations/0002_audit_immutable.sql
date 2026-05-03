@@ -1,25 +1,19 @@
 -- Migration: Audit Log Immutability
 -- Spec §7.1 — the audit_log table must be append-only.
 --
--- The `authenticated` and `anon` Supabase roles represent application users
--- running via the PostgREST API gateway. Revoking UPDATE and DELETE from these
--- roles ensures no client-side code (even if exploited) can alter or remove
--- audit entries. INSERT and SELECT remain permitted so the application can
--- record and query audit events.
+-- audit_log is a system-owned, append-only table accessed exclusively through
+-- server-side transaction helpers (withOrgContext / withSystemContext), which
+-- connect as the `postgres` role. The `postgres` role is the table owner and
+-- inherits full access without requiring an explicit GRANT.
 --
--- The `service_role` in Supabase bypasses all GRANT/REVOKE checks (it holds
--- superuser-like privileges). Audit inserts from the service layer therefore
--- continue to work. This is intentional: `recordAudit()` is only called from
--- server-side transaction helpers (never exposed to client code).
-
--- Revoke mutation privileges from the application-facing roles.
-REVOKE UPDATE, DELETE ON TABLE "audit_log" FROM authenticated;
-REVOKE UPDATE, DELETE ON TABLE "audit_log" FROM anon;
-
--- Ensure SELECT and INSERT are explicitly granted (Supabase default grants
--- these to authenticated already, but we make the intent explicit).
-GRANT SELECT, INSERT ON TABLE "audit_log" TO authenticated;
-GRANT SELECT ON TABLE "audit_log" TO anon;
+-- The `authenticated` (PostgREST JWT) and `anon` roles must have NO direct
+-- access to audit_log: without RLS the table is not org-scoped, so any GRANT
+-- would expose every organisation's audit history to any caller. All audit
+-- reads and writes must go through the service layer only.
+--
+-- Revoke all direct access from the PostgREST-facing roles.
+REVOKE ALL ON TABLE "audit_log" FROM authenticated;
+REVOKE ALL ON TABLE "audit_log" FROM anon;
 
 -- ============================================================
 -- Verification query (run manually after applying):

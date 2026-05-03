@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { webhooksOutgoing } from './webhooks_outgoing';
+
 import { webhookDeliveries } from './webhook_deliveries';
+import { webhooksOutgoing } from './webhooks_outgoing';
+
+type Col = Record<string, unknown>;
+type Tbl = Record<string, Col>;
 
 describe('webhooks_outgoing schema', () => {
   it('has all required columns', () => {
@@ -18,37 +22,37 @@ describe('webhooks_outgoing schema', () => {
   });
 
   it('active defaults to true', () => {
-    const col = (webhooksOutgoing as any).active;
+    const col = (webhooksOutgoing as Tbl).active;
     expect(col.default).toBe(true);
   });
 
   it('failure_count defaults to 0', () => {
-    const col = (webhooksOutgoing as any).failure_count;
+    const col = (webhooksOutgoing as Tbl).failure_count;
     expect(col.default).toBe(0);
   });
 
   it('last_delivery_at is nullable', () => {
-    const col = (webhooksOutgoing as any).last_delivery_at;
+    const col = (webhooksOutgoing as Tbl).last_delivery_at;
     expect(col.notNull).toBeFalsy();
   });
 
   it('last_failure_at is nullable', () => {
-    const col = (webhooksOutgoing as any).last_failure_at;
+    const col = (webhooksOutgoing as Tbl).last_failure_at;
     expect(col.notNull).toBeFalsy();
   });
 
   it('org_id is not null', () => {
-    const col = (webhooksOutgoing as any).org_id;
+    const col = (webhooksOutgoing as Tbl).org_id;
     expect(col.notNull).toBeTruthy();
   });
 
   it('url is not null', () => {
-    const col = (webhooksOutgoing as any).url;
+    const col = (webhooksOutgoing as Tbl).url;
     expect(col.notNull).toBeTruthy();
   });
 
   it('secret is not null', () => {
-    const col = (webhooksOutgoing as any).secret;
+    const col = (webhooksOutgoing as Tbl).secret;
     expect(col.notNull).toBeTruthy();
   });
 });
@@ -67,37 +71,37 @@ describe('webhook_deliveries schema', () => {
   });
 
   it('attempt defaults to 1', () => {
-    const col = (webhookDeliveries as any).attempt;
+    const col = (webhookDeliveries as Tbl).attempt;
     expect(col.default).toBe(1);
   });
 
   it('status_code is nullable', () => {
-    const col = (webhookDeliveries as any).status_code;
+    const col = (webhookDeliveries as Tbl).status_code;
     expect(col.notNull).toBeFalsy();
   });
 
   it('delivered_at is nullable', () => {
-    const col = (webhookDeliveries as any).delivered_at;
+    const col = (webhookDeliveries as Tbl).delivered_at;
     expect(col.notNull).toBeFalsy();
   });
 
   it('error is nullable', () => {
-    const col = (webhookDeliveries as any).error;
+    const col = (webhookDeliveries as Tbl).error;
     expect(col.notNull).toBeFalsy();
   });
 
   it('webhook_id is not null', () => {
-    const col = (webhookDeliveries as any).webhook_id;
+    const col = (webhookDeliveries as Tbl).webhook_id;
     expect(col.notNull).toBeTruthy();
   });
 
   it('event_type is not null', () => {
-    const col = (webhookDeliveries as any).event_type;
+    const col = (webhookDeliveries as Tbl).event_type;
     expect(col.notNull).toBeTruthy();
   });
 
   it('payload is not null', () => {
-    const col = (webhookDeliveries as any).payload;
+    const col = (webhookDeliveries as Tbl).payload;
     expect(col.notNull).toBeTruthy();
   });
 });

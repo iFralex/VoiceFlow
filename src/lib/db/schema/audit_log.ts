@@ -1,5 +1,5 @@
-import { bigserial, index, jsonb, pgEnum, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
+import { bigserial, index, jsonb, pgEnum, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 // System-owned table — no RLS. Queried via service role with explicit org filter.
 export const actorTypeEnum = pgEnum('actor_type', ['user', 'system', 'webhook']);

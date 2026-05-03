@@ -19,8 +19,8 @@ vi.mock('./schema', () => ({
   auditLog: { _: { name: 'audit_log' } },
 }));
 
-import { auditLog } from './schema';
 import { recordAudit } from './audit';
+import { auditLog } from './schema';
 
 // Simulates the transactional db client passed to recordAudit.
 // The `update` method throws a Postgres ERROR 42501 (insufficient_privilege)

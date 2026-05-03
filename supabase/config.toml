@@ -1,6 +1,6 @@
 # Supabase local development configuration
 # Mirrors the settings applied to the cloud projects (VoiceFlow-dev, VoiceFlow-staging, VoiceFlow-prod).
-# Run `supabase start` to spin up a local Postgres 15 + Auth + Storage stack.
+# Run `supabase start` to spin up a local Postgres 16 + Auth + Storage stack.
 # See docs/infra/supabase-setup.md for cloud provisioning instructions.
 
 project_id = "voiceflow"
@@ -15,7 +15,7 @@ max_rows = 1000
 [db]
 port = 54322
 shadow_port = 54320
-major_version = 15
+major_version = 16
 
 [studio]
 enabled = true

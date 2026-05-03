@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -7,9 +8,11 @@ import { describe, expect, it } from 'vitest';
 //
 // The Postgres trigger runs:
 //   NEW.balance_after_cents :=
-//     (SELECT COALESCE(MAX(balance_after_cents), 0) FROM credit_ledger
-//      WHERE org_id = NEW.org_id)
-//     + NEW.delta_cents;
+//     COALESCE(
+//       (SELECT balance_after_cents FROM credit_ledger
+//        WHERE org_id = NEW.org_id ORDER BY created_at DESC LIMIT 1),
+//       0
+//     ) + NEW.delta_cents;
 //
 // We replicate this as a JS function so we can unit-test the running-balance
 // logic without a live database.
@@ -46,7 +49,7 @@ describe('credit balance trigger — logic simulation', () => {
     expect(row.balance_after_cents).toBe(10000);
   });
 
-  it('adds delta to the previous maximum balance', () => {
+  it('adds delta to the most recent balance (ORDER BY created_at DESC LIMIT 1)', () => {
     const existing: LedgerRow[] = [
       { org_id: 'org-1', delta_cents: 10000, balance_after_cents: 10000 },
     ];

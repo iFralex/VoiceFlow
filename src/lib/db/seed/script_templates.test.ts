@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { scriptTemplateSeedData } from './script_templates';
 
 const EXPECTED_SLUGS = [

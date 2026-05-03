@@ -1,8 +1,8 @@
-import { integer, pgEnum, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
+import { integer, pgEnum, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
-import { organizations } from './organizations';
 import { creditPackages } from './credit_packages';
+import { organizations } from './organizations';
 
 export const paymentStatusEnum = pgEnum('payment_status', [
   'pending',

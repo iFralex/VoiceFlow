@@ -1,8 +1,8 @@
-import { boolean, index, jsonb, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
+import { boolean, index, jsonb, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 
-import { organizations } from './organizations';
 import { contactLists } from './contact_lists';
+import { organizations } from './organizations';
 
 export const consentBasisEnum = pgEnum('consent_basis', [
   'consent',

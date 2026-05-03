@@ -1,8 +1,8 @@
 import { db } from '../client';
-import { creditPackages } from '../schema/credit_packages';
-import { scriptTemplates } from '../schema/script_templates';
 import { creditPackageSeedData } from './credit_packages';
 import { scriptTemplateSeedData } from './script_templates';
+import { creditPackages } from '../schema/credit_packages';
+import { scriptTemplates } from '../schema/script_templates';
 
 export async function seedScriptTemplates(): Promise<void> {
   await db
@@ -37,13 +37,13 @@ export async function seedCreditPackages(): Promise<void> {
 }
 
 export async function seed(): Promise<void> {
-  console.log('Seeding script templates...');
+  console.warn('Seeding script templates...');
   await seedScriptTemplates();
-  console.log(`  ✓ ${scriptTemplateSeedData.length} script templates upserted`);
+  console.warn(`  ✓ ${scriptTemplateSeedData.length} script templates upserted`);
 
-  console.log('Seeding credit packages...');
+  console.warn('Seeding credit packages...');
   await seedCreditPackages();
-  console.log(`  ✓ ${creditPackageSeedData.length} credit packages upserted`);
+  console.warn(`  ✓ ${creditPackageSeedData.length} credit packages upserted`);
 
-  console.log('Seed complete.');
+  console.warn('Seed complete.');
 }

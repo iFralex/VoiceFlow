@@ -1,5 +1,5 @@
-import { index, pgEnum, pgTable, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
+import { index, pgEnum, pgTable, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
 
 import { organizations } from './organizations';
 import { users } from './users';

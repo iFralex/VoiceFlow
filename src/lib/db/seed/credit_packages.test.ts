@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { creditPackageSeedData } from './credit_packages';
 
 const EXPECTED_SLUGS = ['test', 'starter', 'growth', 'scale', 'enterprise'];

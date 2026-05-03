@@ -5,7 +5,7 @@ import * as schema from '@/lib/db/schema';
 
 const TEST_DATABASE_URL =
   process.env['TEST_DATABASE_URL'] ??
-  'postgresql://postgres:postgres@localhost:5432/vox_auto_test';
+  'postgresql://postgres:postgres@localhost:5433/vox_auto_test';
 
 type TestDbInstance = ReturnType<typeof drizzle<typeof schema>>;
 export type DbTx = Parameters<Parameters<TestDbInstance['transaction']>[0]>[0];

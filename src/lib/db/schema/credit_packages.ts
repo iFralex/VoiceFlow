@@ -1,5 +1,5 @@
-import { boolean, integer, pgTable, text, uuid } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
+import { boolean, integer, pgTable, text, uuid } from 'drizzle-orm/pg-core';
 
 export const creditPackages = pgTable('credit_packages', {
   id: uuid('id')

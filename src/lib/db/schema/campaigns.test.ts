@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { campaignStatusEnum, campaigns } from './campaigns';
-import { callOutcomeEnum, callProviderEnum, callStatusEnum, calls } from './calls';
 import { appointmentStatusEnum, appointments } from './appointments';
+import { callOutcomeEnum, callProviderEnum, callStatusEnum, calls } from './calls';
+import { campaignStatusEnum, campaigns } from './campaigns';
+
+type Col = Record<string, unknown>;
+type Tbl = Record<string, Col>;
 
 describe('campaigns schema', () => {
   it('has expected columns', () => {
@@ -23,22 +26,22 @@ describe('campaigns schema', () => {
   });
 
   it('status defaults to draft', () => {
-    const col = (campaigns as any).status;
+    const col = (campaigns as Tbl).status;
     expect(col.default).toBe('draft');
   });
 
   it('concurrency_limit defaults to 5', () => {
-    const col = (campaigns as any).concurrency_limit;
+    const col = (campaigns as Tbl).concurrency_limit;
     expect(col.default).toBe(5);
   });
 
   it('actual_cents defaults to 0', () => {
-    const col = (campaigns as any).actual_cents;
+    const col = (campaigns as Tbl).actual_cents;
     expect(col.default).toBe(0);
   });
 
   it('estimated_max_cents is nullable', () => {
-    const col = (campaigns as any).estimated_max_cents;
+    const col = (campaigns as Tbl).estimated_max_cents;
     expect(col.notNull).toBeFalsy();
   });
 
@@ -76,12 +79,12 @@ describe('calls schema', () => {
   });
 
   it('status defaults to pending', () => {
-    const col = (calls as any).status;
+    const col = (calls as Tbl).status;
     expect(col.default).toBe('pending');
   });
 
   it('transferred_to_agent defaults to false', () => {
-    const col = (calls as any).transferred_to_agent;
+    const col = (calls as Tbl).transferred_to_agent;
     expect(col.default).toBe(false);
   });
 
@@ -99,7 +102,7 @@ describe('calls schema', () => {
       'ended_at',
     ];
     for (const field of nullableFields) {
-      const col = (calls as any)[field];
+      const col = (calls as Tbl)[field];
       expect(col.notNull, `${field} should be nullable`).toBeFalsy();
     }
   });
@@ -148,12 +151,12 @@ describe('appointments schema', () => {
   });
 
   it('notes is nullable', () => {
-    const col = (appointments as any).notes;
+    const col = (appointments as Tbl).notes;
     expect(col.notNull).toBeFalsy();
   });
 
   it('status defaults to booked', () => {
-    const col = (appointments as any).status;
+    const col = (appointments as Tbl).status;
     expect(col.default).toBe('booked');
   });
 

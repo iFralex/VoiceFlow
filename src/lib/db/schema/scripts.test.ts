@@ -3,6 +3,9 @@ import { describe, expect, it } from 'vitest';
 import { scriptTemplates } from './script_templates';
 import { scripts } from './scripts';
 
+type Col = Record<string, unknown>;
+type Tbl = Record<string, Col>;
+
 describe('script_templates schema', () => {
   it('has expected columns', () => {
     const cols = Object.keys(scriptTemplates);
@@ -19,12 +22,12 @@ describe('script_templates schema', () => {
   });
 
   it('defaults default_language to it-IT', () => {
-    const col = (scriptTemplates as any).default_language;
+    const col = (scriptTemplates as Tbl).default_language;
     expect(col.default).toBe('it-IT');
   });
 
   it('defaults version to 1', () => {
-    const col = (scriptTemplates as any).version;
+    const col = (scriptTemplates as Tbl).version;
     expect(col.default).toBe(1);
   });
 });
@@ -43,7 +46,7 @@ describe('scripts schema', () => {
   });
 
   it('voice_id is nullable (override column)', () => {
-    const col = (scripts as any).voice_id;
+    const col = (scripts as Tbl).voice_id;
     expect(col.notNull).toBeFalsy();
   });
 });

@@ -117,7 +117,7 @@ export type NewOrganization = typeof organizations.$inferInsert;
 ### Task 11: Generate first migration
 
 - [x] Run `pnpm db:generate` to produce `drizzle/migrations/0000_init.sql`
-- [x] Inspect generated SQL: confirm all 16 tables, all enums, all indexes are present
+- [x] Inspect generated SQL: confirm all 20 tables, all enums, all indexes are present
 - [x] Apply to dev Supabase via `pnpm db:migrate`; verify in Supabase Studio
 - [x] Commit the generated migration file (treat migrations as code per spec §7.4)
 - [x] Mark completed
@@ -237,7 +237,7 @@ export async function withOrgContext<T>(
 
 ### Task 22: Definition of Done
 
-- [x] All 16 tables present and inspected in Supabase Studio
+- [x] All 20 tables present and inspected in Supabase Studio
 - [x] All RLS policies active; verified via psql session swapping `app.current_org_id`
 - [x] Seed produces 5 script templates and 5 credit packages
 - [x] Drizzle migrations committed in `drizzle/migrations/`

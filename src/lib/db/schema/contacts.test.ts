@@ -3,6 +3,9 @@ import { describe, expect, it } from 'vitest';
 import { contactLists, listSourceEnum } from './contact_lists';
 import { consentBasisEnum, contactTypeEnum, contacts, rpoStatusEnum } from './contacts';
 
+type Col = Record<string, unknown>;
+type Tbl = Record<string, Col>;
+
 describe('contact_lists schema', () => {
   it('has expected columns', () => {
     const cols = Object.keys(contactLists);
@@ -17,13 +20,13 @@ describe('contact_lists schema', () => {
   });
 
   it('source_file_path is nullable', () => {
-    const col = (contactLists as any).source_file_path;
+    const col = (contactLists as Tbl).source_file_path;
     expect(col.notNull).toBeFalsy();
   });
 
   it('total_count and valid_count default to 0', () => {
-    const total = (contactLists as any).total_count;
-    const valid = (contactLists as any).valid_count;
+    const total = (contactLists as Tbl).total_count;
+    const valid = (contactLists as Tbl).valid_count;
     expect(total.default).toBe(0);
     expect(valid.default).toBe(0);
   });
@@ -58,23 +61,23 @@ describe('contacts schema', () => {
   it('nullable optional fields', () => {
     const nullableFields = ['first_name', 'last_name', 'email', 'consent_evidence', 'opt_out_reason', 'metadata', 'rpo_checked_at', 'deleted_at'];
     for (const field of nullableFields) {
-      const col = (contacts as any)[field];
+      const col = (contacts as Tbl)[field];
       expect(col.notNull, `${field} should be nullable`).toBeFalsy();
     }
   });
 
   it('contact_type defaults to b2c', () => {
-    const col = (contacts as any).contact_type;
+    const col = (contacts as Tbl).contact_type;
     expect(col.default).toBe('b2c');
   });
 
   it('rpo_status defaults to unchecked', () => {
-    const col = (contacts as any).rpo_status;
+    const col = (contacts as Tbl).rpo_status;
     expect(col.default).toBe('unchecked');
   });
 
   it('opt_out defaults to false', () => {
-    const col = (contacts as any).opt_out;
+    const col = (contacts as Tbl).opt_out;
     expect(col.default).toBe(false);
   });
 

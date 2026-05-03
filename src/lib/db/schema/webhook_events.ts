@@ -1,5 +1,5 @@
-import { jsonb, pgEnum, pgTable, text, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
+import { jsonb, pgEnum, pgTable, text, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
 
 // System-owned table — no RLS. Stores inbound webhook payloads for idempotent processing.
 export const webhookProviderEnum = pgEnum('webhook_provider', [

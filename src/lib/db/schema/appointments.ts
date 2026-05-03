@@ -1,9 +1,9 @@
-import { index, pgEnum, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
+import { index, pgEnum, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
-import { organizations } from './organizations';
 import { calls } from './calls';
 import { contacts } from './contacts';
+import { organizations } from './organizations';
 
 export const appointmentStatusEnum = pgEnum('appointment_status', [
   'booked',

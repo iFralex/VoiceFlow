@@ -8,8 +8,8 @@ vi.mock('../client', () => ({
 }));
 
 import { db } from '../client';
-import { seed, seedCreditPackages, seedScriptTemplates } from './index';
 import { creditPackageSeedData } from './credit_packages';
+import { seed, seedCreditPackages, seedScriptTemplates } from './index';
 import { scriptTemplateSeedData } from './script_templates';
 
 function makeInsertChain() {

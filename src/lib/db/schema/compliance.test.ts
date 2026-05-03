@@ -5,6 +5,9 @@ import { optOutRegistry, optOutSourceEnum } from './opt_out_registry';
 import { rpoSnapshots } from './rpo_snapshots';
 import { webhookEvents, webhookProviderEnum } from './webhook_events';
 
+type Col = Record<string, unknown>;
+type Tbl = Record<string, Col>;
+
 describe('opt_out_registry schema', () => {
   it('has expected columns', () => {
     const cols = Object.keys(optOutRegistry);
@@ -25,7 +28,7 @@ describe('opt_out_registry schema', () => {
   });
 
   it('phone_e164 is not null', () => {
-    const col = (optOutRegistry as any).phone_e164;
+    const col = (optOutRegistry as Tbl).phone_e164;
     expect(col.notNull).toBeTruthy();
   });
 });
@@ -44,7 +47,7 @@ describe('rpo_snapshots schema', () => {
   });
 
   it('is_blocked is not null', () => {
-    const col = (rpoSnapshots as any).is_blocked;
+    const col = (rpoSnapshots as Tbl).is_blocked;
     expect(col.notNull).toBeTruthy();
   });
 });
@@ -68,22 +71,22 @@ describe('audit_log schema', () => {
   });
 
   it('org_id is nullable', () => {
-    const col = (auditLog as any).org_id;
+    const col = (auditLog as Tbl).org_id;
     expect(col.notNull).toBeFalsy();
   });
 
   it('actor_user_id is nullable', () => {
-    const col = (auditLog as any).actor_user_id;
+    const col = (auditLog as Tbl).actor_user_id;
     expect(col.notNull).toBeFalsy();
   });
 
   it('metadata is nullable', () => {
-    const col = (auditLog as any).metadata;
+    const col = (auditLog as Tbl).metadata;
     expect(col.notNull).toBeFalsy();
   });
 
   it('action is not null', () => {
-    const col = (auditLog as any).action;
+    const col = (auditLog as Tbl).action;
     expect(col.notNull).toBeTruthy();
   });
 });
@@ -106,17 +109,17 @@ describe('webhook_events schema', () => {
   });
 
   it('processed_at is nullable', () => {
-    const col = (webhookEvents as any).processed_at;
+    const col = (webhookEvents as Tbl).processed_at;
     expect(col.notNull).toBeFalsy();
   });
 
   it('error is nullable', () => {
-    const col = (webhookEvents as any).error;
+    const col = (webhookEvents as Tbl).error;
     expect(col.notNull).toBeFalsy();
   });
 
   it('payload is not null', () => {
-    const col = (webhookEvents as any).payload;
+    const col = (webhookEvents as Tbl).payload;
     expect(col.notNull).toBeTruthy();
   });
 

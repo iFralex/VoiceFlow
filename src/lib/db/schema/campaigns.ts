@@ -1,9 +1,9 @@
-import { index, integer, pgEnum, pgTable, text, time, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
+import { index, integer, pgEnum, pgTable, text, time, timestamp, uuid } from 'drizzle-orm/pg-core';
 
+import { contactLists } from './contact_lists';
 import { organizations } from './organizations';
 import { scripts } from './scripts';
-import { contactLists } from './contact_lists';
 
 export const campaignStatusEnum = pgEnum('campaign_status', [
   'draft',

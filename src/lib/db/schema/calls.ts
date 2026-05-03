@@ -1,9 +1,9 @@
-import { boolean, index, integer, numeric, pgEnum, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
+import { boolean, index, integer, numeric, pgEnum, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
-import { organizations } from './organizations';
 import { campaigns } from './campaigns';
 import { contacts } from './contacts';
+import { organizations } from './organizations';
 
 export const callProviderEnum = pgEnum('call_provider', ['vapi', 'retell', 'proprietary']);
 
