@@ -39,6 +39,19 @@ const config = [
       // Console: only allow warn and error
       'no-console': ['warn', { allow: ['warn', 'error'] }],
 
+      // Forbid raw SVG file imports — use @/components/ui/icon instead
+      'no-restricted-imports': [
+        'warn',
+        {
+          patterns: [
+            {
+              regex: '\\.svg(\\?.*)?$',
+              message: 'Import icons from @/components/ui/icon instead of raw SVG files.',
+            },
+          ],
+        },
+      ],
+
       // React hooks exhaustive deps
       'react-hooks/exhaustive-deps': 'warn',
 

@@ -78,10 +78,10 @@ The product is a B2B operational tool for Italian car dealerships, not a consume
 
 ### Task 4: Iconography
 
-- [ ] Install `lucide-react` for icons (already a shadcn dependency)
-- [ ] Create `src/components/ui/icon.tsx` thin wrapper exporting commonly-used icons with consistent stroke and size defaults
-- [ ] Forbid raw SVG imports in lint config in favour of going through this wrapper
-- [ ] Mark completed
+- [x] Install `lucide-react` for icons (already a shadcn dependency)
+- [x] Create `src/components/ui/icon.tsx` thin wrapper exporting commonly-used icons with consistent stroke and size defaults
+- [x] Forbid raw SVG imports in lint config in favour of going through this wrapper
+- [x] Mark completed
 
 ### Task 5: Application shell — `(app)` layout
 
