@@ -6,18 +6,22 @@
 **Estimated effort:** 3–4 days
 
 ## Overview
+
 Delivers the data-consumption surfaces the dealer interacts with daily: the main dashboard with KPI cards, the campaign live view with Realtime updates, the campaign results tab with filters and per-call drill-down, the synced recording + transcript player, the daily summary email (Resend), and the cmd+K search wired against actual data. All data already exists in the database after Wave 3; this plan presents it well.
 
 ## Context
+
 The product is read-heavy after the first calls happen. Dashboards must feel instant; relying on per-page-load aggregations would not scale, so we lean on the `campaign_stats` denormalised table from plan 09 and Realtime subscriptions for in-progress campaigns. Recording and transcript are stored separately (plan 08); the player synchronises them client-side.
 
 ## Validation Commands
+
 - `pnpm typecheck`
 - `pnpm test src/components/dashboard src/lib/email/templates`
 - `pnpm test:e2e e2e/dashboard.spec.ts e2e/recording-player.spec.ts`
 - `pnpm exec react-email preview` (for email template iteration)
 
 ### Task 1: Main dashboard layout
+
 - [ ] Replace placeholder `src/app/(app)/dashboard/page.tsx` with the real dashboard:
   - top: greeting + period selector (oggi, ultimi 7 giorni, ultimi 30 giorni, mese corrente, mese scorso) — selection stored in URL search param for shareability
   - KPI grid (4 cards): Chiamate completate, Lead qualificati, Appuntamenti fissati, Credito residuo
@@ -28,22 +32,50 @@ The product is read-heavy after the first calls happen. Dashboards must feel ins
 - [ ] Mark completed
 
 ### Task 2: Aggregation query layer
+
 - [ ] Create `src/lib/services/dashboard.ts` with `getDashboardData(orgId, period)`:
+
 ```typescript
 export type DashboardData = {
   period: { start: Date; end: Date; label: string };
-  kpis: { callsCompleted: number; qualifiedLeads: number; appointmentsBooked: number; creditBalance: { cents: number; minutes: number; } };
-  trends: { date: string; completed: number; appointmentBooked: number; notInterested: number; voicemail: number; failed: number }[];
-  activeCampaigns: { id: string; name: string; total: number; completed: number; running: boolean; appointmentsBooked: number; }[];
-  recentAppointments: Array<{ id: string; contactName: string; scheduledAt: Date; campaignName: string; }>;
+  kpis: {
+    callsCompleted: number;
+    qualifiedLeads: number;
+    appointmentsBooked: number;
+    creditBalance: { cents: number; minutes: number };
+  };
+  trends: {
+    date: string;
+    completed: number;
+    appointmentBooked: number;
+    notInterested: number;
+    voicemail: number;
+    failed: number;
+  }[];
+  activeCampaigns: {
+    id: string;
+    name: string;
+    total: number;
+    completed: number;
+    running: boolean;
+    appointmentsBooked: number;
+  }[];
+  recentAppointments: Array<{
+    id: string;
+    contactName: string;
+    scheduledAt: Date;
+    campaignName: string;
+  }>;
   alerts: Alert[];
 };
 ```
+
 - [ ] Single SQL with CTEs returning everything in one round-trip; use `EXPLAIN ANALYZE` to confirm <100ms on representative data
 - [ ] Cache result for 60s with `unstable_cache` keyed by `(orgId, period)`
 - [ ] Mark completed
 
 ### Task 3: Campaign live tab
+
 - [ ] Add `src/app/(app)/campaigns/[id]/live/page.tsx` (or implement as a tab within `campaigns/[id]/page.tsx`):
   - real-time view of in-progress + recent calls
   - each row: contact name, status (dialing/in_progress/completed), live duration timer for in-progress, outcome chip when complete
@@ -55,6 +87,7 @@ export type DashboardData = {
 - [ ] Mark completed
 
 ### Task 4: Campaign results tab
+
 - [ ] Add `src/app/(app)/campaigns/[id]/results/page.tsx`:
   - data table (using the table component from plan 03) with columns: contatto, telefono, stato chiamata, esito, durata, costo, ora chiamata, link a dettaglio
   - filters: esito (multi-select), durata range, data range
@@ -64,6 +97,7 @@ export type DashboardData = {
 - [ ] Mark completed
 
 ### Task 5: Campaign results CSV export
+
 - [ ] Server Action `exportCampaignResults(campaignId, filters)`:
   - resolves all calls matching, joins contacts and appointments
   - writes CSV to Storage path `<org_id>/exports/campaign-<id>-<timestamp>.csv`
@@ -72,6 +106,7 @@ export type DashboardData = {
 - [ ] Mark completed
 
 ### Task 6: Recording + transcript synced player
+
 - [ ] Create `src/components/calls/recording-player.tsx` (Client Component):
   - HTML5 `<audio>` with custom controls (play/pause, scrub, speed 0.5x/1x/1.5x/2x, skip ±15s)
   - transcript panel beside the audio: list of `[speaker] [timestamp] text` with auto-scroll-to-current-segment behaviour
@@ -82,6 +117,7 @@ export type DashboardData = {
 - [ ] Mark completed
 
 ### Task 7: Per-call detail page
+
 - [ ] Create `src/app/(app)/calls/[id]/page.tsx`:
   - header: contact name, phone, campaign, script, time, duration, cost, outcome badge
   - timeline (vertical): call dispatched → ringing → answered → tool invocations (with timestamps and tool names) → ended
@@ -91,6 +127,7 @@ export type DashboardData = {
 - [ ] Mark completed
 
 ### Task 8: Daily report email
+
 - [ ] Install `@react-email/components` and `react-email` (dev tool)
 - [ ] Author `src/lib/email/templates/daily-report.tsx`:
   - subject: "Report giornaliero — [data] — [N chiamate]"
@@ -102,6 +139,7 @@ export type DashboardData = {
 - [ ] Mark completed
 
 ### Task 9: Daily report cron and dispatch
+
 - [ ] Create `src/app/api/cron/daily-report/route.ts` (path already in `vercel.json`) running daily at 19:00 Europe/Rome:
   - select all orgs with at least one call in the last 24h (skip orgs with no activity)
   - for each, build the report data via `getDashboardData(orgId, "yesterday")`
@@ -112,12 +150,14 @@ export type DashboardData = {
 - [ ] Mark completed
 
 ### Task 10: Notifications preferences
+
 - [ ] Add migration `0018_user_notification_prefs.sql`: `user_notification_preferences` (`user_id`, `org_id`, `daily_report` boolean default true, `appointment_booked` boolean default true, `qualified_lead` boolean default true, `low_credit` boolean default true, `campaign_completed` boolean default true, `weekly_summary` boolean default false)
 - [ ] Settings page `/settings/notifications` exposing toggles
 - [ ] Daily report cron and other notifications consult these preferences before sending
 - [ ] Mark completed
 
 ### Task 11: cmd+K search wired against data
+
 - [ ] Extend the cmd+K palette stub from plan 03 with real data sources:
   - search contacts by name or phone (LIKE query, capped 20 results, capability-gated)
   - search campaigns by name
@@ -128,29 +168,34 @@ export type DashboardData = {
 - [ ] Mark completed
 
 ### Task 12: Empty-state polish
+
 - [ ] First-time-user dashboard (zero campaigns): replace KPI cards with a guided onboarding card showing 3 steps: Carica contatti → Configura script → Crea campagna; CTAs link to the relevant flows
 - [ ] First-time-user campaigns page: show illustrated empty state with "Crea prima campagna" CTA
 - [ ] First-time-user contacts page: same with "Carica prima lista"
 - [ ] Mark completed
 
 ### Task 13: Live dashboard updates (Realtime + revalidate)
+
 - [ ] On dashboard, when an active campaign is running, subscribe to `campaign_stats` Realtime updates and re-render only the active-campaigns row (avoid full-page revalidation cost)
 - [ ] On the campaign live page, also subscribe to `campaigns` row to detect status changes triggered by other tabs (multi-window safety)
 - [ ] On reconnect after network drop, force a server-side revalidate to catch missed events
 - [ ] Mark completed
 
 ### Task 14: Print-friendly campaign report
+
 - [ ] Add a "Stampa report" button on the campaign detail page generating a print-optimised view (uses CSS `@media print`)
 - [ ] Includes summary, outcome breakdown chart, top appointments table; truncates contact phones to last-4-digits unless explicitly toggled
 - [ ] Mark completed
 
 ### Task 15: Performance audit
+
 - [ ] Run Lighthouse against `/dashboard`, `/campaigns/[id]`, `/calls/[id]`; target Performance score ≥85
 - [ ] Optimise: defer Recharts via `dynamic(() => import(), { ssr: false })`, audio loaded lazily, transcript paginated for very long calls (>10 min)
 - [ ] Document findings in `docs/architecture-decisions/0003-dashboard-perf.md`
 - [ ] Mark completed
 
 ### Task 16: E2E
+
 - [ ] Playwright `e2e/dashboard.spec.ts`:
   - sign in with seeded data
   - assert KPIs render
@@ -163,6 +208,7 @@ export type DashboardData = {
 - [ ] Mark completed
 
 ### Task 17: Definition of Done
+
 - [ ] Dashboard renders <500ms server-side on representative data
 - [ ] KPI accuracy verified against direct SQL queries
 - [ ] Live campaign view updates in real time without manual refresh

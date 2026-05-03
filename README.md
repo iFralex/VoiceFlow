@@ -32,6 +32,7 @@ pnpm install
 Copy `.env.example` to `.env.local` and fill in the required values.
 
 **Minimum required for `pnpm dev`:**
+
 - `NODE_ENV`
 - `NEXT_PUBLIC_APP_URL`
 - `NEXT_PUBLIC_APP_ENV`
@@ -57,23 +58,23 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ### Available Scripts
 
-| Script | Description |
-|---|---|
-| `pnpm dev` | Start development server |
-| `pnpm build` | Build for production |
-| `pnpm start` | Start production server |
-| `pnpm lint` | Run ESLint |
-| `pnpm format` | Format code with Prettier |
+| Script              | Description                      |
+| ------------------- | -------------------------------- |
+| `pnpm dev`          | Start development server         |
+| `pnpm build`        | Build for production             |
+| `pnpm start`        | Start production server          |
+| `pnpm lint`         | Run ESLint                       |
+| `pnpm format`       | Format code with Prettier        |
 | `pnpm format:check` | Check formatting without writing |
-| `pnpm typecheck` | Run TypeScript compiler check |
-| `pnpm test` | Run unit and integration tests |
-| `pnpm test:watch` | Run tests in watch mode |
-| `pnpm test:e2e` | Run Playwright end-to-end tests |
-| `pnpm db:generate` | Generate Drizzle migration files |
-| `pnpm db:migrate` | Run database migrations |
-| `pnpm db:push` | Push schema changes (dev only) |
-| `pnpm db:studio` | Open Drizzle Studio |
-| `pnpm db:seed` | Seed the database |
+| `pnpm typecheck`    | Run TypeScript compiler check    |
+| `pnpm test`         | Run unit and integration tests   |
+| `pnpm test:watch`   | Run tests in watch mode          |
+| `pnpm test:e2e`     | Run Playwright end-to-end tests  |
+| `pnpm db:generate`  | Generate Drizzle migration files |
+| `pnpm db:migrate`   | Run database migrations          |
+| `pnpm db:push`      | Push schema changes (dev only)   |
+| `pnpm db:studio`    | Open Drizzle Studio              |
+| `pnpm db:seed`      | Seed the database                |
 
 ## CI Status
 

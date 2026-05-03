@@ -6,12 +6,15 @@
 **Estimated effort:** 4–6 days
 
 ## Overview
+
 Brings the entire compliance subsystem described in spec §12 to operational completeness. Wires up the RPO (Registro Pubblico delle Opposizioni) intermediary client with daily snapshots and per-call live verification, fully consolidates the per-org opt-out registry across all five sources, audits the three-layer AI Act enforcement (preamble → first message → transcript verification), ships GDPR data subject rights (export and erasure), and exposes the audit-log dashboard. Compliance is a first-class subsystem and a sales differentiator.
 
 ## Context
+
 RPO is the Italian national do-not-call registry. Calling B2C numbers without checking RPO is a regulatory violation (spec §12.2). We integrate via a third-party intermediary (e.g. Datatec, Compliance Solutions) because direct RPO access requires significant onboarding. Two-tier strategy: (1) daily bulk snapshot for fast in-DB lookups, (2) per-call live check just before dispatch as a safety net. AI Act transparency requires the AI nature to be disclosed before substantive conversation (spec §12.3). GDPR data subject rights (Articles 15 and 17) must be servable within 30 days; we automate them under 24h to reduce support burden.
 
 ## Validation Commands
+
 - `pnpm typecheck`
 - `pnpm test src/lib/compliance src/lib/services/optout`
 - `pnpm test:integration src/lib/compliance`
@@ -19,8 +22,10 @@ RPO is the Italian national do-not-call registry. Calling B2C numbers without ch
 - `pnpm exec tsx scripts/rpo-snapshot-dry-run.ts` (manual: tests RPO intermediary connectivity without committing)
 
 ### Task 1: RPO intermediary client
+
 - [ ] Open commercial account with an RPO intermediary provider; capture API endpoint and API key in `RPO_PROVIDER_API_KEY` and `RPO_PROVIDER_ENDPOINT`
 - [ ] Create `src/lib/compliance/rpo/client.ts`:
+
 ```typescript
 export interface RpoClient {
   bulkCheck(phoneNumbers: string[]): Promise<Map<string, boolean>>; // E.164 → isBlocked
@@ -28,16 +33,25 @@ export interface RpoClient {
 }
 
 export class RpoIntermediaryClient implements RpoClient {
-  constructor(private endpoint: string, private apiKey: string) {}
-  async bulkCheck(numbers: string[]): Promise<Map<string, boolean>> { /* batched POST */ }
-  async singleCheck(phoneE164: string): Promise<{ isBlocked: boolean; checkedAt: Date }> { /* GET */ }
+  constructor(
+    private endpoint: string,
+    private apiKey: string,
+  ) {}
+  async bulkCheck(numbers: string[]): Promise<Map<string, boolean>> {
+    /* batched POST */
+  }
+  async singleCheck(phoneE164: string): Promise<{ isBlocked: boolean; checkedAt: Date }> {
+    /* GET */
+  }
 }
 ```
+
 - [ ] Mock implementation `RpoMockClient` for dev/test environments returning random ~5% block rate
 - [ ] Factory `getRpoClient()` selecting based on `NODE_ENV` and presence of credentials
 - [ ] Mark completed
 
 ### Task 2: Daily RPO snapshot cron
+
 - [ ] Create `src/app/api/cron/rpo-snapshot/route.ts` running daily at 04:30 Europe/Rome (add to `vercel.json`):
   - select all distinct `contacts.phone_e164` across all orgs that are `b2c` and not opt-out and have `rpo_status` either `unchecked` or `last_checked_at < now() - interval '7 days'`
   - paginate over results in chunks of 1000
@@ -50,6 +64,7 @@ export class RpoIntermediaryClient implements RpoClient {
 - [ ] Mark completed
 
 ### Task 3: Batch RPO check on contact upload
+
 - [ ] Update plan 06's import Inngest function to call `rpoClient.bulkCheck` after `bulk-upsert` step:
   - chunk newly-inserted contacts (b2c only)
   - upsert into `rpo_snapshots`
@@ -58,6 +73,7 @@ export class RpoIntermediaryClient implements RpoClient {
 - [ ] Mark completed
 
 ### Task 4: Per-call live RPO verification
+
 - [ ] In plan 09's `dispatch-call` chain, add a step `verify-rpo`:
   - if `contact.contact_type='b2b'` skip (RPO covers B2C only per Italian regulation)
   - if `contact.rpo_checked_at < now() - interval '7 days'` OR `contact.rpo_status='unchecked'`, call `rpoClient.singleCheck`
@@ -67,6 +83,7 @@ export class RpoIntermediaryClient implements RpoClient {
 - [ ] Mark completed
 
 ### Task 5: Opt-out registry — full wiring
+
 - [ ] All five opt-out sources route through a single service `src/lib/services/optout.ts`:
   - `markOptOut(orgId, phoneE164, source, reason?)` (public API)
   - sources: `call_outcome` (LLM tool), `dealer_input` (manual upload or row action), `gdpr_request` (Article 17), `inbound_ivr` (plan 10), `rpo_block` (RPO sync)
@@ -79,6 +96,7 @@ export class RpoIntermediaryClient implements RpoClient {
 - [ ] Mark completed
 
 ### Task 6: Opt-out propagation across campaigns
+
 - [ ] When `markOptOut` runs, abort any pending or in-progress calls to that contact in any active campaign:
   - SELECT calls WHERE org_id, contact_id matches phone, status IN (pending, dialing, in_progress)
   - for each: if `dialing` or `in_progress` → call `provider.cancelCall(provider_call_id)`; else update status to `failed/error_code='opted_out'`
@@ -86,6 +104,7 @@ export class RpoIntermediaryClient implements RpoClient {
 - [ ] Mark completed
 
 ### Task 7: AI Act three-layer enforcement audit
+
 - [ ] Create automated audit `src/lib/compliance/aiact/audit.ts` with `runAiActConformanceAudit(timeWindow)`:
   - sample up to 500 calls from the time window
   - for each, verify:
@@ -99,6 +118,7 @@ export class RpoIntermediaryClient implements RpoClient {
 - [ ] Mark completed
 
 ### Task 8: Disclosure failure runbook
+
 - [ ] Create `docs/runbooks/aiact-disclosure-failure.md` documenting:
   - what triggers a `quality.disclosure-missing` event
   - how to triage (listen to recording, read transcript)
@@ -108,6 +128,7 @@ export class RpoIntermediaryClient implements RpoClient {
 - [ ] Mark completed
 
 ### Task 9: GDPR data subject rights — export (Article 15)
+
 - [ ] Create `src/lib/compliance/gdpr/export.ts` with `buildSubjectExport(orgId, phoneE164OrEmail)`:
   - resolves contact by phone or email within the org
   - fetches all related records: contact row, all calls (with recording URLs and transcripts), appointments, opt-out entries, audit-log entries mentioning the contact
@@ -119,6 +140,7 @@ export class RpoIntermediaryClient implements RpoClient {
 - [ ] Mark completed
 
 ### Task 10: GDPR data subject rights — erasure (Article 17)
+
 - [ ] Create `src/lib/compliance/gdpr/erase.ts` with `eraseSubject(orgId, byUserId, identifier, reason)`:
   - resolves contact by phone or email
   - confirmation gate: requires the requestor to type the contact's phone number to confirm
@@ -134,6 +156,7 @@ export class RpoIntermediaryClient implements RpoClient {
 - [ ] Mark completed
 
 ### Task 11: GDPR self-service UI
+
 - [ ] Create `src/app/(app)/settings/compliance/page.tsx` (capability `compliance.export` for read; `compliance.erase` for erase):
   - section "Diritti dell'interessato (GDPR)":
     - input field for phone or email
@@ -143,6 +166,7 @@ export class RpoIntermediaryClient implements RpoClient {
 - [ ] Mark completed
 
 ### Task 12: Retention policy enforcement
+
 - [ ] Define retention policy per spec §12.4 in `src/lib/compliance/retention.ts`:
   - recordings: retained 12 months by default; configurable per-org (`organizations.recording_retention_days`, migration `0016_org_retention.sql`)
   - transcripts: retained 24 months
@@ -153,6 +177,7 @@ export class RpoIntermediaryClient implements RpoClient {
 - [ ] Mark completed
 
 ### Task 13: Retention purge cron
+
 - [ ] Create `src/app/api/cron/retention-purge/route.ts` (path already in `vercel.json`) running daily at 03:00 Europe/Rome:
   - delete recordings (Storage objects) older than per-org retention threshold
   - clear `calls.recording_path` for purged rows
@@ -164,6 +189,7 @@ export class RpoIntermediaryClient implements RpoClient {
 - [ ] Mark completed
 
 ### Task 14: Legal hold flag
+
 - [ ] Add column `contacts.legal_hold_until` (nullable timestamp) via migration `0017_legal_hold.sql`
 - [ ] When set, retention purge skips the contact and their related data
 - [ ] Founder-only Server Action `setLegalHold(orgId, contactId, untilDate, reason)` accessible via admin tooling
@@ -171,6 +197,7 @@ export class RpoIntermediaryClient implements RpoClient {
 - [ ] Mark completed
 
 ### Task 15: Audit log viewer
+
 - [ ] Create `src/app/(app)/settings/audit-log/page.tsx` (capability `audit.view`, defaults to `admin` and `owner` roles):
   - paginated data table with columns: timestamp, actor (user/system/webhook), action, subject type/id, details (collapsed JSON viewer)
   - filters: action prefix (e.g. `compliance.*`), date range, actor user
@@ -179,6 +206,7 @@ export class RpoIntermediaryClient implements RpoClient {
 - [ ] Mark completed
 
 ### Task 16: DPA acceptance gate
+
 - [ ] On organization creation (plan 04 onboarding), the user must tick a DPA checkbox before submitting
 - [ ] Capture the acceptance event with: timestamp, user_id, IP, user_agent, DPA version (constant string in `src/lib/compliance/dpa.ts`)
 - [ ] Persist as audit_log entry `action='compliance.dpa_accepted'` with full metadata
@@ -186,6 +214,7 @@ export class RpoIntermediaryClient implements RpoClient {
 - [ ] Mark completed
 
 ### Task 17: Privacy and DPA static documents
+
 - [ ] Author Italian-language documents under `src/app/(marketing)/legal/`:
   - `/legal/privacy/page.tsx` — full privacy policy
   - `/legal/dpa/page.tsx` — Data Processing Agreement template (we are processor, dealer is controller for their contacts; we are controller for our own user data)
@@ -196,6 +225,7 @@ export class RpoIntermediaryClient implements RpoClient {
 - [ ] Mark completed
 
 ### Task 18: Integration tests
+
 - [ ] Test: RPO daily snapshot updates `rpo_snapshots` and `contacts.rpo_status`
 - [ ] Test: live RPO check on dispatch fails closed when client errors and no stale snapshot
 - [ ] Test: opt-out via any source aborts in-flight calls
@@ -206,6 +236,7 @@ export class RpoIntermediaryClient implements RpoClient {
 - [ ] Mark completed
 
 ### Task 19: Definition of Done
+
 - [ ] RPO intermediary integration green (test connection passes)
 - [ ] Daily RPO snapshot cron green; sample contact's `rpo_status` populated
 - [ ] Per-call RPO check fails closed in absence of data
