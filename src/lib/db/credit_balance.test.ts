@@ -124,7 +124,7 @@ describe('credit balance trigger — logic simulation', () => {
   });
 
   it('uses COALESCE — returns delta directly when no prior rows exist for org', () => {
-    // coalesce(max(balance_after_cents), 0) = 0 when table has no rows for org
+    // COALESCE((SELECT balance_after_cents ... ORDER BY created_at DESC LIMIT 1), 0) = 0 when no rows exist for org
     const row = applyBalanceTrigger([], { org_id: 'org-empty', delta_cents: -999 });
     expect(row.balance_after_cents).toBe(-999);
   });

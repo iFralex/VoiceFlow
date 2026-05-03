@@ -20,11 +20,18 @@
 -- privileges. In Supabase this means using the service-role / postgres user.
 -- The statement is idempotent via IF EXISTS / on conflict with existing tables.
 
--- Add calls table to the supabase_realtime publication
-ALTER PUBLICATION supabase_realtime ADD TABLE calls;
-
--- Add campaigns table to the supabase_realtime publication
-ALTER PUBLICATION supabase_realtime ADD TABLE campaigns;
+-- Add calls and campaigns to the supabase_realtime publication.
+-- Wrapped in a DO block so this is a no-op on plain-Postgres environments
+-- (e.g. the integration-test Docker DB) where the publication does not exist.
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'supabase_realtime') THEN
+    EXECUTE 'ALTER PUBLICATION supabase_realtime ADD TABLE calls';
+    EXECUTE 'ALTER PUBLICATION supabase_realtime ADD TABLE campaigns';
+  ELSE
+    RAISE NOTICE 'supabase_realtime publication not found — realtime tables not added (non-Supabase environment)';
+  END IF;
+END $$;
 
 -- ============================================================
 -- Verification (run after applying):

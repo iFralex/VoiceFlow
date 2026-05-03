@@ -1,11 +1,14 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
-// Mock the db client before importing seed functions
-vi.mock('../client', () => ({
-  db: {
-    insert: vi.fn(),
-  },
-}));
+// Mock the db client before importing seed functions.
+// transaction must be mocked because seedScriptTemplates/seedCreditPackages now
+// use withSystemContext, which calls db.transaction. We pass the same insert
+// mock as the tx so that db.insert call-count assertions still work.
+vi.mock('../client', () => {
+  const insert = vi.fn();
+  const transaction = vi.fn((fn: (tx: unknown) => Promise<unknown>) => fn({ insert }));
+  return { db: { insert, transaction } };
+});
 
 import { db } from '../client';
 import { creditPackageSeedData } from './credit_packages';

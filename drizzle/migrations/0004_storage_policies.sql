@@ -14,6 +14,10 @@
 -- Drizzle migration because the storage schema is managed by Supabase internally.
 -- This file is committed as code for reproducibility and auditability.
 --
+-- All statements are wrapped in a DO block so this migration is a no-op on
+-- plain-Postgres environments (e.g. the integration-test Docker DB) where the
+-- storage schema is absent.
+--
 -- HOW TO APPLY:
 --   Option 1 (Dashboard): Storage > Policies > New policy (for each bucket below)
 --   Option 2 (SQL Editor): Run this file in the Supabase SQL editor
@@ -25,173 +29,184 @@
 -- storage.foldername(name) returns the array of path segments excluding the filename.
 -- (storage.foldername(name))[1] returns the first segment (the org UUID).
 
--- ============================================================
--- BUCKET: recordings
--- Max file size enforced via supabase/config.toml (500 MB)
--- ============================================================
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.schemata WHERE schema_name = 'storage'
+  ) THEN
+    RAISE NOTICE 'storage schema not found — storage bucket policies skipped (non-Supabase environment)';
+    RETURN;
+  END IF;
 
-CREATE POLICY "recordings_org_select" ON storage.objects
-  FOR SELECT
-  USING (
-    bucket_id = 'recordings'
-    AND current_setting('app.current_org_id', true) <> ''
-    AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
-  );
+  -- ============================================================
+  -- BUCKET: recordings
+  -- Max file size enforced via supabase/config.toml (500 MB)
+  -- ============================================================
 
-CREATE POLICY "recordings_org_insert" ON storage.objects
-  FOR INSERT
-  WITH CHECK (
-    bucket_id = 'recordings'
-    AND current_setting('app.current_org_id', true) <> ''
-    AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
-  );
+  EXECUTE $p$ CREATE POLICY "recordings_org_select" ON storage.objects
+    FOR SELECT
+    USING (
+      bucket_id = 'recordings'
+      AND current_setting('app.current_org_id', true) <> ''
+      AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
+    ) $p$;
 
-CREATE POLICY "recordings_org_update" ON storage.objects
-  FOR UPDATE
-  USING (
-    bucket_id = 'recordings'
-    AND current_setting('app.current_org_id', true) <> ''
-    AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
-  )
-  WITH CHECK (
-    bucket_id = 'recordings'
-    AND current_setting('app.current_org_id', true) <> ''
-    AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
-  );
+  EXECUTE $p$ CREATE POLICY "recordings_org_insert" ON storage.objects
+    FOR INSERT
+    WITH CHECK (
+      bucket_id = 'recordings'
+      AND current_setting('app.current_org_id', true) <> ''
+      AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
+    ) $p$;
 
-CREATE POLICY "recordings_org_delete" ON storage.objects
-  FOR DELETE
-  USING (
-    bucket_id = 'recordings'
-    AND current_setting('app.current_org_id', true) <> ''
-    AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
-  );
+  EXECUTE $p$ CREATE POLICY "recordings_org_update" ON storage.objects
+    FOR UPDATE
+    USING (
+      bucket_id = 'recordings'
+      AND current_setting('app.current_org_id', true) <> ''
+      AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
+    )
+    WITH CHECK (
+      bucket_id = 'recordings'
+      AND current_setting('app.current_org_id', true) <> ''
+      AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
+    ) $p$;
 
--- ============================================================
--- BUCKET: transcripts
--- Max file size enforced via supabase/config.toml (50 MB)
--- ============================================================
+  EXECUTE $p$ CREATE POLICY "recordings_org_delete" ON storage.objects
+    FOR DELETE
+    USING (
+      bucket_id = 'recordings'
+      AND current_setting('app.current_org_id', true) <> ''
+      AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
+    ) $p$;
 
-CREATE POLICY "transcripts_org_select" ON storage.objects
-  FOR SELECT
-  USING (
-    bucket_id = 'transcripts'
-    AND current_setting('app.current_org_id', true) <> ''
-    AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
-  );
+  -- ============================================================
+  -- BUCKET: transcripts
+  -- Max file size enforced via supabase/config.toml (50 MB)
+  -- ============================================================
 
-CREATE POLICY "transcripts_org_insert" ON storage.objects
-  FOR INSERT
-  WITH CHECK (
-    bucket_id = 'transcripts'
-    AND current_setting('app.current_org_id', true) <> ''
-    AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
-  );
+  EXECUTE $p$ CREATE POLICY "transcripts_org_select" ON storage.objects
+    FOR SELECT
+    USING (
+      bucket_id = 'transcripts'
+      AND current_setting('app.current_org_id', true) <> ''
+      AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
+    ) $p$;
 
-CREATE POLICY "transcripts_org_update" ON storage.objects
-  FOR UPDATE
-  USING (
-    bucket_id = 'transcripts'
-    AND current_setting('app.current_org_id', true) <> ''
-    AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
-  )
-  WITH CHECK (
-    bucket_id = 'transcripts'
-    AND current_setting('app.current_org_id', true) <> ''
-    AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
-  );
+  EXECUTE $p$ CREATE POLICY "transcripts_org_insert" ON storage.objects
+    FOR INSERT
+    WITH CHECK (
+      bucket_id = 'transcripts'
+      AND current_setting('app.current_org_id', true) <> ''
+      AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
+    ) $p$;
 
-CREATE POLICY "transcripts_org_delete" ON storage.objects
-  FOR DELETE
-  USING (
-    bucket_id = 'transcripts'
-    AND current_setting('app.current_org_id', true) <> ''
-    AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
-  );
+  EXECUTE $p$ CREATE POLICY "transcripts_org_update" ON storage.objects
+    FOR UPDATE
+    USING (
+      bucket_id = 'transcripts'
+      AND current_setting('app.current_org_id', true) <> ''
+      AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
+    )
+    WITH CHECK (
+      bucket_id = 'transcripts'
+      AND current_setting('app.current_org_id', true) <> ''
+      AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
+    ) $p$;
 
--- ============================================================
--- BUCKET: csv-uploads
--- Max file size enforced via supabase/config.toml (50 MB)
--- ============================================================
+  EXECUTE $p$ CREATE POLICY "transcripts_org_delete" ON storage.objects
+    FOR DELETE
+    USING (
+      bucket_id = 'transcripts'
+      AND current_setting('app.current_org_id', true) <> ''
+      AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
+    ) $p$;
 
-CREATE POLICY "csv_uploads_org_select" ON storage.objects
-  FOR SELECT
-  USING (
-    bucket_id = 'csv-uploads'
-    AND current_setting('app.current_org_id', true) <> ''
-    AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
-  );
+  -- ============================================================
+  -- BUCKET: csv-uploads
+  -- Max file size enforced via supabase/config.toml (50 MB)
+  -- ============================================================
 
-CREATE POLICY "csv_uploads_org_insert" ON storage.objects
-  FOR INSERT
-  WITH CHECK (
-    bucket_id = 'csv-uploads'
-    AND current_setting('app.current_org_id', true) <> ''
-    AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
-  );
+  EXECUTE $p$ CREATE POLICY "csv_uploads_org_select" ON storage.objects
+    FOR SELECT
+    USING (
+      bucket_id = 'csv-uploads'
+      AND current_setting('app.current_org_id', true) <> ''
+      AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
+    ) $p$;
 
-CREATE POLICY "csv_uploads_org_update" ON storage.objects
-  FOR UPDATE
-  USING (
-    bucket_id = 'csv-uploads'
-    AND current_setting('app.current_org_id', true) <> ''
-    AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
-  )
-  WITH CHECK (
-    bucket_id = 'csv-uploads'
-    AND current_setting('app.current_org_id', true) <> ''
-    AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
-  );
+  EXECUTE $p$ CREATE POLICY "csv_uploads_org_insert" ON storage.objects
+    FOR INSERT
+    WITH CHECK (
+      bucket_id = 'csv-uploads'
+      AND current_setting('app.current_org_id', true) <> ''
+      AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
+    ) $p$;
 
-CREATE POLICY "csv_uploads_org_delete" ON storage.objects
-  FOR DELETE
-  USING (
-    bucket_id = 'csv-uploads'
-    AND current_setting('app.current_org_id', true) <> ''
-    AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
-  );
+  EXECUTE $p$ CREATE POLICY "csv_uploads_org_update" ON storage.objects
+    FOR UPDATE
+    USING (
+      bucket_id = 'csv-uploads'
+      AND current_setting('app.current_org_id', true) <> ''
+      AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
+    )
+    WITH CHECK (
+      bucket_id = 'csv-uploads'
+      AND current_setting('app.current_org_id', true) <> ''
+      AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
+    ) $p$;
 
--- ============================================================
--- BUCKET: exports
--- Max file size enforced via supabase/config.toml (50 MB)
--- ============================================================
+  EXECUTE $p$ CREATE POLICY "csv_uploads_org_delete" ON storage.objects
+    FOR DELETE
+    USING (
+      bucket_id = 'csv-uploads'
+      AND current_setting('app.current_org_id', true) <> ''
+      AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
+    ) $p$;
 
-CREATE POLICY "exports_org_select" ON storage.objects
-  FOR SELECT
-  USING (
-    bucket_id = 'exports'
-    AND current_setting('app.current_org_id', true) <> ''
-    AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
-  );
+  -- ============================================================
+  -- BUCKET: exports
+  -- Max file size enforced via supabase/config.toml (50 MB)
+  -- ============================================================
 
-CREATE POLICY "exports_org_insert" ON storage.objects
-  FOR INSERT
-  WITH CHECK (
-    bucket_id = 'exports'
-    AND current_setting('app.current_org_id', true) <> ''
-    AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
-  );
+  EXECUTE $p$ CREATE POLICY "exports_org_select" ON storage.objects
+    FOR SELECT
+    USING (
+      bucket_id = 'exports'
+      AND current_setting('app.current_org_id', true) <> ''
+      AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
+    ) $p$;
 
-CREATE POLICY "exports_org_update" ON storage.objects
-  FOR UPDATE
-  USING (
-    bucket_id = 'exports'
-    AND current_setting('app.current_org_id', true) <> ''
-    AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
-  )
-  WITH CHECK (
-    bucket_id = 'exports'
-    AND current_setting('app.current_org_id', true) <> ''
-    AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
-  );
+  EXECUTE $p$ CREATE POLICY "exports_org_insert" ON storage.objects
+    FOR INSERT
+    WITH CHECK (
+      bucket_id = 'exports'
+      AND current_setting('app.current_org_id', true) <> ''
+      AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
+    ) $p$;
 
-CREATE POLICY "exports_org_delete" ON storage.objects
-  FOR DELETE
-  USING (
-    bucket_id = 'exports'
-    AND current_setting('app.current_org_id', true) <> ''
-    AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
-  );
+  EXECUTE $p$ CREATE POLICY "exports_org_update" ON storage.objects
+    FOR UPDATE
+    USING (
+      bucket_id = 'exports'
+      AND current_setting('app.current_org_id', true) <> ''
+      AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
+    )
+    WITH CHECK (
+      bucket_id = 'exports'
+      AND current_setting('app.current_org_id', true) <> ''
+      AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
+    ) $p$;
+
+  EXECUTE $p$ CREATE POLICY "exports_org_delete" ON storage.objects
+    FOR DELETE
+    USING (
+      bucket_id = 'exports'
+      AND current_setting('app.current_org_id', true) <> ''
+      AND (storage.foldername(name))[1] = current_setting('app.current_org_id', true)
+    ) $p$;
+
+END $$;
 
 -- ============================================================
 -- Cross-org isolation verification (run manually after applying):

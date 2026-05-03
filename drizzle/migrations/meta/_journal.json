@@ -57,6 +57,13 @@
       "when": 1777800275491,
       "tag": "0007_review_fixes",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1777800275492,
+      "tag": "0008_org_policy_security",
+      "breakpoints": true
     }
   ]
 }
