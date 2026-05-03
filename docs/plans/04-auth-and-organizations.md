@@ -48,10 +48,10 @@ Supabase Auth with magic link is the primary authentication. The application kee
 
 ### Task 4: User mirror table population
 
-- [ ] In Supabase, create a Postgres function and trigger on `auth.users` AFTER INSERT that inserts a row in `public.users` with the same id and email; default locale `it`, full name from metadata if present
-- [ ] Commit the SQL in `drizzle/migrations/0005_user_mirror_trigger.sql`
-- [ ] Test by creating a user via Supabase dashboard and confirming the row appears in `public.users`
-- [ ] Mark completed
+- [x] In Supabase, create a Postgres function and trigger on `auth.users` AFTER INSERT that inserts a row in `public.users` with the same id and email; default locale `it`, full name from metadata if present
+- [x] Commit the SQL in `drizzle/migrations/0005_user_mirror_trigger.sql`
+- [x] Test by creating a user via Supabase dashboard and confirming the row appears in `public.users`
+- [x] Mark completed
 
 ### Task 5: Organization service
 
