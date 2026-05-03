@@ -24,8 +24,8 @@ The product is a B2B operational tool for Italian car dealerships, not a consume
 
 ### Task 1: Tailwind 4 configuration
 
-- [ ] Confirm Tailwind 4 already wired by Next.js scaffold (plan 01)
-- [ ] Update `src/app/globals.css` with Tailwind v4 `@import "tailwindcss";` and design tokens defined as CSS variables in `:root`:
+- [x] Confirm Tailwind 4 already wired by Next.js scaffold (plan 01)
+- [x] Update `src/app/globals.css` with Tailwind v4 `@import "tailwindcss";` and design tokens defined as CSS variables in `:root`:
 
 ```css
 :root {
@@ -51,9 +51,9 @@ The product is a B2B operational tool for Italian car dealerships, not a consume
 }
 ```
 
-- [ ] Add monospace font stack utility for technical fields: `font-mono-tabular` with `font-feature-settings: "tnum"`
-- [ ] Configure typography scale appropriate for dense data UIs (smaller defaults than Tailwind's defaults)
-- [ ] Mark completed
+- [x] Add monospace font stack utility for technical fields: `font-mono-tabular` with `font-feature-settings: "tnum"`
+- [x] Configure typography scale appropriate for dense data UIs (smaller defaults than Tailwind's defaults)
+- [x] Mark completed
 
 ### Task 2: Fonts
 
