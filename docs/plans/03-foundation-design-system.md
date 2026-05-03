@@ -129,9 +129,9 @@ type NavItem = {
 
 ### Task 9: Top bar — search command palette stub
 
-- [ ] Add cmd+K command palette using `cmdk` (already a shadcn dep)
-- [ ] In Phase 1 it lists static actions (go to dashboard, go to campaigns, etc.); search results across data come in plan 12
-- [ ] Mark completed
+- [x] Add cmd+K command palette using `cmdk` (already a shadcn dep)
+- [x] In Phase 1 it lists static actions (go to dashboard, go to campaigns, etc.); search results across data come in plan 12
+- [x] Mark completed
 
 ### Task 10: User menu
 

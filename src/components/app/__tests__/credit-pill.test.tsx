@@ -11,6 +11,11 @@ vi.mock('next/link', () => ({
   ),
 }));
 
+// TopBar → CommandPalette uses useRouter
+vi.mock('next/navigation', () => ({
+  useRouter: vi.fn(() => ({ push: vi.fn() })),
+}));
+
 describe('CreditPill', () => {
   afterEach(cleanup);
 

@@ -7,6 +7,7 @@ import { Icons } from '@/components/ui/icon';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils/index';
 
+import { CommandPalette, useCommandPaletteShortcut } from './command-palette';
 import { type CreditBalance, CreditPill, CreditPillSkeleton } from './credit-pill';
 
 interface TopBarProps {
@@ -17,6 +18,9 @@ interface TopBarProps {
 }
 
 export function TopBar({ onMobileMenuClick, creditBalance, className }: TopBarProps) {
+  const [cmdOpen, setCmdOpen] = React.useState(false);
+  useCommandPaletteShortcut(React.useCallback(() => setCmdOpen(true), []));
+
   return (
     <header
       data-testid="app-topbar"
@@ -43,12 +47,17 @@ export function TopBar({ onMobileMenuClick, creditBalance, className }: TopBarPr
       </div>
 
       <div className="flex items-center gap-1">
-        {/* Search command palette trigger — stub, wired in Task 9 */}
+        {/* Command palette */}
+        <CommandPalette open={cmdOpen} onOpenChange={setCmdOpen} />
+
+        {/* Search command palette trigger */}
         <Button
           variant="ghost"
           size="sm"
           className="hidden h-8 gap-2 text-sm text-muted-foreground md:flex"
           aria-label="Apri ricerca (Cmd+K)"
+          onClick={() => setCmdOpen(true)}
+          data-testid="cmd-trigger"
         >
           <Icons.Search size={14} />
           <span>Cerca...</span>
