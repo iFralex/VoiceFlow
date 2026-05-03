@@ -159,13 +159,13 @@ type NavItem = {
 
 ### Task 13: Date and number formatting helpers
 
-- [ ] Create `src/lib/utils/format.ts` with helpers using `Intl.DateTimeFormat` and `Intl.NumberFormat` bound to the current locale and Europe/Rome timezone
-- [ ] `formatCurrency(cents, locale)` formats integer cents as €X.XX
-- [ ] `formatPhone(e164)` formats E.164 to a readable Italian format
-- [ ] `formatDuration(seconds)` returns "1m 23s"
-- [ ] `formatRelativeTime(date)` ("2 ore fa")
-- [ ] Add unit tests covering Italian and English locales for each helper
-- [ ] Mark completed
+- [x] Create `src/lib/utils/format.ts` with helpers using `Intl.DateTimeFormat` and `Intl.NumberFormat` bound to the current locale and Europe/Rome timezone
+- [x] `formatCurrency(cents, locale)` formats integer cents as €X.XX
+- [x] `formatPhone(e164)` formats E.164 to a readable Italian format
+- [x] `formatDuration(seconds)` returns "1m 23s"
+- [x] `formatRelativeTime(date)` ("2 ore fa")
+- [x] Add unit tests covering Italian and English locales for each helper
+- [x] Mark completed
 
 ### Task 14: Status indicators and data tables
 
