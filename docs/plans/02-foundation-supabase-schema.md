@@ -80,13 +80,13 @@ The data model has four invariants (tenancy, money-as-cents, time-as-UTC-timesta
 
 ### Task 7: Drizzle schema — compliance
 
-- [ ] Create `src/lib/db/schema/opt_out_registry.ts` with `id`, `org_id`, `phone_e164`, `source` enum (`call_outcome|dealer_input|gdpr_request|inbound_ivr`), `recorded_at` and unique constraint on `(org_id, phone_e164)`
-- [ ] Create `src/lib/db/schema/rpo_snapshots.ts` (system-owned, no RLS) with `phone_e164` PK, `is_blocked`, `last_checked_at`
-- [ ] Create `src/lib/db/schema/audit_log.ts` with `id` bigserial, `org_id` nullable, `actor_user_id` nullable, `actor_type` enum (`user|system|webhook`), `action`, `subject_type`, `subject_id`, `metadata` jsonb, `created_at`
-- [ ] Add index `audit_log(org_id, created_at DESC)`, partial index `audit_log(action)` for hot actions
-- [ ] Create `src/lib/db/schema/webhook_events.ts` with `id`, `provider` enum (`stripe|vapi|retell|twilio`), `provider_event_id`, `event_type`, `payload` jsonb, `received_at`, `processed_at`, `error`
-- [ ] Add unique on `(provider, provider_event_id)` enforcing webhook idempotency
-- [ ] Mark completed
+- [x] Create `src/lib/db/schema/opt_out_registry.ts` with `id`, `org_id`, `phone_e164`, `source` enum (`call_outcome|dealer_input|gdpr_request|inbound_ivr`), `recorded_at` and unique constraint on `(org_id, phone_e164)`
+- [x] Create `src/lib/db/schema/rpo_snapshots.ts` (system-owned, no RLS) with `phone_e164` PK, `is_blocked`, `last_checked_at`
+- [x] Create `src/lib/db/schema/audit_log.ts` with `id` bigserial, `org_id` nullable, `actor_user_id` nullable, `actor_type` enum (`user|system|webhook`), `action`, `subject_type`, `subject_id`, `metadata` jsonb, `created_at`
+- [x] Add index `audit_log(org_id, created_at DESC)`, partial index `audit_log(action)` for hot actions
+- [x] Create `src/lib/db/schema/webhook_events.ts` with `id`, `provider` enum (`stripe|vapi|retell|twilio`), `provider_event_id`, `event_type`, `payload` jsonb, `received_at`, `processed_at`, `error`
+- [x] Add unique on `(provider, provider_event_id)` enforcing webhook idempotency
+- [x] Mark completed
 
 ### Task 8: Drizzle schema — telephony pool
 
