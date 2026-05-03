@@ -210,9 +210,9 @@ export type DB = typeof db;
 
 ### Task 14: Repo-level Definition of Done
 
-- [ ] All validation commands above pass locally and in CI
-- [ ] First Vercel deploy from `main` is live
-- [ ] `.env.example` enumerates every variable from spec Appendix A
-- [ ] `pnpm dev` works for a developer who clones the repo, fills `.env.local` with placeholder values, and runs `pnpm install && pnpm dev`
-- [ ] PR template exists at `.github/PULL_REQUEST_TEMPLATE.md` referencing the plan-completion checklist
-- [ ] Mark completed
+- [x] All validation commands above pass locally and in CI
+- [x] First Vercel deploy from `main` is live
+- [x] `.env.example` enumerates every variable from spec Appendix A
+- [x] `pnpm dev` works for a developer who clones the repo, fills `.env.local` with placeholder values, and runs `pnpm install && pnpm dev`
+- [x] PR template exists at `.github/PULL_REQUEST_TEMPLATE.md` referencing the plan-completion checklist
+- [x] Mark completed
