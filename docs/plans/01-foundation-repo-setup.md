@@ -72,7 +72,7 @@ The technical spec specifies Next.js 15 + App Router + TypeScript strict + Tailw
 
 ### Task 6: Environment variable scaffolding
 
-- [ ] Create `src/lib/env.ts` with a Zod-validated env loader following this pattern:
+- [x] Create `src/lib/env.ts` with a Zod-validated env loader following this pattern:
 
 ```typescript
 import { z } from 'zod';
@@ -112,11 +112,11 @@ const Env = z.object({
 export const env = Env.parse(process.env);
 ```
 
-- [ ] Create `.env.example` enumerating every variable above with placeholder values and inline comments
-- [ ] Create `.env.local.example` for developer-local overrides
-- [ ] Wire `env.ts` into `next.config.ts` via `import "./src/lib/env"` so misconfigured deploys fail at build
-- [ ] Document in README the required minimum subset for `pnpm dev` to boot vs the full set for production
-- [ ] Mark completed
+- [x] Create `.env.example` enumerating every variable above with placeholder values and inline comments
+- [x] Create `.env.local.example` for developer-local overrides
+- [x] Wire `env.ts` into `next.config.ts` via `import "./src/lib/env"` so misconfigured deploys fail at build
+- [x] Document in README the required minimum subset for `pnpm dev` to boot vs the full set for production
+- [x] Mark completed
 
 ### Task 7: Vitest unit and integration test runner
 
