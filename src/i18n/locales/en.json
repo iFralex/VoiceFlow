@@ -175,6 +175,26 @@
     "next_page": "Next page",
     "last_page": "Last page"
   },
+  "onboarding": {
+    "title": "Set up your organization",
+    "description": "Tell us about your organization to get started.",
+    "name_label": "Organization name",
+    "name_placeholder": "Acme Corp",
+    "legal_name_label": "Legal name (optional)",
+    "legal_name_placeholder": "Acme S.r.l.",
+    "vat_label": "VAT number (optional)",
+    "vat_placeholder": "12345678901",
+    "country_label": "Country",
+    "country_it": "Italy",
+    "dpa_label_before": "I accept the ",
+    "dpa_link_text": "Data Processing Agreement",
+    "submit": "Create organization",
+    "submitting": "Creating…",
+    "name_required": "Organization name is required",
+    "name_too_long": "Name must be at most 100 characters",
+    "vat_invalid": "Invalid VAT number (must be 11 digits with valid checksum)",
+    "dpa_required": "You must accept the Data Processing Agreement"
+  },
   "errors": {
     "title": "Error",
     "message": "An unexpected error has occurred.",

@@ -175,6 +175,26 @@
     "next_page": "Pagina successiva",
     "last_page": "Ultima pagina"
   },
+  "onboarding": {
+    "title": "Configura la tua organizzazione",
+    "description": "Raccontaci della tua organizzazione per iniziare.",
+    "name_label": "Nome organizzazione",
+    "name_placeholder": "Acme Corp",
+    "legal_name_label": "Ragione sociale (opzionale)",
+    "legal_name_placeholder": "Acme S.r.l.",
+    "vat_label": "Partita IVA (opzionale)",
+    "vat_placeholder": "12345678901",
+    "country_label": "Paese",
+    "country_it": "Italia",
+    "dpa_label_before": "Accetto il ",
+    "dpa_link_text": "Accordo sul Trattamento dei Dati",
+    "submit": "Crea organizzazione",
+    "submitting": "Creazione in corso…",
+    "name_required": "Il nome dell'organizzazione è obbligatorio",
+    "name_too_long": "Il nome deve essere al massimo 100 caratteri",
+    "vat_invalid": "Partita IVA non valida (deve essere 11 cifre con checksum valido)",
+    "dpa_required": "Devi accettare l'Accordo sul Trattamento dei Dati"
+  },
   "errors": {
     "title": "Errore",
     "message": "Si è verificato un errore imprevisto.",

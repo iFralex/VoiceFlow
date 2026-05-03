@@ -161,11 +161,11 @@ export async function requireCapability(capability: Capability): Promise<void>;
 
 ### Task 9: Onboarding flow
 
-- [ ] Create `src/app/(app)/onboarding/page.tsx` shown when a user has no organization
-- [ ] Form fields: organization name (required), legal name (optional), VAT number (optional, validated), country (defaulted IT, locked in Phase 1)
-- [ ] On submit: call `createOrganization` Server Action, set `active_org_id` cookie, redirect to `/dashboard`
-- [ ] Display the DPA acceptance checkbox (text linked to `/legal/dpa`); persist `dpa_accepted_at` in the audit log when ticked + submitted
-- [ ] Mark completed
+- [x] Create `src/app/(app)/onboarding/page.tsx` shown when a user has no organization
+- [x] Form fields: organization name (required), legal name (optional), VAT number (optional, validated), country (defaulted IT, locked in Phase 1)
+- [x] On submit: call `createOrganization` Server Action, set `active_org_id` cookie, redirect to `/dashboard`
+- [x] Display the DPA acceptance checkbox (text linked to `/legal/dpa`); persist `dpa_accepted_at` in the audit log when ticked + submitted
+- [x] Mark completed
 
 ### Task 10: Members management page
 
