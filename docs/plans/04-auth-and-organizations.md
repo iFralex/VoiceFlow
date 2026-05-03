@@ -55,7 +55,7 @@ Supabase Auth with magic link is the primary authentication. The application kee
 
 ### Task 5: Organization service
 
-- [ ] Create `src/lib/services/organizations.ts` exposing:
+- [x] Create `src/lib/services/organizations.ts` exposing:
 
 ```typescript
 export async function createOrganization(input: {
@@ -77,10 +77,10 @@ export async function updateOrganization(
 export async function softDeleteOrganization(orgId: string, byUserId: string): Promise<void>;
 ```
 
-- [ ] `createOrganization` runs in a transaction: insert org, insert membership with role `owner` and `accepted_at = now()`, insert audit log entry, return organization
-- [ ] All read operations use `withSystemContext` only when listing across orgs (e.g. `listOrganizationsForUser`); single-org reads use `withOrgContext`
-- [ ] Validate VAT number format if provided (Italian P.IVA: 11 digits with checksum)
-- [ ] Mark completed
+- [x] `createOrganization` runs in a transaction: insert org, insert membership with role `owner` and `accepted_at = now()`, insert audit log entry, return organization
+- [x] All read operations use `withSystemContext` only when listing across orgs (e.g. `listOrganizationsForUser`); single-org reads use `withOrgContext`
+- [x] Validate VAT number format if provided (Italian P.IVA: 11 digits with checksum)
+- [x] Mark completed
 
 ### Task 6: Membership service
 
