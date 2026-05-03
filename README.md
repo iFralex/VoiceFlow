@@ -69,6 +69,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 | `pnpm typecheck`    | Run TypeScript compiler check    |
 | `pnpm test`         | Run unit and integration tests   |
 | `pnpm test:watch`   | Run tests in watch mode          |
+| `pnpm test:coverage`| Run tests with coverage report   |
 | `pnpm test:e2e`     | Run Playwright end-to-end tests  |
 | `pnpm db:generate`  | Generate Drizzle migration files |
 | `pnpm db:migrate`   | Run database migrations          |

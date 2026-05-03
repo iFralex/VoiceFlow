@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { formatPhone } from './format';
 
 describe('formatPhone', () => {
-  it('formats a 10-digit number with US country code', () => {
+  it('formats a 10-digit number', () => {
     expect(formatPhone('2125551234')).toBe('+1 (212) 555-1234');
   });
 

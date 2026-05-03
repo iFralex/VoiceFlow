@@ -27,14 +27,6 @@ jobs:
           node-version: 20
           cache: pnpm
 
-      - name: Cache pnpm store
-        uses: actions/cache@v4
-        with:
-          path: ~/.pnpm-store
-          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            pnpm-store-${{ runner.os }}-
-
       - name: Cache Playwright browsers
         uses: actions/cache@v4
         with:

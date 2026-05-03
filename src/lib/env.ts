@@ -34,4 +34,7 @@ const Env = z.object({
   INTERNAL_WEBHOOK_SECRET: z.string().min(32),
 });
 
-export const env = Env.parse(process.env);
+export const env =
+  process.env['SKIP_ENV_VALIDATION'] === 'true'
+    ? (process.env as unknown as z.infer<typeof Env>)
+    : Env.parse(process.env);
