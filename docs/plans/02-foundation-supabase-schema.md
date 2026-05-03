@@ -178,10 +178,10 @@ export async function withOrgContext<T>(
 
 ### Task 15: Materialised credit balance trigger
 
-- [ ] Create migration `0003_credit_balance_trigger.sql` with a BEFORE INSERT trigger on `credit_ledger` that computes `balance_after_cents` as `(SELECT COALESCE(MAX(balance_after_cents), 0) FROM credit_ledger WHERE org_id = NEW.org_id) + NEW.delta_cents`
-- [ ] Add a unique partial constraint preventing concurrent inserts that would create stale balances: serialise per-org via SELECT FOR UPDATE in service layer (documented in plan 05)
-- [ ] Test the trigger by inserting a sequence of entries and verifying running balance is maintained
-- [ ] Mark completed
+- [x] Create migration `0003_credit_balance_trigger.sql` with a BEFORE INSERT trigger on `credit_ledger` that computes `balance_after_cents` as `(SELECT COALESCE(MAX(balance_after_cents), 0) FROM credit_ledger WHERE org_id = NEW.org_id) + NEW.delta_cents`
+- [x] Add a unique partial constraint preventing concurrent inserts that would create stale balances: serialise per-org via SELECT FOR UPDATE in service layer (documented in plan 05)
+- [x] Test the trigger by inserting a sequence of entries and verifying running balance is maintained
+- [x] Mark completed
 
 ### Task 16: Seed — script templates
 
