@@ -121,13 +121,13 @@ export async function removeMember(
 
 ### Task 7: Middleware — session and org resolution
 
-- [ ] Create `src/middleware.ts` running on `/(app)/:path*` and `/api/:path*` (excluding webhooks):
+- [x] Create `src/middleware.ts` running on `/(app)/:path*` and `/api/:path*` (excluding webhooks):
   - read Supabase auth cookies
   - if no session → redirect to `/login` for app routes; 401 JSON for API routes
   - read `active_org_id` cookie; if missing or invalid (user not a member or not accepted), pick the first valid org; if user has no org → redirect to `/onboarding`
   - set request headers `x-user-id`, `x-org-id`, `x-member-role` consumed downstream
-- [ ] Skip middleware for static assets, marketing pages, auth pages, webhook endpoints (signature-verified separately)
-- [ ] Mark completed
+- [x] Skip middleware for static assets, marketing pages, auth pages, webhook endpoints (signature-verified separately)
+- [x] Mark completed
 
 ### Task 8: Auth context helpers (Server Components)
 
