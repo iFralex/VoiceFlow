@@ -124,7 +124,7 @@ export type NewOrganization = typeof organizations.$inferInsert;
 
 ### Task 12: Row Level Security policies
 
-- [ ] Create `drizzle/migrations/0001_rls_policies.sql` containing the RLS setup. For every org-scoped table apply the pattern from spec §7.3:
+- [x] Create `drizzle/migrations/0001_rls_policies.sql` containing the RLS setup. For every org-scoped table apply the pattern from spec §7.3:
 
 ```sql
 ALTER TABLE <table> ENABLE ROW LEVEL SECURITY;
@@ -133,9 +133,9 @@ CREATE POLICY <table>_org_isolation ON <table>
   WITH CHECK (org_id = current_setting('app.current_org_id', true)::uuid);
 ```
 
-- [ ] List of tables that MUST have RLS: `organizations` (special: filter by membership), `memberships`, `scripts`, `contact_lists`, `contacts`, `campaigns`, `calls`, `appointments`, `credit_ledger`, `payments`, `opt_out_registry`, `phone_numbers` (only org-scoped rows), `webhooks_outgoing`, `webhook_deliveries`
-- [ ] System tables WITHOUT RLS: `script_templates`, `credit_packages`, `rpo_snapshots`, `webhook_events`, `audit_log` (RLS bypassed via service role; queried via service layer with explicit org filter)
-- [ ] For `organizations` define a policy joining via `memberships` so a user only sees orgs they belong to:
+- [x] List of tables that MUST have RLS: `organizations` (special: filter by membership), `memberships`, `scripts`, `contact_lists`, `contacts`, `campaigns`, `calls`, `appointments`, `credit_ledger`, `payments`, `opt_out_registry`, `phone_numbers` (only org-scoped rows), `webhooks_outgoing`, `webhook_deliveries`
+- [x] System tables WITHOUT RLS: `script_templates`, `credit_packages`, `rpo_snapshots`, `webhook_events`, `audit_log` (RLS bypassed via service role; queried via service layer with explicit org filter)
+- [x] For `organizations` define a policy joining via `memberships` so a user only sees orgs they belong to:
 
 ```sql
 CREATE POLICY organizations_member_visibility ON organizations
@@ -145,8 +145,8 @@ CREATE POLICY organizations_member_visibility ON organizations
   ));
 ```
 
-- [ ] Apply migration to dev; verify with a manual psql session
-- [ ] Mark completed
+- [x] Apply migration to dev; verify with a manual psql session
+- [x] Mark completed
 
 ### Task 13: RLS context setter helper
 
