@@ -169,11 +169,11 @@ export async function requireCapability(capability: Capability): Promise<void>;
 
 ### Task 10: Members management page
 
-- [ ] Create `src/app/(app)/settings/members/page.tsx` listing current members with role badges, invite-pending status, last login (from `auth.users.last_sign_in_at`)
-- [ ] "Invita membro" dialog: email + role select; calls `inviteMember`
-- [ ] Per-member dropdown: change role, remove
-- [ ] Empty state and pending-invites list separated
-- [ ] Mark completed
+- [x] Create `src/app/(app)/settings/members/page.tsx` listing current members with role badges, invite-pending status, last login (from `auth.users.last_sign_in_at`)
+- [x] "Invita membro" dialog: email + role select; calls `inviteMember`
+- [x] Per-member dropdown: change role, remove
+- [x] Empty state and pending-invites list separated
+- [x] Mark completed
 
 ### Task 11: Organization settings page
 
