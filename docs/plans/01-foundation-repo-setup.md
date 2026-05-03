@@ -120,13 +120,13 @@ export const env = Env.parse(process.env);
 
 ### Task 7: Vitest unit and integration test runner
 
-- [ ] Install Vitest, `@vitest/ui`, `@testing-library/react`, `@testing-library/jest-dom`, `jsdom`
-- [ ] Create `vitest.config.ts` with two projects: `unit` (jsdom env, `src/**/*.test.ts(x)`) and `integration` (node env, `src/**/*.integration.test.ts`)
-- [ ] Create `src/test/setup.ts` with `@testing-library/jest-dom/vitest` import
-- [ ] Add a sample passing unit test in `src/lib/utils/format.test.ts` (e.g. a phone formatter stub) so CI has something to run
-- [ ] Configure coverage with v8 provider, output `coverage/`
-- [ ] Add `pnpm test`, `pnpm test:watch`, `pnpm test:coverage` scripts
-- [ ] Mark completed
+- [x] Install Vitest, `@vitest/ui`, `@testing-library/react`, `@testing-library/jest-dom`, `jsdom`
+- [x] Create `vitest.config.ts` with two projects: `unit` (jsdom env, `src/**/*.test.ts(x)`) and `integration` (node env, `src/**/*.integration.test.ts`)
+- [x] Create `src/test/setup.ts` with `@testing-library/jest-dom/vitest` import
+- [x] Add a sample passing unit test in `src/lib/utils/format.test.ts` (e.g. a phone formatter stub) so CI has something to run
+- [x] Configure coverage with v8 provider, output `coverage/`
+- [x] Add `pnpm test`, `pnpm test:watch`, `pnpm test:coverage` scripts
+- [x] Mark completed
 
 ### Task 8: Playwright end-to-end runner
 
