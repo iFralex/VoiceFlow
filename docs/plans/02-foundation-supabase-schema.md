@@ -63,11 +63,11 @@ The data model has four invariants (tenancy, money-as-cents, time-as-UTC-timesta
 
 ### Task 5: Drizzle schema — campaigns and calls
 
-- [ ] Create `src/lib/db/schema/campaigns.ts` with all columns from spec §7.2 including `concurrency_limit` default 5, `time_window_start` default `09:00`, `time_window_end` default `19:00`, `estimated_max_cents` int, `actual_cents` int default 0, `status` enum (`draft|scheduled|running|paused|completed|cancelled`)
-- [ ] Create `src/lib/db/schema/calls.ts` with all columns from spec §7.2 including `provider` enum (`vapi|retell|proprietary`), `status` enum (`pending|dialing|in_progress|completed|failed|no_answer|voicemail|busy`), `outcome` enum (`interested|not_interested|appointment_booked|wrong_number|callback_requested|voicemail_left|do_not_call`), `outcome_confidence` numeric(3,2), `billable_seconds` int, `cost_cents` int, `recording_path`, `transcript_path`, `transferred_to_agent` boolean, `error_code`
-- [ ] Create `src/lib/db/schema/appointments.ts` with `id`, `org_id`, `call_id`, `contact_id`, `scheduled_at`, `notes`, `status` enum (`booked|confirmed|cancelled|no_show|completed`), `created_at`
-- [ ] Add indexes: `calls(org_id, campaign_id, status)`, `calls(org_id, contact_id)`, partial index on `calls(provider_call_id)` WHERE not null, `appointments(org_id, scheduled_at)`
-- [ ] Mark completed
+- [x] Create `src/lib/db/schema/campaigns.ts` with all columns from spec §7.2 including `concurrency_limit` default 5, `time_window_start` default `09:00`, `time_window_end` default `19:00`, `estimated_max_cents` int, `actual_cents` int default 0, `status` enum (`draft|scheduled|running|paused|completed|cancelled`)
+- [x] Create `src/lib/db/schema/calls.ts` with all columns from spec §7.2 including `provider` enum (`vapi|retell|proprietary`), `status` enum (`pending|dialing|in_progress|completed|failed|no_answer|voicemail|busy`), `outcome` enum (`interested|not_interested|appointment_booked|wrong_number|callback_requested|voicemail_left|do_not_call`), `outcome_confidence` numeric(3,2), `billable_seconds` int, `cost_cents` int, `recording_path`, `transcript_path`, `transferred_to_agent` boolean, `error_code`
+- [x] Create `src/lib/db/schema/appointments.ts` with `id`, `org_id`, `call_id`, `contact_id`, `scheduled_at`, `notes`, `status` enum (`booked|confirmed|cancelled|no_show|completed`), `created_at`
+- [x] Add indexes: `calls(org_id, campaign_id, status)`, `calls(org_id, contact_id)`, partial index on `calls(provider_call_id)` WHERE not null, `appointments(org_id, scheduled_at)`
+- [x] Mark completed
 
 ### Task 6: Drizzle schema — billing
 

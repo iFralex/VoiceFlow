@@ -5,3 +5,6 @@ export * from './script_templates';
 export * from './scripts';
 export * from './contact_lists';
 export * from './contacts';
+export * from './campaigns';
+export * from './calls';
+export * from './appointments';
