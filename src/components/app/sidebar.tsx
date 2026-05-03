@@ -25,7 +25,7 @@ interface SidebarProps {
 export function Sidebar({
   collapsed,
   onToggle,
-  role = 'owner',
+  role = 'viewer',
   orgs = [],
   activeOrgId = null,
 }: SidebarProps) {

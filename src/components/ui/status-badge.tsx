@@ -23,6 +23,7 @@ export type CallStatus =
   | 'completed'
   | 'failed'
   | 'no_answer'
+  | 'voicemail'
   | 'busy'
   | 'cancelled';
 
@@ -63,6 +64,7 @@ export const STATUS_MAP: Record<string, { colorClass: string }> = {
   failed: { colorClass: 'bg-[hsl(var(--status-danger)/0.12)] text-[hsl(var(--status-danger))] border-[hsl(var(--status-danger)/0.3)]' },
   no_answer: { colorClass: 'bg-[hsl(var(--status-warning)/0.12)] text-[hsl(var(--status-warning))] border-[hsl(var(--status-warning)/0.3)]' },
   busy: { colorClass: 'bg-[hsl(var(--status-warning)/0.12)] text-[hsl(var(--status-warning))] border-[hsl(var(--status-warning)/0.3)]' },
+  voicemail: { colorClass: 'bg-[hsl(var(--status-neutral)/0.12)] text-[hsl(var(--status-neutral))] border-[hsl(var(--status-neutral)/0.3)]' },
   // Payment statuses
   processing: { colorClass: 'bg-[hsl(var(--status-info)/0.12)] text-[hsl(var(--status-info))] border-[hsl(var(--status-info)/0.3)]' },
   succeeded: { colorClass: 'bg-[hsl(var(--status-success)/0.12)] text-[hsl(var(--status-success))] border-[hsl(var(--status-success)/0.3)]' },

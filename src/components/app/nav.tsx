@@ -58,7 +58,7 @@ interface NavProps {
   badgeValues?: Record<string, string | null>;
 }
 
-export function Nav({ items = PRIMARY_NAV_ITEMS, collapsed = false, role = 'owner', badgeValues }: NavProps) {
+export function Nav({ items = PRIMARY_NAV_ITEMS, collapsed = false, role = 'viewer', badgeValues }: NavProps) {
   const pathname = usePathname();
   const t = useTranslations('nav');
 

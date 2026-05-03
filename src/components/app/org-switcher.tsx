@@ -35,10 +35,13 @@ export function OrgSwitcher({ orgs, activeOrgId, collapsed = false }: OrgSwitche
       return;
     }
     setPending(orgId);
-    await switchOrg(orgId);
-    setPending(null);
-    setOpen(false);
-    router.refresh();
+    try {
+      await switchOrg(orgId);
+      setOpen(false);
+      router.refresh();
+    } finally {
+      setPending(null);
+    }
   }
 
   return (

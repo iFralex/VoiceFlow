@@ -16,9 +16,9 @@ afterEach(() => {
 });
 
 describe('toastResult', () => {
-  it('shows a success toast for ok:true result without message', () => {
+  it('shows no toast for ok:true result without message', () => {
     toastResult({ ok: true });
-    expect(toast.success).toHaveBeenCalledWith(undefined);
+    expect(toast.success).not.toHaveBeenCalled();
     expect(toast.error).not.toHaveBeenCalled();
   });
 

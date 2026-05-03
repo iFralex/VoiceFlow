@@ -107,6 +107,7 @@ const _italianStrings: Record<string, Record<string, string>> = {
     in_progress: 'In corso',
     failed: 'Fallita',
     no_answer: 'Senza risposta',
+    voicemail: 'Segreteria',
     busy: 'Occupato',
     processing: 'In elaborazione',
     succeeded: 'Completato',

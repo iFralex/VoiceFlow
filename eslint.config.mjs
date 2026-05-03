@@ -41,7 +41,7 @@ const config = [
 
       // Forbid raw SVG file imports — use @/components/ui/icon instead
       'no-restricted-imports': [
-        'warn',
+        'error',
         {
           patterns: [
             {
