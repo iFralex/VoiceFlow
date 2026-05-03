@@ -20,9 +20,9 @@ Each implementation plan in `docs/plans/` corresponds to exactly one git branch.
 4. Complete plan tasks in order (tasks may be skipped out of order only with a comment in the plan file)
 5. After each task, commit using the conventional format:
    ```
-   task(<plan-id>): <task-name>
+   feat(<plan-id>): <task-name>
    ```
-   Example: `task(01): initialise repository and package manager`
+   Example: `feat(01): initialise repository and package manager`
 6. When all tasks are complete and the plan's Definition of Done is satisfied, open a PR
 
 ## Commit Message Format
