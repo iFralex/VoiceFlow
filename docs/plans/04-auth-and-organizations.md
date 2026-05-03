@@ -177,10 +177,10 @@ export async function requireCapability(capability: Capability): Promise<void>;
 
 ### Task 11: Organization settings page
 
-- [ ] Create `src/app/(app)/settings/organization/page.tsx` with form to edit name, legal name, VAT number; locale not relevant here (per-user)
-- [ ] Show creation date, member count, organization id (for support reference)
-- [ ] "Elimina organizzazione" button (owner only) → confirmation dialog requiring the org name to be typed; on confirm calls `softDeleteOrganization`; documented as soft delete with full purge happening via runbook (plan 11)
-- [ ] Mark completed
+- [x] Create `src/app/(app)/settings/organization/page.tsx` with form to edit name, legal name, VAT number; locale not relevant here (per-user)
+- [x] Show creation date, member count, organization id (for support reference)
+- [x] "Elimina organizzazione" button (owner only) → confirmation dialog requiring the org name to be typed; on confirm calls `softDeleteOrganization`; documented as soft delete with full purge happening via runbook (plan 11)
+- [x] Mark completed
 
 ### Task 12: Org switcher Server Action
 
