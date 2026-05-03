@@ -7,12 +7,16 @@ import { Icons } from '@/components/ui/icon';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils/index';
 
+import { type CreditBalance, CreditPill, CreditPillSkeleton } from './credit-pill';
+
 interface TopBarProps {
   onMobileMenuClick: () => void;
+  /** Credit balance passed from a server-rendered parent; undefined while loading */
+  creditBalance?: CreditBalance;
   className?: string;
 }
 
-export function TopBar({ onMobileMenuClick, className }: TopBarProps) {
+export function TopBar({ onMobileMenuClick, creditBalance, className }: TopBarProps) {
   return (
     <header
       data-testid="app-topbar"
@@ -55,8 +59,12 @@ export function TopBar({ onMobileMenuClick, className }: TopBarProps) {
 
         <Separator orientation="vertical" className="mx-1 h-5" />
 
-        {/* Credit balance pill — stub, wired in Task 8 */}
-        <CreditPillStub />
+        {/* Credit balance pill */}
+        {creditBalance !== undefined ? (
+          <CreditPill balance={creditBalance} />
+        ) : (
+          <CreditPillSkeleton />
+        )}
 
         {/* Notifications — stub */}
         <Button
@@ -78,21 +86,6 @@ export function TopBar({ onMobileMenuClick, className }: TopBarProps) {
 /** Slot for pages to inject their title/breadcrumbs — wired in Task 12 via context */
 function PageTitleSlot() {
   return <span className="sr-only" aria-hidden />;
-}
-
-/** Stub credit pill — replaced by real component in Task 8 */
-function CreditPillStub() {
-  return (
-    <Button
-      variant="ghost"
-      size="sm"
-      className="h-8 gap-1.5 rounded-full px-3 text-xs"
-      aria-label="Saldo crediti"
-    >
-      <Icons.CreditCard size={13} />
-      <span className="font-medium">— min</span>
-    </Button>
-  );
 }
 
 /** Stub user menu — replaced by real dropdown in Task 10 */

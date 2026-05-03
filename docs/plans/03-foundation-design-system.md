@@ -121,11 +121,11 @@ type NavItem = {
 
 ### Task 8: Top bar — credit balance pill
 
-- [ ] Create `src/components/app/credit-pill.tsx` displaying remaining minutes (data fetched from a server-rendered parent and passed down)
-- [ ] Status colours: green ≥60 min, amber 10–59 min, red <10 min
-- [ ] Click opens a popover with current balance breakdown and "Ricarica" button → `/credit/topup`
-- [ ] In Phase 1 the data flows via a `<Suspense>` and short revalidation; full Realtime subscription is added in plan 12
-- [ ] Mark completed
+- [x] Create `src/components/app/credit-pill.tsx` displaying remaining minutes (data fetched from a server-rendered parent and passed down)
+- [x] Status colours: green ≥60 min, amber 10–59 min, red <10 min
+- [x] Click opens a popover with current balance breakdown and "Ricarica" button → `/credit/topup`
+- [x] In Phase 1 the data flows via a `<Suspense>` and short revalidation; full Realtime subscription is added in plan 12
+- [x] Mark completed
 
 ### Task 9: Top bar — search command palette stub
 

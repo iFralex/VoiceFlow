@@ -5,6 +5,7 @@ import * as React from 'react';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils/index';
 
+import { type CreditBalance } from './credit-pill';
 import { type OrgSummary } from './org-switcher';
 import { Sidebar } from './sidebar';
 import { TopBar } from './topbar';
@@ -37,9 +38,11 @@ interface ShellProps {
   children: React.ReactNode;
   orgs?: OrgSummary[];
   activeOrgId?: string | null;
+  /** Credit balance passed down from a server-rendered parent via Suspense */
+  creditBalance?: CreditBalance;
 }
 
-export function Shell({ children, orgs = [], activeOrgId = null }: ShellProps) {
+export function Shell({ children, orgs = [], activeOrgId = null, creditBalance }: ShellProps) {
   const collapsed = React.useSyncExternalStore(
     subscribe,
     getSidebarSnapshot,
@@ -85,7 +88,10 @@ export function Shell({ children, orgs = [], activeOrgId = null }: ShellProps) {
 
       {/* ── Main column (top bar + content) ─────────────────────────────── */}
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <TopBar onMobileMenuClick={() => setMobileOpen(true)} />
+        <TopBar
+          onMobileMenuClick={() => setMobileOpen(true)}
+          {...(creditBalance !== undefined ? { creditBalance } : {})}
+        />
 
         <main className="flex-1 overflow-y-auto">
           <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">{children}</div>
