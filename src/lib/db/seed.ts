@@ -1,3 +1,8 @@
-// Seed script — implementation arrives in plan 02.
-// Run with: pnpm db:seed
-console.warn('Seed script not yet implemented — coming in plan 02.');
+import { seed } from './seed/index';
+
+seed()
+  .then(() => process.exit(0))
+  .catch((err) => {
+    console.error('Seed failed:', err);
+    process.exit(1);
+  });

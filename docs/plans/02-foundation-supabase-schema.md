@@ -210,10 +210,10 @@ export async function withOrgContext<T>(
 
 ### Task 18: Seed runner
 
-- [ ] Create `src/lib/db/seed/index.ts` orchestrating idempotent seed (UPSERT on slug)
-- [ ] Add `pnpm db:seed` script
-- [ ] Run against dev; verify rows in Supabase Studio
-- [ ] Mark completed
+- [x] Create `src/lib/db/seed/index.ts` orchestrating idempotent seed (UPSERT on slug)
+- [x] Add `pnpm db:seed` script
+- [x] Run against dev; verify rows in Supabase Studio
+- [x] Mark completed
 
 ### Task 19: Test harness — transactional Postgres
 
