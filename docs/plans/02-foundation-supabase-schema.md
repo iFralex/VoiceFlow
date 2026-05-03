@@ -116,11 +116,11 @@ export type NewOrganization = typeof organizations.$inferInsert;
 
 ### Task 11: Generate first migration
 
-- [ ] Run `pnpm db:generate` to produce `drizzle/migrations/0000_init.sql`
-- [ ] Inspect generated SQL: confirm all 16 tables, all enums, all indexes are present
-- [ ] Apply to dev Supabase via `pnpm db:migrate`; verify in Supabase Studio
-- [ ] Commit the generated migration file (treat migrations as code per spec §7.4)
-- [ ] Mark completed
+- [x] Run `pnpm db:generate` to produce `drizzle/migrations/0000_init.sql`
+- [x] Inspect generated SQL: confirm all 16 tables, all enums, all indexes are present
+- [x] Apply to dev Supabase via `pnpm db:migrate`; verify in Supabase Studio
+- [x] Commit the generated migration file (treat migrations as code per spec §7.4)
+- [x] Mark completed
 
 ### Task 12: Row Level Security policies
 
