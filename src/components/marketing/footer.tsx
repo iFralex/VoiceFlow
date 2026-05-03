@@ -1,14 +1,19 @@
-import Link from 'next/link';
+'use client';
 
-const LEGAL_LINKS = [
-  { href: '/privacy', label: 'Privacy Policy' },
-  { href: '/termini', label: 'Termini di Servizio' },
-  { href: '/cookie', label: 'Cookie Policy' },
-] as const;
+import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 
 const CURRENT_YEAR = new Date().getFullYear();
 
 export function MarketingFooter() {
+  const t = useTranslations('common');
+
+  const legalLinks = [
+    { href: '/privacy', labelKey: 'marketing_privacy' },
+    { href: '/termini', labelKey: 'marketing_terms' },
+    { href: '/cookie', labelKey: 'marketing_cookies' },
+  ] as const;
+
   return (
     <footer
       data-testid="marketing-footer"
@@ -17,18 +22,18 @@ export function MarketingFooter() {
       <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 px-6 py-8 md:flex-row md:justify-between">
         {/* Copyright */}
         <p className="text-sm text-muted-foreground">
-          © {CURRENT_YEAR} VoiceFlow. Tutti i diritti riservati.
+          {t('marketing_copyright', { year: CURRENT_YEAR })}
         </p>
 
         {/* Legal links */}
-        <nav aria-label="Link legali" className="flex flex-wrap justify-center gap-4 md:justify-end">
-          {LEGAL_LINKS.map(({ href, label }) => (
+        <nav aria-label={t('marketing_legal_nav_label')} className="flex flex-wrap justify-center gap-4 md:justify-end">
+          {legalLinks.map(({ href, labelKey }) => (
             <Link
               key={href}
               href={href}
               className="text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
-              {label}
+              {t(labelKey)}
             </Link>
           ))}
         </nav>

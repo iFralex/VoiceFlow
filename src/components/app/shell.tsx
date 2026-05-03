@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import * as React from 'react';
 
 import { Sheet, SheetContent } from '@/components/ui/sheet';
@@ -43,6 +44,7 @@ interface ShellProps {
 }
 
 export function Shell({ children, orgs = [], activeOrgId = null, creditBalance }: ShellProps) {
+  const t = useTranslations('common');
   const collapsed = React.useSyncExternalStore(
     subscribe,
     getSidebarSnapshot,
@@ -80,7 +82,7 @@ export function Shell({ children, orgs = [], activeOrgId = null, creditBalance }
         <SheetContent
           side="left"
           className="w-60 p-0"
-          aria-label="Menu di navigazione"
+          aria-label={t('mobile_nav_label')}
         >
           <Sidebar collapsed={false} onToggle={() => setMobileOpen(false)} orgs={orgs} activeOrgId={activeOrgId} />
         </SheetContent>

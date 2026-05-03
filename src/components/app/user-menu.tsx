@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useTheme } from 'next-themes';
 import * as React from 'react';
 
@@ -41,9 +42,10 @@ function getInitials(name: string): string {
 
 export function UserMenu({ user }: UserMenuProps) {
   const { theme, setTheme } = useTheme();
+  const t = useTranslations('auth');
   const [locale, setLocaleState] = React.useState<Locale>('it');
 
-  const displayName = user?.name ?? 'Utente';
+  const displayName = user?.name ?? t('default_user');
   const email = user?.email ?? '';
   const initials = getInitials(displayName);
 
@@ -58,7 +60,7 @@ export function UserMenu({ user }: UserMenuProps) {
       <DropdownMenuTrigger asChild>
         <button
           className="flex h-8 w-8 items-center justify-center rounded-full outline-none ring-ring focus-visible:ring-2"
-          aria-label="Menu utente"
+          aria-label={t('user_menu_label')}
           data-testid="user-menu-trigger"
         >
           <Avatar className="h-8 w-8">
@@ -87,14 +89,14 @@ export function UserMenu({ user }: UserMenuProps) {
         <DropdownMenuItem asChild>
           <a href="/settings/profile" data-testid="user-menu-profile">
             <Icons.User className="mr-2" />
-            Profilo
+            {t('profile')}
           </a>
         </DropdownMenuItem>
 
         <DropdownMenuItem asChild>
           <a href="/settings" data-testid="user-menu-settings">
             <Icons.Settings className="mr-2" />
-            Impostazioni
+            {t('settings')}
           </a>
         </DropdownMenuItem>
 
@@ -104,15 +106,15 @@ export function UserMenu({ user }: UserMenuProps) {
         <DropdownMenuSub>
           <DropdownMenuSubTrigger data-testid="user-menu-lingua-trigger">
             <Icons.Globe className="mr-2" />
-            Lingua
+            {t('language')}
           </DropdownMenuSubTrigger>
           <DropdownMenuSubContent data-testid="user-menu-lingua-content">
             <DropdownMenuRadioGroup value={locale} onValueChange={handleLocaleChange}>
               <DropdownMenuRadioItem value="it" data-testid="user-menu-locale-it">
-                Italiano
+                {t('locale_it')}
               </DropdownMenuRadioItem>
               <DropdownMenuRadioItem value="en" data-testid="user-menu-locale-en">
-                English
+                {t('locale_en')}
               </DropdownMenuRadioItem>
             </DropdownMenuRadioGroup>
           </DropdownMenuSubContent>
@@ -122,21 +124,21 @@ export function UserMenu({ user }: UserMenuProps) {
         <DropdownMenuSub>
           <DropdownMenuSubTrigger data-testid="user-menu-tema-trigger">
             <Icons.Sun className="mr-2" />
-            Tema
+            {t('theme')}
           </DropdownMenuSubTrigger>
           <DropdownMenuSubContent data-testid="user-menu-tema-content">
             <DropdownMenuRadioGroup value={theme ?? 'light'} onValueChange={setTheme}>
               <DropdownMenuRadioItem value="light" data-testid="user-menu-theme-light">
                 <Icons.Sun className="mr-2" />
-                Chiaro
+                {t('theme_light')}
               </DropdownMenuRadioItem>
               <DropdownMenuRadioItem value="dark" data-testid="user-menu-theme-dark">
                 <Icons.Moon className="mr-2" />
-                Scuro
+                {t('theme_dark')}
               </DropdownMenuRadioItem>
               <DropdownMenuRadioItem value="system" data-testid="user-menu-theme-system">
                 <Icons.Monitor className="mr-2" />
-                Sistema
+                {t('theme_system')}
               </DropdownMenuRadioItem>
             </DropdownMenuRadioGroup>
           </DropdownMenuSubContent>
@@ -154,7 +156,7 @@ export function UserMenu({ user }: UserMenuProps) {
           }}
         >
           <Icons.LogOut className="mr-2" />
-          Esci
+          {t('sign_out')}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

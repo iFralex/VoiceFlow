@@ -1,4 +1,5 @@
 import { cleanup, render, screen } from '@testing-library/react';
+import { useTranslations } from 'next-intl';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { Nav, PRIMARY_NAV_ITEMS } from '../nav';
@@ -10,6 +11,7 @@ vi.mock('next/navigation', () => ({
 
 afterEach(() => {
   cleanup();
+  vi.clearAllMocks();
 });
 
 describe('Nav', () => {
@@ -46,8 +48,22 @@ describe('Nav', () => {
     expect(activeLink.getAttribute('aria-current')).toBe('page');
   });
 
-  it('renders English labels when locale is en', () => {
-    render(<Nav role="owner" locale="en" />);
+  it('renders English labels when useTranslations returns English values', () => {
+    // Override the global mock to return English nav translations for this test
+    const enNav: Record<string, string> = {
+      dashboard: 'Dashboard',
+      campaigns: 'Campaigns',
+      contacts: 'Contacts',
+      scripts: 'Scripts',
+      credit: 'Credit',
+      settings: 'Settings',
+      primary_nav_label: 'Main navigation',
+    };
+    // Cast required because vi.fn mock doesn't have the full Translator methods
+    vi.mocked(useTranslations).mockReturnValueOnce(
+      ((key: string) => enNav[key] ?? key) as unknown as ReturnType<typeof useTranslations>,
+    );
+    render(<Nav role="owner" />);
     expect(screen.getByText('Campaigns')).toBeTruthy();
     expect(screen.getByText('Contacts')).toBeTruthy();
     expect(screen.getByText('Credit')).toBeTruthy();

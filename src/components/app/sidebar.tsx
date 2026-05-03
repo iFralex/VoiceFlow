@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import * as React from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -28,6 +29,9 @@ export function Sidebar({
   orgs = [],
   activeOrgId = null,
 }: SidebarProps) {
+  const t = useTranslations('common');
+  const tNav = useTranslations('nav');
+
   return (
     <TooltipProvider delayDuration={0}>
       <div className="flex h-full flex-col">
@@ -51,19 +55,19 @@ export function Sidebar({
                 size="icon"
                 className="h-8 w-8 shrink-0"
                 onClick={onToggle}
-                aria-label={collapsed ? 'Espandi barra laterale' : 'Comprimi barra laterale'}
+                aria-label={collapsed ? t('expand_sidebar') : t('collapse_sidebar')}
               >
                 <Icons.PanelLeft size={16} />
               </Button>
             </TooltipTrigger>
             <TooltipContent side="right">
-              {collapsed ? 'Espandi' : 'Comprimi'}
+              {collapsed ? t('expand') : t('collapse')}
             </TooltipContent>
           </Tooltip>
         </div>
 
         {/* Primary navigation */}
-        <nav className="flex-1 overflow-y-auto py-2" aria-label="Navigazione principale">
+        <nav className="flex-1 overflow-y-auto py-2" aria-label={tNav('primary_nav_label')}>
           <Nav collapsed={collapsed} role={role} />
         </nav>
 

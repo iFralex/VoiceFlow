@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import * as React from 'react';
 
 import { switchOrg } from '@/actions/org';
@@ -21,11 +22,12 @@ interface OrgSwitcherProps {
 
 export function OrgSwitcher({ orgs, activeOrgId, collapsed = false }: OrgSwitcherProps) {
   const router = useRouter();
+  const t = useTranslations('common');
   const [open, setOpen] = React.useState(false);
   const [pending, setPending] = React.useState<string | null>(null);
 
   const activeOrg = orgs.find((o) => o.id === activeOrgId) ?? orgs[0] ?? null;
-  const displayName = activeOrg?.name ?? 'Organizzazione';
+  const displayName = activeOrg?.name ?? t('default_org_name');
 
   async function handleSwitch(orgId: string) {
     if (orgId === activeOrgId) {
@@ -53,7 +55,7 @@ export function OrgSwitcher({ orgs, activeOrgId, collapsed = false }: OrgSwitche
                 'h-9 w-full justify-start gap-2 text-sm',
                 collapsed && 'w-9 justify-center px-0',
               )}
-              aria-label="Cambia organizzazione"
+              aria-label={t('org_switcher_label')}
               aria-expanded={open}
             >
               <Icons.Building2 size={16} className="shrink-0" />
@@ -76,7 +78,7 @@ export function OrgSwitcher({ orgs, activeOrgId, collapsed = false }: OrgSwitche
         className="w-56 p-1"
         data-testid="org-switcher-content"
       >
-        <p className="px-2 py-1 text-xs font-medium text-muted-foreground">Organizzazioni</p>
+        <p className="px-2 py-1 text-xs font-medium text-muted-foreground">{t('organizations')}</p>
         <ul role="list">
           {orgs.map((org) => {
             const isActive = org.id === activeOrgId;
@@ -117,7 +119,7 @@ export function OrgSwitcher({ orgs, activeOrgId, collapsed = false }: OrgSwitche
           className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
         >
           <Icons.Plus size={14} className="shrink-0" />
-          <span>Crea nuova organizzazione</span>
+          <span>{t('create_new_org')}</span>
         </button>
       </PopoverContent>
     </Popover>

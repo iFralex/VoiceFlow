@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import * as React from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -22,6 +23,7 @@ interface TopBarProps {
 
 export function TopBar({ onMobileMenuClick, creditBalance, user, className }: TopBarProps) {
   const [cmdOpen, setCmdOpen] = React.useState(false);
+  const t = useTranslations('common');
   useCommandPaletteShortcut(React.useCallback(() => setCmdOpen(true), []));
 
   return (
@@ -38,7 +40,7 @@ export function TopBar({ onMobileMenuClick, creditBalance, user, className }: To
         size="icon"
         className="h-8 w-8 md:hidden"
         onClick={onMobileMenuClick}
-        aria-label="Apri menu"
+        aria-label={t('open_menu')}
       >
         <Icons.Menu size={18} />
       </Button>
@@ -58,12 +60,12 @@ export function TopBar({ onMobileMenuClick, creditBalance, user, className }: To
           variant="ghost"
           size="sm"
           className="hidden h-8 gap-2 text-sm text-muted-foreground md:flex"
-          aria-label="Apri ricerca (Cmd+K)"
+          aria-label={t('search_label')}
           onClick={() => setCmdOpen(true)}
           data-testid="cmd-trigger"
         >
           <Icons.Search size={14} />
-          <span>Cerca...</span>
+          <span>{t('search_placeholder')}</span>
           <kbd className="ml-1 hidden rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground md:inline">
             ⌘K
           </kbd>
@@ -83,7 +85,7 @@ export function TopBar({ onMobileMenuClick, creditBalance, user, className }: To
           variant="ghost"
           size="icon"
           className="h-8 w-8"
-          aria-label="Notifiche"
+          aria-label={t('notifications')}
         >
           <Icons.Bell size={16} />
         </Button>

@@ -3,6 +3,7 @@
 import { type LucideProps } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import * as React from 'react';
 
 import { Icons } from '@/components/ui/icon';
@@ -18,7 +19,8 @@ import { type MemberRole } from '@/types/index';
 // ---------------------------------------------------------------------------
 export type NavItem = {
   href: string;
-  label: { it: string; en: string };
+  /** Key in the 'nav' i18n namespace (e.g. 'campaigns', 'contacts'). */
+  labelKey: string;
   icon: React.ComponentType<LucideProps>;
   badge?: () => Promise<string | null>;
   requireRole?: MemberRole[];
@@ -28,35 +30,19 @@ export type NavItem = {
 // Primary navigation items — spec §5.1
 // ---------------------------------------------------------------------------
 export const PRIMARY_NAV_ITEMS: NavItem[] = [
-  {
-    href: '/dashboard',
-    label: { it: 'Dashboard', en: 'Dashboard' },
-    icon: Icons.LayoutDashboard,
-  },
-  {
-    href: '/campagne',
-    label: { it: 'Campagne', en: 'Campaigns' },
-    icon: Icons.Megaphone,
-  },
-  {
-    href: '/contatti',
-    label: { it: 'Contatti', en: 'Contacts' },
-    icon: Icons.Users,
-  },
-  {
-    href: '/script',
-    label: { it: 'Script', en: 'Scripts' },
-    icon: Icons.FileText,
-  },
+  { href: '/dashboard', labelKey: 'dashboard', icon: Icons.LayoutDashboard },
+  { href: '/campagne', labelKey: 'campaigns', icon: Icons.Megaphone },
+  { href: '/contatti', labelKey: 'contacts', icon: Icons.Users },
+  { href: '/script', labelKey: 'scripts', icon: Icons.FileText },
   {
     href: '/credito',
-    label: { it: 'Credito', en: 'Credit' },
+    labelKey: 'credit',
     icon: Icons.CreditCard,
     requireRole: ['owner', 'admin'],
   },
   {
     href: '/impostazioni',
-    label: { it: 'Impostazioni', en: 'Settings' },
+    labelKey: 'settings',
     icon: Icons.Settings,
     requireRole: ['owner', 'admin'],
   },
@@ -69,19 +55,13 @@ interface NavProps {
   items?: NavItem[];
   collapsed?: boolean;
   role?: MemberRole;
-  locale?: 'it' | 'en';
   /** Pre-resolved badge values keyed by item href */
   badgeValues?: Record<string, string | null>;
 }
 
-export function Nav({
-  items = PRIMARY_NAV_ITEMS,
-  collapsed = false,
-  role = 'owner',
-  locale = 'it',
-  badgeValues,
-}: NavProps) {
+export function Nav({ items = PRIMARY_NAV_ITEMS, collapsed = false, role = 'owner', badgeValues }: NavProps) {
   const pathname = usePathname();
+  const t = useTranslations('nav');
 
   const visibleItems = items.filter((item) => {
     if (!item.requireRole) return true;
@@ -92,7 +72,7 @@ export function Nav({
     <TooltipProvider delayDuration={0}>
       <ul className="space-y-0.5 px-2" role="list">
         {visibleItems.map((item) => {
-          const label = item.label[locale];
+          const label = t(item.labelKey);
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
           const badge = badgeValues?.[item.href];
 

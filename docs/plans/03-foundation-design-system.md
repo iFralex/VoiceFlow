@@ -149,13 +149,13 @@ type NavItem = {
 
 ### Task 12: i18n scaffolding
 
-- [ ] Install `next-intl`
-- [ ] Configure `src/i18n/locales/it.json` and `src/i18n/locales/en.json` with namespaces: `common`, `nav`, `auth`, `campaigns`, `contacts`, `credit`, `settings`, `compliance`
-- [ ] Wire `next-intl` middleware that resolves locale from cookie → falls back to `it`
-- [ ] Provide a `t()` server helper and a `useTranslations()` client hook
-- [ ] Translate the navigation labels, top-bar elements, and the marketing layout chrome as the seed
-- [ ] Document in `docs/i18n.md` how to add new keys (every UI string passes through translations; no inline strings outside JSX)
-- [ ] Mark completed
+- [x] Install `next-intl`
+- [x] Configure `src/i18n/locales/it.json` and `src/i18n/locales/en.json` with namespaces: `common`, `nav`, `auth`, `campaigns`, `contacts`, `credit`, `settings`, `compliance`
+- [x] Wire `next-intl` middleware that resolves locale from cookie → falls back to `it`
+- [x] Provide a `t()` server helper and a `useTranslations()` client hook
+- [x] Translate the navigation labels, top-bar elements, and the marketing layout chrome as the seed
+- [x] Document in `docs/i18n.md` how to add new keys (every UI string passes through translations; no inline strings outside JSX)
+- [x] Mark completed
 
 ### Task 13: Date and number formatting helpers
 

@@ -1,9 +1,14 @@
+'use client';
+
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
 import { Icons } from '@/components/ui/icon';
 
 export function MarketingNav() {
+  const t = useTranslations('common');
+
   return (
     <header
       data-testid="marketing-nav"
@@ -17,9 +22,9 @@ export function MarketingNav() {
         </Link>
 
         {/* CTA */}
-        <nav aria-label="Navigazione marketing">
+        <nav aria-label={t('marketing_nav_label')}>
           <Button asChild size="sm">
-            <Link href="/login">Accedi</Link>
+            <Link href="/login">{t('marketing_sign_in')}</Link>
           </Button>
         </nav>
       </div>
