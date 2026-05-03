@@ -1,6 +1,6 @@
 # VoiceFlow
 
-VoiceFlow is an AI-powered voice outreach platform that enables sales teams to automate and personalise outbound calling campaigns using intelligent voice agents — combining real-time speech synthesis, CRM-style contact management, and campaign analytics in a single Next.js 15 application.
+VoiceFlow is an AI-powered voice outreach platform that enables sales teams to automate and personalise outbound calling campaigns using intelligent voice agents — combining real-time speech synthesis, CRM-style contact management, and campaign analytics in a single Next.js 16 application.
 
 ## Documentation
 

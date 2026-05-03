@@ -5,7 +5,7 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: 'VoiceFlow',
-  description: 'AI-powered voice recruitment platform',
+  description: 'AI-powered voice outreach platform for sales teams',
 };
 
 export default function RootLayout({

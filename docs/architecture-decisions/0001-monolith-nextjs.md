@@ -16,7 +16,7 @@ The technical specification (§2, §4) explicitly states the guiding principles:
 
 ## Decision
 
-Keep all application logic — API routes, background jobs (Inngest), database access (Drizzle), server actions, and frontend UI — inside a single Next.js 15 App Router application deployed to Vercel.
+Keep all application logic — API routes, background jobs (Inngest), database access (Drizzle), server actions, and frontend UI — inside a single Next.js 16 App Router application deployed to Vercel.
 
 No separate worker service, no message broker, no separate API gateway.
 

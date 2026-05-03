@@ -12,9 +12,15 @@ const Env = z.object({
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
   STRIPE_SECRET_KEY: z.string().startsWith('sk_').optional(),
   STRIPE_WEBHOOK_SECRET: z.string().startsWith('whsec_').optional(),
+  STRIPE_PRICE_TEST: z.string().optional(),
+  STRIPE_PRICE_STARTER: z.string().optional(),
+  STRIPE_PRICE_GROWTH: z.string().optional(),
+  STRIPE_PRICE_SCALE: z.string().optional(),
   RESEND_API_KEY: z.string().min(1).optional(),
   EMAIL_FROM_ADDRESS: z.string().email().optional(),
+  EMAIL_REPLY_TO: z.string().email().optional(),
   SENTRY_DSN: z.string().url().optional(),
+  SENTRY_AUTH_TOKEN: z.string().optional(),
   AXIOM_TOKEN: z.string().optional(),
   AXIOM_DATASET: z.string().optional(),
   INNGEST_EVENT_KEY: z.string().min(1),
@@ -27,6 +33,9 @@ const Env = z.object({
   TWILIO_ACCOUNT_SID: z.string().min(1).optional(),
   TWILIO_AUTH_TOKEN: z.string().min(1).optional(),
   TELNYX_API_KEY: z.string().min(1).optional(),
+  SBC_TRUNK_ID: z.string().optional(),
+  SBC_AUTH_USER: z.string().optional(),
+  SBC_AUTH_PASS: z.string().optional(),
   OPENAI_API_KEY: z.string().min(1).optional(),
   ELEVENLABS_API_KEY: z.string().min(1).optional(),
   RPO_PROVIDER_API_KEY: z.string().min(1).optional(),
@@ -34,7 +43,12 @@ const Env = z.object({
   INTERNAL_WEBHOOK_SECRET: z.string().min(32),
 });
 
+// Convert empty strings to undefined so optional validators don't reject blank env vars
+const rawEnv = Object.fromEntries(
+  Object.entries(process.env).map(([k, v]) => [k, v === '' ? undefined : v])
+);
+
 export const env =
   process.env['SKIP_ENV_VALIDATION'] === 'true'
     ? (process.env as unknown as z.infer<typeof Env>)
-    : Env.parse(process.env);
+    : Env.parse(rawEnv);
