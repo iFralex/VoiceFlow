@@ -185,17 +185,17 @@ export async function withOrgContext<T>(
 
 ### Task 16: Seed — script templates
 
-- [ ] Create `src/lib/db/seed/script_templates.ts` with the five Italian-language templates per spec §8.3:
+- [x] Create `src/lib/db/seed/script_templates.ts` with the five Italian-language templates per spec §8.3:
   - `lead-reactivation` — riattivazione di lead non chiusi
   - `appointment-confirm` — conferma appuntamento test drive o officina
   - `car-renewal` — cambio auto programmato (post 36–48 mesi)
   - `post-sale-followup` — verifica soddisfazione post-vendita
   - `csi-survey` — questionario CSI per le case madri
-- [ ] For each template author the `system_prompt` in Italian, including the AI Act disclosure preamble (note: the adapter prepends an additional canonical disclosure, but templates also state it explicitly per spec §12.3)
-- [ ] For each template define `variable_schema` JSON Schema with required variables (e.g. for `lead-reactivation`: `dealership_name`, `brand`, `salesperson_first_name`, `available_slots`, `lead_origin_context`, `incentive_to_offer`)
-- [ ] Set `default_voice_id` per template (revisited in plan 08)
-- [ ] Mark each as `version: 1` and `published_at: now()`
-- [ ] Mark completed
+- [x] For each template author the `system_prompt` in Italian, including the AI Act disclosure preamble (note: the adapter prepends an additional canonical disclosure, but templates also state it explicitly per spec §12.3)
+- [x] For each template define `variable_schema` JSON Schema with required variables (e.g. for `lead-reactivation`: `dealership_name`, `brand`, `salesperson_first_name`, `available_slots`, `lead_origin_context`, `incentive_to_offer`)
+- [x] Set `default_voice_id` per template (revisited in plan 08)
+- [x] Mark each as `version: 1` and `published_at: now()`
+- [x] Mark completed
 
 ### Task 17: Seed — credit packages
 
