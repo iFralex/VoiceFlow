@@ -10,6 +10,8 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronUp,
+  ChevronsLeft,
+  ChevronsRight,
   ChevronsUpDown,
   Clock,
   Copy,
@@ -87,6 +89,8 @@ export const Icons = {
   ChevronUp: withDefaults(ChevronUp),
   ChevronLeft: withDefaults(ChevronLeft),
   ChevronRight: withDefaults(ChevronRight),
+  ChevronsLeft: withDefaults(ChevronsLeft),
+  ChevronsRight: withDefaults(ChevronsRight),
   ChevronsUpDown: withDefaults(ChevronsUpDown),
 
   // Actions

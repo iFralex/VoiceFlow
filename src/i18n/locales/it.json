@@ -27,7 +27,8 @@
     "command_palette_nav_group": "Navigazione",
     "confirm": "Conferma",
     "cancel": "Annulla",
-    "loading": "Attendere…"
+    "loading": "Attendere…",
+    "error_generic": "Si è verificato un errore. Riprova."
   },
   "nav": {
     "dashboard": "Dashboard",

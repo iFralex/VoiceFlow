@@ -49,6 +49,7 @@ const _italianStrings: Record<string, Record<string, string>> = {
     confirm: 'Conferma',
     cancel: 'Annulla',
     loading: 'Attendere…',
+    error_generic: 'Si è verificato un errore. Riprova.',
   },
   nav: {
     dashboard: 'Dashboard',
@@ -133,5 +134,6 @@ vi.mock('next-intl', () => ({
       return msg;
     };
   }),
+  useLocale: vi.fn(() => 'it'),
   NextIntlClientProvider: ({ children }: { children: unknown }) => children,
 }));

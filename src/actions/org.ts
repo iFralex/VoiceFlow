@@ -24,5 +24,6 @@ export async function switchOrg(orgId: string): Promise<void> {
     sameSite: 'lax',
     path: '/',
     maxAge: 60 * 60 * 24 * 365, // 1 year
+    secure: process.env.NODE_ENV === 'production',
   });
 }

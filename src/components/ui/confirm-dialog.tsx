@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import * as React from 'react';
+import { toast } from 'sonner';
 
 import {
   AlertDialog,
@@ -68,6 +69,8 @@ export function ConfirmDialog({
       setOpen(false);
     } catch (err) {
       console.error('ConfirmDialog: onConfirm threw an error', err);
+      const message = err instanceof Error ? err.message : t('error_generic');
+      toast.error(message);
     } finally {
       setPending(false);
     }

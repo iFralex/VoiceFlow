@@ -26,7 +26,7 @@ export function DataTablePagination<TData>({
   const { pageIndex, pageSize } = table.getState().pagination;
   const pageCount = table.getPageCount();
   const selectedCount = table.getFilteredSelectedRowModel().rows.length;
-  const totalCount = table.getFilteredRowModel().rows.length;
+  const totalCount = table.getRowCount();
 
   return (
     <div className="flex items-center justify-between gap-4 text-sm">
@@ -75,7 +75,7 @@ export function DataTablePagination<TData>({
             disabled={!table.getCanPreviousPage()}
             aria-label={t('first_page')}
           >
-            <Icons.ChevronLeft />
+            <Icons.ChevronsLeft />
           </Button>
           <Button
             variant="outline"
@@ -105,7 +105,7 @@ export function DataTablePagination<TData>({
             disabled={!table.getCanNextPage()}
             aria-label={t('last_page')}
           >
-            <Icons.ChevronRight />
+            <Icons.ChevronsRight />
           </Button>
         </div>
       </div>

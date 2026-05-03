@@ -42,6 +42,9 @@ export function formatPhone(phone: string): string {
  * formatDuration(45) → "45s"
  */
 export function formatDuration(seconds: number): string {
+  if (seconds <= 0) {
+    return '0s';
+  }
   if (seconds < 60) {
     return `${seconds}s`;
   }

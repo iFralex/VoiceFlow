@@ -23,7 +23,7 @@ export function toastResult(
   successMessage?: string,
 ): ActionResult {
   if (result.ok) {
-    toast.success(successMessage ?? result.message ?? 'Operazione completata');
+    toast.success(successMessage ?? result.message);
   } else {
     toast.error(result.message);
   }

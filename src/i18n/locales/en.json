@@ -27,7 +27,8 @@
     "command_palette_nav_group": "Navigation",
     "confirm": "Confirm",
     "cancel": "Cancel",
-    "loading": "Please wait…"
+    "loading": "Please wait…",
+    "error_generic": "An error occurred. Please try again."
   },
   "nav": {
     "dashboard": "Dashboard",

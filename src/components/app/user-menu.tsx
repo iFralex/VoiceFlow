@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useTheme } from 'next-themes';
 import * as React from 'react';
 
@@ -47,7 +47,8 @@ export function UserMenu({ user }: UserMenuProps) {
   const { theme, setTheme } = useTheme();
   const t = useTranslations('auth');
   const router = useRouter();
-  const [locale, setLocaleState] = React.useState<Locale>('it');
+  const currentLocale = useLocale() as Locale;
+  const [locale, setLocaleState] = React.useState<Locale>(currentLocale);
 
   const displayName = user?.name ?? t('default_user');
   const email = user?.email ?? '';
