@@ -5,6 +5,7 @@ import * as React from 'react';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils/index';
 
+import { type OrgSummary } from './org-switcher';
 import { Sidebar } from './sidebar';
 import { TopBar } from './topbar';
 
@@ -34,9 +35,11 @@ function getSidebarServerSnapshot(): boolean {
 
 interface ShellProps {
   children: React.ReactNode;
+  orgs?: OrgSummary[];
+  activeOrgId?: string | null;
 }
 
-export function Shell({ children }: ShellProps) {
+export function Shell({ children, orgs = [], activeOrgId = null }: ShellProps) {
   const collapsed = React.useSyncExternalStore(
     subscribe,
     getSidebarSnapshot,
@@ -66,7 +69,7 @@ export function Shell({ children }: ShellProps) {
           collapsed ? 'w-16' : 'w-60',
         )}
       >
-        <Sidebar collapsed={collapsed} onToggle={handleToggle} />
+        <Sidebar collapsed={collapsed} onToggle={handleToggle} orgs={orgs} activeOrgId={activeOrgId} />
       </aside>
 
       {/* ── Mobile: sidebar inside a Sheet ──────────────────────────────── */}
@@ -76,7 +79,7 @@ export function Shell({ children }: ShellProps) {
           className="w-60 p-0"
           aria-label="Menu di navigazione"
         >
-          <Sidebar collapsed={false} onToggle={() => setMobileOpen(false)} />
+          <Sidebar collapsed={false} onToggle={() => setMobileOpen(false)} orgs={orgs} activeOrgId={activeOrgId} />
         </SheetContent>
       </Sheet>
 

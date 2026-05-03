@@ -8,13 +8,26 @@ import { Icons } from '@/components/ui/icon';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils/index';
+import { type MemberRole } from '@/types/index';
+
+import { Nav } from './nav';
+import { OrgSwitcher, type OrgSummary } from './org-switcher';
 
 interface SidebarProps {
   collapsed: boolean;
   onToggle: () => void;
+  role?: MemberRole;
+  orgs?: OrgSummary[];
+  activeOrgId?: string | null;
 }
 
-export function Sidebar({ collapsed, onToggle }: SidebarProps) {
+export function Sidebar({
+  collapsed,
+  onToggle,
+  role = 'owner',
+  orgs = [],
+  activeOrgId = null,
+}: SidebarProps) {
   return (
     <TooltipProvider delayDuration={0}>
       <div className="flex h-full flex-col">
@@ -49,72 +62,18 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           </Tooltip>
         </div>
 
-        {/* Primary navigation — populated in Task 6 */}
+        {/* Primary navigation */}
         <nav className="flex-1 overflow-y-auto py-2" aria-label="Navigazione principale">
-          <SidebarNavStub collapsed={collapsed} />
+          <Nav collapsed={collapsed} role={role} />
         </nav>
 
         <Separator />
 
-        {/* Org switcher — populated in Task 7 */}
+        {/* Org switcher */}
         <div className={cn('p-3', collapsed && 'flex justify-center')}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                className={cn(
-                  'h-9 w-full justify-start gap-2 text-sm',
-                  collapsed && 'w-9 justify-center px-0',
-                )}
-                aria-label="Cambia organizzazione"
-              >
-                <Icons.Building2 size={16} className="shrink-0" />
-                {!collapsed && <span className="truncate text-muted-foreground">Organizzazione</span>}
-              </Button>
-            </TooltipTrigger>
-            {collapsed && <TooltipContent side="right">Organizzazione</TooltipContent>}
-          </Tooltip>
+          <OrgSwitcher orgs={orgs} activeOrgId={activeOrgId} collapsed={collapsed} />
         </div>
       </div>
-    </TooltipProvider>
-  );
-}
-
-/** Stub nav items — replaced by the real Nav component in Task 6 */
-function SidebarNavStub({ collapsed }: { collapsed: boolean }) {
-  const items = [
-    { href: '/dashboard', label: 'Dashboard', icon: Icons.LayoutDashboard },
-    { href: '/campagne', label: 'Campagne', icon: Icons.Megaphone },
-    { href: '/contatti', label: 'Contatti', icon: Icons.Users },
-    { href: '/script', label: 'Script', icon: Icons.FileText },
-    { href: '/credito', label: 'Credito', icon: Icons.CreditCard },
-    { href: '/impostazioni', label: 'Impostazioni', icon: Icons.Settings },
-  ] as const;
-
-  return (
-    <TooltipProvider delayDuration={0}>
-      <ul className="space-y-0.5 px-2">
-        {items.map(({ href, label, icon: Icon }) => (
-          <li key={href}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Link
-                  href={href}
-                  className={cn(
-                    'flex h-9 items-center gap-2 rounded-md px-2 text-sm text-muted-foreground',
-                    'hover:bg-accent hover:text-foreground transition-colors',
-                    collapsed && 'w-9 justify-center px-0',
-                  )}
-                >
-                  <Icon size={16} className="shrink-0" />
-                  {!collapsed && <span>{label}</span>}
-                </Link>
-              </TooltipTrigger>
-              {collapsed && <TooltipContent side="right">{label}</TooltipContent>}
-            </Tooltip>
-          </li>
-        ))}
-      </ul>
     </TooltipProvider>
   );
 }

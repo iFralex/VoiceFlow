@@ -1,7 +1,13 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { Shell } from '../shell';
+
+// Nav uses usePathname; OrgSwitcher uses useRouter
+vi.mock('next/navigation', () => ({
+  usePathname: vi.fn(() => '/dashboard'),
+  useRouter: vi.fn(() => ({ refresh: vi.fn() })),
+}));
 
 // Minimal localStorage mock with StorageEvent support
 const store: Record<string, string> = {};

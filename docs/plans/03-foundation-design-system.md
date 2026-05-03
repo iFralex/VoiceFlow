@@ -114,10 +114,10 @@ type NavItem = {
 
 ### Task 7: Organization switcher
 
-- [ ] Create `src/components/app/org-switcher.tsx` rendering a popover listing all orgs the user belongs to (data passed from server component)
-- [ ] Active org indicated; clicking another org sets `active_org_id` cookie via Server Action then `router.refresh()`
-- [ ] "Crea nuova organizzazione" CTA at the bottom of the popover (handler stub; full creation flow lives in plan 04)
-- [ ] Mark completed
+- [x] Create `src/components/app/org-switcher.tsx` rendering a popover listing all orgs the user belongs to (data passed from server component)
+- [x] Active org indicated; clicking another org sets `active_org_id` cookie via Server Action then `router.refresh()`
+- [x] "Crea nuova organizzazione" CTA at the bottom of the popover (handler stub; full creation flow lives in plan 04)
+- [x] Mark completed
 
 ### Task 8: Top bar — credit balance pill
 
