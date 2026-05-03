@@ -9,6 +9,12 @@ vi.mock('next/navigation', () => ({
   useRouter: vi.fn(() => ({ refresh: vi.fn() })),
 }));
 
+// OrgSwitcher calls setActiveOrg — mock to prevent db/env imports
+vi.mock('@/actions/org', () => ({
+  setActiveOrg: vi.fn().mockResolvedValue({ ok: true }),
+  switchOrg: vi.fn().mockResolvedValue({ ok: true }),
+}));
+
 // Minimal localStorage mock with StorageEvent support
 const store: Record<string, string> = {};
 const localStorageMock = {

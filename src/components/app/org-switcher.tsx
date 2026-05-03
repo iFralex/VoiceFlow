@@ -4,12 +4,13 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import * as React from 'react';
 
-import { switchOrg } from '@/actions/org';
+import { setActiveOrg } from '@/actions/org';
 import { Button } from '@/components/ui/button';
 import { Icons } from '@/components/ui/icon';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { toastResult } from '@/lib/utils/action-toast';
 import { cn } from '@/lib/utils/index';
 
 export type OrgSummary = { id: string; name: string };
@@ -36,9 +37,12 @@ export function OrgSwitcher({ orgs, activeOrgId, collapsed = false }: OrgSwitche
     }
     setPending(orgId);
     try {
-      await switchOrg(orgId);
-      setOpen(false);
-      router.refresh();
+      const result = await setActiveOrg(orgId);
+      toastResult(result);
+      if (result.ok) {
+        setOpen(false);
+        router.refresh();
+      }
     } finally {
       setPending(null);
     }

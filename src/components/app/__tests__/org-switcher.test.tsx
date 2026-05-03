@@ -17,7 +17,8 @@ function renderWithProvider(props: React.ComponentProps<typeof OrgSwitcher>) {
 const mockRefresh = vi.fn();
 
 vi.mock('@/actions/org', () => ({
-  switchOrg: vi.fn().mockResolvedValue(undefined),
+  setActiveOrg: vi.fn().mockResolvedValue({ ok: true }),
+  switchOrg: vi.fn().mockResolvedValue({ ok: true }),
 }));
 
 vi.mock('next/navigation', () => ({
@@ -81,28 +82,42 @@ describe('OrgSwitcher', () => {
     expect(screen.getByText('Crea nuova organizzazione')).toBeTruthy();
   });
 
-  it('calls switchOrg and router.refresh when a different org is clicked', async () => {
-    const { switchOrg } = await import('@/actions/org');
+  it('calls setActiveOrg and router.refresh when a different org is clicked', async () => {
+    const { setActiveOrg } = await import('@/actions/org');
     renderWithProvider({ orgs: ORGS, activeOrgId: 'org-1' });
     fireEvent.click(screen.getByRole('button', { name: /cambia organizzazione/i }));
     fireEvent.click(screen.getByText('Concessionaria Sud'));
     await waitFor(() => {
-      expect(switchOrg).toHaveBeenCalledWith('org-2');
+      expect(setActiveOrg).toHaveBeenCalledWith('org-2');
     });
     await waitFor(() => {
       expect(mockRefresh).toHaveBeenCalled();
     });
   });
 
-  it('does not call switchOrg when clicking the already-active org', async () => {
-    const { switchOrg } = await import('@/actions/org');
+  it('does not call setActiveOrg when clicking the already-active org', async () => {
+    const { setActiveOrg } = await import('@/actions/org');
     renderWithProvider({ orgs: ORGS, activeOrgId: 'org-1' });
     fireEvent.click(screen.getByRole('button', { name: /cambia organizzazione/i }));
     // In the popover list, the active org button is the last match for the name
     const listItems = screen.getAllByText('Concessionaria Nord');
     fireEvent.click(listItems.at(-1)!);
     await waitFor(() => {
-      expect(switchOrg).not.toHaveBeenCalled();
+      expect(setActiveOrg).not.toHaveBeenCalled();
+    });
+  });
+
+  it('does not refresh when setActiveOrg returns an error', async () => {
+    const { setActiveOrg } = await import('@/actions/org');
+    vi.mocked(setActiveOrg).mockResolvedValueOnce({ ok: false, message: 'not_a_member' });
+    renderWithProvider({ orgs: ORGS, activeOrgId: 'org-1' });
+    fireEvent.click(screen.getByRole('button', { name: /cambia organizzazione/i }));
+    fireEvent.click(screen.getByText('Concessionaria Sud'));
+    await waitFor(() => {
+      expect(setActiveOrg).toHaveBeenCalledWith('org-2');
+    });
+    await waitFor(() => {
+      expect(mockRefresh).not.toHaveBeenCalled();
     });
   });
 });

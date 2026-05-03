@@ -184,9 +184,9 @@ export async function requireCapability(capability: Capability): Promise<void>;
 
 ### Task 12: Org switcher Server Action
 
-- [ ] Add `setActiveOrg(orgId)` Server Action: validates membership, writes `active_org_id` cookie, returns `{ ok }`
-- [ ] Wire to the `<OrgSwitcher>` component built in plan 03 (which currently has a stub)
-- [ ] Mark completed
+- [x] Add `setActiveOrg(orgId)` Server Action: validates membership, writes `active_org_id` cookie, returns `{ ok }`
+- [x] Wire to the `<OrgSwitcher>` component built in plan 03 (which currently has a stub)
+- [x] Mark completed
 
 ### Task 13: Personal Access Tokens (programmatic access scaffolding)
 
