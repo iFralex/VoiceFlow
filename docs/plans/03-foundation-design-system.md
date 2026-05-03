@@ -197,10 +197,10 @@ type NavItem = {
 
 ### Task 18: Visual regression test baseline
 
-- [ ] Add Playwright visual regression test in `e2e/visual.spec.ts` capturing screenshots of: marketing landing, login page placeholder, app shell empty state
-- [ ] Commit the baseline screenshots; CI fails on visual drift exceeding threshold
-- [ ] Document in README how to update baselines when intentional changes happen
-- [ ] Mark completed
+- [x] Add Playwright visual regression test in `e2e/visual.spec.ts` capturing screenshots of: marketing landing, login page placeholder, app shell empty state
+- [x] Commit the baseline screenshots; CI fails on visual drift exceeding threshold
+- [x] Document in README how to update baselines when intentional changes happen
+- [x] Mark completed
 
 ### Task 19: Definition of Done
 

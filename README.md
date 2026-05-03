@@ -81,6 +81,48 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 | `pnpm db:studio`    | Open Drizzle Studio              |
 | `pnpm db:seed`      | Seed the database                |
 
+## Visual Regression Tests
+
+Visual regression baselines are stored in `e2e/__snapshots__/`. They capture screenshots of key pages (marketing landing, login, app shell) and CI fails when pixel drift exceeds 2%.
+
+### Generating baselines for the first time
+
+Run the Playwright tests with `--update-snapshots` against a running app:
+
+```bash
+# Start the dev server (or use the built app with pnpm start)
+pnpm dev &
+
+# In another terminal, generate baseline screenshots
+PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers \
+  pnpm exec playwright test e2e/visual.spec.ts --project chromium --update-snapshots
+
+# Commit the generated snapshot files
+git add e2e/__snapshots__
+git commit -m "test: commit visual regression baselines"
+```
+
+### Updating baselines when intentional changes happen
+
+After a deliberate UI change (design system update, layout tweak, etc.):
+
+1. Make your code changes and verify them visually in the browser.
+2. Re-generate the affected snapshots:
+
+   ```bash
+   pnpm exec playwright test e2e/visual.spec.ts --project chromium --update-snapshots
+   ```
+
+3. Review the diff in `e2e/__snapshots__/` — the updated PNG files should reflect only the intended change.
+4. Commit the new baseline files alongside the code change:
+
+   ```bash
+   git add e2e/__snapshots__
+   git commit -m "test: update visual baselines after <description of change>"
+   ```
+
+> **Tip:** Run `pnpm exec playwright show-report` after a failure to open an interactive diff report showing the expected vs. actual screenshots.
+
 ## CI Status
 
 ![CI](https://github.com/iFralex/VoiceFlow/actions/workflows/ci.yml/badge.svg)

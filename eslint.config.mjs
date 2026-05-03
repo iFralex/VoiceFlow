@@ -75,6 +75,9 @@ const config = [
       'coverage/**',
       'public/**',
       'postcss.config.mjs',
+      'playwright-report/**',
+      'test-results/**',
+      '.playwright-browsers/**',
     ],
   },
 ];

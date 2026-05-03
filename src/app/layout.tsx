@@ -33,7 +33,7 @@ export default async function RootLayout({
   const cookieStore = await cookies();
   const locale: 'it' | 'en' = cookieStore.get('locale')?.value === 'en' ? 'en' : 'it';
   // Dynamic import resolved at request time — locale is 'it' or 'en' only
-  const messages = (await import(`../i18n/locales/${locale}.json`)) as Record<
+  const messages = (await import(`../i18n/locales/${locale}.json`)).default as Record<
     string,
     Record<string, string>
   >;
