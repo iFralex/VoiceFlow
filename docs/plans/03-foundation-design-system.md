@@ -169,10 +169,10 @@ type NavItem = {
 
 ### Task 14: Status indicators and data tables
 
-- [ ] Create `src/components/ui/status-badge.tsx` mapping status enums to colour and label (campaign status, call status, payment status, opt-out, RPO status)
-- [ ] Create `src/components/data-table/` (uses TanStack Table v8 + shadcn table primitive) with: column visibility, sorting, pagination, server-side filtering hooks
-- [ ] Provide a "Loading", "Empty", and "Error" placeholder state in the table component
-- [ ] Mark completed
+- [x] Create `src/components/ui/status-badge.tsx` mapping status enums to colour and label (campaign status, call status, payment status, opt-out, RPO status)
+- [x] Create `src/components/data-table/` (uses TanStack Table v8 + shadcn table primitive) with: column visibility, sorting, pagination, server-side filtering hooks
+- [x] Provide a "Loading", "Empty", and "Error" placeholder state in the table component
+- [x] Mark completed
 
 ### Task 15: Toaster and confirmations
 
