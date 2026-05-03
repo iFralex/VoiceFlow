@@ -204,10 +204,10 @@ type NavItem = {
 
 ### Task 19: Definition of Done
 
-- [ ] All 16 shadcn primitives render without console errors
-- [ ] App shell renders correctly at desktop, tablet and mobile breakpoints
-- [ ] Italian and English locales both render the navigation and marketing copy
-- [ ] Theme switcher works (light/dark/system)
-- [ ] Format helpers covered by unit tests
-- [ ] Visual regression baseline committed
-- [ ] Mark completed
+- [x] All 16 shadcn primitives render without console errors
+- [x] App shell renders correctly at desktop, tablet and mobile breakpoints
+- [x] Italian and English locales both render the navigation and marketing copy
+- [x] Theme switcher works (light/dark/system)
+- [x] Format helpers covered by unit tests
+- [x] Visual regression baseline committed
+- [x] Mark completed
