@@ -90,8 +90,8 @@ $RECYCLE.BIN/
 *.msp
 *.lnk
 
-# Drizzle
-drizzle/
+# Drizzle — generated snapshots are transient; migration SQL and config are versioned
+drizzle/migrations/meta/
 
 # Debug
 *.log

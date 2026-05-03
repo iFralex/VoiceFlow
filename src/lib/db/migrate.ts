@@ -8,5 +8,8 @@ import { env } from '@/lib/env';
 
 const migrationClient = postgres(env.DATABASE_DIRECT_URL, { max: 1 });
 
-await migrate(drizzle(migrationClient), { migrationsFolder: './drizzle/migrations' });
-await migrationClient.end();
+try {
+  await migrate(drizzle(migrationClient), { migrationsFolder: './drizzle/migrations' });
+} finally {
+  await migrationClient.end();
+}

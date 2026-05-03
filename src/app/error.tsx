@@ -1,12 +1,13 @@
 'use client';
 
 export default function Error({
-  error: _error,
+  error,
   reset,
 }: {
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  console.error(error);
   return (
     <main className="flex flex-1 flex-col items-center justify-center p-8">
       <h1 className="text-4xl font-bold">Errore</h1>

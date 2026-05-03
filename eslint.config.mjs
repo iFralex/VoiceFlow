@@ -61,7 +61,6 @@ const config = [
       'build/**',
       'coverage/**',
       'public/**',
-      '*.config.mjs',
       'postcss.config.mjs',
     ],
   },

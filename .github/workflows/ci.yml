@@ -43,6 +43,8 @@ jobs:
 
       - name: Test
         run: pnpm test:coverage
+        env:
+          SKIP_ENV_VALIDATION: true
 
       - name: Build
         run: pnpm build
