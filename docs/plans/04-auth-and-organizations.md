@@ -40,11 +40,11 @@ Supabase Auth with magic link is the primary authentication. The application kee
 
 ### Task 3: Auth Server Actions
 
-- [ ] `signInWithMagicLink(email)`: validates email, calls Supabase OTP, returns `{ ok: true }` or `{ ok: false, message }`
-- [ ] `signOut()`: clears Supabase session and the `active_org_id` cookie, redirects to `/`
-- [ ] `requestEmailChange(newEmail)`: triggers Supabase change-email flow (used by settings page later)
-- [ ] All actions log to `audit_log` with action `auth.signin_requested` etc., even on failure (with sanitised data)
-- [ ] Mark completed
+- [x] `signInWithMagicLink(email)`: validates email, calls Supabase OTP, returns `{ ok: true }` or `{ ok: false, message }`
+- [x] `signOut()`: clears Supabase session and the `active_org_id` cookie, redirects to `/`
+- [x] `requestEmailChange(newEmail)`: triggers Supabase change-email flow (used by settings page later)
+- [x] All actions log to `audit_log` with action `auth.signin_requested` etc., even on failure (with sanitised data)
+- [x] Mark completed
 
 ### Task 4: User mirror table population
 
