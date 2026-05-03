@@ -16,3 +16,5 @@ export * from './rpo_snapshots';
 export * from './audit_log';
 export * from './webhook_events';
 export * from './phone_numbers';
+export * from './webhooks_outgoing';
+export * from './webhook_deliveries';

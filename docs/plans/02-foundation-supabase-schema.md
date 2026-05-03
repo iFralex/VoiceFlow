@@ -96,9 +96,9 @@ The data model has four invariants (tenancy, money-as-cents, time-as-UTC-timesta
 
 ### Task 9: Drizzle schema — outbound webhooks subscriptions
 
-- [ ] Create `src/lib/db/schema/webhooks_outgoing.ts` (referenced by spec §13.2) with `id`, `org_id`, `url`, `secret`, `event_types` text array, `active` boolean, `created_at`, `last_delivery_at`, `last_failure_at`, `failure_count` int default 0
-- [ ] Create `src/lib/db/schema/webhook_deliveries.ts` log of outbound delivery attempts: `id`, `webhook_id`, `event_type`, `payload` jsonb, `status_code`, `attempt` int, `delivered_at`, `error`
-- [ ] Mark completed
+- [x] Create `src/lib/db/schema/webhooks_outgoing.ts` (referenced by spec §13.2) with `id`, `org_id`, `url`, `secret`, `event_types` text array, `active` boolean, `created_at`, `last_delivery_at`, `last_failure_at`, `failure_count` int default 0
+- [x] Create `src/lib/db/schema/webhook_deliveries.ts` log of outbound delivery attempts: `id`, `webhook_id`, `event_type`, `payload` jsonb, `status_code`, `attempt` int, `delivered_at`, `error`
+- [x] Mark completed
 
 ### Task 10: Schema barrel export and types
 
