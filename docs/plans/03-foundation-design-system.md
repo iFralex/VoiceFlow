@@ -95,7 +95,7 @@ The product is a B2B operational tool for Italian car dealerships, not a consume
 
 ### Task 6: Navigation primitives
 
-- [ ] Define navigation item shape:
+- [x] Define navigation item shape:
 
 ```typescript
 type NavItem = {
@@ -107,10 +107,10 @@ type NavItem = {
 };
 ```
 
-- [ ] Author `src/components/app/nav.tsx` reading `pathname` to highlight active item
-- [ ] Configure primary nav items per spec §5.1: Dashboard, Campagne, Contatti, Script, Credito, Impostazioni
-- [ ] Render nothing for items the active member's role cannot access
-- [ ] Mark completed
+- [x] Author `src/components/app/nav.tsx` reading `pathname` to highlight active item
+- [x] Configure primary nav items per spec §5.1: Dashboard, Campagne, Contatti, Script, Credito, Impostazioni
+- [x] Render nothing for items the active member's role cannot access
+- [x] Mark completed
 
 ### Task 7: Organization switcher
 
