@@ -47,11 +47,11 @@ The data model has four invariants (tenancy, money-as-cents, time-as-UTC-timesta
 
 ### Task 3: Drizzle schema — scripts and templates
 
-- [ ] Create `src/lib/db/schema/script_templates.ts` (system-owned, no `org_id`, no RLS) with `id`, `slug` UNIQUE, `name`, `version` int, `system_prompt` text, `variable_schema` jsonb, `default_voice_id`, `default_language` default `it-IT`, `published_at`, `created_at`
-- [ ] Create `src/lib/db/schema/scripts.ts` (org-scoped) with `id`, `org_id`, `template_id`, `name`, `variables` jsonb, `voice_id` nullable (override), `created_at`, `updated_at`
-- [ ] Add unique on `script_templates(slug, version)` to permit versioning
-- [ ] Add index `scripts(org_id)`
-- [ ] Mark completed
+- [x] Create `src/lib/db/schema/script_templates.ts` (system-owned, no `org_id`, no RLS) with `id`, `slug` UNIQUE, `name`, `version` int, `system_prompt` text, `variable_schema` jsonb, `default_voice_id`, `default_language` default `it-IT`, `published_at`, `created_at`
+- [x] Create `src/lib/db/schema/scripts.ts` (org-scoped) with `id`, `org_id`, `template_id`, `name`, `variables` jsonb, `voice_id` nullable (override), `created_at`, `updated_at`
+- [x] Add unique on `script_templates(slug, version)` to permit versioning
+- [x] Add index `scripts(org_id)`
+- [x] Mark completed
 
 ### Task 4: Drizzle schema — contacts and lists
 
