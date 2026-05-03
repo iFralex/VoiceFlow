@@ -131,7 +131,7 @@ export async function removeMember(
 
 ### Task 8: Auth context helpers (Server Components)
 
-- [ ] Create `src/lib/auth/context.ts` with:
+- [x] Create `src/lib/auth/context.ts` with:
 
 ```typescript
 export async function getAuthContext(): Promise<{
@@ -150,14 +150,14 @@ export async function getAuthContext(): Promise<{
 export async function requireCapability(capability: Capability): Promise<void>;
 ```
 
-- [ ] Define capability list: `org.manage`, `members.invite`, `members.update_role`, `billing.topup`, `billing.view`, `campaigns.launch`, `campaigns.view`, `contacts.upload`, `contacts.delete`, `scripts.edit`, `compliance.export`, `compliance.erase`, `audit.view`
-- [ ] Map roles → capabilities in a single module:
+- [x] Define capability list: `org.manage`, `members.invite`, `members.update_role`, `billing.topup`, `billing.view`, `campaigns.launch`, `campaigns.view`, `contacts.upload`, `contacts.delete`, `scripts.edit`, `compliance.export`, `compliance.erase`, `audit.view`
+- [x] Map roles → capabilities in a single module:
   - `owner` → all capabilities
   - `admin` → all except `org.manage` (delete, transfer ownership)
   - `operator` → `campaigns.*`, `contacts.upload`, `scripts.edit`, `billing.view`
   - `viewer` → `*.view` capabilities only
-- [ ] Add unit tests for every role × capability pair
-- [ ] Mark completed
+- [x] Add unit tests for every role × capability pair
+- [x] Mark completed
 
 ### Task 9: Onboarding flow
 

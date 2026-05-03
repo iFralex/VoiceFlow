@@ -1,2 +1,2 @@
-// placeholder — populated in later plans
-export {};
+export { getAuthContext, hasCapability, requireCapability } from './context';
+export type { AuthContext, Capability } from './context';
