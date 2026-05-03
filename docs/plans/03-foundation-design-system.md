@@ -57,10 +57,10 @@ The product is a B2B operational tool for Italian car dealerships, not a consume
 
 ### Task 2: Fonts
 
-- [ ] Self-host Inter (UI) and JetBrains Mono (technical fields) via `next/font/google` for performance and privacy
-- [ ] Apply font variables in `app/layout.tsx`
-- [ ] Verify CLS is zero on initial render
-- [ ] Mark completed
+- [x] Self-host Inter (UI) and JetBrains Mono (technical fields) via `next/font/google` for performance and privacy
+- [x] Apply font variables in `app/layout.tsx`
+- [x] Verify CLS is zero on initial render
+- [x] Mark completed
 
 ### Task 3: shadcn/ui setup
 
