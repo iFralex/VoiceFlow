@@ -91,11 +91,15 @@ $RECYCLE.BIN/
 *.lnk
 
 # Drizzle — snapshots are transient; the journal and migration SQL are versioned
-drizzle/migrations/meta/
+drizzle/migrations/meta/*
 !drizzle/migrations/meta/_journal.json
 
 # Debug
 *.log
 
-# ralphex progress logs
+# ralphex workspace artifacts
 .ralphex/progress/
+.playwright-browsers/
+.pnpm-home/
+.npmrc
+pnpm

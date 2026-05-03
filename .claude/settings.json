@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ralphex docs/plans/01-foundation-repo-setup.md --serve --max-external-iterations=2)"
+    ]
+  }
+}
