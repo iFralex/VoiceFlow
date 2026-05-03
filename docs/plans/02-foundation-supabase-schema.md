@@ -38,12 +38,12 @@ The data model has four invariants (tenancy, money-as-cents, time-as-UTC-timesta
 
 ### Task 2: Drizzle schema — organizations, users, memberships
 
-- [ ] Create `src/lib/db/schema/organizations.ts` with the `organizations` table per spec §7.2 (`id`, `name`, `legal_name`, `vat_number`, `country` default `IT`, `timezone` default `Europe/Rome`, `created_at`, `deleted_at`)
-- [ ] Create `src/lib/db/schema/users.ts` mirroring Supabase Auth `auth.users.id` (uuid PK, `email`, `full_name`, `locale` enum `it|en` default `it`, `created_at`)
-- [ ] Create `src/lib/db/schema/memberships.ts` with `id`, `org_id`, `user_id`, `role` enum (`owner|admin|operator|viewer`), `invited_at`, `accepted_at`, unique constraint on `(org_id, user_id)`, FKs with `onDelete: cascade`
-- [ ] Define enum types using Drizzle `pgEnum` for `member_role` and `user_locale`
-- [ ] Add indexes: `memberships(user_id)`, `memberships(org_id)`
-- [ ] Mark completed
+- [x] Create `src/lib/db/schema/organizations.ts` with the `organizations` table per spec §7.2 (`id`, `name`, `legal_name`, `vat_number`, `country` default `IT`, `timezone` default `Europe/Rome`, `created_at`, `deleted_at`)
+- [x] Create `src/lib/db/schema/users.ts` mirroring Supabase Auth `auth.users.id` (uuid PK, `email`, `full_name`, `locale` enum `it|en` default `it`, `created_at`)
+- [x] Create `src/lib/db/schema/memberships.ts` with `id`, `org_id`, `user_id`, `role` enum (`owner|admin|operator|viewer`), `invited_at`, `accepted_at`, unique constraint on `(org_id, user_id)`, FKs with `onDelete: cascade`
+- [x] Define enum types using Drizzle `pgEnum` for `member_role` and `user_locale`
+- [x] Add indexes: `memberships(user_id)`, `memberships(org_id)`
+- [x] Mark completed
 
 ### Task 3: Drizzle schema — scripts and templates
 
