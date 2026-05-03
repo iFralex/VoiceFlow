@@ -84,7 +84,7 @@ export async function softDeleteOrganization(orgId: string, byUserId: string): P
 
 ### Task 6: Membership service
 
-- [ ] Create `src/lib/services/memberships.ts` exposing:
+- [x] Create `src/lib/services/memberships.ts` exposing:
 
 ```typescript
 export async function inviteMember(
@@ -114,10 +114,10 @@ export async function removeMember(
 ): Promise<void>;
 ```
 
-- [ ] Authorisation guards: only `owner` and `admin` can invite or change roles; only `owner` can change another `owner`; you cannot demote yourself if you are the sole owner
-- [ ] Inviting an existing user attaches them via `user_id`; inviting a new email creates an `auth.users` row via admin API and links it; both cases set `accepted_at` only after the invitee logs in for the first time
-- [ ] Send invite email via Resend (template stub; full email plan is 13)
-- [ ] Mark completed
+- [x] Authorisation guards: only `owner` and `admin` can invite or change roles; only `owner` can change another `owner`; you cannot demote yourself if you are the sole owner
+- [x] Inviting an existing user attaches them via `user_id`; inviting a new email creates an `auth.users` row via admin API and links it; both cases set `accepted_at` only after the invitee logs in for the first time
+- [x] Send invite email via Resend (template stub; full email plan is 13)
+- [x] Mark completed
 
 ### Task 7: Middleware — session and org resolution
 
