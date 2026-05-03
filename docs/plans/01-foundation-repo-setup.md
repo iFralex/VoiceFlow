@@ -130,11 +130,11 @@ export const env = Env.parse(process.env);
 
 ### Task 8: Playwright end-to-end runner
 
-- [ ] Install Playwright with `pnpm dlx create-playwright@latest --quiet`
-- [ ] Configure `playwright.config.ts` to start the dev server on port 3000, run on Chromium only by default, retain traces on failure
-- [ ] Create `e2e/smoke.spec.ts` with a single test that asserts the marketing page renders the placeholder title
-- [ ] Add `pnpm test:e2e` script
-- [ ] Mark completed
+- [x] Install Playwright with `pnpm dlx create-playwright@latest --quiet`
+- [x] Configure `playwright.config.ts` to start the dev server on port 3000, run on Chromium only by default, retain traces on failure
+- [x] Create `e2e/smoke.spec.ts` with a single test that asserts the marketing page renders the placeholder title
+- [x] Add `pnpm test:e2e` script
+- [x] Mark completed
 
 ### Task 9: Drizzle ORM tooling (schema files arrive in plan 02)
 
