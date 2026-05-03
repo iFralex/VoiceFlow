@@ -50,6 +50,13 @@
       "when": 1777800275490,
       "tag": "0006_credit_ledger_fixes",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1777800275491,
+      "tag": "0007_review_fixes",
+      "breakpoints": true
     }
   ]
 }

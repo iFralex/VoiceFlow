@@ -36,7 +36,7 @@ export const creditLedger = pgTable(
       t.reference_id,
       t.entry_type,
     ).nullsNotDistinct(),
-    index('credit_ledger_org_created_at_idx').on(t.org_id, t.created_at),
+    index('credit_ledger_org_created_at_idx').on(t.org_id, t.created_at.desc()),
   ],
 );
 

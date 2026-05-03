@@ -7,7 +7,7 @@ export const users = pgTable('users', {
   id: uuid('id')
     .primaryKey()
     .default(sql`gen_random_uuid()`),
-  email: text('email').notNull(),
+  email: text('email').notNull().unique(),
   full_name: text('full_name'),
   locale: userLocaleEnum('locale').notNull().default('it'),
   created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
