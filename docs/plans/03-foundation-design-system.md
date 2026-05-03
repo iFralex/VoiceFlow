@@ -142,10 +142,10 @@ type NavItem = {
 
 ### Task 11: Marketing-area layout
 
-- [ ] Create `src/app/(marketing)/layout.tsx` with a separate, simpler shell (top nav with logo, "Accedi" CTA; footer with legal links)
-- [ ] Style aligned with the app but lighter — centred content, hero typography
-- [ ] Marketing pages use a different max-width and density than the app
-- [ ] Mark completed
+- [x] Create `src/app/(marketing)/layout.tsx` with a separate, simpler shell (top nav with logo, "Accedi" CTA; footer with legal links)
+- [x] Style aligned with the app but lighter — centred content, hero typography
+- [x] Marketing pages use a different max-width and density than the app
+- [x] Mark completed
 
 ### Task 12: i18n scaffolding
 
