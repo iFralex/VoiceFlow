@@ -85,13 +85,13 @@ The product is a B2B operational tool for Italian car dealerships, not a consume
 
 ### Task 5: Application shell — `(app)` layout
 
-- [ ] Create `src/app/(app)/layout.tsx` with three regions:
+- [x] Create `src/app/(app)/layout.tsx` with three regions:
   - left sidebar (collapsible, 240px expanded, 64px collapsed): logo, primary navigation, current org switcher at bottom
   - top bar (h-14): page title slot, breadcrumbs, search command palette trigger, credit balance pill, notifications bell, user menu
   - main content area: `<main>` with max-width and consistent padding
-- [ ] Implement collapsed/expanded state in `localStorage` with `useState` hydration guard
-- [ ] Mobile breakpoint: sidebar becomes a drawer triggered from a hamburger menu
-- [ ] Mark completed
+- [x] Implement collapsed/expanded state in `localStorage` with `useState` hydration guard
+- [x] Mobile breakpoint: sidebar becomes a drawer triggered from a hamburger menu
+- [x] Mark completed
 
 ### Task 6: Navigation primitives
 
