@@ -1,0 +1,3 @@
+packages:
+  # Single-package layout — workspace-ready for future expansion (e.g. packages/*)
+  - "."

@@ -1,0 +1,30 @@
+{
+  "name": "voiceflow",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@9.15.4",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx src/lib/db/migrate.ts",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "db:seed": "tsx src/lib/db/seed.ts"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

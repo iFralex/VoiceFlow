@@ -21,14 +21,14 @@ The technical spec specifies Next.js 15 + App Router + TypeScript strict + Tailw
 - `pnpm exec playwright --version`
 
 ### Task 1: Initialise repository and package manager
-- [ ] Create new GitHub repository (private), default branch `main`, branch protection requiring CI green
-- [ ] Add `LICENSE` (proprietary), `.gitignore` (Node + Next.js + IDEs + macOS + `.env*` except `.env.example`), `.gitattributes` for line endings
-- [ ] Add `README.md` with one-paragraph project summary, link to `docs/technical_spec.md`, link to `docs/plans/00-INDEX.md`
-- [ ] Add `.nvmrc` pinning Node 20 LTS
-- [ ] Create `pnpm-workspace.yaml` (single-package layout, but workspace-ready for future expansion)
-- [ ] Add `package.json` at root with name `VoiceFlow`, scripts `dev`, `build`, `start`, `lint`, `format`, `format:check`, `typecheck`, `test`, `test:watch`, `test:e2e`, `db:generate`, `db:migrate`, `db:push`, `db:studio`, `db:seed`
-- [ ] Add `corepack` instructions in README; commit `packageManager` field at pnpm 9.x
-- [ ] Mark completed
+- [x] Create new GitHub repository (private), default branch `main`, branch protection requiring CI green
+- [x] Add `LICENSE` (proprietary), `.gitignore` (Node + Next.js + IDEs + macOS + `.env*` except `.env.example`), `.gitattributes` for line endings
+- [x] Add `README.md` with one-paragraph project summary, link to `docs/technical_spec.md`, link to `docs/plans/00-INDEX.md`
+- [x] Add `.nvmrc` pinning Node 20 LTS
+- [x] Create `pnpm-workspace.yaml` (single-package layout, but workspace-ready for future expansion)
+- [x] Add `package.json` at root with name `VoiceFlow`, scripts `dev`, `build`, `start`, `lint`, `format`, `format:check`, `typecheck`, `test`, `test:watch`, `test:e2e`, `db:generate`, `db:migrate`, `db:push`, `db:studio`, `db:seed`
+- [x] Add `corepack` instructions in README; commit `packageManager` field at pnpm 9.x
+- [x] Mark completed
 
 ### Task 2: Scaffold Next.js 15 App Router project
 - [ ] Run `pnpm create next-app@latest .` with TypeScript, App Router, Tailwind, src directory, import alias `@/*`
