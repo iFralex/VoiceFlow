@@ -65,10 +65,10 @@ The technical spec specifies Next.js 15 + App Router + TypeScript strict + Tailw
 
 ### Task 5: Source folder structure
 
-- [ ] Create skeleton folders matching tech spec §5.1: `src/app/(marketing)`, `src/app/(auth)`, `src/app/(app)`, `src/app/api/webhooks`, `src/app/api/cron`, `src/app/api/uploads`, `src/components/ui`, `src/lib/supabase`, `src/lib/db`, `src/lib/services`, `src/lib/inngest`, `src/lib/voice`, `src/lib/compliance`, `src/lib/stripe`, `src/lib/email`, `src/lib/storage`, `src/lib/utils`, `src/lib/auth`
-- [ ] Add a `README.md` inside `src/lib/` describing the layered architecture (domain → adapters → entrypoints) per spec §6.1
-- [ ] Add placeholder `index.ts` re-export files where needed to keep TS happy
-- [ ] Mark completed
+- [x] Create skeleton folders matching tech spec §5.1: `src/app/(marketing)`, `src/app/(auth)`, `src/app/(app)`, `src/app/api/webhooks`, `src/app/api/cron`, `src/app/api/uploads`, `src/components/ui`, `src/lib/supabase`, `src/lib/db`, `src/lib/services`, `src/lib/inngest`, `src/lib/voice`, `src/lib/compliance`, `src/lib/stripe`, `src/lib/email`, `src/lib/storage`, `src/lib/utils`, `src/lib/auth`
+- [x] Add a `README.md` inside `src/lib/` describing the layered architecture (domain → adapters → entrypoints) per spec §6.1
+- [x] Add placeholder `index.ts` re-export files where needed to keep TS happy
+- [x] Mark completed
 
 ### Task 6: Environment variable scaffolding
 
