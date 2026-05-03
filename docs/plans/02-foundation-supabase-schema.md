@@ -26,15 +26,15 @@ The data model has four invariants (tenancy, money-as-cents, time-as-UTC-timesta
 
 ### Task 1: Provision Supabase projects
 
-- [ ] Create three Supabase projects: `VoiceFlow-dev`, `VoiceFlow-staging`, `VoiceFlow-prod`, all in EU region (Frankfurt)
-- [ ] For each project enable Postgres 16, Authentication, Storage, Realtime
-- [ ] Capture project URLs, anon keys, service-role keys, pooler and direct connection strings into 1Password vault entries
-- [ ] Configure Storage buckets (private): `recordings`, `transcripts`, `csv-uploads`, `exports`. Set max file sizes (500MB recordings, 50MB CSV)
-- [ ] Configure Auth providers: email + magic link only (no password, no OAuth in Phase 1)
-- [ ] Set Auth email templates to Italian (signup confirmation, magic link, password reset placeholders, change email confirm)
-- [ ] Set magic link expiry to 30 minutes; OTP length 6 digits
-- [ ] Set Auth redirect allowlist for production, staging, and `http://localhost:3000`
-- [ ] Mark completed
+- [x] Create three Supabase projects: `VoiceFlow-dev`, `VoiceFlow-staging`, `VoiceFlow-prod`, all in EU region (Frankfurt)
+- [x] For each project enable Postgres 16, Authentication, Storage, Realtime
+- [x] Capture project URLs, anon keys, service-role keys, pooler and direct connection strings into 1Password vault entries
+- [x] Configure Storage buckets (private): `recordings`, `transcripts`, `csv-uploads`, `exports`. Set max file sizes (500MB recordings, 50MB CSV)
+- [x] Configure Auth providers: email + magic link only (no password, no OAuth in Phase 1)
+- [x] Set Auth email templates to Italian (signup confirmation, magic link, password reset placeholders, change email confirm)
+- [x] Set magic link expiry to 30 minutes; OTP length 6 digits
+- [x] Set Auth redirect allowlist for production, staging, and `http://localhost:3000`
+- [x] Mark completed
 
 ### Task 2: Drizzle schema — organizations, users, memberships
 
