@@ -7,9 +7,7 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  if (process.env.NODE_ENV === 'development') {
-    console.error(error);
-  }
+  console.error(error);
   return (
     <main className="flex flex-1 flex-col items-center justify-center p-8">
       <h1 className="text-4xl font-bold">Errore</h1>

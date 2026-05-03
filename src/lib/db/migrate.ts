@@ -10,6 +10,10 @@ const migrationClient = postgres(env.DATABASE_DIRECT_URL, { max: 1 });
 
 try {
   await migrate(drizzle(migrationClient), { migrationsFolder: './drizzle/migrations' });
-} finally {
   await migrationClient.end();
+  process.exit(0);
+} catch (err) {
+  console.error('Migration failed:', err);
+  await migrationClient.end();
+  process.exit(1);
 }
