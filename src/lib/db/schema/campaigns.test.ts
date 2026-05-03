@@ -26,22 +26,22 @@ describe('campaigns schema', () => {
   });
 
   it('status defaults to draft', () => {
-    const col = (campaigns as Tbl).status;
+    const col = (campaigns as unknown as Tbl).status!;
     expect(col.default).toBe('draft');
   });
 
   it('concurrency_limit defaults to 5', () => {
-    const col = (campaigns as Tbl).concurrency_limit;
+    const col = (campaigns as unknown as Tbl).concurrency_limit!;
     expect(col.default).toBe(5);
   });
 
   it('actual_cents defaults to 0', () => {
-    const col = (campaigns as Tbl).actual_cents;
+    const col = (campaigns as unknown as Tbl).actual_cents!;
     expect(col.default).toBe(0);
   });
 
   it('estimated_max_cents is nullable', () => {
-    const col = (campaigns as Tbl).estimated_max_cents;
+    const col = (campaigns as unknown as Tbl).estimated_max_cents!;
     expect(col.notNull).toBeFalsy();
   });
 
@@ -79,12 +79,12 @@ describe('calls schema', () => {
   });
 
   it('status defaults to pending', () => {
-    const col = (calls as Tbl).status;
+    const col = (calls as unknown as Tbl).status!;
     expect(col.default).toBe('pending');
   });
 
   it('transferred_to_agent defaults to false', () => {
-    const col = (calls as Tbl).transferred_to_agent;
+    const col = (calls as unknown as Tbl).transferred_to_agent!;
     expect(col.default).toBe(false);
   });
 
@@ -102,7 +102,7 @@ describe('calls schema', () => {
       'ended_at',
     ];
     for (const field of nullableFields) {
-      const col = (calls as Tbl)[field];
+      const col = (calls as unknown as unknown as Tbl)[field]!;
       expect(col.notNull, `${field} should be nullable`).toBeFalsy();
     }
   });
@@ -151,12 +151,12 @@ describe('appointments schema', () => {
   });
 
   it('notes is nullable', () => {
-    const col = (appointments as Tbl).notes;
+    const col = (appointments as unknown as Tbl).notes!;
     expect(col.notNull).toBeFalsy();
   });
 
   it('status defaults to booked', () => {
-    const col = (appointments as Tbl).status;
+    const col = (appointments as unknown as Tbl).status!;
     expect(col.default).toBe('booked');
   });
 

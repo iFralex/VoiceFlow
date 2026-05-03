@@ -21,12 +21,12 @@ describe('credit_packages schema', () => {
   });
 
   it('active defaults to true', () => {
-    const col = (creditPackages as Tbl).active;
+    const col = (creditPackages as unknown as Tbl).active!;
     expect(col.default).toBe(true);
   });
 
   it('stripe_price_id is nullable', () => {
-    const col = (creditPackages as Tbl).stripe_price_id;
+    const col = (creditPackages as unknown as Tbl).stripe_price_id!;
     expect(col.notNull).toBeFalsy();
   });
 });
@@ -58,13 +58,13 @@ describe('credit_ledger schema', () => {
 
   it('nullable optional fields', () => {
     for (const field of ['reference_type', 'reference_id', 'description']) {
-      const col = (creditLedger as Tbl)[field];
+      const col = (creditLedger as unknown as unknown as Tbl)[field]!;
       expect(col.notNull, `${field} should be nullable`).toBeFalsy();
     }
   });
 
   it('balance_after_cents is not null', () => {
-    const col = (creditLedger as Tbl).balance_after_cents;
+    const col = (creditLedger as unknown as Tbl).balance_after_cents!;
     expect(col.notNull).toBeTruthy();
   });
 });
@@ -86,12 +86,12 @@ describe('payments schema', () => {
   });
 
   it('currency defaults to eur', () => {
-    const col = (payments as Tbl).currency;
+    const col = (payments as unknown as Tbl).currency!;
     expect(col.default).toBe('eur');
   });
 
   it('status defaults to pending', () => {
-    const col = (payments as Tbl).status;
+    const col = (payments as unknown as Tbl).status!;
     expect(col.default).toBe('pending');
   });
 
@@ -106,7 +106,7 @@ describe('payments schema', () => {
 
   it('nullable optional fields', () => {
     for (const field of ['stripe_payment_intent_id', 'invoice_url', 'completed_at']) {
-      const col = (payments as Tbl)[field];
+      const col = (payments as unknown as unknown as Tbl)[field]!;
       expect(col.notNull, `${field} should be nullable`).toBeFalsy();
     }
   });

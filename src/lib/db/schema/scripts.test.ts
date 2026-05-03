@@ -22,12 +22,12 @@ describe('script_templates schema', () => {
   });
 
   it('defaults default_language to it-IT', () => {
-    const col = (scriptTemplates as Tbl).default_language;
+    const col = (scriptTemplates as unknown as Tbl).default_language!;
     expect(col.default).toBe('it-IT');
   });
 
   it('defaults version to 1', () => {
-    const col = (scriptTemplates as Tbl).version;
+    const col = (scriptTemplates as unknown as Tbl).version!;
     expect(col.default).toBe(1);
   });
 });
@@ -46,7 +46,7 @@ describe('scripts schema', () => {
   });
 
   it('voice_id is nullable (override column)', () => {
-    const col = (scripts as Tbl).voice_id;
+    const col = (scripts as unknown as Tbl).voice_id!;
     expect(col.notNull).toBeFalsy();
   });
 });

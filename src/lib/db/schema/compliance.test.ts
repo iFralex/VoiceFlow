@@ -28,7 +28,7 @@ describe('opt_out_registry schema', () => {
   });
 
   it('phone_e164 is not null', () => {
-    const col = (optOutRegistry as Tbl).phone_e164;
+    const col = (optOutRegistry as unknown as Tbl).phone_e164!;
     expect(col.notNull).toBeTruthy();
   });
 });
@@ -47,7 +47,7 @@ describe('rpo_snapshots schema', () => {
   });
 
   it('is_blocked is not null', () => {
-    const col = (rpoSnapshots as Tbl).is_blocked;
+    const col = (rpoSnapshots as unknown as Tbl).is_blocked!;
     expect(col.notNull).toBeTruthy();
   });
 });
@@ -71,22 +71,22 @@ describe('audit_log schema', () => {
   });
 
   it('org_id is nullable', () => {
-    const col = (auditLog as Tbl).org_id;
+    const col = (auditLog as unknown as Tbl).org_id!;
     expect(col.notNull).toBeFalsy();
   });
 
   it('actor_user_id is nullable', () => {
-    const col = (auditLog as Tbl).actor_user_id;
+    const col = (auditLog as unknown as Tbl).actor_user_id!;
     expect(col.notNull).toBeFalsy();
   });
 
   it('metadata is nullable', () => {
-    const col = (auditLog as Tbl).metadata;
+    const col = (auditLog as unknown as Tbl).metadata!;
     expect(col.notNull).toBeFalsy();
   });
 
   it('action is not null', () => {
-    const col = (auditLog as Tbl).action;
+    const col = (auditLog as unknown as Tbl).action!;
     expect(col.notNull).toBeTruthy();
   });
 });
@@ -109,17 +109,17 @@ describe('webhook_events schema', () => {
   });
 
   it('processed_at is nullable', () => {
-    const col = (webhookEvents as Tbl).processed_at;
+    const col = (webhookEvents as unknown as Tbl).processed_at!;
     expect(col.notNull).toBeFalsy();
   });
 
   it('error is nullable', () => {
-    const col = (webhookEvents as Tbl).error;
+    const col = (webhookEvents as unknown as Tbl).error!;
     expect(col.notNull).toBeFalsy();
   });
 
   it('payload is not null', () => {
-    const col = (webhookEvents as Tbl).payload;
+    const col = (webhookEvents as unknown as Tbl).payload!;
     expect(col.notNull).toBeTruthy();
   });
 

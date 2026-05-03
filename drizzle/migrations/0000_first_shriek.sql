@@ -173,7 +173,7 @@ CREATE TABLE "credit_ledger" (
 	"reference_id" text,
 	"description" text,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
-	CONSTRAINT "credit_ledger_idempotency_key" UNIQUE("org_id","reference_type","reference_id","entry_type")
+	CONSTRAINT "credit_ledger_idempotency_key" UNIQUE NULLS NOT DISTINCT("org_id","reference_type","reference_id","entry_type")
 );
 --> statement-breakpoint
 CREATE TABLE "payments" (
