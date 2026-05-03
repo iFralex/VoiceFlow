@@ -12,3 +12,6 @@ next-env.d.ts
 
 # TypeScript
 tsconfig.tsbuildinfo
+
+# ralphex progress logs
+.ralphex/worktrees/
