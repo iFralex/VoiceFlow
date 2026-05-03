@@ -31,13 +31,13 @@ The technical spec specifies Next.js 15 + App Router + TypeScript strict + Tailw
 - [x] Mark completed
 
 ### Task 2: Scaffold Next.js 15 App Router project
-- [ ] Run `pnpm create next-app@latest .` with TypeScript, App Router, Tailwind, src directory, import alias `@/*`
-- [ ] Replace generated boilerplate with empty `app/(marketing)/page.tsx` displaying just a placeholder title
-- [ ] Add `app/layout.tsx` with `lang="it"` and a minimal HTML shell
-- [ ] Add `app/not-found.tsx` and `app/error.tsx` with placeholder content
-- [ ] Verify `pnpm dev` boots on port 3000 and the placeholder page renders
-- [ ] Verify `pnpm build` and `pnpm start` succeed
-- [ ] Mark completed
+- [x] Run `pnpm create next-app@latest .` with TypeScript, App Router, Tailwind, src directory, import alias `@/*`
+- [x] Replace generated boilerplate with empty `app/(marketing)/page.tsx` displaying just a placeholder title
+- [x] Add `app/layout.tsx` with `lang="it"` and a minimal HTML shell
+- [x] Add `app/not-found.tsx` and `app/error.tsx` with placeholder content
+- [x] Verify `pnpm dev` boots on port 3000 and the placeholder page renders
+- [x] Verify `pnpm build` and `pnpm start` succeed
+- [x] Mark completed
 
 ### Task 3: TypeScript strict configuration
 - [ ] Update `tsconfig.json` with `"strict": true`, `"noUncheckedIndexedAccess": true`, `"exactOptionalPropertyTypes": true`, `"noImplicitOverride": true`, `"noFallthroughCasesInSwitch": true`
