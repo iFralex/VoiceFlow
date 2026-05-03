@@ -8,12 +8,13 @@ import { env } from '@/lib/env';
 
 const migrationClient = postgres(env.DATABASE_DIRECT_URL, { max: 1 });
 
+let exitCode = 0;
 try {
   await migrate(drizzle(migrationClient), { migrationsFolder: './drizzle/migrations' });
-  await migrationClient.end();
-  process.exit(0);
 } catch (err) {
   console.error('Migration failed:', err);
+  exitCode = 1;
+} finally {
   await migrationClient.end();
-  process.exit(1);
 }
+process.exit(exitCode);
