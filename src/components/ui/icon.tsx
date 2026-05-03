@@ -20,12 +20,15 @@ import {
   EyeOff,
   FileText,
   Filter,
+  Globe,
   Info,
   LayoutDashboard,
   Loader2,
   LogOut,
   Megaphone,
   Menu,
+  Monitor,
+  Moon,
   MoreHorizontal,
   MoreVertical,
   PanelLeft,
@@ -38,6 +41,7 @@ import {
   RefreshCw,
   Search,
   Settings,
+  Sun,
   Trash2,
   Upload,
   User,
@@ -110,6 +114,12 @@ export const Icons = {
   Info: withDefaults(Info),
   Clock: withDefaults(Clock),
   Loader2: withDefaults(Loader2),
+
+  // Theme / locale
+  Sun: withDefaults(Sun),
+  Moon: withDefaults(Moon),
+  Monitor: withDefaults(Monitor),
+  Globe: withDefaults(Globe),
 
   // Entities
   Building2: withDefaults(Building2),

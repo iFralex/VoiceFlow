@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import { Inter, JetBrains_Mono } from 'next/font/google';
 import type { ReactNode } from 'react';
 
+import { Providers } from '@/components/providers';
+
 import './globals.css';
 
 const inter = Inter({
@@ -27,8 +29,10 @@ export default function RootLayout({
   children: ReactNode;
 }>) {
   return (
-    <html lang="it" className={`h-full ${inter.variable} ${jetbrainsMono.variable}`}>
-      <body className="flex min-h-full flex-col">{children}</body>
+    <html lang="it" className={`h-full ${inter.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
+      <body className="flex min-h-full flex-col">
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }

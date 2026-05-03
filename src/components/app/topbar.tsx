@@ -9,15 +9,18 @@ import { cn } from '@/lib/utils/index';
 
 import { CommandPalette, useCommandPaletteShortcut } from './command-palette';
 import { type CreditBalance, CreditPill, CreditPillSkeleton } from './credit-pill';
+import { UserMenu, type UserInfo } from './user-menu';
 
 interface TopBarProps {
   onMobileMenuClick: () => void;
   /** Credit balance passed from a server-rendered parent; undefined while loading */
   creditBalance?: CreditBalance;
+  /** User info passed from a server-rendered parent; undefined while loading */
+  user?: UserInfo;
   className?: string;
 }
 
-export function TopBar({ onMobileMenuClick, creditBalance, className }: TopBarProps) {
+export function TopBar({ onMobileMenuClick, creditBalance, user, className }: TopBarProps) {
   const [cmdOpen, setCmdOpen] = React.useState(false);
   useCommandPaletteShortcut(React.useCallback(() => setCmdOpen(true), []));
 
@@ -85,8 +88,8 @@ export function TopBar({ onMobileMenuClick, creditBalance, className }: TopBarPr
           <Icons.Bell size={16} />
         </Button>
 
-        {/* User menu — stub, wired in Task 10 */}
-        <UserMenuStub />
+        {/* User menu */}
+        <UserMenu {...(user !== undefined ? { user } : {})} />
       </div>
     </header>
   );
@@ -95,18 +98,4 @@ export function TopBar({ onMobileMenuClick, creditBalance, className }: TopBarPr
 /** Slot for pages to inject their title/breadcrumbs — wired in Task 12 via context */
 function PageTitleSlot() {
   return <span className="sr-only" aria-hidden />;
-}
-
-/** Stub user menu — replaced by real dropdown in Task 10 */
-function UserMenuStub() {
-  return (
-    <Button
-      variant="ghost"
-      size="icon"
-      className="h-8 w-8 rounded-full"
-      aria-label="Menu utente"
-    >
-      <Icons.UserCircle2 size={18} />
-    </Button>
-  );
 }

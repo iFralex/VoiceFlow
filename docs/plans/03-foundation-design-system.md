@@ -135,10 +135,10 @@ type NavItem = {
 
 ### Task 10: User menu
 
-- [ ] Avatar dropdown with: full name, email, "Profilo", "Impostazioni", "Lingua" submenu (it/en), "Tema" submenu (light/dark/system), "Esci"
-- [ ] Theme switching via `next-themes`; default is `light`
-- [ ] Locale switching writes to a `locale` cookie; full i18n wiring in Task 12
-- [ ] Mark completed
+- [x] Avatar dropdown with: full name, email, "Profilo", "Impostazioni", "Lingua" submenu (it/en), "Tema" submenu (light/dark/system), "Esci"
+- [x] Theme switching via `next-themes`; default is `light`
+- [x] Locale switching writes to a `locale` cookie; full i18n wiring in Task 12
+- [x] Mark completed
 
 ### Task 11: Marketing-area layout
 
