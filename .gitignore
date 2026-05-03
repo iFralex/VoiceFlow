@@ -1,4 +1,14 @@
 
 # ralphex progress logs
 .ralphex/progress/
+
+# dependencies
 node_modules
+.pnpm-store/
+
+# Next.js
+.next/
+next-env.d.ts
+
+# TypeScript
+tsconfig.tsbuildinfo
