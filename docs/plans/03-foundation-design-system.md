@@ -183,10 +183,10 @@ type NavItem = {
 
 ### Task 16: Empty and skeleton states
 
-- [ ] Author shared empty-state component with illustration slot, title, description, primary action
-- [ ] Author skeleton variants for: data tables, KPI cards, list pages, detail pages
-- [ ] Use these as default Suspense fallbacks
-- [ ] Mark completed
+- [x] Author shared empty-state component with illustration slot, title, description, primary action
+- [x] Author skeleton variants for: data tables, KPI cards, list pages, detail pages
+- [x] Use these as default Suspense fallbacks
+- [x] Mark completed
 
 ### Task 17: Marketing landing skeleton
 
