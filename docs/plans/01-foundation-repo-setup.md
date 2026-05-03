@@ -201,12 +201,12 @@ export type DB = typeof db;
 
 ### Task 13: Pre-commit and editor hooks
 
-- [ ] Install `husky` and `lint-staged`
-- [ ] Configure `lint-staged` to run `eslint --fix` and `prettier --write` on staged TS/TSX/MD files
-- [ ] Configure `husky` `pre-commit` hook to run `lint-staged` and `pnpm typecheck`
-- [ ] Configure `husky` `commit-msg` hook to enforce conventional commits via `commitlint`
-- [ ] Add `commitlint.config.cjs` with the conventional config and an additional rule allowing `task(<plan-id>)` scopes
-- [ ] Mark completed
+- [x] Install `husky` and `lint-staged`
+- [x] Configure `lint-staged` to run `eslint --fix` and `prettier --write` on staged TS/TSX/MD files
+- [x] Configure `husky` `pre-commit` hook to run `lint-staged` and `pnpm typecheck`
+- [x] Configure `husky` `commit-msg` hook to enforce conventional commits via `commitlint`
+- [x] Add `commitlint.config.cjs` with the conventional config and an additional rule allowing `task(<plan-id>)` scopes
+- [x] Mark completed
 
 ### Task 14: Repo-level Definition of Done
 

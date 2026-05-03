@@ -1,4 +1,6 @@
 import nextConfig from 'eslint-config-next';
+import typescriptEslint from '@typescript-eslint/eslint-plugin';
+import reactHooks from 'eslint-plugin-react-hooks';
 import unusedImports from 'eslint-plugin-unused-imports';
 import importPlugin from 'eslint-plugin-import';
 
@@ -7,6 +9,8 @@ const config = [
   ...nextConfig,
   {
     plugins: {
+      '@typescript-eslint': typescriptEslint,
+      'react-hooks': reactHooks,
       'unused-imports': unusedImports,
       import: importPlugin,
     },
