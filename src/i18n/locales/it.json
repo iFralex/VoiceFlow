@@ -117,5 +117,22 @@
     "data_retention": "Conservazione dati",
     "privacy_policy": "Informativa sulla privacy",
     "consent_required": "Consenso richiesto"
+  },
+  "landing": {
+    "hero_title": "Voice AI Outbound per Concessionari Auto",
+    "hero_subtitle": "Automatizza le chiamate di riattivazione, conferma gli appuntamenti e gestisci il post-vendita con agenti vocali AI. Scala il tuo team commerciale senza aumentare i costi.",
+    "hero_cta_primary": "Inizia ora",
+    "hero_cta_secondary": "Scopri come funziona",
+    "value_props_title": "Tutto ciò di cui hai bisogno",
+    "vp1_title": "Riattivazione Lead",
+    "vp1_description": "Raggiungi automaticamente i lead inattivi con chiamate personalizzate. I tuoi agenti AI contattano centinaia di potenziali clienti al giorno, qualificano l'interesse e fissano appuntamenti per il tuo team.",
+    "vp2_title": "Conferma Appuntamenti",
+    "vp2_description": "Elimina i no-show con promemoria automatici via telefono. Il sistema conferma, modifica o cancella appuntamenti in autonomia, sincronizzando il calendario in tempo reale.",
+    "vp3_title": "Post-Vendita",
+    "vp3_description": "Mantieni il contatto con i clienti dopo l'acquisto. Raccogli feedback sulla soddisfazione, proponi servizi aggiuntivi e costruisci una relazione duratura che genera riacquisti.",
+    "pricing_title": "Prezzi semplici e trasparenti",
+    "pricing_description": "Paga solo per i minuti utilizzati. Nessun contratto annuale, nessun costo nascosto.",
+    "pricing_cta": "Vedi i prezzi completi",
+    "pricing_href": "/prezzi"
   }
 }

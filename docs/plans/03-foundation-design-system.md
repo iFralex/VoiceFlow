@@ -190,10 +190,10 @@ type NavItem = {
 
 ### Task 17: Marketing landing skeleton
 
-- [ ] Replace placeholder marketing page with a simple landing: hero ("Voice AI Outbound per Concessionari Auto"), three value props (riattivazione lead, conferma appuntamenti, post-vendita), pricing teaser linking to full pricing page, footer legal links
-- [ ] All copy from i18n; Italian primary
-- [ ] No actual lead capture form yet (could be added later or left as placeholder)
-- [ ] Mark completed
+- [x] Replace placeholder marketing page with a simple landing: hero ("Voice AI Outbound per Concessionari Auto"), three value props (riattivazione lead, conferma appuntamenti, post-vendita), pricing teaser linking to full pricing page, footer legal links
+- [x] All copy from i18n; Italian primary
+- [x] No actual lead capture form yet (could be added later or left as placeholder)
+- [x] Mark completed
 
 ### Task 18: Visual regression test baseline
 

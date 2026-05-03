@@ -117,5 +117,22 @@
     "data_retention": "Data retention",
     "privacy_policy": "Privacy policy",
     "consent_required": "Consent required"
+  },
+  "landing": {
+    "hero_title": "Voice AI Outbound for Car Dealerships",
+    "hero_subtitle": "Automate reactivation calls, confirm appointments, and manage post-sale follow-ups with AI voice agents. Scale your sales team without increasing costs.",
+    "hero_cta_primary": "Get started",
+    "hero_cta_secondary": "See how it works",
+    "value_props_title": "Everything you need",
+    "vp1_title": "Lead Reactivation",
+    "vp1_description": "Automatically reach inactive leads with personalised calls. Your AI agents contact hundreds of potential customers per day, qualify interest, and book appointments for your team.",
+    "vp2_title": "Appointment Confirmation",
+    "vp2_description": "Eliminate no-shows with automatic phone reminders. The system confirms, reschedules, or cancels appointments autonomously, syncing your calendar in real time.",
+    "vp3_title": "Post-Sale",
+    "vp3_description": "Stay in touch with customers after purchase. Collect satisfaction feedback, propose additional services, and build lasting relationships that drive repeat business.",
+    "pricing_title": "Simple, transparent pricing",
+    "pricing_description": "Pay only for the minutes you use. No annual contracts, no hidden costs.",
+    "pricing_cta": "See full pricing",
+    "pricing_href": "/pricing"
   }
 }
