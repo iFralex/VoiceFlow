@@ -226,13 +226,13 @@ export async function previewSystemPrompt(
 
 ### Task 15: E2E
 
-- [ ] Playwright `e2e/scripts.spec.ts`:
+- [x] Playwright `e2e/scripts.spec.ts`:
   - from `/scripts` click "Crea da template" on `lead-reactivation`
   - fill all variables; verify live preview updates
   - save; assert redirect to detail page
   - edit one variable, save, verify history reflects update
   - attempt to save with empty `dealership_name`: form rejects
-- [ ] Mark completed
+- [x] Mark completed
 
 ### Task 16: Definition of Done
 
