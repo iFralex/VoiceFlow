@@ -606,6 +606,7 @@ export async function getLedgerHistory(
     description: string | null;
     reference_type: string | null;
     reference_id: string | null;
+    invoice_url: string | null;
     created_at: Date;
   }>;
   total: number;
@@ -639,9 +640,17 @@ export async function getLedgerHistory(
         description: creditLedger.description,
         reference_type: creditLedger.reference_type,
         reference_id: creditLedger.reference_id,
+        invoice_url: payments.invoice_url,
         created_at: creditLedger.created_at,
       })
       .from(creditLedger)
+      .leftJoin(
+        payments,
+        and(
+          eq(creditLedger.reference_type, 'payment'),
+          eq(creditLedger.reference_id, payments.stripe_payment_intent_id),
+        ),
+      )
       .where(where)
       .orderBy(desc(creditLedger.created_at))
       .limit(filter.pageSize)

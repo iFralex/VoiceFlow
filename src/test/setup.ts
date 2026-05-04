@@ -145,6 +145,8 @@ const _italianStrings: Record<string, Record<string, string>> = {
     filter_date_from: 'Da',
     filter_date_to: 'A',
     export_csv: 'Esporta CSV',
+    ledger_col_invoice: 'Fattura',
+    invoice_link: 'Scarica',
   },
   table: {
     columns: 'Colonne',
@@ -237,6 +239,10 @@ const _italianStrings: Record<string, Record<string, string>> = {
     org_delete_dialog_description: 'Questo eliminerà logicamente "{name}".',
     org_delete_confirm_label: "Digita il nome dell'organizzazione per confermare",
     org_delete_submitting: 'Eliminazione…',
+    billing_portal_title: 'Storico fatture',
+    billing_portal_description: 'Accedi al portale di fatturazione.',
+    billing_portal_button: 'Apri storico fatture',
+    billing_portal_opening: 'Apertura in corso…',
   },
   integrations: {
     pat_title: 'Token di Accesso Personale',

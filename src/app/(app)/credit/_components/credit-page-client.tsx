@@ -294,13 +294,14 @@ export function CreditPageClient({
                 <th className="px-4 py-3 text-right font-medium">{t('ledger_col_delta')}</th>
                 <th className="px-4 py-3 text-right font-medium">{t('ledger_col_balance')}</th>
                 <th className="px-4 py-3 text-right font-medium">{t('ledger_col_date')}</th>
+                <th className="px-4 py-3 text-right font-medium">{t('ledger_col_invoice')}</th>
               </tr>
             </thead>
             <tbody>
               {entries.length === 0 && (
                 <tr>
                   <td
-                    colSpan={5}
+                    colSpan={6}
                     className="px-4 py-8 text-center text-muted-foreground"
                   >
                     {t('ledger_no_entries')}
@@ -338,6 +339,18 @@ export function CreditPageClient({
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-right text-muted-foreground">
                     {formatDate(entry.created_at)}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    {entry.invoice_url ? (
+                      <a
+                        href={entry.invoice_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-primary underline underline-offset-2"
+                      >
+                        {t('invoice_link')}
+                      </a>
+                    ) : null}
                   </td>
                 </tr>
               ))}

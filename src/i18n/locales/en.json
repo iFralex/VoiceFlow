@@ -163,7 +163,9 @@
     "filter_type_adjustment": "Adjustment",
     "filter_date_from": "From",
     "filter_date_to": "To",
-    "export_csv": "Export CSV"
+    "export_csv": "Export CSV",
+    "ledger_col_invoice": "Invoice",
+    "invoice_link": "Download"
   },
   "settings": {
     "title": "Settings",
@@ -221,7 +223,11 @@
     "org_delete_dialog_title": "Delete organization",
     "org_delete_dialog_description": "This will soft-delete \"{name}\". All data will be retained until the purge runbook is executed. This action cannot be undone.",
     "org_delete_confirm_label": "Type the organization name to confirm",
-    "org_delete_submitting": "Deleting…"
+    "org_delete_submitting": "Deleting…",
+    "billing_portal_title": "Invoice history",
+    "billing_portal_description": "Access the billing portal to download invoices and manage payment methods.",
+    "billing_portal_button": "Open invoice history",
+    "billing_portal_opening": "Opening…"
   },
   "compliance": {
     "gdpr_notice": "Data is processed in accordance with GDPR.",

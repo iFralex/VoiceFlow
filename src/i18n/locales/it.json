@@ -163,7 +163,9 @@
     "filter_type_adjustment": "Rettifica",
     "filter_date_from": "Da",
     "filter_date_to": "A",
-    "export_csv": "Esporta CSV"
+    "export_csv": "Esporta CSV",
+    "ledger_col_invoice": "Fattura",
+    "invoice_link": "Scarica"
   },
   "settings": {
     "title": "Impostazioni",
@@ -221,7 +223,11 @@
     "org_delete_dialog_title": "Elimina organizzazione",
     "org_delete_dialog_description": "Questo eliminerà logicamente \"{name}\". Tutti i dati saranno conservati fino all'esecuzione del runbook di purga. Questa operazione non può essere annullata.",
     "org_delete_confirm_label": "Digita il nome dell'organizzazione per confermare",
-    "org_delete_submitting": "Eliminazione…"
+    "org_delete_submitting": "Eliminazione…",
+    "billing_portal_title": "Storico fatture",
+    "billing_portal_description": "Accedi al portale di fatturazione per scaricare le fatture e gestire i metodi di pagamento.",
+    "billing_portal_button": "Apri storico fatture",
+    "billing_portal_opening": "Apertura in corso…"
   },
   "compliance": {
     "gdpr_notice": "I dati sono trattati in conformità al GDPR.",

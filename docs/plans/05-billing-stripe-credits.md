@@ -231,9 +231,9 @@ export function computeCallCost(args: { durationSeconds: number; perMinuteCents:
 
 ### Task 17: Invoicing access
 
-- [ ] Add download links for invoices on the credit history page (each top-up row links to its `invoice_url`)
-- [ ] On settings page add link "Storico fatture" → Stripe customer portal session for that org
-- [ ] Mark completed
+- [x] Add download links for invoices on the credit history page (each top-up row links to its `invoice_url`)
+- [x] On settings page add link "Storico fatture" → Stripe customer portal session for that org
+- [x] Mark completed
 
 ### Task 18: E2E billing flow with Stripe test mode
 

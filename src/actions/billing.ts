@@ -151,6 +151,7 @@ export type LedgerPageResult =
         description: string | null;
         reference_type: string | null;
         reference_id: string | null;
+        invoice_url: string | null;
         created_at: string; // ISO string for serialisation
       }>;
       total: number;
@@ -191,10 +192,29 @@ export async function getLedgerPage(
     ok: true,
     entries: result.entries.map((e) => ({
       ...e,
+      invoice_url: e.invoice_url ?? null,
       created_at: e.created_at.toISOString(),
     })),
     total: result.total,
   };
+}
+
+/**
+ * Creates a Stripe Billing Portal session for the org's customer.
+ * Returns the portal URL so the client can redirect to "Storico fatture".
+ */
+export async function createBillingPortalSession(): Promise<ActionResult & { url?: string }> {
+  const { orgId } = await getAuthContext();
+  await requireCapability('billing.topup');
+
+  const stripeCustomerId = await getOrCreateCustomerForOrg(orgId);
+
+  const session = await stripe.billingPortal.sessions.create({
+    customer: stripeCustomerId,
+    return_url: `${env.NEXT_PUBLIC_APP_URL}/settings/organization`,
+  });
+
+  return { ok: true, url: session.url };
 }
 
 const exportCsvSchema = z.object({

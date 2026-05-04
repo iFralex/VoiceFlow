@@ -11,6 +11,7 @@ import {
   deleteOrganizationAction,
   updateOrganizationAction,
 } from '@/actions/organization';
+import { createBillingPortalSession } from '@/actions/billing';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -210,6 +211,9 @@ export function OrganizationSettingsClient({ org, isOwner, canUpdate }: Organiza
         </form>
       </Form>
 
+      {/* Billing portal */}
+      <BillingPortalSection />
+
       {/* Danger zone — owner only */}
       {isOwner && (
         <div className="rounded-lg border border-destructive/30 p-4 space-y-3">
@@ -218,6 +222,30 @@ export function OrganizationSettingsClient({ org, isOwner, canUpdate }: Organiza
           <DeleteOrgDialog orgName={org.name} />
         </div>
       )}
+    </div>
+  );
+}
+
+function BillingPortalSection() {
+  const t = useTranslations('settings');
+  const [isPending, startTransition] = useTransition();
+
+  function handleOpenPortal() {
+    startTransition(async () => {
+      const result = await createBillingPortalSession();
+      if (result.ok && result.url) {
+        window.location.href = result.url;
+      }
+    });
+  }
+
+  return (
+    <div className="rounded-lg border p-4 space-y-3">
+      <h2 className="text-sm font-semibold">{t('billing_portal_title')}</h2>
+      <p className="text-sm text-muted-foreground">{t('billing_portal_description')}</p>
+      <Button variant="outline" disabled={isPending} onClick={handleOpenPortal}>
+        {isPending ? t('billing_portal_opening') : t('billing_portal_button')}
+      </Button>
     </div>
   );
 }
