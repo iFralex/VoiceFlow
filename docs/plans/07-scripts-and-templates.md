@@ -183,12 +183,12 @@ export async function previewSystemPrompt(
 
 ### Task 10: Script editor wizard
 
-- [ ] Create `src/app/(app)/scripts/new/page.tsx` with two steps:
+- [x] Create `src/app/(app)/scripts/new/page.tsx` with two steps:
   1. **Template selection**: pre-selected via query param `?template=<slug>` from the previous page
   2. **Variables**: form auto-generated from the template's variable schema; field types map JSON Schema → input components (string→input, enum→select, array→repeatable rows, etc.)
-- [ ] Live preview pane showing the assembled system prompt below (read-only) so the dealer can verify the result
-- [ ] "Salva" button calls `createScript`; redirects to `/scripts/<id>`
-- [ ] Mark completed
+- [x] Live preview pane showing the assembled system prompt below (read-only) so the dealer can verify the result
+- [x] "Salva" button calls `createScript`; redirects to `/scripts/<id>`
+- [x] Mark completed
 
 ### Task 11: Script detail/edit page
 
