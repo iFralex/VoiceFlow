@@ -223,11 +223,11 @@ export function computeCallCost(args: { durationSeconds: number; perMinuteCents:
 
 ### Task 16: Reconciliation cron
 
-- [ ] Add `/api/cron/credit-reconciliation` running daily at 04:00 Europe/Rome:
+- [x] Add `/api/cron/credit-reconciliation` running daily at 04:00 Europe/Rome:
   - select all `payments` in `pending` for >2 hours → query Stripe and reconcile
   - select last 24h ledger; assert sum of `delta_cents` for an org equals `MAX(balance_after_cents) - previous_day_balance` (sanity check)
   - log discrepancies to Sentry; alert on >€0.10 discrepancy
-- [ ] Mark completed
+- [x] Mark completed
 
 ### Task 17: Invoicing access
 

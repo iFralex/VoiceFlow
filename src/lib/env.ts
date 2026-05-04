@@ -43,6 +43,7 @@ const Env = z.object({
   RPO_PROVIDER_ENDPOINT: z.string().url().optional(),
   INTERNAL_WEBHOOK_SECRET: z.string().min(32),
   INTERNAL_ADMIN_TOKEN: z.string().min(32),
+  CRON_SECRET: z.string().min(16).optional(),
   CREDIT_SOFT_THRESHOLD_MINUTES: z.coerce.number().int().nonnegative().default(30),
   CREDIT_HARD_THRESHOLD_CENTS: z.coerce.number().int().nonnegative().default(0),
 });
