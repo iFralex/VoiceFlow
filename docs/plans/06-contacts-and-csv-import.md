@@ -119,8 +119,8 @@ export async function markOptOut(
 
 ### Task 4: CSV parser
 
-- [ ] Install `papaparse`
-- [ ] Create `src/lib/services/csv.ts` exposing:
+- [x] Install `papaparse`
+- [x] Create `src/lib/services/csv.ts` exposing:
 
 ```typescript
 export type CsvParseResult = {
@@ -142,11 +142,11 @@ export async function parseContactsCsv(
 ): Promise<CsvParseResult>;
 ```
 
-- [ ] Auto-detect columns by header name (Italian + English variants): `telefono`, `cellulare`, `numero`, `phone`, `mobile` for phone; similar for `nome`/`first_name`, `cognome`/`last_name`, `email`
-- [ ] If headers can't be detected emit an error result demanding explicit column mapping (UI in Task 7)
-- [ ] Per-row validation: phone normalisation, email format, length limits on names
-- [ ] Preserve original row in `metadata` jsonb per spec §7.2 for audit
-- [ ] Mark completed
+- [x] Auto-detect columns by header name (Italian + English variants): `telefono`, `cellulare`, `numero`, `phone`, `mobile` for phone; similar for `nome`/`first_name`, `cognome`/`last_name`, `email`
+- [x] If headers can't be detected emit an error result demanding explicit column mapping (UI in Task 7)
+- [x] Per-row validation: phone normalisation, email format, length limits on names
+- [x] Preserve original row in `metadata` jsonb per spec §7.2 for audit
+- [x] Mark completed
 
 ### Task 5: CSV upload — pre-signed URL endpoint
 
