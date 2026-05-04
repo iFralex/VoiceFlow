@@ -23,13 +23,13 @@ The model is "cash before service": credit must be reserved at campaign launch a
 
 ### Task 1: Stripe project setup
 
-- [ ] Create Stripe accounts: test mode for dev/staging, live mode for production (single Stripe account, two modes)
-- [ ] Configure business profile: legal entity (Italian SRLS once incorporated), VAT settings via Stripe Tax for Italian B2B
-- [ ] Enable Italian payment methods: card, SEPA Direct Debit, Bancomat Pay if available; disable methods unsuitable for B2B (Klarna etc.)
-- [ ] Configure invoice template: include legal name, VAT, address; default to Italian language and EUR
-- [ ] Configure customer portal (used later for self-serve invoice download): enable invoice history view only
-- [ ] Save publishable, secret, and webhook signing keys into 1Password
-- [ ] Mark completed
+- [x] Create Stripe accounts: test mode for dev/staging, live mode for production (single Stripe account, two modes)
+- [x] Configure business profile: legal entity (Italian SRLS once incorporated), VAT settings via Stripe Tax for Italian B2B
+- [x] Enable Italian payment methods: card, SEPA Direct Debit, Bancomat Pay if available; disable methods unsuitable for B2B (Klarna etc.)
+- [x] Configure invoice template: include legal name, VAT, address; default to Italian language and EUR
+- [x] Configure customer portal (used later for self-serve invoice download): enable invoice history view only
+- [x] Save publishable, secret, and webhook signing keys into 1Password
+- [x] Mark completed
 
 ### Task 2: Stripe products and prices
 
