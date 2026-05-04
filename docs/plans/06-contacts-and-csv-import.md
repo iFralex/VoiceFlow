@@ -174,12 +174,12 @@ export async function parseContactsCsv(
 
 ### Task 7: Upload UI — three-step wizard
 
-- [ ] Create `src/app/(app)/contacts/upload/page.tsx` with three steps:
+- [x] Create `src/app/(app)/contacts/upload/page.tsx` with three steps:
   1. **File**: drag-and-drop or file picker; client requests pre-signed URL, uploads via XHR with progress bar; emits `contacts.import-requested` event server-side once upload completes
   2. **Mapping** (optional, only if auto-detect failed): show first 10 rows; user assigns columns to phone/first_name/last_name/email
   3. **Compliance**: user selects `consent_basis` (consent, legitimate interest, existing customer), `contact_type` (B2C / B2B), free-text `consent_evidence`, ticks the disclaimer "Confermo di avere base giuridica per contattare questi numeri"
-- [ ] After step 3 submit, the user lands on the list detail page `/contacts/lists/<id>` with live progress
-- [ ] Mark completed
+- [x] After step 3 submit, the user lands on the list detail page `/contacts/lists/<id>` with live progress
+- [x] Mark completed
 
 ### Task 8: List detail page with live progress
 

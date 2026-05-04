@@ -136,6 +136,7 @@ export async function parseContactsCsv(
     sourceListId: string;
     orgId: string;
     columnMapping?: ColumnMapping;
+    consentEvidence?: string;
   },
 ): Promise<CsvParseResult> {
   const { defaultCountry = 'IT', consentBasis, contactType = 'b2c', sourceListId, orgId } = options;
@@ -226,6 +227,7 @@ export async function parseContactsCsv(
       last_name: lastName ?? null,
       email: email ?? null,
       consent_basis: consentBasis,
+      consent_evidence: options.consentEvidence ?? null,
       contact_type: contactType,
       metadata: { _original_row: row },
     });

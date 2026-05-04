@@ -10,6 +10,7 @@ export interface ContactsImportRequestedData {
   columnMapping?: ColumnMapping;
   consentBasis: ConsentBasis;
   contactType?: ContactType;
+  consentEvidence?: string;
 }
 
 export interface ContactsImportCompletedData {

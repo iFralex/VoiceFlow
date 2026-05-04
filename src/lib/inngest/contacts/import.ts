@@ -142,6 +142,7 @@ export async function processContactsImport(
     orgId,
     ...(data.contactType !== undefined ? { contactType: data.contactType } : {}),
     ...(data.columnMapping !== undefined ? { columnMapping: data.columnMapping } : {}),
+    ...(data.consentEvidence !== undefined ? { consentEvidence: data.consentEvidence } : {}),
   });
 
   if (parseResult.invalidRows.length > 0) {
