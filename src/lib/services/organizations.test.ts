@@ -223,7 +223,7 @@ describe('updateOrganization', () => {
 
   it('uses withOrgContext and returns updated org', async () => {
     const { updateOrganization } = await import('./organizations');
-    const result = await updateOrganization('org-1', { name: 'New Name' });
+    const result = await updateOrganization('org-1', { name: 'New Name' }, 'user-1');
 
     expect(withOrgContext).toHaveBeenCalledWith('org-1', expect.any(Function));
     expect(result.name).toBe('New Name');
@@ -231,7 +231,7 @@ describe('updateOrganization', () => {
 
   it('throws for invalid VAT in patch', async () => {
     const { updateOrganization } = await import('./organizations');
-    await expect(updateOrganization('org-1', { vat_number: '12345678901' })).rejects.toThrow(
+    await expect(updateOrganization('org-1', { vat_number: '12345678901' }, 'user-1')).rejects.toThrow(
       'invalid_vat_number',
     );
   });
@@ -246,7 +246,7 @@ describe('updateOrganization', () => {
       })),
     });
     const { updateOrganization } = await import('./organizations');
-    await expect(updateOrganization('org-1', { vat_number: null })).resolves.toBeDefined();
+    await expect(updateOrganization('org-1', { vat_number: null }, 'user-1')).resolves.toBeDefined();
   });
 
   it('throws organization_not_found when update returns empty', async () => {
@@ -258,7 +258,7 @@ describe('updateOrganization', () => {
       })),
     });
     const { updateOrganization } = await import('./organizations');
-    await expect(updateOrganization('org-1', { name: 'X' })).rejects.toThrow(
+    await expect(updateOrganization('org-1', { name: 'X' }, 'user-1')).rejects.toThrow(
       'organization_not_found',
     );
   });

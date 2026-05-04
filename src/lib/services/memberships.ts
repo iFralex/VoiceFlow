@@ -113,7 +113,12 @@ export async function inviteMember(
         role: input.role,
         // accepted_at intentionally null until invitee logs in
       })
+      .onConflictDoNothing()
       .returning();
+
+    if (!membership) {
+      throw new Error('already_a_member');
+    }
 
     await recordAudit(tx, {
       orgId,
@@ -121,14 +126,14 @@ export async function inviteMember(
       actorType: 'user',
       action: 'member.invited',
       subjectType: 'membership',
-      subjectId: membership!.id,
+      subjectId: membership.id,
       metadata: { email: input.email, role: input.role },
     });
 
     // Non-fatal: send invite email (stub; full implementation in plan 13)
     void sendInviteEmail(input.email, orgId);
 
-    return membership!;
+    return membership;
   });
 }
 

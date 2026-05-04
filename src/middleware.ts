@@ -40,6 +40,17 @@ async function sha256Hex(input: string): Promise<string> {
 }
 
 /**
+ * Module-level admin client for PAT lookups — created once per worker process.
+ * Avoids constructing a new SDK client (and its fetch adapter) on every request.
+ */
+const _patAdminClient = (() => {
+  const url = process.env['NEXT_PUBLIC_SUPABASE_URL'];
+  const key = process.env['SUPABASE_SERVICE_ROLE_KEY'];
+  if (!url || !key) return null;
+  return createClient(url, key, { auth: { persistSession: false } });
+})();
+
+/**
  * Attempts to authenticate a request using a Personal Access Token (PAT).
  * Returns identity if the token is valid, or null if not.
  *
@@ -48,17 +59,10 @@ async function sha256Hex(input: string): Promise<string> {
 async function tryPatAuth(
   rawToken: string,
 ): Promise<{ userId: string; orgId: string; role: string } | null> {
-  const supabaseUrl = process.env['NEXT_PUBLIC_SUPABASE_URL'];
-  const serviceRoleKey = process.env['SUPABASE_SERVICE_ROLE_KEY'];
-
-  if (!supabaseUrl || !serviceRoleKey) return null;
+  const admin = _patAdminClient;
+  if (!admin) return null;
 
   const tokenHash = await sha256Hex(rawToken);
-
-  // Service-role client bypasses RLS for cross-table PAT lookup
-  const admin = createClient(supabaseUrl, serviceRoleKey, {
-    auth: { persistSession: false },
-  });
 
   const { data: pat } = await admin
     .from('personal_access_tokens')
@@ -79,7 +83,9 @@ async function tryPatAuth(
     .not('accepted_at', 'is', null)
     .maybeSingle();
 
-  const role = (membership?.role as string | undefined) ?? 'operator';
+  // If the membership has been removed, the PAT is no longer valid
+  if (!membership) return null;
+  const role = membership.role as string;
 
   // Best-effort update of last_used_at (fire-and-forget)
   void admin
@@ -216,7 +222,7 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
     supabaseResponse.cookies.set('active_org_id', activeMembership.org_id, {
       path: '/',
       sameSite: 'lax',
-      httpOnly: false,
+      httpOnly: true,
     });
   }
 

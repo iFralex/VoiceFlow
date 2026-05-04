@@ -90,13 +90,10 @@ async function enqueueSuspiciousLoginAlert(
 export async function POST(request: Request): Promise<Response> {
   const rawBody = await request.text();
 
-  // Verify HMAC-SHA256 signature when provided.
-  // The header is sent by Supabase or the internal test harness.
+  // Verify HMAC-SHA256 signature. Required on all requests.
   const signature = request.headers.get('x-supabase-signature');
-  if (signature !== null) {
-    if (!verifySignature(rawBody, signature, env.INTERNAL_WEBHOOK_SECRET)) {
-      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
-    }
+  if (!signature || !verifySignature(rawBody, signature, env.INTERNAL_WEBHOOK_SECRET)) {
+    return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
   }
 
   // Parse the JSON payload.
@@ -175,8 +172,11 @@ export async function POST(request: Request): Promise<Response> {
 
     isNewFingerprint = !existing;
 
-    // Always record the fingerprint.
-    await tx.insert(authSignins).values({ user_id: userId, ip, user_agent: userAgent });
+    // Only insert a new fingerprint row for genuinely new devices.
+    // Inserting on every token_refreshed event would grow the table unboundedly.
+    if (isNewFingerprint) {
+      await tx.insert(authSignins).values({ user_id: userId, ip, user_agent: userAgent });
+    }
 
     if (isNewFingerprint) {
       await recordAudit(tx, {

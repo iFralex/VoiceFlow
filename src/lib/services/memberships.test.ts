@@ -49,7 +49,9 @@ function resetMockTx() {
     return {
       values: vi.fn(() => ({
         returning: vi.fn().mockResolvedValue(result),
-        onConflictDoNothing: vi.fn().mockResolvedValue([]),
+        onConflictDoNothing: vi.fn(() => ({
+          returning: vi.fn().mockResolvedValue(result),
+        })),
       })),
     };
   });

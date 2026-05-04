@@ -163,6 +163,27 @@ Theme switching uses `next-themes`. The `ThemeProvider` is in `src/components/pr
 
 **Data tables:** Use `<DataTable>` from `@/components/data-table`. Pass `rowCount` + `onStateChange` for server-side pagination; omit both for client-side.
 
-## Security Notes
+## Auth Context
 
-`src/actions/org.ts#switchOrg` does **not** verify org membership — the fix is deferred to plan 04 (auth integration). Until then, do not rely on this action for access control.
+In Server Components and Server Actions inside `(app)/`, use `getAuthContext` to read the middleware-injected identity headers:
+
+```ts
+import { getAuthContext, requireCapability } from '@/lib/auth/context';
+
+const { userId, orgId, role } = await getAuthContext();
+```
+
+Gate privileged operations with `requireCapability` (throws a Forbidden error if the role lacks the capability):
+
+```ts
+await requireCapability('members.invite');
+```
+
+Capability → role mapping (`src/lib/auth/context.ts`): `owner` has all capabilities; `admin` has all except `org.manage`; `operator` has campaign/contact/script/billing-view; `viewer` has billing/campaigns/audit read-only.
+
+## Supabase Clients
+
+Three client factories in `src/lib/supabase/`:
+- `createServerSupabaseClient()` — async, reads session cookies; use in Server Components, Server Actions, Route Handlers
+- `supabaseAdmin` — service-role singleton, bypasses RLS; use only in trusted server contexts (auth triggers, membership invite). Never expose to the browser.
+- `getSupabaseBrowserClient()` — singleton browser client for Client Components needing client-side auth state

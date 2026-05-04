@@ -6,7 +6,6 @@ import { z } from 'zod';
 import { getAuthContext } from '@/lib/auth/context';
 import {
   inviteMember,
-  listMembers,
   removeMember,
   updateMemberRole,
 } from '@/lib/services/memberships';
@@ -90,4 +89,3 @@ export async function removeMemberAction(input: { membershipId: string }): Promi
   }
 }
 
-export { listMembers };

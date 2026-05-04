@@ -160,13 +160,12 @@ describe('POST /api/webhooks/supabase-auth', () => {
       expect(json.error).toBe('Invalid signature');
     });
 
-    it('accepts request without a signature header (unsigned)', async () => {
-      setupInsertSequence([{ id: 'new' }]);
-      setupNoExistingFingerprint();
-
+    it('rejects request without a signature header (unsigned)', async () => {
       const body = { type: 'SIGNED_IN', user: { id: USER_ID } };
       const res = await POST(makeRequest(body, { signature: null }));
-      expect(res.status).toBe(200);
+      expect(res.status).toBe(401);
+      const json = (await res.json()) as { error: string };
+      expect(json.error).toBe('Invalid signature');
     });
   });
 
@@ -174,9 +173,11 @@ describe('POST /api/webhooks/supabase-auth', () => {
 
   describe('payload parsing', () => {
     it('returns 400 for malformed JSON', async () => {
+      const body = 'not-json';
       const req = new Request('http://localhost/api/webhooks/supabase-auth', {
         method: 'POST',
-        body: 'not-json',
+        headers: { 'x-supabase-signature': sign(body) },
+        body,
       });
       const res = await POST(req);
       expect(res.status).toBe(400);
@@ -184,13 +185,13 @@ describe('POST /api/webhooks/supabase-auth', () => {
 
     it('returns 400 when required type field is absent', async () => {
       const body = { user: { id: USER_ID } }; // missing type
-      const res = await POST(makeRequest(body, { signature: null }));
+      const res = await POST(makeRequest(body));
       expect(res.status).toBe(400);
     });
 
     it('returns 200 and skips processing when no userId is present', async () => {
       const body = { type: 'SIGNED_IN' }; // no user, no user_id
-      const res = await POST(makeRequest(body, { signature: null }));
+      const res = await POST(makeRequest(body));
       expect(res.status).toBe(200);
       expect(mockWithSystemContext).not.toHaveBeenCalled();
     });
@@ -204,7 +205,7 @@ describe('POST /api/webhooks/supabase-auth', () => {
       setupInsertSequence([]); // empty = conflict
 
       const body = { type: 'SIGNED_IN', user: { id: USER_ID } };
-      const res = await POST(makeRequest(body, { signature: null }));
+      const res = await POST(makeRequest(body));
       expect(res.status).toBe(200);
       // Only the dedup transaction runs
       expect(mockWithSystemContext).toHaveBeenCalledTimes(1);
@@ -219,7 +220,7 @@ describe('POST /api/webhooks/supabase-auth', () => {
       setupInsertSequence([{ id: 'new' }]);
 
       const body = { type: 'USER_UPDATED', user: { id: USER_ID } };
-      const res = await POST(makeRequest(body, { signature: null }));
+      const res = await POST(makeRequest(body));
       expect(res.status).toBe(200);
       expect(mockWithSystemContext).toHaveBeenCalledTimes(1);
       expect(mockSelect).not.toHaveBeenCalled();
@@ -239,7 +240,7 @@ describe('POST /api/webhooks/supabase-auth', () => {
         ip_address: '1.2.3.4',
         user_agent: 'TestBrowser/1.0',
       };
-      const res = await POST(makeRequest(body, { signature: null }));
+      const res = await POST(makeRequest(body));
       expect(res.status).toBe(200);
       expect(mockRecordAudit).toHaveBeenCalledWith(
         expect.anything(),
@@ -257,7 +258,7 @@ describe('POST /api/webhooks/supabase-auth', () => {
       setupExistingFingerprint();
 
       const body = { type: 'SIGNED_IN', user: { id: USER_ID }, ip_address: '1.2.3.4' };
-      const res = await POST(makeRequest(body, { signature: null }));
+      const res = await POST(makeRequest(body));
       expect(res.status).toBe(200);
       expect(mockRecordAudit).not.toHaveBeenCalled();
     });
@@ -288,6 +289,7 @@ describe('POST /api/webhooks/supabase-auth', () => {
         method: 'POST',
         headers: {
           'content-type': 'application/json',
+          'x-supabase-signature': sign(rawBody),
           'x-forwarded-for': '192.168.1.1, 10.0.0.1',
         },
         body: rawBody,
@@ -301,7 +303,7 @@ describe('POST /api/webhooks/supabase-auth', () => {
       setupNoExistingFingerprint();
 
       const body = { type: 'SIGNED_IN', user_id: USER_ID };
-      const res = await POST(makeRequest(body, { signature: null }));
+      const res = await POST(makeRequest(body));
       expect(res.status).toBe(200);
       // Both dedup and fingerprint transactions should have run
       expect(mockWithSystemContext).toHaveBeenCalledTimes(2);
@@ -330,6 +332,7 @@ describe('POST /api/webhooks/supabase-auth', () => {
       const rawBody = JSON.stringify(body);
       const req = new Request('http://localhost/api/webhooks/supabase-auth', {
         method: 'POST',
+        headers: { 'x-supabase-signature': sign(rawBody) },
         body: rawBody,
       });
       await POST(req);

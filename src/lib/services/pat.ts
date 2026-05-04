@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 
-import { and, eq, isNull } from 'drizzle-orm';
+import { and, eq, gt, isNull, or } from 'drizzle-orm';
 
 import { recordAudit } from '@/lib/db/audit';
 import { withOrgContext, withSystemContext } from '@/lib/db/context';
@@ -135,6 +135,7 @@ export async function listPats(
           eq(personalAccessTokens.user_id, userId),
           eq(personalAccessTokens.org_id, orgId),
           isNull(personalAccessTokens.revoked_at),
+          or(isNull(personalAccessTokens.expires_at), gt(personalAccessTokens.expires_at, new Date())),
         ),
       );
   });

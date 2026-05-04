@@ -99,6 +99,7 @@ export async function listOrganizationsForUser(userId: string): Promise<Organiza
 export async function updateOrganization(
   orgId: string,
   patch: Partial<Pick<Organization, 'name' | 'legal_name' | 'vat_number' | 'timezone'>>,
+  byUserId: string,
 ): Promise<Organization> {
   if (patch.vat_number !== undefined && patch.vat_number !== null) {
     if (!validateItalianVat(patch.vat_number)) {
@@ -116,6 +117,16 @@ export async function updateOrganization(
     if (!updated) {
       throw new Error('organization_not_found');
     }
+
+    await recordAudit(tx, {
+      orgId,
+      actorUserId: byUserId,
+      actorType: 'user',
+      action: 'org.updated',
+      subjectType: 'organization',
+      subjectId: orgId,
+      metadata: patch,
+    });
 
     return updated;
   });

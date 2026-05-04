@@ -42,7 +42,6 @@ export async function createOrganizationAndOnboard(
     return { ok: false, message: 'auth.unauthenticated' };
   }
 
-  let orgId: string;
   try {
     const org = await createOrganization({
       ownerId: user.id,
@@ -73,8 +72,6 @@ export async function createOrganizationAndOnboard(
       maxAge: 60 * 60 * 24 * 365, // 1 year
       secure: process.env.NODE_ENV === 'production',
     });
-
-    orgId = org.id;
   } catch (e) {
     const message = e instanceof Error ? e.message : 'unknown_error';
     if (message === 'invalid_vat_number') {
@@ -84,6 +81,5 @@ export async function createOrganizationAndOnboard(
   }
 
   // Must be outside try/catch — redirect() throws NEXT_REDIRECT internally
-  void orgId;
   redirect('/dashboard');
 }

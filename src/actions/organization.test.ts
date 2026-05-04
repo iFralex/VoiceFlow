@@ -93,11 +93,15 @@ describe('updateOrganizationAction', () => {
       legalName: 'New Name S.r.l.',
       vatNumber: '12345678903',
     });
-    expect(mockUpdateOrganization).toHaveBeenCalledWith(orgId, {
-      name: 'New Name',
-      legal_name: 'New Name S.r.l.',
-      vat_number: '12345678903',
-    });
+    expect(mockUpdateOrganization).toHaveBeenCalledWith(
+      orgId,
+      {
+        name: 'New Name',
+        legal_name: 'New Name S.r.l.',
+        vat_number: '12345678903',
+      },
+      userId,
+    );
   });
 
   it('passes null legal_name when legalName is not provided', async () => {
@@ -105,6 +109,7 @@ describe('updateOrganizationAction', () => {
     expect(mockUpdateOrganization).toHaveBeenCalledWith(
       orgId,
       expect.objectContaining({ legal_name: null }),
+      userId,
     );
   });
 

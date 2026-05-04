@@ -34,15 +34,19 @@ export async function updateOrganizationAction(input: {
     return { ok: false, message: issue?.message ?? 'validation_error' };
   }
 
-  const { orgId } = await getAuthContext();
+  const { userId, orgId } = await getAuthContext();
   await requireCapability('org.manage');
 
   try {
-    await updateOrganization(orgId, {
-      name: parsed.data.name,
-      legal_name: parsed.data.legalName ?? null,
-      vat_number: parsed.data.vatNumber ?? null,
-    });
+    await updateOrganization(
+      orgId,
+      {
+        name: parsed.data.name,
+        legal_name: parsed.data.legalName ?? null,
+        vat_number: parsed.data.vatNumber ?? null,
+      },
+      userId,
+    );
     revalidatePath('/settings/organization');
     return { ok: true };
   } catch (e) {

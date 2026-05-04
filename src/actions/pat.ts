@@ -5,7 +5,7 @@ import { z } from 'zod';
 
 import { getAuthContext } from '@/lib/auth/context';
 import type { PersonalAccessToken } from '@/lib/db/schema';
-import { createPat, listPats, revokePat } from '@/lib/services/pat';
+import { createPat, revokePat } from '@/lib/services/pat';
 import type { ActionResult } from '@/lib/utils/action-toast';
 
 const createPatSchema = z.object({
@@ -66,4 +66,3 @@ export async function revokePatAction(input: { patId: string }): Promise<ActionR
   }
 }
 
-export { listPats };

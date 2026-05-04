@@ -63,7 +63,3 @@ export async function setActiveOrg(orgId: string): Promise<ActionResult> {
   return { ok: true };
 }
 
-/**
- * @deprecated Use `setActiveOrg` which validates membership before setting the cookie.
- */
-export const switchOrg = setActiveOrg;

@@ -145,10 +145,4 @@ describe('setActiveOrg', () => {
     });
   });
 
-  describe('switchOrg alias', () => {
-    it('is exported as a backward-compat alias', async () => {
-      const { switchOrg } = await import('./org');
-      expect(switchOrg).toBeDefined();
-    });
-  });
 });

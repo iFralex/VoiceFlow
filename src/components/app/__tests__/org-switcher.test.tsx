@@ -18,7 +18,6 @@ const mockRefresh = vi.fn();
 
 vi.mock('@/actions/org', () => ({
   setActiveOrg: vi.fn().mockResolvedValue({ ok: true }),
-  switchOrg: vi.fn().mockResolvedValue({ ok: true }),
 }));
 
 vi.mock('next/navigation', () => ({

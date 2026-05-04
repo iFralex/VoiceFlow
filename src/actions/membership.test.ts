@@ -25,7 +25,6 @@ vi.mock('@/lib/auth/context', () => ({
 
 vi.mock('@/lib/services/memberships', () => ({
   inviteMember: mockInviteMember,
-  listMembers: vi.fn(),
   updateMemberRole: mockUpdateMemberRole,
   removeMember: mockRemoveMember,
 }));
