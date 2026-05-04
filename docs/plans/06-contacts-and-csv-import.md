@@ -218,9 +218,9 @@ export async function parseContactsCsv(
 
 ### Task 12: Storage signed-URL helper
 
-- [ ] Create `src/lib/storage/signed.ts` with `getDownloadUrl(path: string, ttlSeconds: number)` and `getUploadUrl(path: string, ttlSeconds: number)`
-- [ ] Capability check: caller must have membership of the org owning the path; util enforces by parsing the first path segment
-- [ ] Mark completed
+- [x] Create `src/lib/storage/signed.ts` with `getDownloadUrl(path: string, ttlSeconds: number)` and `getUploadUrl(path: string, ttlSeconds: number)`
+- [x] Capability check: caller must have membership of the org owning the path; util enforces by parsing the first path segment
+- [x] Mark completed
 
 ### Task 13: CSV export
 
