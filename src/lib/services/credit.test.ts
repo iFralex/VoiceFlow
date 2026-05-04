@@ -5,6 +5,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mockRecordAudit = vi.fn().mockResolvedValue(undefined);
 const mockSendInngestEvent = vi.fn().mockResolvedValue(undefined);
 
+vi.mock('@/lib/env', () => ({
+  env: { CREDIT_SOFT_THRESHOLD_MINUTES: 30 },
+}));
+
 vi.mock('@/lib/db/audit', () => ({
   recordAudit: (...args: unknown[]) => mockRecordAudit(...args),
 }));

@@ -30,7 +30,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   }
 
   // Ensure the redirect target is a relative path on this origin to prevent
-  // open redirect vulnerabilities.
-  const redirectTo = next.startsWith('/') ? `${origin}${next}` : `${origin}/dashboard`;
+  // open redirect vulnerabilities. Reject protocol-relative paths like //evil.com.
+  const isSafeRelative = next.startsWith('/') && !next.startsWith('//');
+  const redirectTo = isSafeRelative ? `${origin}${next}` : `${origin}/dashboard`;
   return NextResponse.redirect(redirectTo);
 }

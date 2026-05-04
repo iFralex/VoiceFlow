@@ -73,7 +73,7 @@ describe('CommandPalette', () => {
 
     it('renders Credito item', () => {
       renderOpen();
-      expect(screen.getByTestId('cmd-nav-credito')).toBeTruthy();
+      expect(screen.getByTestId('cmd-nav-credit')).toBeTruthy();
     });
 
     it('renders Impostazioni item', () => {

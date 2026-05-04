@@ -112,7 +112,10 @@ async function handlePaymentIntentFailed(pi: Stripe.PaymentIntent): Promise<void
 }
 
 async function handleChargeRefunded(charge: Stripe.Charge): Promise<void> {
-  const refundedCents = charge.amount_refunded;
+  // Use the most recent refund's incremental amount rather than the cumulative
+  // amount_refunded, which would double-count credits on partial refunds where
+  // Stripe fires multiple charge.refunded events for the same charge.
+  const refundedCents = charge.refunds?.data[0]?.amount ?? charge.amount_refunded;
   if (refundedCents === 0) return;
 
   // Check for a direct call-level refund (metadata set by Wave 3 call processing)

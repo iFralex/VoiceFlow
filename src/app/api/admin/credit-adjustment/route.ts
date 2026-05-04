@@ -15,10 +15,14 @@ const BodySchema = z.object({
 export async function POST(request: Request): Promise<Response> {
   const token = request.headers.get('x-admin-token');
 
-  const isValid =
-    token !== null &&
-    token.length === env.INTERNAL_ADMIN_TOKEN.length &&
-    timingSafeEqual(Buffer.from(token), Buffer.from(env.INTERNAL_ADMIN_TOKEN));
+  let isValid = false;
+  if (token !== null) {
+    try {
+      isValid = timingSafeEqual(Buffer.from(token), Buffer.from(env.INTERNAL_ADMIN_TOKEN));
+    } catch {
+      isValid = false;
+    }
+  }
 
   if (!isValid) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

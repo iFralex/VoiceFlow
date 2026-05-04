@@ -200,11 +200,12 @@ export async function acceptInvite(membershipId: string, userId: string): Promis
 
     if (!m) throw new Error('membership_not_found');
     if (m.user_id !== userId) throw new Error('membership_user_mismatch');
+    if (m.accepted_at !== null) throw new Error('already_accepted');
 
     await tx
       .update(memberships)
       .set({ accepted_at: new Date() })
-      .where(eq(memberships.id, membershipId));
+      .where(and(eq(memberships.id, membershipId), isNull(memberships.accepted_at)));
 
     await recordAudit(tx, {
       orgId: m.org_id,

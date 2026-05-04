@@ -4,6 +4,7 @@ import { recordAudit } from '@/lib/db/audit';
 import type { DbTx } from '@/lib/db/context';
 import { withOrgContext, withSystemContext } from '@/lib/db/context';
 import { auditLog, calls, creditEntryTypeEnum, creditLedger, creditPackages, payments } from '@/lib/db/schema';
+import { env } from '@/lib/env';
 import { sendInngestEvent } from '@/lib/inngest/client';
 import { CREDIT_LOW_BALANCE_EVENT } from '@/lib/inngest/handlers/credit';
 
@@ -76,10 +77,7 @@ async function weightedAvgCentsPerMinute(tx: DbTx, orgId: string): Promise<numbe
  * Falls back to 30 when the variable is absent or not a valid integer.
  */
 function softThresholdMinutes(): number {
-  const raw = process.env['CREDIT_SOFT_THRESHOLD_MINUTES'];
-  if (raw === undefined || raw === '') return 30;
-  const parsed = parseInt(raw, 10);
-  return isNaN(parsed) ? 30 : parsed;
+  return env.CREDIT_SOFT_THRESHOLD_MINUTES;
 }
 
 /**
@@ -475,6 +473,11 @@ export async function adjust(
   await withOrgContext(orgId, async (tx) => {
     const currentBalance = await lockBalance(tx, orgId);
     const newBalance = currentBalance + deltaCents;
+
+    if (newBalance < 0) {
+      throw new Error('adjustment_would_overdraft');
+    }
+
     const referenceId = crypto.randomUUID();
 
     await tx.insert(creditLedger).values({

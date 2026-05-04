@@ -34,7 +34,7 @@ export const PRIMARY_NAV_ITEMS: NavItem[] = [
   { href: '/contatti', labelKey: 'contacts', icon: Icons.Users },
   { href: '/script', labelKey: 'scripts', icon: Icons.FileText },
   {
-    href: '/credito',
+    href: '/credit',
     labelKey: 'credit',
     icon: Icons.CreditCard,
     requireRole: ['owner', 'admin'],

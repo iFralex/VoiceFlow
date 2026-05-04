@@ -82,7 +82,7 @@ describe('Nav', () => {
       '/campagne',
       '/contatti',
       '/script',
-      '/credito',
+      '/credit',
       '/impostazioni',
     ]);
   });

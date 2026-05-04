@@ -167,7 +167,7 @@ export async function runLedgerSanityCheck(): Promise<SanityResult> {
           ),
       );
 
-      const totalDelta = parseInt(String(deltaRow?.total_delta ?? '0'), 10);
+      const totalDelta = Math.round(Number(deltaRow?.total_delta ?? 0));
 
       // Balance just before the window (most recent entry before windowStart)
       const [beforeRow] = await withSystemContext(async (tx) =>
