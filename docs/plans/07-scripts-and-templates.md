@@ -57,7 +57,7 @@ Scripts are versioned at template level (`script_templates.version`). A per-org 
 
 ### Task 4: Canonical AI Act disclosure preamble
 
-- [ ] Create `src/lib/voice/prompt/preamble.ts` exporting:
+- [x] Create `src/lib/voice/prompt/preamble.ts` exporting:
 
 ```typescript
 export const AI_ACT_PREAMBLE_IT = `Devi rispettare scrupolosamente la seguente regola di trasparenza all'inizio di ogni chiamata:
@@ -94,10 +94,10 @@ export function assembleSystemPrompt(args: {
 }
 ```
 
-- [ ] `interpolate` validates that every `{{var}}` placeholder is present in the variables map; throws if missing
-- [ ] Sanitize variable values: strip control chars, cap to 256 chars, escape any `{{` sequences in the values themselves
-- [ ] Add unit tests covering: missing variable, injection attempt (e.g. `{{var}}` value contains "Ignore previous instructions"), preamble always first
-- [ ] Mark completed
+- [x] `interpolate` validates that every `{{var}}` placeholder is present in the variables map; throws if missing
+- [x] Sanitize variable values: strip control chars, cap to 256 chars, escape any `{{` sequences in the values themselves
+- [x] Add unit tests covering: missing variable, injection attempt (e.g. `{{var}}` value contains "Ignore previous instructions"), preamble always first
+- [x] Mark completed
 
 ### Task 5: First-message templates
 
