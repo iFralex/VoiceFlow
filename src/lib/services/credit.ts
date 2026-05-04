@@ -2,8 +2,10 @@ import { and, count, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm';
 
 import { recordAudit } from '@/lib/db/audit';
 import type { DbTx } from '@/lib/db/context';
-import { withOrgContext } from '@/lib/db/context';
-import { calls, creditEntryTypeEnum, creditLedger, creditPackages, payments } from '@/lib/db/schema';
+import { withOrgContext, withSystemContext } from '@/lib/db/context';
+import { auditLog, calls, creditEntryTypeEnum, creditLedger, creditPackages, payments } from '@/lib/db/schema';
+import { CREDIT_LOW_BALANCE_EVENT } from '@/lib/inngest/handlers/credit';
+import { sendInngestEvent } from '@/lib/inngest/client';
 
 // ─── Internal helpers ──────────────────────────────────────────────────────────
 
@@ -67,6 +69,75 @@ async function weightedAvgCentsPerMinute(tx: DbTx, orgId: string): Promise<numbe
 
   if (totalMinutes === 0) return null;
   return totalCents / totalMinutes; // cents per minute
+}
+
+/**
+ * Reads the per-org soft threshold (minutes) from the environment.
+ * Falls back to 30 when the variable is absent or not a valid integer.
+ */
+function softThresholdMinutes(): number {
+  const raw = process.env['CREDIT_SOFT_THRESHOLD_MINUTES'];
+  if (raw === undefined || raw === '') return 30;
+  const parsed = parseInt(raw, 10);
+  return isNaN(parsed) ? 30 : parsed;
+}
+
+/**
+ * Emits a `credit/low-balance` Inngest event when remaining minutes cross below
+ * the soft threshold for the first time today (checked via audit_log).
+ * Failures are caught and logged — this must never interrupt the billing write.
+ */
+async function maybeEmitLowBalanceAlert(orgId: string, newBalanceCents: number): Promise<void> {
+  // Compute remaining minutes using the org's weighted-average rate
+  const remainingMinutes = await withOrgContext(orgId, async (tx) => {
+    const cpm = await weightedAvgCentsPerMinute(tx, orgId);
+    if (cpm === null || cpm <= 0) return null;
+    return Math.floor(newBalanceCents / cpm);
+  });
+
+  if (remainingMinutes === null) return; // no packages purchased yet
+
+  const threshold = softThresholdMinutes();
+  if (remainingMinutes >= threshold) return; // still above threshold
+
+  // Check whether we already fired an alert for this org today
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+
+  const alreadyAlerted = await withSystemContext(async (tx) => {
+    const rows = await tx
+      .select({ id: auditLog.id })
+      .from(auditLog)
+      .where(
+        and(
+          eq(auditLog.org_id, orgId),
+          eq(auditLog.action, 'credit.low-balance'),
+          gte(auditLog.created_at, todayStart),
+        ),
+      )
+      .limit(1);
+    return rows.length > 0;
+  });
+
+  if (alreadyAlerted) return;
+
+  // Emit the Inngest event so the background handler can send the email
+  await sendInngestEvent({
+    name: CREDIT_LOW_BALANCE_EVENT,
+    data: { orgId, balanceCents: newBalanceCents, remainingMinutes },
+  });
+
+  // Record in audit_log so we don't re-alert the same day
+  await withSystemContext(async (tx) => {
+    await recordAudit(tx, {
+      orgId,
+      actorType: 'system',
+      action: 'credit.low-balance',
+      subjectType: 'credit_ledger',
+      subjectId: orgId,
+      metadata: { balanceCents: newBalanceCents, remainingMinutes, thresholdMinutes: threshold },
+    });
+  });
 }
 
 // ─── Service functions ─────────────────────────────────────────────────────────
@@ -285,6 +356,11 @@ export async function releaseReservation(orgId: string, campaignId: string): Pro
  * Records the actual cost of a completed call against the org's credit balance.
  * Idempotent: duplicate calls with the same callId are no-ops.
  * No-op for zero-cost calls (e.g. unanswered, under minimum billable duration).
+ *
+ * After a successful charge, checks the low-balance soft threshold and emits a
+ * `credit/low-balance` Inngest event the first time the balance drops below it
+ * within the same calendar day. Alert failures are suppressed — they must never
+ * interrupt the billing write.
  */
 export async function chargeForCall(
   orgId: string,
@@ -293,9 +369,11 @@ export async function chargeForCall(
 ): Promise<void> {
   if (costCents === 0) return;
 
+  let newBalance: number | undefined;
+
   await withOrgContext(orgId, async (tx) => {
     const currentBalance = await lockBalance(tx, orgId);
-    const newBalance = currentBalance - costCents;
+    const candidateBalance = currentBalance - costCents;
 
     const [inserted] = await tx
       .insert(creditLedger)
@@ -303,7 +381,7 @@ export async function chargeForCall(
         org_id: orgId,
         entry_type: 'charge',
         delta_cents: -costCents,
-        balance_after_cents: newBalance,
+        balance_after_cents: candidateBalance,
         reference_type: 'call',
         reference_id: callId,
         description: `Call charge for ${callId}`,
@@ -311,7 +389,7 @@ export async function chargeForCall(
       .onConflictDoNothing()
       .returning({ id: creditLedger.id });
 
-    if (!inserted) return;
+    if (!inserted) return; // duplicate delivery — no-op; skip alert
 
     await recordAudit(tx, {
       orgId,
@@ -319,9 +397,19 @@ export async function chargeForCall(
       action: 'credit.charged',
       subjectType: 'call',
       subjectId: callId,
-      metadata: { costCents, balanceBefore: currentBalance, balanceAfter: newBalance },
+      metadata: { costCents, balanceBefore: currentBalance, balanceAfter: candidateBalance },
     });
+
+    newBalance = candidateBalance;
   });
+
+  // Check threshold outside the transaction so a failed alert never rolls back
+  // the ledger write. Fire-and-forget with error suppression.
+  if (newBalance !== undefined) {
+    await maybeEmitLowBalanceAlert(orgId, newBalance).catch((e: unknown) => {
+      console.error('[credit] Low-balance alert failed for org', orgId, e);
+    });
+  }
 }
 
 /**

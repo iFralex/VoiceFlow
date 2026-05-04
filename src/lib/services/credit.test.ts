@@ -3,9 +3,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
 const mockRecordAudit = vi.fn().mockResolvedValue(undefined);
+const mockSendInngestEvent = vi.fn().mockResolvedValue(undefined);
 
 vi.mock('@/lib/db/audit', () => ({
   recordAudit: (...args: unknown[]) => mockRecordAudit(...args),
+}));
+
+vi.mock('@/lib/inngest/client', () => ({
+  sendInngestEvent: (...args: unknown[]) => mockSendInngestEvent(...args),
 }));
 
 // Select results queue — consumed in FIFO order per test
@@ -459,6 +464,106 @@ describe('chargeForCall', () => {
     await chargeForCall(ORG_ID, CALL_ID, 100);
 
     expect(mockRecordAudit).not.toHaveBeenCalled();
+  });
+
+  it('emits credit/low-balance event when remaining minutes cross below threshold', async () => {
+    // Setup: balance 3000 → charge 2990 → newBalance 10 cents
+    // Rate: 2990 cents / 700 min ≈ 4.27 c/min → floor(10/4.27) = 2 minutes → below 30
+    // No prior alert today → should emit
+    process.env['CREDIT_SOFT_THRESHOLD_MINUTES'] = '30';
+
+    selectResults.push([{ balance_after_cents: 3000 }]); // lockBalance (charge tx)
+    insertResults.push([LEDGER_ROW]);                     // insert charge entry
+    // maybeEmitLowBalanceAlert → withOrgContext → weightedAvgCentsPerMinute
+    selectResults.push([{ delta_cents: 2990, reference_id: PAYMENT_INTENT_ID }]); // topups
+    selectResults.push([{ package_id: PACKAGE_ID }]);                            // payment
+    selectResults.push([{ included_minutes: 700 }]);                             // package
+    // maybeEmitLowBalanceAlert → withSystemContext → auditLog check
+    selectResults.push([]); // no prior alert today
+
+    const { chargeForCall } = await import('./credit');
+    await chargeForCall(ORG_ID, CALL_ID, 2990);
+
+    expect(mockSendInngestEvent).toHaveBeenCalledOnce();
+    expect(mockSendInngestEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'credit/low-balance',
+        data: expect.objectContaining({ orgId: ORG_ID, balanceCents: 10, remainingMinutes: 2 }),
+      }),
+    );
+  });
+
+  it('does not emit event when remaining minutes are above threshold', async () => {
+    process.env['CREDIT_SOFT_THRESHOLD_MINUTES'] = '30';
+
+    // balance 10000 → charge 100 → newBalance 9900 cents; rate 4.27 → 2318 min → above 30
+    selectResults.push([{ balance_after_cents: 10000 }]); // lockBalance
+    insertResults.push([LEDGER_ROW]);
+    // weightedAvgCentsPerMinute
+    selectResults.push([{ delta_cents: 2990, reference_id: PAYMENT_INTENT_ID }]);
+    selectResults.push([{ package_id: PACKAGE_ID }]);
+    selectResults.push([{ included_minutes: 700 }]);
+
+    const { chargeForCall } = await import('./credit');
+    await chargeForCall(ORG_ID, CALL_ID, 100);
+
+    expect(mockSendInngestEvent).not.toHaveBeenCalled();
+  });
+
+  it('does not emit event if already alerted today', async () => {
+    process.env['CREDIT_SOFT_THRESHOLD_MINUTES'] = '30';
+
+    selectResults.push([{ balance_after_cents: 3000 }]); // lockBalance
+    insertResults.push([LEDGER_ROW]);
+    selectResults.push([{ delta_cents: 2990, reference_id: PAYMENT_INTENT_ID }]);
+    selectResults.push([{ package_id: PACKAGE_ID }]);
+    selectResults.push([{ included_minutes: 700 }]);
+    selectResults.push([{ id: 'audit-1' }]); // audit_log has entry today → already alerted
+
+    const { chargeForCall } = await import('./credit');
+    await chargeForCall(ORG_ID, CALL_ID, 2990);
+
+    expect(mockSendInngestEvent).not.toHaveBeenCalled();
+  });
+
+  it('does not emit event when no packages have been purchased', async () => {
+    process.env['CREDIT_SOFT_THRESHOLD_MINUTES'] = '30';
+
+    selectResults.push([{ balance_after_cents: 1000 }]); // lockBalance
+    insertResults.push([LEDGER_ROW]);
+    selectResults.push([]); // no topup entries → centsPerMinute null → returns early
+
+    const { chargeForCall } = await import('./credit');
+    await chargeForCall(ORG_ID, CALL_ID, 10);
+
+    expect(mockSendInngestEvent).not.toHaveBeenCalled();
+  });
+
+  it('does not emit event for duplicate charge (idempotent)', async () => {
+    process.env['CREDIT_SOFT_THRESHOLD_MINUTES'] = '30';
+
+    selectResults.push([{ balance_after_cents: 5000 }]);
+    insertResults.push([]); // conflict → no-op → newBalance stays undefined
+
+    const { chargeForCall } = await import('./credit');
+    await chargeForCall(ORG_ID, CALL_ID, 100);
+
+    expect(mockSendInngestEvent).not.toHaveBeenCalled();
+  });
+
+  it('suppresses alert errors — chargeForCall resolves even if sendInngestEvent throws', async () => {
+    process.env['CREDIT_SOFT_THRESHOLD_MINUTES'] = '30';
+    mockSendInngestEvent.mockRejectedValueOnce(new Error('Inngest down'));
+
+    selectResults.push([{ balance_after_cents: 3000 }]);
+    insertResults.push([LEDGER_ROW]);
+    selectResults.push([{ delta_cents: 2990, reference_id: PAYMENT_INTENT_ID }]);
+    selectResults.push([{ package_id: PACKAGE_ID }]);
+    selectResults.push([{ included_minutes: 700 }]);
+    selectResults.push([]); // no prior alert
+
+    const { chargeForCall } = await import('./credit');
+    await expect(chargeForCall(ORG_ID, CALL_ID, 2990)).resolves.toBeUndefined();
   });
 });
 

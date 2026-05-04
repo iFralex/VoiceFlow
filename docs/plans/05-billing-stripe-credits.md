@@ -201,11 +201,11 @@ export function computeCallCost(args: { durationSeconds: number; perMinuteCents:
 
 ### Task 13: Low-balance threshold monitor
 
-- [ ] Define thresholds in env: `CREDIT_SOFT_THRESHOLD_MINUTES=30`, `CREDIT_HARD_THRESHOLD_CENTS=0`
-- [ ] After every charge in `chargeForCall`, compute remaining minutes; if it crosses below the soft threshold for the first time today (compared against `audit_log` entries), emit Inngest event `credit.low-balance` with `{ orgId, balance, remainingMinutes }`
-- [ ] Inngest handler (in plan 09 or 13): send "Credito basso" email to org owner
-- [ ] Hard threshold is checked at dispatch time in plan 09's `campaign.dispatch-call`
-- [ ] Mark completed
+- [x] Define thresholds in env: `CREDIT_SOFT_THRESHOLD_MINUTES=30`, `CREDIT_HARD_THRESHOLD_CENTS=0`
+- [x] After every charge in `chargeForCall`, compute remaining minutes; if it crosses below the soft threshold for the first time today (compared against `audit_log` entries), emit Inngest event `credit.low-balance` with `{ orgId, balance, remainingMinutes }`
+- [x] Inngest handler (in plan 09 or 13): send "Credito basso" email to org owner
+- [x] Hard threshold is checked at dispatch time in plan 09's `campaign.dispatch-call`
+- [x] Mark completed
 
 ### Task 14: Pre-launch credit check on campaign creation
 
