@@ -216,10 +216,10 @@ export function computeCallCost(args: { durationSeconds: number; perMinuteCents:
 
 ### Task 15: Manual credit adjustment (admin tooling)
 
-- [ ] Create internal-only route `/api/admin/credit-adjustment` callable with a server-side admin token (env `INTERNAL_ADMIN_TOKEN`)
-- [ ] Body: `{ orgId, deltaCents, reason }`; logs to `audit_log` with `actor_type='system'`
-- [ ] Document the runbook in `docs/runbooks/credit-adjustment.md` (full population in plan 14)
-- [ ] Mark completed
+- [x] Create internal-only route `/api/admin/credit-adjustment` callable with a server-side admin token (env `INTERNAL_ADMIN_TOKEN`)
+- [x] Body: `{ orgId, deltaCents, reason }`; logs to `audit_log` with `actor_type='system'`
+- [x] Document the runbook in `docs/runbooks/credit-adjustment.md` (full population in plan 14)
+- [x] Mark completed
 
 ### Task 16: Reconciliation cron
 

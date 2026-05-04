@@ -463,7 +463,9 @@ export async function adjust(
   byUserId: string,
   deltaCents: number,
   reason: string,
+  opts?: { actorType?: 'user' | 'system' },
 ): Promise<void> {
+  const actorType = opts?.actorType ?? 'user';
   await withOrgContext(orgId, async (tx) => {
     const currentBalance = await lockBalance(tx, orgId);
     const newBalance = currentBalance + deltaCents;
@@ -481,8 +483,8 @@ export async function adjust(
 
     await recordAudit(tx, {
       orgId,
-      actorUserId: byUserId,
-      actorType: 'user',
+      ...(actorType === 'user' && { actorUserId: byUserId }),
+      actorType,
       action: 'credit.adjusted',
       subjectType: 'credit_ledger',
       subjectId: referenceId,
