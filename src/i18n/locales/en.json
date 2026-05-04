@@ -207,7 +207,18 @@
     "add_contact_phone_invalid": "Invalid phone number",
     "add_contact_success": "Contact added",
     "add_contact_already_exists": "Contact already exists — data updated",
-    "add_contact_submitting": "Saving…"
+    "add_contact_submitting": "Saving…",
+    "dnc_btn": "Import do-not-call",
+    "dnc_dialog_title": "Import do-not-call list",
+    "dnc_dialog_description": "Upload a CSV with one phone number per line. No contacts are created — only opt-outs are recorded.",
+    "dnc_file_label": "CSV file (one number per line)",
+    "dnc_paste_label": "Or paste numbers",
+    "dnc_paste_placeholder": "+39 333 1234567\n+39 02 12345678\n…",
+    "dnc_submit": "Import",
+    "dnc_submitting": "Importing…",
+    "dnc_success": "{count} numbers added to the do-not-call list",
+    "dnc_no_valid_numbers": "No valid numbers found in the file",
+    "dnc_error": "Error during import"
   },
   "credit": {
     "title": "Credit",

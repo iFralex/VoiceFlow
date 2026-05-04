@@ -10,6 +10,8 @@ import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { StatusBadge } from '@/components/ui/status-badge';
 
+import { ImportDncDialog } from './import-dnc-dialog';
+
 // ---------------------------------------------------------------------------
 // Serialised type for contact lists
 // ---------------------------------------------------------------------------
@@ -148,12 +150,15 @@ export function ContactsPageClient({
       {/* Page header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
-        <Button asChild size="sm">
-          <Link href="/contacts/upload">
-            <Upload className="mr-2 size-4" />
-            {t('upload_new_list')}
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <ImportDncDialog />
+          <Button asChild size="sm">
+            <Link href="/contacts/upload">
+              <Upload className="mr-2 size-4" />
+              {t('upload_new_list')}
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {/* Tab navigation */}

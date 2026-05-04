@@ -240,6 +240,53 @@ export async function addManualContact(
   }
 }
 
+const importDncSchema = z.object({
+  csvText: z.string().min(1).max(5 * 1024 * 1024), // 5 MB text limit
+});
+
+/**
+ * Imports a single-column CSV of phone numbers as opt-outs (do-not-call list).
+ * Each number is normalised to E.164 then inserted into the org opt-out registry.
+ * No new contact rows are created — only entries in `opt_out_registry`.
+ */
+export async function importDncList(
+  input: z.infer<typeof importDncSchema>,
+): Promise<ActionResult & { processedCount?: number; invalidCount?: number }> {
+  const parsed = importDncSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? 'validation_error' };
+
+  try {
+    const { orgId } = await getAuthContext();
+    await requireCapability('contacts.upload');
+
+    const lines = parsed.data.csvText
+      .split(/\r?\n/)
+      .map((l) => l.split(',')[0]?.trim() ?? '')
+      .filter(Boolean);
+
+    // Skip header rows that are clearly column labels
+    const headerPattern = /^(telefono|cellulare|numero|phone|mobile|tel)$/i;
+
+    let processedCount = 0;
+    let invalidCount = 0;
+
+    for (const raw of lines) {
+      if (headerPattern.test(raw)) continue;
+      const e164 = normaliseToE164(raw);
+      if (!e164) {
+        invalidCount++;
+        continue;
+      }
+      await markOptOut(orgId, e164, 'dealer_input');
+      processedCount++;
+    }
+
+    return { ok: true, processedCount, invalidCount };
+  } catch (e) {
+    return { ok: false, message: e instanceof Error ? e.message : 'error' };
+  }
+}
+
 /**
  * Returns a signed download URL for the import errors JSON artifact.
  * The file is stored at `<orgId>/uploads/<listId>-errors.json` in csv-uploads bucket.

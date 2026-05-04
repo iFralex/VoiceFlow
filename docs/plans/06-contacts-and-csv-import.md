@@ -211,10 +211,10 @@ export async function parseContactsCsv(
 
 ### Task 11: Manual opt-out import (do-not-call CSV)
 
-- [ ] Add "Importa lista do-not-call" dialog accepting a single-column CSV of phone numbers
-- [ ] Each number is normalised, then `markOptOut(orgId, phoneE164, 'dealer_input')` is called
-- [ ] No new contacts are created via this path — only opt-outs added to `opt_out_registry`
-- [ ] Mark completed
+- [x] Add "Importa lista do-not-call" dialog accepting a single-column CSV of phone numbers
+- [x] Each number is normalised, then `markOptOut(orgId, phoneE164, 'dealer_input')` is called
+- [x] No new contacts are created via this path — only opt-outs added to `opt_out_registry`
+- [x] Mark completed
 
 ### Task 12: Storage signed-URL helper
 
