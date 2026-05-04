@@ -79,7 +79,7 @@ export async function updateListCounts(
 
 ### Task 3: Contact service
 
-- [ ] Create `src/lib/services/contacts.ts` with:
+- [x] Create `src/lib/services/contacts.ts` with:
 
 ```typescript
 export async function upsertContact(
@@ -112,10 +112,10 @@ export async function markOptOut(
 ): Promise<void>;
 ```
 
-- [ ] `bulkUpsertContacts` uses `INSERT ... ON CONFLICT (org_id, phone_e164) DO UPDATE SET ...` to be idempotent on re-uploads, in batches of 500
-- [ ] `softDeleteContact` sets `deleted_at` and removes recordings/transcripts of past calls per spec §12.4 (full erasure logic in plan 11; here we only mark the contact)
-- [ ] All operations wrapped in `withOrgContext`
-- [ ] Mark completed
+- [x] `bulkUpsertContacts` uses `INSERT ... ON CONFLICT (org_id, phone_e164) DO UPDATE SET ...` to be idempotent on re-uploads, in batches of 500
+- [x] `softDeleteContact` sets `deleted_at` and removes recordings/transcripts of past calls per spec §12.4 (full erasure logic in plan 11; here we only mark the contact)
+- [x] All operations wrapped in `withOrgContext`
+- [x] Mark completed
 
 ### Task 4: CSV parser
 
