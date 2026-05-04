@@ -175,11 +175,11 @@ export async function previewSystemPrompt(
 
 ### Task 9: Scripts list page
 
-- [ ] Create `src/app/(app)/scripts/page.tsx`:
+- [x] Create `src/app/(app)/scripts/page.tsx`:
   - empty state: "Nessuno script configurato — inizia da uno dei nostri template"
   - grid of template cards (5 cards) with: template name, description, list of required variables, "Crea da questo template" CTA
   - section below: "I tuoi script" — list of org-owned scripts with template badge, last updated, action buttons
-- [ ] Mark completed
+- [x] Mark completed
 
 ### Task 10: Script editor wizard
 

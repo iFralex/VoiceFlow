@@ -432,6 +432,28 @@
     "no_tokens": "No personal access tokens yet",
     "never_used": "Never"
   },
+  "scripts": {
+    "title": "Scripts",
+    "templates_title": "Available templates",
+    "your_scripts_title": "Your scripts",
+    "no_scripts": "No scripts configured — start from one of our templates",
+    "create_from_template": "Create from this template",
+    "col_name": "Name",
+    "col_template": "Template",
+    "col_updated": "Last updated",
+    "col_actions": "Actions",
+    "action_edit": "Edit",
+    "action_delete": "Delete",
+    "delete_title": "Delete script",
+    "delete_description": "The script will be permanently deleted. Campaigns using this script must be completed or cancelled first.",
+    "delete_success": "Script deleted",
+    "delete_error_referenced": "This script is used by active campaigns. Complete or cancel them first.",
+    "template_lead_reactivation_desc": "Reactivate inactive leads with an appointment proposal",
+    "template_appointment_confirm_desc": "Confirm, reschedule or cancel existing appointments",
+    "template_car_renewal_desc": "Propose vehicle renewal to customers with older cars",
+    "template_post_sale_followup_desc": "Post-sale follow-up to collect satisfaction and book service",
+    "template_csi_survey_desc": "Customer satisfaction survey for the manufacturer"
+  },
   "errors": {
     "title": "Error",
     "message": "An unexpected error has occurred.",

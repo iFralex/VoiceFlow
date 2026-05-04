@@ -432,6 +432,28 @@
     "no_tokens": "Nessun token di accesso personale",
     "never_used": "Mai"
   },
+  "scripts": {
+    "title": "Script",
+    "templates_title": "Template disponibili",
+    "your_scripts_title": "I tuoi script",
+    "no_scripts": "Nessuno script configurato — inizia da uno dei nostri template",
+    "create_from_template": "Crea da questo template",
+    "col_name": "Nome",
+    "col_template": "Template",
+    "col_updated": "Ultimo aggiornamento",
+    "col_actions": "Azioni",
+    "action_edit": "Modifica",
+    "action_delete": "Elimina",
+    "delete_title": "Elimina script",
+    "delete_description": "Lo script verrà eliminato definitivamente. Le campagne che usano questo script devono essere completate o annullate prima.",
+    "delete_success": "Script eliminato",
+    "delete_error_referenced": "Questo script è utilizzato da campagne attive. Completale o annullale prima.",
+    "template_lead_reactivation_desc": "Riattivazione dei lead inattivi con proposta di appuntamento",
+    "template_appointment_confirm_desc": "Conferma, modifica o cancellazione degli appuntamenti esistenti",
+    "template_car_renewal_desc": "Proposta di rinnovo del veicolo ai clienti con auto di un certo numero di anni",
+    "template_post_sale_followup_desc": "Follow-up post-vendita per raccogliere soddisfazione e prenotare tagliando",
+    "template_csi_survey_desc": "Questionario di soddisfazione cliente per la casa madre"
+  },
   "errors": {
     "title": "Errore",
     "message": "Si è verificato un errore imprevisto.",
