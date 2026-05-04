@@ -251,6 +251,17 @@ export function ListDetailClient({ list, contacts, listId, orgId }: Props) {
             <span>
               {t('list_contacts_count', { count: String(listState.valid_count) })}
             </span>
+            {listState.total_count > listState.valid_count && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-auto px-2 py-0 text-xs"
+                disabled={loadingErrors}
+                onClick={handleLoadErrors}
+              >
+                {loadingErrors ? t('list_errors_loading') : t('list_errors_download')}
+              </Button>
+            )}
           </div>
           <ContactsTable contacts={contacts} listId={listId} orgId={orgId} />
         </div>

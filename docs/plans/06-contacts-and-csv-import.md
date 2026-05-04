@@ -249,12 +249,12 @@ export async function parseContactsCsv(
 
 ### Task 16: E2E
 
-- [ ] Playwright `e2e/contacts.spec.ts`:
+- [x] Playwright `e2e/contacts.spec.ts`:
   - upload CSV with 100 rows containing 5 invalid phones
   - assert 95 valid contacts after parsing
   - download errors artifact and verify content
   - mark one contact as opt-out from row action; verify it appears in opt-out tab
-- [ ] Mark completed
+- [x] Mark completed
 
 ### Task 17: Definition of Done
 
