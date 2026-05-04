@@ -2,8 +2,10 @@ import { and, eq } from 'drizzle-orm';
 
 import { recordAudit } from '@/lib/db/audit';
 import { withOrgContext } from '@/lib/db/context';
-import { contactLists } from '@/lib/db/schema';
+import { contactLists, importStatusEnum } from '@/lib/db/schema';
 import type { ContactList } from '@/lib/db/schema';
+
+export type ImportStatus = (typeof importStatusEnum.enumValues)[number];
 
 export async function createContactList(
   orgId: string,
@@ -91,6 +93,19 @@ export async function updateListCounts(
     await tx
       .update(contactLists)
       .set({ total_count: total, valid_count: valid })
+      .where(and(eq(contactLists.id, listId), eq(contactLists.org_id, orgId)));
+  });
+}
+
+export async function updateListImportStatus(
+  orgId: string,
+  listId: string,
+  status: ImportStatus,
+): Promise<void> {
+  await withOrgContext(orgId, async (tx) => {
+    await tx
+      .update(contactLists)
+      .set({ import_status: status })
       .where(and(eq(contactLists.id, listId), eq(contactLists.org_id, orgId)));
   });
 }

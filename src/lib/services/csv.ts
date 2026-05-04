@@ -14,7 +14,7 @@ export type CsvParseResult = {
   detectedColumns: { phone: string; firstName?: string; lastName?: string; email?: string };
 };
 
-interface ColumnMapping {
+export interface ColumnMapping {
   phone: string;
   firstName?: string;
   lastName?: string;

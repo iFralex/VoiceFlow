@@ -160,8 +160,8 @@ export async function parseContactsCsv(
 
 ### Task 6: Inngest function — parse and ingest
 
-- [ ] Create `src/lib/inngest/contacts/import.ts` triggered by event `contacts.import-requested` with `{ orgId, listId, storagePath, columnMapping?, consentBasis, contactType }`
-- [ ] Steps:
+- [x] Create `src/lib/inngest/contacts/import.ts` triggered by event `contacts.import-requested` with `{ orgId, listId, storagePath, columnMapping?, consentBasis, contactType }`
+- [x] Steps:
   1. `download-file`: fetch the CSV from Supabase Storage to memory or stream-process
   2. `parse`: run `parseContactsCsv` and store invalid rows artifact at `<org_id>/uploads/<listId>-errors.json`
   3. `enrich`: for each valid row resolve current opt-out state (org-scoped registry; RPO check is best-effort — if the RPO snapshot exists, use it; otherwise leave `rpo_status='unchecked'` for plan 11 to fill in)
@@ -169,8 +169,8 @@ export async function parseContactsCsv(
   5. `update-list`: call `updateListCounts` and set `import_status = 'completed'` (or `'failed'` if step 2 produced zero valid rows)
   6. `audit`: write audit-log entry with totals
   7. `notify`: emit `contacts.import-completed` event for plan 13's notification handler
-- [ ] Use Inngest `step.run` for retries; entire function is idempotent on `(orgId, listId)`
-- [ ] Mark completed
+- [x] Use Inngest `step.run` for retries; entire function is idempotent on `(orgId, listId)`
+- [x] Mark completed
 
 ### Task 7: Upload UI — three-step wizard
 
