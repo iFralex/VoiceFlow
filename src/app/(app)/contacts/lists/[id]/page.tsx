@@ -47,8 +47,11 @@ export default async function ListDetailPage({ params, searchParams }: Props) {
   const search = typeof sp.search === 'string' ? sp.search : undefined;
   const optOut =
     sp.optOut === 'true' ? true : sp.optOut === 'false' ? false : undefined;
+  const RPO_STATUSES: RpoStatus[] = ['clear', 'blocked', 'unchecked'];
   const rpoStatus =
-    typeof sp.rpoStatus === 'string' ? (sp.rpoStatus as RpoStatus) : undefined;
+    typeof sp.rpoStatus === 'string' && RPO_STATUSES.includes(sp.rpoStatus as RpoStatus)
+      ? (sp.rpoStatus as RpoStatus)
+      : undefined;
 
   const { orgId } = await getAuthContext();
   const list = await getContactList(orgId, id);

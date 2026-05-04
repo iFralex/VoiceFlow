@@ -77,7 +77,7 @@ const validRow = {
   email: null,
   consent_basis: 'consent' as const,
   contact_type: 'b2c' as const,
-  metadata: { _original_row: { telefono: '3401234567' } },
+  metadata: null,
 };
 
 const baseParseResult = {

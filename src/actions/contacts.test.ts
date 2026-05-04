@@ -9,6 +9,7 @@ const {
   mockSendInngestEvent,
   mockGetContactList,
   mockMarkOptOut,
+  mockBulkMarkOptOut,
   mockSoftDeleteContact,
   mockUpsertContact,
   mockListContacts,
@@ -23,6 +24,7 @@ const {
   mockSendInngestEvent: vi.fn(),
   mockGetContactList: vi.fn(),
   mockMarkOptOut: vi.fn(),
+  mockBulkMarkOptOut: vi.fn(),
   mockSoftDeleteContact: vi.fn(),
   mockUpsertContact: vi.fn(),
   mockListContacts: vi.fn(),
@@ -48,6 +50,7 @@ vi.mock('@/lib/services/contact_lists', () => ({
 
 vi.mock('@/lib/services/contacts', () => ({
   markOptOut: mockMarkOptOut,
+  bulkMarkOptOut: mockBulkMarkOptOut,
   softDeleteContact: mockSoftDeleteContact,
   upsertContact: mockUpsertContact,
   listContacts: mockListContacts,
@@ -374,6 +377,7 @@ describe('getImportErrorsUrl', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockGetAuthContext.mockResolvedValue({ orgId: ORG_ID, userId: USER_ID });
+    mockGetContactList.mockResolvedValue({ id: VALID_LIST_ID });
   });
 
   it('returns signed URL when file exists', async () => {
@@ -385,6 +389,14 @@ describe('getImportErrorsUrl', () => {
     const result = await getImportErrorsUrl(VALID_LIST_ID);
     expect(result.ok).toBe(true);
     expect(result.url).toBe('https://example.com/signed-url');
+  });
+
+  it('returns error when list not found', async () => {
+    mockGetContactList.mockResolvedValue(null);
+
+    const result = await getImportErrorsUrl(VALID_LIST_ID);
+    expect(result.ok).toBe(false);
+    expect(result.message).toBe('list_not_found');
   });
 
   it('returns error when file not found', async () => {
@@ -631,7 +643,7 @@ describe('importDncList', () => {
     vi.clearAllMocks();
     mockGetAuthContext.mockResolvedValue({ orgId: ORG_ID, userId: USER_ID });
     mockRequireCapability.mockResolvedValue(undefined);
-    mockMarkOptOut.mockResolvedValue(undefined);
+    mockBulkMarkOptOut.mockResolvedValue(undefined);
   });
 
   it('imports valid phone numbers and returns counts', async () => {
@@ -641,8 +653,12 @@ describe('importDncList', () => {
     expect(result.ok).toBe(true);
     expect(result.processedCount).toBe(2);
     expect(result.invalidCount).toBe(0);
-    expect(mockMarkOptOut).toHaveBeenCalledTimes(2);
-    expect(mockMarkOptOut).toHaveBeenCalledWith(ORG_ID, '+393401234567', 'dealer_input');
+    expect(mockBulkMarkOptOut).toHaveBeenCalledTimes(1);
+    expect(mockBulkMarkOptOut).toHaveBeenCalledWith(
+      ORG_ID,
+      ['+393401234567', '+393407654321'],
+      'dealer_input',
+    );
   });
 
   it('skips header rows matching common column names', async () => {
@@ -651,7 +667,8 @@ describe('importDncList', () => {
 
     expect(result.ok).toBe(true);
     expect(result.processedCount).toBe(1);
-    expect(mockMarkOptOut).toHaveBeenCalledTimes(1);
+    expect(mockBulkMarkOptOut).toHaveBeenCalledTimes(1);
+    expect(mockBulkMarkOptOut).toHaveBeenCalledWith(ORG_ID, ['+393401234567'], 'dealer_input');
   });
 
   it('counts invalid phone numbers without stopping', async () => {
@@ -667,11 +684,11 @@ describe('importDncList', () => {
     const result = await importDncList({ csvText: '' });
 
     expect(result.ok).toBe(false);
-    expect(mockMarkOptOut).not.toHaveBeenCalled();
+    expect(mockBulkMarkOptOut).not.toHaveBeenCalled();
   });
 
-  it('returns error when markOptOut throws', async () => {
-    mockMarkOptOut.mockRejectedValueOnce(new Error('registry_error'));
+  it('returns error when bulkMarkOptOut throws', async () => {
+    mockBulkMarkOptOut.mockRejectedValueOnce(new Error('registry_error'));
 
     const result = await importDncList({ csvText: '+393401234567' });
 

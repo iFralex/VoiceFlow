@@ -120,6 +120,13 @@
       "when": 1777800275500,
       "tag": "0016_contact_list_import_status",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1777800275501,
+      "tag": "0017_contact_lists_realtime",
+      "breakpoints": true
     }
   ]
 }

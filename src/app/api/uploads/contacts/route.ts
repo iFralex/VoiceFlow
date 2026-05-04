@@ -60,6 +60,8 @@ export async function POST(request: Request): Promise<Response> {
   const storagePath = `${auth.orgId}/uploads/${fileId}-${safeName}`;
 
   // Generate signed upload URL (service-role bypasses RLS)
+  // Note: Supabase JS v2 createSignedUploadUrl does not expose a TTL option;
+  // the default expiry for upload URLs is 1 hour (Supabase platform default).
   const { data: signedData, error: storageError } =
     await supabaseAdmin.storage.from(BUCKET).createSignedUploadUrl(storagePath, {
       upsert: false,

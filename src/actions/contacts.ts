@@ -18,7 +18,7 @@ import type {
 } from '@/lib/inngest/contacts/events';
 import { contactsToCsv } from '@/lib/inngest/contacts/export';
 import { getContactList } from '@/lib/services/contact_lists';
-import { listContacts, markOptOut, softDeleteContact, upsertContact } from '@/lib/services/contacts';
+import { bulkMarkOptOut, listContacts, markOptOut, softDeleteContact, upsertContact } from '@/lib/services/contacts';
 import type { RpoStatus } from '@/lib/services/contacts';
 import { CSV_UPLOADS_BUCKET } from '@/lib/storage/signed';
 import { supabaseAdmin } from '@/lib/supabase/admin';
@@ -167,7 +167,7 @@ export async function deleteContact(input: z.infer<typeof deleteContactSchema>):
 }
 
 const bulkOptOutSchema = z.object({
-  contacts: z.array(z.object({ contactId: z.string().uuid(), phoneE164: z.string().min(1) })).min(1),
+  contacts: z.array(z.object({ contactId: z.string().uuid(), phoneE164: z.string().min(1) })).min(1).max(500),
 });
 
 /**
@@ -191,7 +191,7 @@ export async function bulkMarkContactsOptOut(
 }
 
 const bulkDeleteSchema = z.object({
-  contactIds: z.array(z.string().uuid()).min(1),
+  contactIds: z.array(z.string().uuid()).min(1).max(500),
 });
 
 /**
@@ -291,7 +291,7 @@ export async function importDncList(
     // Skip header rows that are clearly column labels
     const headerPattern = /^(telefono|cellulare|numero|phone|mobile|tel)$/i;
 
-    let processedCount = 0;
+    const validPhones: string[] = [];
     let invalidCount = 0;
 
     for (const raw of lines) {
@@ -301,11 +301,12 @@ export async function importDncList(
         invalidCount++;
         continue;
       }
-      await markOptOut(orgId, e164, 'dealer_input');
-      processedCount++;
+      validPhones.push(e164);
     }
 
-    return { ok: true, processedCount, invalidCount };
+    await bulkMarkOptOut(orgId, validPhones, 'dealer_input');
+
+    return { ok: true, processedCount: validPhones.length, invalidCount };
   } catch (e) {
     return { ok: false, message: e instanceof Error ? e.message : 'error' };
   }
@@ -318,6 +319,8 @@ export async function importDncList(
 export async function getImportErrorsUrl(listId: string): Promise<ActionResult & { url?: string }> {
   try {
     const { orgId } = await getAuthContext();
+    const list = await getContactList(orgId, listId);
+    if (!list) return { ok: false, message: 'list_not_found' };
     const path = `${orgId}/uploads/${listId}-errors.json`;
     const { data, error } = await supabaseAdmin.storage
       .from(CSV_UPLOADS_BUCKET)
@@ -413,7 +416,8 @@ export async function exportContactsCsv(
       .upload(path, csv, { contentType: 'text/csv', upsert: true });
 
     if (uploadError) {
-      return { ok: false, message: `export_upload_failed: ${uploadError.message}` };
+      console.error('[exportContactsCsv] upload failed:', uploadError.message);
+      return { ok: false, message: 'export_upload_failed' };
     }
 
     const { data: signData, error: signError } = await supabaseAdmin.storage

@@ -256,7 +256,7 @@ export async function parseContactsCsv(
         ? sanitiseField(options.consentEvidence) || null
         : null,
       contact_type: contactType,
-      metadata: { _original_row: row },
+      metadata: null,
     });
   }
 

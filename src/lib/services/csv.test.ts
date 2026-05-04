@@ -205,12 +205,10 @@ describe('defensive limits', () => {
 // ─── Metadata preservation ────────────────────────────────────────────────────
 
 describe('metadata preservation', () => {
-  it('stores original row data in metadata', async () => {
+  it('stores null metadata (no raw row data retained)', async () => {
     const csv = 'phone,nome,extra_col\n+393331234567,Mario,somevalue';
     const result = await parseContactsCsv(csv, BASE_OPTIONS);
-    expect(result.validRows[0]!.metadata).toMatchObject({
-      _original_row: { phone: '+393331234567', nome: 'Mario', extra_col: 'somevalue' },
-    });
+    expect(result.validRows[0]!.metadata).toBeNull();
   });
 
   it('preserves raw row in invalidRows even when invalid', async () => {

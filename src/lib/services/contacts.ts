@@ -259,3 +259,37 @@ export async function markOptOut(
       );
   });
 }
+
+/**
+ * Bulk-inserts multiple phone numbers into the opt-out registry in a single
+ * transaction. Existing entries are silently skipped (ON CONFLICT DO NOTHING).
+ * Matching live contact rows are also marked opt_out = true.
+ */
+export async function bulkMarkOptOut(
+  orgId: string,
+  phonesE164: string[],
+  source: OptOutSource,
+): Promise<void> {
+  if (phonesE164.length === 0) return;
+
+  for (let i = 0; i < phonesE164.length; i += BATCH_SIZE) {
+    const batch = phonesE164.slice(i, i + BATCH_SIZE);
+    await withOrgContext(orgId, async (tx) => {
+      await tx
+        .insert(optOutRegistry)
+        .values(batch.map((phone_e164) => ({ org_id: orgId, phone_e164, source })))
+        .onConflictDoNothing();
+
+      await tx
+        .update(contacts)
+        .set({ opt_out: true })
+        .where(
+          and(
+            eq(contacts.org_id, orgId),
+            inArray(contacts.phone_e164, batch),
+            isNull(contacts.deleted_at),
+          ),
+        );
+    });
+  }
+}
