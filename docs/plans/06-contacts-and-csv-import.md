@@ -204,10 +204,10 @@ export async function parseContactsCsv(
 
 ### Task 10: Manual contact addition
 
-- [ ] Add "Aggiungi contatto manualmente" dialog on the list detail page
-- [ ] Form fields: phone (validated), first/last name, email, consent basis, evidence
-- [ ] On submit, calls `upsertContact`; on conflict show warning "Contatto già presente"
-- [ ] Mark completed
+- [x] Add "Aggiungi contatto manualmente" dialog on the list detail page
+- [x] Form fields: phone (validated), first/last name, email, consent basis, evidence
+- [x] On submit, calls `upsertContact`; on conflict show warning "Contatto già presente"
+- [x] Mark completed
 
 ### Task 11: Manual opt-out import (do-not-call CSV)
 

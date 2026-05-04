@@ -7,9 +7,10 @@ import { sendInngestEvent } from '@/lib/inngest/client';
 import { CONTACTS_IMPORT_REQUESTED } from '@/lib/inngest/contacts/events';
 import type { ContactsImportRequestedData } from '@/lib/inngest/contacts/events';
 import { getContactList } from '@/lib/services/contact_lists';
-import { markOptOut, softDeleteContact } from '@/lib/services/contacts';
+import { markOptOut, softDeleteContact, upsertContact } from '@/lib/services/contacts';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import type { ActionResult } from '@/lib/utils/action-toast';
+import { normaliseToE164 } from '@/lib/utils/phone';
 
 const triggerSchema = z.object({
   listId: z.string().uuid(),
@@ -184,6 +185,56 @@ export async function bulkDeleteContacts(
       parsed.data.contactIds.map((id) => softDeleteContact(orgId, userId, id)),
     );
     return { ok: true };
+  } catch (e) {
+    return { ok: false, message: e instanceof Error ? e.message : 'error' };
+  }
+}
+
+const addManualContactSchema = z.object({
+  listId: z.string().uuid(),
+  phone: z.string().min(1),
+  firstName: z.string().max(200).optional(),
+  lastName: z.string().max(200).optional(),
+  email: z.string().email().optional().or(z.literal('')),
+  consentBasis: z.enum(['consent', 'legitimate_interest', 'existing_customer']),
+  consentEvidence: z.string().max(500).optional(),
+  contactType: z.enum(['b2c', 'b2b']).default('b2c'),
+});
+
+/**
+ * Manually adds a single contact to a contact list via upsert.
+ * Returns `inserted: true` when a new contact was created, `false` when an
+ * existing contact was updated (conflict on org_id + phone_e164).
+ */
+export async function addManualContact(
+  input: z.input<typeof addManualContactSchema>,
+): Promise<ActionResult & { inserted?: boolean }> {
+  const parsed = addManualContactSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? 'validation_error' };
+
+  const e164 = normaliseToE164(parsed.data.phone);
+  if (!e164) return { ok: false, message: 'phone_invalid' };
+
+  try {
+    const { orgId } = await getAuthContext();
+    await requireCapability('contacts.upload');
+
+    const { listId, firstName, lastName, consentBasis, consentEvidence, contactType } = parsed.data;
+    const email = parsed.data.email === '' ? undefined : parsed.data.email;
+
+    const { inserted } = await upsertContact(orgId, {
+      org_id: orgId,
+      contact_list_id: listId,
+      phone_e164: e164,
+      first_name: firstName ?? null,
+      last_name: lastName ?? null,
+      email: email ?? null,
+      consent_basis: consentBasis,
+      consent_evidence: consentEvidence ?? null,
+      contact_type: contactType,
+    });
+
+    return { ok: true, inserted };
   } catch (e) {
     return { ok: false, message: e instanceof Error ? e.message : 'error' };
   }

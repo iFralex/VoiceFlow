@@ -16,6 +16,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { StatusBadge } from '@/components/ui/status-badge';
 import { getSupabaseBrowserClient } from '@/lib/supabase/browser';
 
+import { AddContactDialog } from './add-contact-dialog';
 import { ContactsTable } from './contacts-table';
 
 // ---------------------------------------------------------------------------
@@ -181,11 +182,14 @@ export function ListDetailClient({ list, contacts, listId, orgId }: Props) {
             </div>
           </div>
 
-          {status && (
-            <StatusBadge
-              status={status === 'parsing' ? 'processing' : status === 'pending' ? 'pending' : status as 'completed' | 'failed'}
-            />
-          )}
+          <div className="flex items-center gap-2">
+            <AddContactDialog listId={listId} />
+            {status && (
+              <StatusBadge
+                status={status === 'parsing' ? 'processing' : status === 'pending' ? 'pending' : status as 'completed' | 'failed'}
+              />
+            )}
+          </div>
         </div>
       </div>
 

@@ -202,6 +202,13 @@ const _italianStrings: Record<string, Record<string, string>> = {
     list_col_created: 'Data creazione',
     all_contacts_title: 'Tutti i contatti',
     opt_out_title: 'Contatti con opt-out',
+    add_contact_btn: 'Aggiungi contatto',
+    add_contact_dialog_title: 'Aggiungi contatto manualmente',
+    add_contact_phone_placeholder: '+39 333 1234567',
+    add_contact_phone_invalid: 'Numero di telefono non valido',
+    add_contact_success: 'Contatto aggiunto',
+    add_contact_already_exists: 'Contatto già presente — dati aggiornati',
+    add_contact_submitting: 'Salvataggio…',
   },
   credit: {
     top_up: 'Ricarica',

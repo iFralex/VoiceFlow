@@ -200,7 +200,14 @@
     "list_col_status": "Status",
     "list_col_created": "Created",
     "all_contacts_title": "All contacts",
-    "opt_out_title": "Opted-out contacts"
+    "opt_out_title": "Opted-out contacts",
+    "add_contact_btn": "Add contact",
+    "add_contact_dialog_title": "Add contact manually",
+    "add_contact_phone_placeholder": "+39 333 1234567",
+    "add_contact_phone_invalid": "Invalid phone number",
+    "add_contact_success": "Contact added",
+    "add_contact_already_exists": "Contact already exists — data updated",
+    "add_contact_submitting": "Saving…"
   },
   "credit": {
     "title": "Credit",
