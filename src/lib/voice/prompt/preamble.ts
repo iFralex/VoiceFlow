@@ -17,6 +17,54 @@ export const OUTCOME_CLASSIFICATION_INSTRUCTIONS_IT = `Al termine della conversa
 
 Quando l'esito è chiaro, invoca lo strumento appropriato senza ulteriori commenti.`;
 
+// ---------------------------------------------------------------------------
+// Compliance verification
+// ---------------------------------------------------------------------------
+
+/**
+ * Thrown by `verifyComplianceOrThrow` when the assembled system prompt or
+ * the first message fails the AI Act transparency checks.
+ */
+export class ComplianceVerificationError extends Error {
+  constructor(reason: string) {
+    super(`Compliance verification failed: ${reason}`);
+    this.name = 'ComplianceVerificationError';
+  }
+}
+
+const DISCLOSURE_PHRASE = 'assistente vocale automatico';
+const MIN_PREAMBLE_PREFIX_LENGTH = 200;
+
+/**
+ * Verifies that a fully-assembled script meets the AI Act transparency
+ * requirements:
+ *
+ * 1. The system prompt must start with (at minimum) the first 200 characters
+ *    of `AI_ACT_PREAMBLE_IT`, confirming the preamble has not been stripped.
+ * 2. The first message spoken by the agent must contain the literal phrase
+ *    "assistente vocale automatico" (case-insensitive), confirming the
+ *    inline disclosure is present.
+ *
+ * Throws `ComplianceVerificationError` if either check fails.
+ */
+export function verifyComplianceOrThrow(
+  systemPrompt: string,
+  firstMessage: string,
+): void {
+  const preamblePrefix = AI_ACT_PREAMBLE_IT.slice(0, MIN_PREAMBLE_PREFIX_LENGTH);
+  if (!systemPrompt.startsWith(preamblePrefix)) {
+    throw new ComplianceVerificationError(
+      'The system prompt must begin with the AI Act transparency preamble.',
+    );
+  }
+
+  if (!firstMessage.toLowerCase().includes(DISCLOSURE_PHRASE)) {
+    throw new ComplianceVerificationError(
+      `The first message must contain the phrase "${DISCLOSURE_PHRASE}".`,
+    );
+  }
+}
+
 const PLACEHOLDER_RE = /\{\{(\w+)\}\}/g;
 const CONTROL_CHARS_RE = /[\x00-\x1F\x7F]/g;
 const ESCAPED_PLACEHOLDER_RE = /\{\{/g;

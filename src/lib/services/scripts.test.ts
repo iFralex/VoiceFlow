@@ -10,7 +10,7 @@ vi.mock('@/lib/db/audit', () => ({
 
 vi.mock('node:fs', () => ({
   readFileSync: vi.fn().mockReturnValue(
-    'Buongiorno, sono {{salesperson_first_name}}, assistente vocale per {{dealership_name}}, concessionario {{brand}}.',
+    'Buongiorno, sono {{salesperson_first_name}}, un assistente vocale automatico per {{dealership_name}}, concessionario {{brand}}.',
   ),
 }));
 
@@ -233,6 +233,23 @@ describe('createScript', () => {
     );
   });
 
+  it('throws ComplianceVerificationError when first message lacks disclosure phrase', async () => {
+    const { readFileSync } = await import('node:fs');
+    vi.mocked(readFileSync).mockReturnValueOnce(
+      'Buongiorno, sono {{salesperson_first_name}} di {{dealership_name}}, concessionario {{brand}}.',
+    );
+    selectResultQueue.push([fakeTemplate]);
+    const { createScript } = await import('./scripts');
+
+    await expect(
+      createScript('org-1', 'user-1', {
+        templateSlug: 'lead-reactivation',
+        name: 'Test',
+        variables: fakeVariables,
+      }),
+    ).rejects.toThrow(/assistente vocale automatico/);
+  });
+
   it('uses voiceIdOverride when provided', async () => {
     selectResultQueue.push([fakeTemplate]);
     insertResultQueue.push([{ ...fakeScript, voice_id: 'voice-xyz' }]);
@@ -334,6 +351,21 @@ describe('updateScript', () => {
         variables: fakeVariables,
       }),
     ).rejects.toThrow('script_not_found');
+  });
+
+  it('throws ComplianceVerificationError when updated first message lacks disclosure phrase', async () => {
+    const { readFileSync } = await import('node:fs');
+    vi.mocked(readFileSync).mockReturnValueOnce(
+      'Buongiorno, sono {{salesperson_first_name}} di {{dealership_name}}, concessionario {{brand}}.',
+    );
+    selectResultQueue.push([{ script: fakeScript, template: fakeTemplate }]);
+    const { updateScript } = await import('./scripts');
+
+    await expect(
+      updateScript('org-1', 'user-1', 'script-1', {
+        variables: fakeVariables,
+      }),
+    ).rejects.toThrow(/assistente vocale automatico/);
   });
 });
 

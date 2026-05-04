@@ -209,12 +209,12 @@ export async function previewSystemPrompt(
 
 ### Task 13: Compliance verification at script save
 
-- [ ] On every `createScript` and `updateScript`:
+- [x] On every `createScript` and `updateScript`:
   - call `assembleSystemPrompt` and confirm the AI Act preamble is the first 200+ chars
   - confirm the first-message contains the literal phrase "assistente vocale automatico" (case-insensitive substring check) — guards against template editors removing the disclosure inline
   - if either check fails, reject the save with a clear error
-- [ ] Add unit tests for the verification helper
-- [ ] Mark completed
+- [x] Add unit tests for the verification helper
+- [x] Mark completed
 
 ### Task 14: Sample preview generation (optional, defer if time-tight)
 

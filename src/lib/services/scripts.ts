@@ -8,7 +8,11 @@ import { withOrgContext } from '@/lib/db/context';
 import { campaigns, scripts, scriptTemplates } from '@/lib/db/schema';
 import type { Script, ScriptTemplate } from '@/lib/db/schema';
 import { TEMPLATE_DEFINITIONS } from '@/lib/db/seed/script_templates';
-import { assembleSystemPrompt, interpolate } from '@/lib/voice/prompt/preamble';
+import {
+  assembleSystemPrompt,
+  interpolate,
+  verifyComplianceOrThrow,
+} from '@/lib/voice/prompt/preamble';
 import { TEMPLATE_SCHEMAS } from '@/lib/voice/templates/schemas';
 import type { TemplateSlug } from '@/lib/voice/templates/schemas';
 
@@ -159,6 +163,18 @@ export async function createScript(
       );
     }
 
+    // Compliance check: verify AI Act preamble and first-message disclosure.
+    const stringVarsForCheck = coerceVariablesToStrings(
+      input.variables as Record<string, unknown>,
+    );
+    const assembledPrompt = assembleSystemPrompt({
+      templateBody: template.system_prompt,
+      variables: stringVarsForCheck,
+    });
+    const firstMsgTpl = readFirstMessageTemplate(input.templateSlug);
+    const firstMsg = interpolate(firstMsgTpl, stringVarsForCheck);
+    verifyComplianceOrThrow(assembledPrompt, firstMsg);
+
     const [created] = await tx
       .insert(scripts)
       .values({
@@ -190,7 +206,8 @@ export async function updateScript(
   scriptId: string,
   patch: Partial<Pick<Script, 'name' | 'variables' | 'voice_id'>>,
 ): Promise<Script> {
-  // If variables are being patched, validate against the template's schema.
+  // If variables are being patched, validate against the template's schema
+  // and verify compliance (preamble + first-message disclosure).
   if (patch.variables !== undefined) {
     // We need the template slug to validate; load the script first outside
     // the write transaction to keep validation separate from mutation.
@@ -200,6 +217,18 @@ export async function updateScript(
       existing.template.slug,
       patch.variables as Record<string, unknown>,
     );
+
+    // Compliance check: verify AI Act preamble and first-message disclosure.
+    const stringVarsForCheck = coerceVariablesToStrings(
+      patch.variables as Record<string, unknown>,
+    );
+    const assembledPrompt = assembleSystemPrompt({
+      templateBody: existing.template.system_prompt,
+      variables: stringVarsForCheck,
+    });
+    const firstMsgTpl = readFirstMessageTemplate(existing.template.slug);
+    const firstMsg = interpolate(firstMsgTpl, stringVarsForCheck);
+    verifyComplianceOrThrow(assembledPrompt, firstMsg);
   }
 
   return withOrgContext(orgId, async (tx) => {
