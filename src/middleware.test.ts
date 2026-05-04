@@ -51,7 +51,11 @@ function makeRequest(
 
 /** Builds a chainable Supabase `.from().select().eq().not()` mock. */
 function membershipChain(
-  memberships: Array<{ org_id: string; role: string }>,
+  memberships: Array<{
+    org_id: string;
+    role: string;
+    organizations?: { deleted_at: string | null };
+  }>,
 ): { select: () => { eq: () => { not: () => Promise<{ data: typeof memberships }> } } } {
   const not = vi.fn().mockResolvedValue({ data: memberships });
   const eq = vi.fn().mockReturnValue({ not });
@@ -262,5 +266,36 @@ describe('middleware', () => {
     expect(res.status).toBe(307);
     const location = new URL(res.headers.get('location')!);
     expect(location.pathname).toBe('/onboarding');
+  });
+
+  it('excludes soft-deleted org memberships and redirects to onboarding', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } });
+    mockFrom.mockReturnValue(
+      membershipChain([
+        { org_id: 'org-deleted', role: 'owner', organizations: { deleted_at: '2025-01-01T00:00:00Z' } },
+      ]),
+    );
+
+    const req = makeRequest('/dashboard');
+    const res = await middleware(req);
+    expect(res.status).toBe(307);
+    const location = new URL(res.headers.get('location')!);
+    expect(location.pathname).toBe('/onboarding');
+  });
+
+  it('excludes soft-deleted orgs but keeps active non-deleted org', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } });
+    mockFrom.mockReturnValue(
+      membershipChain([
+        { org_id: 'org-deleted', role: 'owner', organizations: { deleted_at: '2025-01-01T00:00:00Z' } },
+        { org_id: 'org-active', role: 'admin', organizations: { deleted_at: null } },
+      ]),
+    );
+
+    const req = makeRequest('/dashboard');
+    const res = await middleware(req);
+    expect(res.status).toBe(200);
+    expect(getInjectedHeader(res, 'x-org-id')).toBe('org-active');
+    expect(getInjectedHeader(res, 'x-member-role')).toBe('admin');
   });
 });

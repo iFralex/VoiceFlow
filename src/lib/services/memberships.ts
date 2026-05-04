@@ -68,10 +68,31 @@ export async function inviteMember(
   input: { email: string; role: MemberRole },
 ): Promise<Membership> {
   // Look up or create the invitee outside the org-scoped transaction
-  // (supabaseAdmin HTTP call cannot participate in a DB transaction)
+  // (supabaseAdmin HTTP call cannot participate in a DB transaction).
+  // Permission check is performed first, before any side effects.
   let inviteeId: string | null = null;
 
   await withSystemContext(async (tx) => {
+    // Check caller permission before any side effects to avoid creating orphaned users
+    const [caller] = await tx
+      .select({ role: memberships.role })
+      .from(memberships)
+      .where(
+        and(
+          eq(memberships.org_id, orgId),
+          eq(memberships.user_id, byUserId),
+          isNotNull(memberships.accepted_at),
+        ),
+      );
+    if (!caller) throw new Error('not_a_member');
+    if (!(['owner', 'admin'] as MemberRole[]).includes(caller.role)) {
+      throw new Error('insufficient_permissions');
+    }
+    // Only owners may invite new owners
+    if (caller.role !== 'owner' && input.role === 'owner') {
+      throw new Error('insufficient_permissions');
+    }
+
     const [existingUser] = await tx
       .select({ id: users.id })
       .from(users)
@@ -103,7 +124,11 @@ export async function inviteMember(
   const userId = inviteeId;
 
   return withOrgContext(orgId, async (tx) => {
-    await requireCallerRole(tx, orgId, byUserId, 'owner', 'admin');
+    const callerRole = await requireCallerRole(tx, orgId, byUserId, 'owner', 'admin');
+    // Defense-in-depth: repeat the owner-escalation guard inside the transaction
+    if (callerRole !== 'owner' && input.role === 'owner') {
+      throw new Error('insufficient_permissions');
+    }
 
     const [membership] = await tx
       .insert(memberships)
@@ -196,6 +221,11 @@ export async function updateMemberRole(
     // Only owner can change another owner's role
     if (target.role === 'owner' && callerRole !== 'owner') {
       throw new Error('cannot_change_owner_role');
+    }
+
+    // Only owner can assign the owner role
+    if (newRole === 'owner' && callerRole !== 'owner') {
+      throw new Error('insufficient_permissions');
     }
 
     // Cannot demote yourself if you are the sole accepted owner

@@ -23,6 +23,7 @@ describe('hasCapability', () => {
   // All capabilities that exist
   const ALL: Capability[] = [
     'org.manage',
+    'org.update',
     'members.invite',
     'members.update_role',
     'billing.topup',
@@ -75,6 +76,7 @@ describe('hasCapability', () => {
     it('does not have privileged capabilities', () => {
       const denied: Capability[] = [
         'org.manage',
+        'org.update',
         'members.invite',
         'members.update_role',
         'billing.topup',
@@ -101,6 +103,7 @@ describe('hasCapability', () => {
     it('does not have any mutating capabilities', () => {
       const denied: Capability[] = [
         'org.manage',
+        'org.update',
         'members.invite',
         'members.update_role',
         'billing.topup',

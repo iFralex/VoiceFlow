@@ -131,8 +131,9 @@ const fakeOperatorMembership = {
 
 describe('inviteMember', () => {
   it('invites an existing user via withSystemContext then withOrgContext', async () => {
+    selectResults.push([{ role: 'owner' }]); // preflight permission check (in withSystemContext)
     selectResults.push([{ id: fakeInvitee.id }]); // findByEmail → found
-    selectResults.push([{ role: 'owner' }]); // caller role check
+    selectResults.push([{ role: 'owner' }]); // defense-in-depth role check (in withOrgContext)
     insertResults.push([fakePendingMembership]); // membership insert
 
     const { inviteMember } = await import('./memberships');
@@ -147,8 +148,9 @@ describe('inviteMember', () => {
   });
 
   it('records member.invited audit entry', async () => {
+    selectResults.push([{ role: 'owner' }]); // preflight
     selectResults.push([{ id: fakeInvitee.id }]);
-    selectResults.push([{ role: 'owner' }]);
+    selectResults.push([{ role: 'owner' }]); // withOrgContext check
     insertResults.push([fakePendingMembership]);
 
     const { inviteMember } = await import('./memberships');
@@ -163,8 +165,9 @@ describe('inviteMember', () => {
   it('creates a Supabase user and mirrors to public.users when email not found', async () => {
     mockCreateUser.mockResolvedValue({ data: { user: { id: 'new-u-id' } }, error: null });
 
+    selectResults.push([{ role: 'owner' }]); // preflight permission check
     selectResults.push([]); // findByEmail → not found
-    selectResults.push([{ role: 'owner' }]); // caller role
+    selectResults.push([{ role: 'owner' }]); // withOrgContext check
     insertResults.push([]); // users.onConflictDoNothing
     insertResults.push([{ ...fakePendingMembership, user_id: 'new-u-id' }]); // membership
 
@@ -175,7 +178,7 @@ describe('inviteMember', () => {
       email: 'new@example.com',
       email_confirm: false,
     });
-    // withSystemContext called twice: findByEmail + mirror insert
+    // withSystemContext called twice: permission+findByEmail + mirror insert
     expect(withSystemContext).toHaveBeenCalledTimes(2);
   });
 
@@ -185,8 +188,8 @@ describe('inviteMember', () => {
       error: { message: 'email already exists' },
     });
 
+    selectResults.push([{ role: 'owner' }]); // preflight permission check
     selectResults.push([]); // findByEmail → not found
-    selectResults.push([{ role: 'owner' }]);
 
     const { inviteMember } = await import('./memberships');
     await expect(
@@ -195,8 +198,8 @@ describe('inviteMember', () => {
   });
 
   it('throws insufficient_permissions when caller is viewer', async () => {
-    selectResults.push([{ id: fakeInvitee.id }]); // findByEmail
-    selectResults.push([{ role: 'viewer' }]); // caller role
+    // Preflight check fires immediately; no findByEmail needed
+    selectResults.push([{ role: 'viewer' }]); // preflight → insufficient_permissions
 
     const { inviteMember } = await import('./memberships');
     await expect(
@@ -205,8 +208,8 @@ describe('inviteMember', () => {
   });
 
   it('throws not_a_member when caller has no accepted membership', async () => {
-    selectResults.push([{ id: fakeInvitee.id }]); // findByEmail
-    selectResults.push([]); // caller role → no membership
+    // Preflight check fires immediately; no findByEmail needed
+    selectResults.push([]); // preflight → not_a_member
 
     const { inviteMember } = await import('./memberships');
     await expect(
@@ -214,15 +217,25 @@ describe('inviteMember', () => {
     ).rejects.toThrow('not_a_member');
   });
 
-  it('allows admin to invite', async () => {
+  it('allows admin to invite with non-owner role', async () => {
+    selectResults.push([{ role: 'admin' }]); // preflight
     selectResults.push([{ id: fakeInvitee.id }]); // findByEmail
-    selectResults.push([{ role: 'admin' }]); // caller role
+    selectResults.push([{ role: 'admin' }]); // withOrgContext check
     insertResults.push([fakePendingMembership]);
 
     const { inviteMember } = await import('./memberships');
     await expect(
       inviteMember('org-1', 'u-1', { email: 'member@example.com', role: 'viewer' }),
     ).resolves.toBeDefined();
+  });
+
+  it('throws insufficient_permissions when admin tries to invite with owner role', async () => {
+    selectResults.push([{ role: 'admin' }]); // preflight → insufficient_permissions (owner role)
+
+    const { inviteMember } = await import('./memberships');
+    await expect(
+      inviteMember('org-1', 'u-1', { email: 'member@example.com', role: 'owner' }),
+    ).rejects.toThrow('insufficient_permissions');
   });
 });
 
@@ -366,6 +379,16 @@ describe('updateMemberRole', () => {
     const { updateMemberRole } = await import('./memberships');
     await expect(updateMemberRole('org-1', 'u-1', 'm-2', 'admin')).rejects.toThrow(
       'cannot_change_owner_role',
+    );
+  });
+
+  it('throws insufficient_permissions when admin tries to promote non-owner to owner', async () => {
+    selectResults.push([{ role: 'admin' }]); // caller is admin
+    selectResults.push([fakeOperatorMembership]); // target is operator (not owner)
+
+    const { updateMemberRole } = await import('./memberships');
+    await expect(updateMemberRole('org-1', 'u-1', 'm-2', 'owner')).rejects.toThrow(
+      'insufficient_permissions',
     );
   });
 

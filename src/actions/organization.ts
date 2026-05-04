@@ -35,7 +35,7 @@ export async function updateOrganizationAction(input: {
   }
 
   const { userId, orgId } = await getAuthContext();
-  await requireCapability('org.manage');
+  await requireCapability('org.update');
 
   try {
     await updateOrganization(

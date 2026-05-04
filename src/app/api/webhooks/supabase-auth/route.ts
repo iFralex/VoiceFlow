@@ -118,7 +118,11 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   // Generate a stable event ID for deduplication.
-  const eventId = event.event_id ?? `${event.type}:${userId}:${Date.now()}`;
+  // When the provider supplies event_id, use it. Otherwise derive a
+  // minute-granular fallback so retries within the same minute are
+  // deduplicated without blocking genuinely new events in later minutes.
+  const eventId =
+    event.event_id ?? `${event.type}:${userId}:${Math.floor(Date.now() / 60_000)}`;
 
   // Insert into webhook_events for deduplication.
   // onConflictDoNothing returns empty array when the row already exists.

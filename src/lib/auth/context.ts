@@ -14,6 +14,7 @@ import type { MemberRole } from '@/types';
 
 export type Capability =
   | 'org.manage'
+  | 'org.update'
   | 'members.invite'
   | 'members.update_role'
   | 'billing.topup'
@@ -31,6 +32,7 @@ export type Capability =
 
 const ALL_CAPABILITIES: Capability[] = [
   'org.manage',
+  'org.update',
   'members.invite',
   'members.update_role',
   'billing.topup',

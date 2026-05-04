@@ -182,20 +182,33 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     url.searchParams.set('next', pathname);
-    return NextResponse.redirect(url);
+    const redirectRes = NextResponse.redirect(url);
+    // Propagate any refreshed session cookies so the browser doesn't lose them
+    supabaseResponse.cookies.getAll().forEach(({ name, value, ...opts }) =>
+      redirectRes.cookies.set(name, value, opts),
+    );
+    return redirectRes;
   }
 
   // ── Org resolution ────────────────────────────────────────────────────────
   // memberships_self_select RLS policy (0011 migration) allows this query via
   // Supabase PostgREST using auth.uid() without the app.current_org_id GUC.
-  const { data: memberships } = await supabase
+  // The embedded organizations join lets us exclude soft-deleted orgs.
+  const { data: rawMemberships } = await supabase
     .from('memberships')
-    .select('org_id, role')
+    .select('org_id, role, organizations!inner(deleted_at)')
     .eq('user_id', user.id)
     .not('accepted_at', 'is', null);
 
   const activeOrgId = request.cookies.get('active_org_id')?.value;
-  const validMemberships = memberships ?? [];
+  // Exclude memberships for soft-deleted organizations
+  const validMemberships = (rawMemberships ?? [])
+    .filter((m) => {
+      const org = (m as unknown as { organizations?: { deleted_at: string | null } })
+        .organizations;
+      return !org?.deleted_at;
+    })
+    .map(({ org_id, role }) => ({ org_id, role }));
   const activeMembership =
     validMemberships.find((m) => m.org_id === activeOrgId) ?? validMemberships[0] ?? null;
 
@@ -204,7 +217,12 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
     if (!pathname.startsWith('/onboarding')) {
       const url = request.nextUrl.clone();
       url.pathname = '/onboarding';
-      return NextResponse.redirect(url);
+      const redirectRes = NextResponse.redirect(url);
+      // Propagate any refreshed session cookies so the browser doesn't lose them
+      supabaseResponse.cookies.getAll().forEach(({ name, value, ...opts }) =>
+        redirectRes.cookies.set(name, value, opts),
+      );
+      return redirectRes;
     }
     // Already on onboarding — allow through with user identity only
     const reqHeaders = new Headers(request.headers);

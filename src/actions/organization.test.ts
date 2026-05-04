@@ -82,9 +82,9 @@ describe('updateOrganizationAction', () => {
     expect(result).toEqual({ ok: false, message: 'name_too_long' });
   });
 
-  it('calls requireCapability with org.manage', async () => {
+  it('calls requireCapability with org.update', async () => {
     await updateOrganizationAction({ name: 'Acme Corp' });
-    expect(mockRequireCapability).toHaveBeenCalledWith('org.manage');
+    expect(mockRequireCapability).toHaveBeenCalledWith('org.update');
   });
 
   it('calls updateOrganization with correct fields', async () => {
