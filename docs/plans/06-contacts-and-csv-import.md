@@ -258,11 +258,11 @@ export async function parseContactsCsv(
 
 ### Task 17: Definition of Done
 
-- [ ] Direct-to-Storage upload works without proxying through Next.js server
-- [ ] Parsing/ingestion runs as Inngest function with progress observable from UI
-- [ ] All contacts normalised to E.164 IT format
-- [ ] Idempotent re-upload (verified by integration test)
-- [ ] Audit log records uploads with totals
-- [ ] Manual opt-out import works
-- [ ] CSV export works for lists up to 100k contacts
-- [ ] Mark completed
+- [x] Direct-to-Storage upload works without proxying through Next.js server
+- [x] Parsing/ingestion runs as Inngest function with progress observable from UI
+- [x] All contacts normalised to E.164 IT format
+- [x] Idempotent re-upload (verified by integration test)
+- [x] Audit log records uploads with totals
+- [x] Manual opt-out import works
+- [x] CSV export works for lists up to 100k contacts
+- [x] Mark completed
