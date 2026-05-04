@@ -191,13 +191,13 @@ export function computeCallCost(args: { durationSeconds: number; perMinuteCents:
 
 ### Task 12: Credit page — balance and history
 
-- [ ] Create `src/app/(app)/credit/page.tsx`:
+- [x] Create `src/app/(app)/credit/page.tsx`:
   - top: large balance display (remaining minutes + cents), "Ricarica" CTA
   - middle: package consumption breakdown (when multiple packages active)
   - bottom: paginated ledger history (last 100 entries) with type badges (top-up, charge, reservation, refund), description, delta, balance after, timestamp
-- [ ] Filters: by entry type, by date range
-- [ ] Export to CSV button (downloads the filtered ledger)
-- [ ] Mark completed
+- [x] Filters: by entry type, by date range
+- [x] Export to CSV button (downloads the filtered ledger)
+- [x] Mark completed
 
 ### Task 13: Low-balance threshold monitor
 

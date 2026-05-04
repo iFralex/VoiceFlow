@@ -7,7 +7,8 @@ import { getAuthContext, requireCapability } from '@/lib/auth/context';
 import { withOrgContext, withSystemContext } from '@/lib/db/context';
 import { creditPackages, payments } from '@/lib/db/schema';
 import { env } from '@/lib/env';
-import { getBalance } from '@/lib/services/credit';
+import { getBalance, getBalanceWithBreakdown, getLedgerHistory } from '@/lib/services/credit';
+import type { LedgerEntryType, PackagePool } from '@/lib/services/credit';
 import { getOrCreateCustomerForOrg, stripe } from '@/lib/stripe';
 import type { ActionResult } from '@/lib/utils/action-toast';
 
@@ -116,4 +117,128 @@ export async function checkPaymentStatus(stripeSessionId: string): Promise<Payme
   }
 
   return { ok: true, status: payment.status };
+}
+
+// ─── Credit page data ─────────────────────────────────────────────────────────
+
+export type CreditPageDataResult =
+  | { ok: false; message: string }
+  | {
+      ok: true;
+      balanceCents: number;
+      remainingMinutes: number;
+      pools: PackagePool[];
+    };
+
+/**
+ * Fetches balance + package pool breakdown for the credit overview page.
+ */
+export async function getCreditPageData(): Promise<CreditPageDataResult> {
+  const { orgId } = await getAuthContext();
+  const data = await getBalanceWithBreakdown(orgId);
+  return { ok: true, ...data };
+}
+
+export type LedgerPageResult =
+  | { ok: false; message: string }
+  | {
+      ok: true;
+      entries: Array<{
+        id: string;
+        entry_type: LedgerEntryType;
+        delta_cents: number;
+        balance_after_cents: number;
+        description: string | null;
+        reference_type: string | null;
+        reference_id: string | null;
+        created_at: string; // ISO string for serialisation
+      }>;
+      total: number;
+    };
+
+const ledgerPageSchema = z.object({
+  page: z.number().int().min(1).default(1),
+  pageSize: z.number().int().min(1).max(100).default(20),
+  entryType: z
+    .enum(['topup', 'reservation', 'release', 'charge', 'refund', 'adjustment'])
+    .nullable()
+    .default(null),
+  dateFrom: z.string().datetime({ offset: true }).nullable().default(null),
+  dateTo: z.string().datetime({ offset: true }).nullable().default(null),
+});
+
+/**
+ * Returns one page of ledger entries with optional type/date filters.
+ */
+export async function getLedgerPage(
+  params: z.infer<typeof ledgerPageSchema>,
+): Promise<LedgerPageResult> {
+  const parsed = ledgerPageSchema.safeParse(params);
+  if (!parsed.success) return { ok: false, message: 'invalid_params' };
+
+  const { orgId } = await getAuthContext();
+  const { page, pageSize, entryType, dateFrom, dateTo } = parsed.data;
+
+  const result = await getLedgerHistory(orgId, {
+    page,
+    pageSize,
+    entryType: entryType as LedgerEntryType | null,
+    dateFrom: dateFrom ? new Date(dateFrom) : null,
+    dateTo: dateTo ? new Date(dateTo) : null,
+  });
+
+  return {
+    ok: true,
+    entries: result.entries.map((e) => ({
+      ...e,
+      created_at: e.created_at.toISOString(),
+    })),
+    total: result.total,
+  };
+}
+
+const exportCsvSchema = z.object({
+  entryType: z
+    .enum(['topup', 'reservation', 'release', 'charge', 'refund', 'adjustment'])
+    .nullable()
+    .default(null),
+  dateFrom: z.string().datetime({ offset: true }).nullable().default(null),
+  dateTo: z.string().datetime({ offset: true }).nullable().default(null),
+});
+
+/**
+ * Exports all matching ledger entries as a CSV string (max 5,000 rows).
+ */
+export async function exportLedgerCsv(
+  params: z.infer<typeof exportCsvSchema>,
+): Promise<ActionResult & { csv?: string }> {
+  const parsed = exportCsvSchema.safeParse(params);
+  if (!parsed.success) return { ok: false, message: 'invalid_params' };
+
+  const { orgId } = await getAuthContext();
+  const { entryType, dateFrom, dateTo } = parsed.data;
+
+  const result = await getLedgerHistory(orgId, {
+    page: 1,
+    pageSize: 5000,
+    entryType: entryType as LedgerEntryType | null,
+    dateFrom: dateFrom ? new Date(dateFrom) : null,
+    dateTo: dateTo ? new Date(dateTo) : null,
+  });
+
+  const header = 'id,type,description,delta_cents,balance_after_cents,reference_type,reference_id,created_at';
+  const rows = result.entries.map((e) =>
+    [
+      e.id,
+      e.entry_type,
+      `"${(e.description ?? '').replace(/"/g, '""')}"`,
+      e.delta_cents,
+      e.balance_after_cents,
+      e.reference_type ?? '',
+      e.reference_id ?? '',
+      e.created_at.toISOString(),
+    ].join(','),
+  );
+
+  return { ok: true, csv: [header, ...rows].join('\n') };
 }

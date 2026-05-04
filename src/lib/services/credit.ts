@@ -1,9 +1,9 @@
-import { and, desc, eq, inArray, sql } from 'drizzle-orm';
+import { and, count, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm';
 
 import { recordAudit } from '@/lib/db/audit';
 import type { DbTx } from '@/lib/db/context';
 import { withOrgContext } from '@/lib/db/context';
-import { calls, creditLedger, creditPackages, payments } from '@/lib/db/schema';
+import { calls, creditEntryTypeEnum, creditLedger, creditPackages, payments } from '@/lib/db/schema';
 
 // ─── Internal helpers ──────────────────────────────────────────────────────────
 
@@ -400,5 +400,144 @@ export async function adjust(
       subjectId: referenceId,
       metadata: { deltaCents, reason, balanceBefore: currentBalance, balanceAfter: newBalance },
     });
+  });
+}
+
+// ─── Read helpers ──────────────────────────────────────────────────────────────
+
+export type LedgerEntryType = (typeof creditEntryTypeEnum.enumValues)[number];
+
+export type LedgerFilter = {
+  page: number;
+  pageSize: number;
+  entryType: LedgerEntryType | null;
+  dateFrom: Date | null;
+  dateTo: Date | null;
+};
+
+export type PackagePool = {
+  packageName: string;
+  includedMinutes: number;
+  priceCents: number;
+  purchasedAt: Date;
+  invoiceUrl: string | null;
+};
+
+/**
+ * Returns the current balance with a breakdown of purchased package pools.
+ * Pools are ordered newest-first.
+ */
+export async function getBalanceWithBreakdown(orgId: string): Promise<{
+  balanceCents: number;
+  remainingMinutes: number;
+  pools: PackagePool[];
+}> {
+  return withOrgContext(orgId, async (tx) => {
+    const [latest] = await tx
+      .select({ balance_after_cents: creditLedger.balance_after_cents })
+      .from(creditLedger)
+      .where(eq(creditLedger.org_id, orgId))
+      .orderBy(desc(creditLedger.created_at))
+      .limit(1);
+
+    const balanceCents = latest?.balance_after_cents ?? 0;
+    const centsPerMinute = await weightedAvgCentsPerMinute(tx, orgId);
+    const remainingMinutes =
+      centsPerMinute !== null && centsPerMinute > 0
+        ? Math.floor(balanceCents / centsPerMinute)
+        : 0;
+
+    const topupEntries = await tx
+      .select({
+        created_at: creditLedger.created_at,
+        reference_id: creditLedger.reference_id,
+        package_name: creditPackages.display_name,
+        included_minutes: creditPackages.included_minutes,
+        price_cents: creditPackages.price_cents,
+        invoice_url: payments.invoice_url,
+      })
+      .from(creditLedger)
+      .leftJoin(payments, eq(payments.stripe_payment_intent_id, creditLedger.reference_id))
+      .leftJoin(creditPackages, eq(creditPackages.id, payments.package_id))
+      .where(
+        and(
+          eq(creditLedger.org_id, orgId),
+          eq(creditLedger.entry_type, 'topup'),
+        ),
+      )
+      .orderBy(desc(creditLedger.created_at));
+
+    const pools: PackagePool[] = topupEntries
+      .filter((e) => e.package_name !== null)
+      .map((e) => ({
+        packageName: e.package_name!,
+        includedMinutes: e.included_minutes!,
+        priceCents: e.price_cents!,
+        purchasedAt: e.created_at,
+        invoiceUrl: e.invoice_url ?? null,
+      }));
+
+    return { balanceCents, remainingMinutes, pools };
+  });
+}
+
+/**
+ * Returns a paginated slice of the credit ledger with optional filters.
+ * Total count is returned for pagination controls.
+ */
+export async function getLedgerHistory(
+  orgId: string,
+  filter: LedgerFilter,
+): Promise<{
+  entries: Array<{
+    id: string;
+    entry_type: LedgerEntryType;
+    delta_cents: number;
+    balance_after_cents: number;
+    description: string | null;
+    reference_type: string | null;
+    reference_id: string | null;
+    created_at: Date;
+  }>;
+  total: number;
+}> {
+  return withOrgContext(orgId, async (tx) => {
+    const conditions: ReturnType<typeof eq>[] = [eq(creditLedger.org_id, orgId)];
+
+    if (filter.entryType) {
+      conditions.push(eq(creditLedger.entry_type, filter.entryType));
+    }
+    if (filter.dateFrom) {
+      conditions.push(gte(creditLedger.created_at, filter.dateFrom));
+    }
+    if (filter.dateTo) {
+      conditions.push(lte(creditLedger.created_at, filter.dateTo));
+    }
+
+    const where = and(...conditions);
+
+    const [countRow] = await tx
+      .select({ total: count() })
+      .from(creditLedger)
+      .where(where);
+
+    const entries = await tx
+      .select({
+        id: creditLedger.id,
+        entry_type: creditLedger.entry_type,
+        delta_cents: creditLedger.delta_cents,
+        balance_after_cents: creditLedger.balance_after_cents,
+        description: creditLedger.description,
+        reference_type: creditLedger.reference_type,
+        reference_id: creditLedger.reference_id,
+        created_at: creditLedger.created_at,
+      })
+      .from(creditLedger)
+      .where(where)
+      .orderBy(desc(creditLedger.created_at))
+      .limit(filter.pageSize)
+      .offset((filter.page - 1) * filter.pageSize);
+
+    return { entries, total: countRow?.total ?? 0 };
   });
 }
