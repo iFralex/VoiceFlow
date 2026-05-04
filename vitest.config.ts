@@ -43,6 +43,7 @@ export default defineConfig({
           name: 'integration',
           environment: 'node',
           include: ['src/**/*.integration.test.ts'],
+          env: { SKIP_ENV_VALIDATION: 'true' },
         },
       },
     ],

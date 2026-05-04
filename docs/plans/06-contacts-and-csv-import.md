@@ -239,13 +239,13 @@ export async function parseContactsCsv(
 
 ### Task 15: Integration tests
 
-- [ ] Test: a 5,000-row CSV uploads, parses, ingests within 60s in CI
-- [ ] Test: re-upload of the same CSV results in zero new rows (idempotency)
-- [ ] Test: rows with malformed phones are reported in the errors artifact
-- [ ] Test: invalid `org_id` in storage path is rejected by helper
-- [ ] Test: opt-out registry import does not create contact rows
-- [ ] Test: `(org_id, phone_e164)` unique index correctly handles soft-deleted rows (re-insert allowed)
-- [ ] Mark completed
+- [x] Test: a 5,000-row CSV uploads, parses, ingests within 60s in CI
+- [x] Test: re-upload of the same CSV results in zero new rows (idempotency)
+- [x] Test: rows with malformed phones are reported in the errors artifact
+- [x] Test: invalid `org_id` in storage path is rejected by helper
+- [x] Test: opt-out registry import does not create contact rows
+- [x] Test: `(org_id, phone_e164)` unique index correctly handles soft-deleted rows (re-insert allowed)
+- [x] Mark completed
 
 ### Task 16: E2E
 
