@@ -1,21 +1,22 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import { and, eq } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
 
 import { getAuthContext } from '@/lib/auth/context';
 import { dbForRequest } from '@/lib/db/client';
 import { scripts, scriptTemplates } from '@/lib/db/schema';
 import { TEMPLATE_DEFINITIONS } from '@/lib/db/seed/script_templates';
+import { env } from '@/lib/env';
 import {
   AI_ACT_PREAMBLE_IT,
   OUTCOME_CLASSIFICATION_INSTRUCTIONS_IT,
 } from '@/lib/voice/prompt/preamble';
-import { and, eq } from 'drizzle-orm';
 
-import type { TemplateInfo } from '../new/_components/new-script-wizard';
 import type { SerializedScriptDetail } from './_components/script-detail-client';
 import { ScriptDetailClient } from './_components/script-detail-client';
+import type { TemplateInfo } from '../new/_components/new-script-wizard';
 
 const PROMPTS_DIR = path.join(process.cwd(), 'src', 'lib', 'voice', 'templates', 'prompts');
 
@@ -76,6 +77,7 @@ export default async function ScriptDetailPage({ params }: PageProps) {
       templateInfo={templateInfo}
       preamble={AI_ACT_PREAMBLE_IT}
       outcomeInstructions={OUTCOME_CLASSIFICATION_INSTRUCTIONS_IT}
+      elevenLabsConfigured={!!env.ELEVENLABS_API_KEY}
     />
   );
 }

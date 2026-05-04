@@ -483,7 +483,10 @@
     "copy_script": "Copy for editing",
     "copy_success": "Script copied",
     "use_in_campaign": "Use in new campaign",
-    "not_found": "Script not found"
+    "not_found": "Script not found",
+    "voice_sample_listen": "Listen to a sample",
+    "voice_sample_loading": "Generating…",
+    "voice_sample_error": "Could not generate audio sample"
   },
   "errors": {
     "title": "Error",

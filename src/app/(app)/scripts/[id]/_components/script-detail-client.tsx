@@ -3,9 +3,9 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { useState, useTransition } from 'react';
+import { useRef, useState, useTransition } from 'react';
 
-import { copyScriptAction, deleteScript, updateScriptAction } from '@/actions/scripts';
+import { copyScriptAction, deleteScript, previewVoiceSampleAction, updateScriptAction } from '@/actions/scripts';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -19,8 +19,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toastResult } from '@/lib/utils/action-toast';
 
-import type { TemplateInfo } from '../../new/_components/new-script-wizard';
 import { VariableField } from '../../_components/variable-field';
+import type { TemplateInfo } from '../../new/_components/new-script-wizard';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -84,14 +84,18 @@ type Props = {
   templateInfo: TemplateInfo | null;
   preamble: string;
   outcomeInstructions: string;
+  elevenLabsConfigured: boolean;
 };
 
-export function ScriptDetailClient({ script, templateInfo, preamble, outcomeInstructions }: Props) {
+export function ScriptDetailClient({ script, templateInfo, preamble, outcomeInstructions, elevenLabsConfigured }: Props) {
   const t = useTranslations('scripts');
   const router = useRouter();
   const [isSaving, startSaveTransition] = useTransition();
   const [isCopying, startCopyTransition] = useTransition();
   const [isDeleting, startDeleteTransition] = useTransition();
+  const [isLoadingSample, startSampleTransition] = useTransition();
+  const [sampleError, setSampleError] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const [scriptName, setScriptName] = useState(script.name);
   const [voiceId, setVoiceId] = useState(script.voice_id ?? '');
@@ -176,6 +180,20 @@ export function ScriptDetailClient({ script, templateInfo, preamble, outcomeInst
       if (result.ok) {
         router.push('/scripts');
       }
+    });
+  }
+
+  function handlePlaySample() {
+    setSampleError(null);
+    startSampleTransition(async () => {
+      const result = await previewVoiceSampleAction({ scriptId: script.id });
+      if (!result.ok) {
+        setSampleError(t('voice_sample_error'));
+        return;
+      }
+      const audio = new Audio(result.audioDataUrl);
+      audioRef.current = audio;
+      audio.play().catch(() => setSampleError(t('voice_sample_error')));
     });
   }
 
@@ -320,12 +338,28 @@ export function ScriptDetailClient({ script, templateInfo, preamble, outcomeInst
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    {t('preview_first_message_label')}
-                  </p>
+                  <div className="mb-2 flex items-center justify-between">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      {t('preview_first_message_label')}
+                    </p>
+                    {elevenLabsConfigured && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handlePlaySample}
+                        disabled={isLoadingSample}
+                        className="h-7 text-xs"
+                      >
+                        {isLoadingSample ? t('voice_sample_loading') : t('voice_sample_listen')}
+                      </Button>
+                    )}
+                  </div>
                   <pre className="whitespace-pre-wrap rounded-md bg-muted p-3 text-xs text-foreground">
                     {firstMessagePreview || t('preview_placeholder_hint')}
                   </pre>
+                  {sampleError && (
+                    <p className="text-xs text-destructive">{sampleError}</p>
+                  )}
                 </div>
                 <div>
                   <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">

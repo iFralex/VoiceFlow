@@ -454,6 +454,9 @@ const _italianStrings: Record<string, Record<string, string>> = {
     copy_success: 'Script copiato',
     use_in_campaign: 'Usa in nuova campagna',
     not_found: 'Script non trovato',
+    voice_sample_listen: 'Ascolta un esempio',
+    voice_sample_loading: 'Generazione in corso\u2026',
+    voice_sample_error: 'Impossibile generare il campione audio',
   },
   errors: {
     title: 'Errore',

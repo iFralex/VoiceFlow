@@ -218,11 +218,11 @@ export async function previewSystemPrompt(
 
 ### Task 14: Sample preview generation (optional, defer if time-tight)
 
-- [ ] Add Server Action `previewVoiceSample(scriptId)` that calls ElevenLabs to synthesise the first 60 characters of the first message and returns an audio URL
-- [ ] Result cached for 24h to avoid burning ElevenLabs credits
-- [ ] Surfaces in the script editor as a "Ascolta un esempio" button
-- [ ] If ElevenLabs key not configured (early local dev) returns a typed `not_configured` error and the UI hides the button
-- [ ] Mark completed
+- [x] Add Server Action `previewVoiceSample(scriptId)` that calls ElevenLabs to synthesise the first 60 characters of the first message and returns an audio URL
+- [x] Result cached for 24h to avoid burning ElevenLabs credits
+- [x] Surfaces in the script editor as a "Ascolta un esempio" button
+- [x] If ElevenLabs key not configured (early local dev) returns a typed `not_configured` error and the UI hides the button
+- [x] Mark completed
 
 ### Task 15: E2E
 
