@@ -722,3 +722,67 @@ describe('adjust', () => {
     expect(withOrgContext).toHaveBeenCalledWith(ORG_ID, expect.any(Function));
   });
 });
+
+// ─── canAffordCampaign ────────────────────────────────────────────────────────
+
+describe('canAffordCampaign', () => {
+  it('returns ok:true when balance equals the estimate exactly', async () => {
+    selectResults.push([{ balance_after_cents: 5000 }]); // latest balance
+    selectResults.push([]); // topups → none
+
+    const { canAffordCampaign } = await import('./credit');
+    const result = await canAffordCampaign(ORG_ID, 5000);
+
+    expect(result).toEqual({ ok: true });
+  });
+
+  it('returns ok:true when balance exceeds the estimate', async () => {
+    selectResults.push([{ balance_after_cents: 10000 }]);
+    selectResults.push([]);
+
+    const { canAffordCampaign } = await import('./credit');
+    const result = await canAffordCampaign(ORG_ID, 3000);
+
+    expect(result).toEqual({ ok: true });
+  });
+
+  it('returns ok:false with currentCents and requiredCents when balance is insufficient', async () => {
+    selectResults.push([{ balance_after_cents: 1000 }]);
+    selectResults.push([]);
+
+    const { canAffordCampaign } = await import('./credit');
+    const result = await canAffordCampaign(ORG_ID, 5000);
+
+    expect(result).toEqual({ ok: false, currentCents: 1000, requiredCents: 5000 });
+  });
+
+  it('returns ok:false when balance is zero', async () => {
+    selectResults.push([]); // no ledger entries → balance = 0
+    selectResults.push([]);
+
+    const { canAffordCampaign } = await import('./credit');
+    const result = await canAffordCampaign(ORG_ID, 100);
+
+    expect(result).toEqual({ ok: false, currentCents: 0, requiredCents: 100 });
+  });
+
+  it('returns ok:true when estimate is zero (free campaign)', async () => {
+    selectResults.push([{ balance_after_cents: 0 }]);
+    selectResults.push([]);
+
+    const { canAffordCampaign } = await import('./credit');
+    const result = await canAffordCampaign(ORG_ID, 0);
+
+    expect(result).toEqual({ ok: true });
+  });
+
+  it('delegates balance lookup to getBalance via withOrgContext', async () => {
+    selectResults.push([{ balance_after_cents: 2000 }]);
+    selectResults.push([]);
+
+    const { canAffordCampaign } = await import('./credit');
+    await canAffordCampaign(ORG_ID, 1000);
+
+    expect(withOrgContext).toHaveBeenCalledWith(ORG_ID, expect.any(Function));
+  });
+});

@@ -570,6 +570,25 @@ export async function getBalanceWithBreakdown(orgId: string): Promise<{
 }
 
 /**
+ * Checks whether the org has sufficient credit to afford a campaign.
+ * Returns `{ ok: true }` when the current balance covers the estimate,
+ * or `{ ok: false, currentCents, requiredCents }` otherwise.
+ *
+ * Used by the campaign launch flow (plan 09) and the creation wizard to
+ * show a warning when estimated cost exceeds 80% of available credit.
+ */
+export async function canAffordCampaign(
+  orgId: string,
+  estimateCents: number,
+): Promise<{ ok: true } | { ok: false; currentCents: number; requiredCents: number }> {
+  const { balanceCents } = await getBalance(orgId);
+  if (balanceCents >= estimateCents) {
+    return { ok: true };
+  }
+  return { ok: false, currentCents: balanceCents, requiredCents: estimateCents };
+}
+
+/**
  * Returns a paginated slice of the credit ledger with optional filters.
  * Total count is returned for pagination controls.
  */

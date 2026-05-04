@@ -209,10 +209,10 @@ export function computeCallCost(args: { durationSeconds: number; perMinuteCents:
 
 ### Task 14: Pre-launch credit check on campaign creation
 
-- [ ] Expose helper `canAffordCampaign(orgId, estimateCents)` returning `{ ok: true } | { ok: false, currentCents, requiredCents }`
-- [ ] Used in plan 09's campaign launch flow; here we only define and unit-test the helper
-- [ ] On the campaign creation wizard (built in plan 09) the helper renders a warning when estimated cost exceeds 80% of available credit
-- [ ] Mark completed
+- [x] Expose helper `canAffordCampaign(orgId, estimateCents)` returning `{ ok: true } | { ok: false, currentCents, requiredCents }`
+- [x] Used in plan 09's campaign launch flow; here we only define and unit-test the helper
+- [x] On the campaign creation wizard (built in plan 09) the helper renders a warning when estimated cost exceeds 80% of available credit
+- [x] Mark completed
 
 ### Task 15: Manual credit adjustment (admin tooling)
 
