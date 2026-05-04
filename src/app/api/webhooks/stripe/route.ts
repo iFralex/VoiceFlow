@@ -8,6 +8,7 @@ import { organizations, payments, webhookEvents } from '@/lib/db/schema';
 import { env } from '@/lib/env';
 import { adjust, refundCall, topUp } from '@/lib/services/credit';
 import { stripe } from '@/lib/stripe/client';
+import { verifyStripeWebhook } from '@/lib/stripe/verify';
 
 // ---------------------------------------------------------------------------
 // Event handlers
@@ -191,7 +192,7 @@ export async function POST(request: Request): Promise<Response> {
 
   let event: Stripe.Event;
   try {
-    event = stripe.webhooks.constructEvent(rawBody, signature, env.STRIPE_WEBHOOK_SECRET);
+    event = verifyStripeWebhook(rawBody, signature, env.STRIPE_WEBHOOK_SECRET);
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error';
     return NextResponse.json(

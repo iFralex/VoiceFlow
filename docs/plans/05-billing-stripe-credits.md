@@ -185,9 +185,9 @@ export function computeCallCost(args: { durationSeconds: number; perMinuteCents:
 
 ### Task 11: Stripe webhook signature verification utility
 
-- [ ] Extract signature verification into `src/lib/stripe/verify.ts` for unit testability
-- [ ] Add unit tests using fixture payloads + a known signing secret
-- [ ] Mark completed
+- [x] Extract signature verification into `src/lib/stripe/verify.ts` for unit testability
+- [x] Add unit tests using fixture payloads + a known signing secret
+- [x] Mark completed
 
 ### Task 12: Credit page — balance and history
 
