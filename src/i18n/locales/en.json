@@ -470,7 +470,20 @@
     "saving_script": "Saving…",
     "save_success": "Script saved successfully",
     "back_to_templates": "Choose a different template",
-    "select_this_template": "Use this template"
+    "select_this_template": "Use this template",
+    "edit_script_title": "Edit script",
+    "edit_script_back": "Back to scripts",
+    "template_label": "Template",
+    "voice_override_label": "Voice override (ID)",
+    "voice_override_placeholder": "e.g. voice-abc-123 (leave empty to use template default)",
+    "voice_override_hint": "Overrides the template default voice. Populated in plan 08.",
+    "save_changes": "Save changes",
+    "saving_changes": "Saving…",
+    "save_changes_success": "Changes saved",
+    "copy_script": "Copy for editing",
+    "copy_success": "Script copied",
+    "use_in_campaign": "Use in new campaign",
+    "not_found": "Script not found"
   },
   "errors": {
     "title": "Error",

@@ -192,13 +192,13 @@ export async function previewSystemPrompt(
 
 ### Task 11: Script detail/edit page
 
-- [ ] Create `src/app/(app)/scripts/[id]/page.tsx` with:
+- [x] Create `src/app/(app)/scripts/[id]/page.tsx` with:
   - editable variables (pre-populated from `getScript`)
   - voice override picker (lists the available voices for the template's language; voice catalogue managed in plan 08)
   - "Salva modifiche" / "Elimina"
   - "Copia per modifiche" duplicates the script under a new name
   - "Usa in nuova campagna" CTA → routes to campaign wizard (built in plan 09) preselecting this script
-- [ ] Mark completed
+- [x] Mark completed
 
 ### Task 12: Voice catalogue table (foundation; population in plan 08)
 
