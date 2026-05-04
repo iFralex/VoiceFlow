@@ -108,16 +108,16 @@ export function assembleSystemPrompt(args: {
 
 ### Task 6: Tool definitions per template
 
-- [ ] Create `src/lib/voice/templates/tools/`:
+- [x] Create `src/lib/voice/templates/tools/`:
   - `book_appointment.ts`: `{ date: ISO; time: string; contact_confirmation_text: string }`
   - `mark_not_interested.ts`: `{ reason?: string }`
   - `mark_wrong_number.ts`: `{}`
   - `request_callback.ts`: `{ preferred_window: string }`
   - `transfer_to_human_agent.ts`: `{ reason: string }`
   - `register_opt_out.ts`: `{ confirmation_text: string }`
-- [ ] Each tool exports JSON Schema for the LLM and a TS handler stub `(orgId, callId, args) => Promise<void>` that plan 08 wires up
-- [ ] Per-template tool selection: lead-reactivation uses all six; appointment-confirm uses transfer/callback/opt-out plus a custom `confirm_appointment` and `reschedule_appointment`; csi-survey uses `submit_survey_response` and minimal others
-- [ ] Mark completed
+- [x] Each tool exports JSON Schema for the LLM and a TS handler stub `(orgId, callId, args) => Promise<void>` that plan 08 wires up
+- [x] Per-template tool selection: lead-reactivation uses all six; appointment-confirm uses transfer/callback/opt-out plus a custom `confirm_appointment` and `reschedule_appointment`; csi-survey uses `submit_survey_response` and minimal others
+- [x] Mark completed
 
 ### Task 7: Seed updater
 
