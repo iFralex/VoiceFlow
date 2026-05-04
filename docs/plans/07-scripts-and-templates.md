@@ -236,10 +236,10 @@ export async function previewSystemPrompt(
 
 ### Task 16: Definition of Done
 
-- [ ] Five templates seeded into all three Supabase environments (dev, staging, production)
-- [ ] System prompts authored, ≥800 words each, reviewed for tone and compliance
-- [ ] AI Act preamble enforced at assembly and rejected if missing
-- [ ] Variable wizard generates correctly from JSON Schema
-- [ ] Script CRUD works end to end
-- [ ] Voice catalogue table exists (full population deferred to plan 08)
-- [ ] Mark completed
+- [x] Five templates seeded into all three Supabase environments (dev, staging, production)
+- [x] System prompts authored, ≥800 words each, reviewed for tone and compliance
+- [x] AI Act preamble enforced at assembly and rejected if missing
+- [x] Variable wizard generates correctly from JSON Schema
+- [x] Script CRUD works end to end
+- [x] Voice catalogue table exists (full population deferred to plan 08)
+- [x] Mark completed
