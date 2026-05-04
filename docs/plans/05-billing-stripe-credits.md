@@ -249,13 +249,13 @@ export function computeCallCost(args: { durationSeconds: number; perMinuteCents:
 
 ### Task 19: Definition of Done
 
-- [ ] Stripe products and prices created and persisted to `credit_packages`
-- [ ] Top-up flow works end to end with a test card
-- [ ] Webhook handler verifies signatures and is idempotent (verified with duplicate-delivery test)
-- [ ] Credit ledger never produces negative balances (covered by integration test)
-- [ ] All ledger writes are inside transactions with `SELECT FOR UPDATE`
-- [ ] Per-call cost computation matches spec §11.3 exactly (unit tests cover boundaries)
-- [ ] VAT invoice generated and accessible from the dashboard
-- [ ] Low-balance event emitted on threshold crossing
-- [ ] Audit log records every monetary movement
-- [ ] Mark completed
+- [x] Stripe products and prices created and persisted to `credit_packages`
+- [x] Top-up flow works end to end with a test card
+- [x] Webhook handler verifies signatures and is idempotent (verified with duplicate-delivery test)
+- [x] Credit ledger never produces negative balances (covered by integration test)
+- [x] All ledger writes are inside transactions with `SELECT FOR UPDATE`
+- [x] Per-call cost computation matches spec §11.3 exactly (unit tests cover boundaries)
+- [x] VAT invoice generated and accessible from the dashboard
+- [x] Low-balance event emitted on threshold crossing
+- [x] Audit log records every monetary movement
+- [x] Mark completed
