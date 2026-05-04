@@ -104,7 +104,7 @@ export async function adjust(
 
 ### Task 5: Per-call billing computation
 
-- [ ] Create `src/lib/services/billing-rules.ts` with `computeCallCost`:
+- [x] Create `src/lib/services/billing-rules.ts` with `computeCallCost`:
 
 ```typescript
 const BILLING_GRANULARITY_SECONDS = 6;
@@ -124,10 +124,10 @@ export function computeCallCost(args: { durationSeconds: number; perMinuteCents:
 }
 ```
 
-- [ ] Compute `perMinuteCents` per org as a weighted average over un-consumed minute pools (track per-pool consumption; when a pool is depleted move to the next)
-- [ ] Add unit tests covering: under min duration, exactly 6s, 7s rounding up, full minute, partial minute
-- [ ] Document the rule in customer-facing pricing page (work for plan 12)
-- [ ] Mark completed
+- [x] Compute `perMinuteCents` per org as a weighted average over un-consumed minute pools (track per-pool consumption; when a pool is depleted move to the next)
+- [x] Add unit tests covering: under min duration, exactly 6s, 7s rounding up, full minute, partial minute
+- [x] Document the rule in customer-facing pricing page (work for plan 12)
+- [x] Mark completed
 
 ### Task 6: Credit reservation estimator
 
