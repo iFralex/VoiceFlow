@@ -131,12 +131,12 @@ export function computeCallCost(args: { durationSeconds: number; perMinuteCents:
 
 ### Task 6: Credit reservation estimator
 
-- [ ] Create `src/lib/services/campaign-cost-estimator.ts` with `estimateCampaignCost(input)`:
+- [x] Create `src/lib/services/campaign-cost-estimator.ts` with `estimateCampaignCost(input)`:
   - inputs: `contactCount`, optional `expectedAvgDurationSeconds` (default 90 from historical baseline; configurable per template)
   - output: `{ minCents, expectedCents, maxCents }` where `maxCents` uses `MAX_CALL_DURATION` (default 180s, per `CreateCallParams.maxDurationSeconds`)
-- [ ] At launch we reserve `maxCents` per spec §11.1 to guarantee the campaign cannot exceed available credit mid-run
-- [ ] Add unit tests
-- [ ] Mark completed
+- [x] At launch we reserve `maxCents` per spec §11.1 to guarantee the campaign cannot exceed available credit mid-run
+- [x] Add unit tests
+- [x] Mark completed
 
 ### Task 7: Stripe Checkout Session creation
 
