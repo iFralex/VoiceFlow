@@ -33,11 +33,11 @@ The model is "cash before service": credit must be reserved at campaign launch a
 
 ### Task 2: Stripe products and prices
 
-- [ ] Create one Stripe Product per credit package: `Test (200 minuti)`, `Starter (700 minuti)`, `Growth (2.000 minuti)`, `Scale (5.500 minuti)`
-- [ ] For each product create a one-time price in EUR matching spec §6.1 (€99, €299, €799, €1999)
-- [ ] Tag prices with metadata `package_slug`, `included_minutes`, `internal_id` (matching `credit_packages.id`)
-- [ ] Update the seed runner from plan 02 to backfill `credit_packages.stripe_price_id` from a JSON map committed to `src/lib/stripe/products.json`
-- [ ] Mark completed
+- [x] Create one Stripe Product per credit package: `Test (200 minuti)`, `Starter (700 minuti)`, `Growth (2.000 minuti)`, `Scale (5.500 minuti)`
+- [x] For each product create a one-time price in EUR matching spec §6.1 (€99, €299, €799, €1999)
+- [x] Tag prices with metadata `package_slug`, `included_minutes`, `internal_id` (matching `credit_packages.id`)
+- [x] Update the seed runner from plan 02 to backfill `credit_packages.stripe_price_id` from a JSON map committed to `src/lib/stripe/products.json`
+- [x] Mark completed
 
 ### Task 3: Stripe SDK wrapper
 

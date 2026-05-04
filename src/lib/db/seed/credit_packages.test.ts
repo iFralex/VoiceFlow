@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import stripeProductsJson from '../../stripe/products.json';
+
 import { creditPackageSeedData } from './credit_packages';
 
 const EXPECTED_SLUGS = ['test', 'starter', 'growth', 'scale', 'enterprise'];
@@ -48,10 +50,19 @@ describe('credit_packages seed data', () => {
     expect(p.active).toBe(false);
   });
 
-  it('all packages have stripe_price_id as null initially', () => {
+  it('stripe_price_id for each package matches products.json mapping', () => {
+    const priceMap = new Map(
+      stripeProductsJson.packages.map((p) => [p.slug, p.stripe_price_id]),
+    );
     for (const p of creditPackageSeedData) {
-      expect(p.stripe_price_id).toBeNull();
+      const expected = priceMap.get(p.slug) ?? null;
+      expect(p.stripe_price_id).toBe(expected);
     }
+  });
+
+  it('enterprise package always has null stripe_price_id (custom pricing)', () => {
+    const p = creditPackageSeedData.find((x) => x.slug === 'enterprise')!;
+    expect(p.stripe_price_id).toBeNull();
   });
 
   it('every package has a non-empty display_name', () => {
@@ -81,6 +92,39 @@ describe('credit_packages seed data', () => {
       const prev = activePackages[i - 1]!;
       const curr = activePackages[i]!;
       expect(curr.price_cents).toBeGreaterThan(prev.price_cents!);
+    }
+  });
+});
+
+describe('stripe/products.json structure', () => {
+  it('defines exactly four Stripe packages (enterprise is custom, no Stripe product)', () => {
+    expect(stripeProductsJson.packages).toHaveLength(4);
+  });
+
+  it('has entries for test, starter, growth, and scale slugs', () => {
+    const slugs = stripeProductsJson.packages.map((p) => p.slug);
+    expect(slugs).toEqual(expect.arrayContaining(['test', 'starter', 'growth', 'scale']));
+  });
+
+  it('every entry has the required metadata fields', () => {
+    for (const p of stripeProductsJson.packages) {
+      expect(p).toHaveProperty('slug');
+      expect(p).toHaveProperty('stripe_product_id');
+      expect(p).toHaveProperty('stripe_price_id');
+      expect(p).toHaveProperty('price_cents');
+      expect(p).toHaveProperty('currency', 'eur');
+      expect(p).toHaveProperty('included_minutes');
+      expect(p.metadata).toHaveProperty('package_slug', p.slug);
+      expect(p.metadata).toHaveProperty('included_minutes', String(p.included_minutes));
+    }
+  });
+
+  it('price_cents in products.json matches seed data for each package', () => {
+    for (const product of stripeProductsJson.packages) {
+      const seedPkg = creditPackageSeedData.find((p) => p.slug === product.slug);
+      expect(seedPkg).toBeDefined();
+      expect(seedPkg!.price_cents).toBe(product.price_cents);
+      expect(seedPkg!.included_minutes).toBe(product.included_minutes);
     }
   });
 });

@@ -36,6 +36,7 @@ export async function seedCreditPackages(): Promise<void> {
           display_name: sql`excluded.display_name`,
           price_cents: sql`excluded.price_cents`,
           included_minutes: sql`excluded.included_minutes`,
+          stripe_price_id: sql`excluded.stripe_price_id`,
           active: sql`excluded.active`,
         },
       });

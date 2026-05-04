@@ -1,0 +1,61 @@
+{
+  "_comment": "Authoritative mapping between Vox Auto credit packages and Stripe products/prices. Populate stripe_product_id and stripe_price_id after creating the products in the Stripe dashboard (test mode: sk_test_*, live mode: sk_live_*). Re-run pnpm db:seed after updating to backfill credit_packages.stripe_price_id. The internal_id field should be set to the credit_packages.id UUID after the first seed run.",
+  "packages": [
+    {
+      "slug": "test",
+      "stripe_product_id": null,
+      "stripe_price_id": null,
+      "internal_id": null,
+      "stripe_display_name": "Test (200 minuti)",
+      "price_cents": 9900,
+      "currency": "eur",
+      "included_minutes": 200,
+      "metadata": {
+        "package_slug": "test",
+        "included_minutes": "200"
+      }
+    },
+    {
+      "slug": "starter",
+      "stripe_product_id": null,
+      "stripe_price_id": null,
+      "internal_id": null,
+      "stripe_display_name": "Starter (700 minuti)",
+      "price_cents": 29900,
+      "currency": "eur",
+      "included_minutes": 700,
+      "metadata": {
+        "package_slug": "starter",
+        "included_minutes": "700"
+      }
+    },
+    {
+      "slug": "growth",
+      "stripe_product_id": null,
+      "stripe_price_id": null,
+      "internal_id": null,
+      "stripe_display_name": "Growth (2.000 minuti)",
+      "price_cents": 79900,
+      "currency": "eur",
+      "included_minutes": 2000,
+      "metadata": {
+        "package_slug": "growth",
+        "included_minutes": "2000"
+      }
+    },
+    {
+      "slug": "scale",
+      "stripe_product_id": null,
+      "stripe_price_id": null,
+      "internal_id": null,
+      "stripe_display_name": "Scale (5.500 minuti)",
+      "price_cents": 199900,
+      "currency": "eur",
+      "included_minutes": 5500,
+      "metadata": {
+        "package_slug": "scale",
+        "included_minutes": "5500"
+      }
+    }
+  ]
+}
