@@ -183,15 +183,15 @@ export async function parseContactsCsv(
 
 ### Task 8: List detail page with live progress
 
-- [ ] Create `src/app/(app)/contacts/lists/[id]/page.tsx`:
+- [x] Create `src/app/(app)/contacts/lists/[id]/page.tsx`:
   - header: list name, source, total/valid counts, status badge
   - if `import_status='parsing'`: progress card with live updates from Realtime subscription on `contact_lists` row + a separate `contacts` count subscription
   - if `import_status='completed'`: data table of contacts (paginated, server-side filtered)
   - if `import_status='failed'`: error card with downloadable errors JSON
-- [ ] Filters: opt-out, RPO status, has email, search by name/phone
-- [ ] Per-row actions: view metadata, mark opt-out, soft delete
-- [ ] Bulk actions on table selection: mark opt-out, delete, export to CSV
-- [ ] Mark completed
+- [x] Filters: opt-out, RPO status, has email, search by name/phone
+- [x] Per-row actions: view metadata, mark opt-out, soft delete
+- [x] Bulk actions on table selection: mark opt-out, delete, export to CSV
+- [x] Mark completed
 
 ### Task 9: All-contacts view
 

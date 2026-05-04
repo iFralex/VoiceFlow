@@ -6,6 +6,9 @@ import { getAuthContext, requireCapability } from '@/lib/auth/context';
 import { sendInngestEvent } from '@/lib/inngest/client';
 import { CONTACTS_IMPORT_REQUESTED } from '@/lib/inngest/contacts/events';
 import type { ContactsImportRequestedData } from '@/lib/inngest/contacts/events';
+import { getContactList } from '@/lib/services/contact_lists';
+import { markOptOut, softDeleteContact } from '@/lib/services/contacts';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 import type { ActionResult } from '@/lib/utils/action-toast';
 
 const triggerSchema = z.object({
@@ -67,5 +70,139 @@ export async function triggerContactsImport(input: TriggerInput): Promise<Action
   } catch (e) {
     const message = e instanceof Error ? e.message : 'import_trigger_failed';
     return { ok: false, message };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// List detail actions
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns the current import status and counts for a contact list.
+ * Used as a polling fallback when the Realtime subscription is not available.
+ */
+export async function getContactListStatus(listId: string): Promise<
+  ActionResult & { status?: string | null; totalCount?: number; validCount?: number }
+> {
+  try {
+    const { orgId } = await getAuthContext();
+    const list = await getContactList(orgId, listId);
+    if (!list) return { ok: false, message: 'list_not_found' };
+    return {
+      ok: true,
+      status: list.import_status,
+      totalCount: list.total_count,
+      validCount: list.valid_count,
+    };
+  } catch (e) {
+    return { ok: false, message: e instanceof Error ? e.message : 'error' };
+  }
+}
+
+const optOutSchema = z.object({
+  contactId: z.string().uuid(),
+  phoneE164: z.string().min(1),
+  reason: z.string().optional(),
+});
+
+/**
+ * Marks a contact as opted out and records in the org opt-out registry.
+ */
+export async function markContactOptOut(
+  input: z.infer<typeof optOutSchema>,
+): Promise<ActionResult> {
+  const parsed = optOutSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? 'validation_error' };
+  try {
+    const { orgId } = await getAuthContext();
+    await requireCapability('contacts.upload');
+    await markOptOut(orgId, parsed.data.phoneE164, 'dealer_input', parsed.data.reason);
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, message: e instanceof Error ? e.message : 'error' };
+  }
+}
+
+const deleteContactSchema = z.object({ contactId: z.string().uuid() });
+
+/**
+ * Soft-deletes a contact (sets deleted_at).
+ */
+export async function deleteContact(input: z.infer<typeof deleteContactSchema>): Promise<ActionResult> {
+  const parsed = deleteContactSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? 'validation_error' };
+  try {
+    const { orgId, userId } = await getAuthContext();
+    await requireCapability('contacts.delete');
+    await softDeleteContact(orgId, userId, parsed.data.contactId);
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, message: e instanceof Error ? e.message : 'error' };
+  }
+}
+
+const bulkOptOutSchema = z.object({
+  contacts: z.array(z.object({ contactId: z.string().uuid(), phoneE164: z.string().min(1) })).min(1),
+});
+
+/**
+ * Marks multiple contacts as opted out.
+ */
+export async function bulkMarkContactsOptOut(
+  input: z.infer<typeof bulkOptOutSchema>,
+): Promise<ActionResult> {
+  const parsed = bulkOptOutSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? 'validation_error' };
+  try {
+    const { orgId } = await getAuthContext();
+    await requireCapability('contacts.upload');
+    await Promise.all(
+      parsed.data.contacts.map(({ phoneE164 }) => markOptOut(orgId, phoneE164, 'dealer_input')),
+    );
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, message: e instanceof Error ? e.message : 'error' };
+  }
+}
+
+const bulkDeleteSchema = z.object({
+  contactIds: z.array(z.string().uuid()).min(1),
+});
+
+/**
+ * Soft-deletes multiple contacts.
+ */
+export async function bulkDeleteContacts(
+  input: z.infer<typeof bulkDeleteSchema>,
+): Promise<ActionResult> {
+  const parsed = bulkDeleteSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? 'validation_error' };
+  try {
+    const { orgId, userId } = await getAuthContext();
+    await requireCapability('contacts.delete');
+    await Promise.all(
+      parsed.data.contactIds.map((id) => softDeleteContact(orgId, userId, id)),
+    );
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, message: e instanceof Error ? e.message : 'error' };
+  }
+}
+
+/**
+ * Returns a signed download URL for the import errors JSON artifact.
+ * The file is stored at `<orgId>/uploads/<listId>-errors.json` in csv-uploads bucket.
+ */
+export async function getImportErrorsUrl(listId: string): Promise<ActionResult & { url?: string }> {
+  try {
+    const { orgId } = await getAuthContext();
+    const path = `${orgId}/uploads/${listId}-errors.json`;
+    const { data, error } = await supabaseAdmin.storage
+      .from('csv-uploads')
+      .createSignedUrl(path, 3600);
+    if (error || !data?.signedUrl) return { ok: false, message: 'errors_file_not_found' };
+    return { ok: true, url: data.signedUrl };
+  } catch (e) {
+    return { ok: false, message: e instanceof Error ? e.message : 'error' };
   }
 }
