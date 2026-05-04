@@ -118,7 +118,19 @@
     "credit_balance_label": "Saldo crediti",
     "reserved_active_calls": "Riservati (chiamate attive)",
     "available": "Disponibili",
-    "pill_aria_label": "Saldo crediti: {minutes} minuti rimanenti"
+    "pill_aria_label": "Saldo crediti: {minutes} minuti rimanenti",
+    "topup_title": "Ricarica credito",
+    "topup_subtitle": "Scegli il pacchetto più adatto alle tue esigenze",
+    "per_minute": "€{rate}/min",
+    "included_minutes_fmt": "{minutes} minuti",
+    "proceed_to_payment": "Procedi al pagamento",
+    "processing": "Elaborazione…",
+    "payment_cancelled": "Pagamento annullato",
+    "recommended_test": "Ideale per testare il servizio",
+    "recommended_starter": "Concessionario piccolo",
+    "recommended_growth": "Concessionario medio",
+    "recommended_scale": "Grande concessionario o rete",
+    "vat_included": "IVA inclusa"
   },
   "settings": {
     "title": "Impostazioni",

@@ -118,7 +118,19 @@
     "credit_balance_label": "Credit balance",
     "reserved_active_calls": "Reserved (active calls)",
     "available": "Available",
-    "pill_aria_label": "Credit balance: {minutes} minutes remaining"
+    "pill_aria_label": "Credit balance: {minutes} minutes remaining",
+    "topup_title": "Top up credit",
+    "topup_subtitle": "Choose the package that best suits your needs",
+    "per_minute": "€{rate}/min",
+    "included_minutes_fmt": "{minutes} minutes",
+    "proceed_to_payment": "Proceed to payment",
+    "processing": "Processing…",
+    "payment_cancelled": "Payment cancelled",
+    "recommended_test": "Ideal for testing the service",
+    "recommended_starter": "Small dealership",
+    "recommended_growth": "Medium dealership",
+    "recommended_scale": "Large dealership or network",
+    "vat_included": "VAT included"
   },
   "settings": {
     "title": "Settings",

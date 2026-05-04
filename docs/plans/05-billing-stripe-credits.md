@@ -151,11 +151,11 @@ export function computeCallCost(args: { durationSeconds: number; perMinuteCents:
 
 ### Task 8: Top-up page
 
-- [ ] Create `src/app/(app)/credit/topup/page.tsx` rendering four package cards (€99, €299, €799, €1999) with per-minute rate, included minutes, recommended use ("Concessionario piccolo", etc.)
-- [ ] Selecting a package and clicking "Procedi al pagamento" calls `createTopupSession`, then `window.location` to the returned URL
-- [ ] Cancel URL returns to `/credit/topup?cancelled=1` with a toast
-- [ ] Success URL is `/credit/topup/success?session_id={CHECKOUT_SESSION_ID}` (Task 9)
-- [ ] Mark completed
+- [x] Create `src/app/(app)/credit/topup/page.tsx` rendering four package cards (€99, €299, €799, €1999) with per-minute rate, included minutes, recommended use ("Concessionario piccolo", etc.)
+- [x] Selecting a package and clicking "Procedi al pagamento" calls `createTopupSession`, then `window.location` to the returned URL
+- [x] Cancel URL returns to `/credit/topup?cancelled=1` with a toast
+- [x] Success URL is `/credit/topup/success?session_id={CHECKOUT_SESSION_ID}` (Task 9)
+- [x] Mark completed
 
 ### Task 9: Success page with reconciliation poll
 
