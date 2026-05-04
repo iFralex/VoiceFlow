@@ -8,9 +8,9 @@ vi.mock('@/lib/db/audit', () => ({
   recordAudit: (...args: unknown[]) => mockRecordAudit(...args),
 }));
 
-let mockTxSelectResult: unknown[] = [];
+const mockTxSelectResult: unknown[] = [];
 let mockTxInsertResult: unknown[] = [];
-let mockTxUpdateResult: unknown[] = [];
+const mockTxUpdateResult: unknown[] = [];
 let mockTxDeleteResult: unknown[] = [];
 
 const mockTx = {
@@ -260,5 +260,45 @@ describe('updateListCounts', () => {
     const { updateListCounts } = await import('./contact_lists');
     await updateListCounts('org-1', 'list-1', 50, 50);
     expect(mockRecordAudit).not.toHaveBeenCalled();
+  });
+});
+
+// ─── updateListImportStatus ───────────────────────────────────────────────────
+
+describe('updateListImportStatus', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockTx.update.mockReturnValue({
+      set: vi.fn(() => ({
+        where: vi.fn().mockResolvedValue(undefined),
+      })),
+    });
+  });
+
+  it('uses withOrgContext and updates import_status to parsing', async () => {
+    const { updateListImportStatus } = await import('./contact_lists');
+    await updateListImportStatus('org-1', 'list-1', 'parsing');
+
+    expect(withOrgContext).toHaveBeenCalledWith('org-1', expect.any(Function));
+    expect(mockTx.update).toHaveBeenCalledOnce();
+
+    const setCall = mockTx.update.mock.results[0]?.value.set;
+    expect(setCall).toHaveBeenCalledWith({ import_status: 'parsing' });
+  });
+
+  it('updates import_status to completed', async () => {
+    const { updateListImportStatus } = await import('./contact_lists');
+    await updateListImportStatus('org-1', 'list-1', 'completed');
+
+    const setCall = mockTx.update.mock.results[0]?.value.set;
+    expect(setCall).toHaveBeenCalledWith({ import_status: 'completed' });
+  });
+
+  it('updates import_status to failed', async () => {
+    const { updateListImportStatus } = await import('./contact_lists');
+    await updateListImportStatus('org-1', 'list-1', 'failed');
+
+    const setCall = mockTx.update.mock.results[0]?.value.set;
+    expect(setCall).toHaveBeenCalledWith({ import_status: 'failed' });
   });
 });

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { parseContactsCsv } from './csv';
 
@@ -171,23 +171,23 @@ describe('defensive limits', () => {
   });
 
   it('throws csv_too_many_rows when upload exceeds per-upload cap', async () => {
-    // Temporarily lower the cap via env
     const original = process.env['CONTACTS_MAX_ROWS_PER_UPLOAD'];
-    process.env['CONTACTS_MAX_ROWS_PER_UPLOAD'] = '3';
-
-    // Reload module to pick up new env value
-    const { parseContactsCsv: parse } = await import('./csv');
-    const rows = Array.from({ length: 4 }, (_, i) => `+3933312345${String(i).padStart(2, '0')}`);
-    const csv = `phone\n${rows.join('\n')}`;
-
-    // Note: since MAX_ROWS_PER_UPLOAD is a module-level constant evaluated at import time,
-    // we use the default value in this test. We verify the error is thrown when rows > cap.
-    // The constant is already set to 100_000 in the module; test via direct row count assertion.
-    process.env['CONTACTS_MAX_ROWS_PER_UPLOAD'] = original ?? '';
-
-    // Test that the check exists by verifying a non-throwing case with 4 rows
-    const result = await parse(`phone\n${rows.join('\n')}`, BASE_OPTIONS);
-    expect(result.validRows).toHaveLength(4);
+    try {
+      process.env['CONTACTS_MAX_ROWS_PER_UPLOAD'] = '3';
+      // Reset module cache so the fresh import picks up the new env value
+      vi.resetModules();
+      const { parseContactsCsv: parse } = await import('./csv');
+      const rows = Array.from({ length: 4 }, (_, i) => `+3933312345${String(i).padStart(2, '0')}`);
+      const csv = `phone\n${rows.join('\n')}`;
+      await expect(parse(csv, BASE_OPTIONS)).rejects.toThrow('csv_too_many_rows');
+    } finally {
+      if (original !== undefined) {
+        process.env['CONTACTS_MAX_ROWS_PER_UPLOAD'] = original;
+      } else {
+        delete process.env['CONTACTS_MAX_ROWS_PER_UPLOAD'];
+      }
+      vi.resetModules();
+    }
   });
 
   it('sanitizes consentEvidence option (strips control chars, caps at 200 chars)', async () => {

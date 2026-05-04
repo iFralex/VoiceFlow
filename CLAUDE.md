@@ -81,6 +81,10 @@ Default connection: `postgresql://postgres:postgres@localhost:5433/vox_auto_test
 
 `src/lib/env.ts` validates all environment variables via Zod on startup. Set `SKIP_ENV_VALIDATION=true` to bypass in CI builds and test runners that don't have real secrets.
 
+Contact import limits (optional, validated in `env.ts`):
+- `CONTACTS_MAX_ROWS_PER_UPLOAD` — max rows per single CSV upload (default: 100,000)
+- `CONTACTS_MAX_ROWS_PER_ORG` — max total non-deleted contacts per org (default: 1,000,000)
+
 ## Migration Naming
 
 Migration files live in `drizzle/migrations/` as `000N_<slug>.sql`. All files must have a corresponding entry in `drizzle/migrations/meta/_journal.json` or they will not be applied by `pnpm db:migrate`. Hand-authored migrations (RLS policies, triggers, storage policies, realtime publications) must be added to the journal manually.
@@ -193,6 +197,10 @@ await requireCapability('members.invite');
 ```
 
 Capability → role mapping (`src/lib/auth/context.ts`): `owner` has all capabilities; `admin` has all except `org.manage`; `operator` has campaign/contact/script/billing-view; `viewer` has billing/campaigns/audit read-only.
+
+Contact capabilities (plan 06):
+- `contacts.upload` — create contact lists, upload CSVs, trigger imports, mark opt-out; granted to `operator`+
+- `contacts.delete` — soft-delete contacts; granted to `admin`+ only (`operator` does NOT have this)
 
 ## Supabase Clients
 

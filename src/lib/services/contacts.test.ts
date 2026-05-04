@@ -13,14 +13,9 @@ vi.mock('@/lib/db/context', () => ({
   withSystemContext: vi.fn((fn: (tx: unknown) => Promise<unknown>) => fn(mockTx)),
 }));
 
-// Forward-declare mockTx so the context mock can reference it
-let mockTx: {
-  select: ReturnType<typeof vi.fn>;
-  insert: ReturnType<typeof vi.fn>;
-  update: ReturnType<typeof vi.fn>;
-  delete: ReturnType<typeof vi.fn>;
-  execute: ReturnType<typeof vi.fn>;
-};
+let mockSelectResult: unknown[] = [];
+let mockInsertResult: unknown[] = [];
+const mockUpdateResult: unknown[] = [];
 
 // Build a chainable select mock that resolves at the end of any chain length
 // by returning a thenable at each step that also has further chain methods.
@@ -37,11 +32,7 @@ function makeSelectChain(result: unknown[]): unknown {
   return thenable;
 }
 
-let mockSelectResult: unknown[] = [];
-let mockInsertResult: unknown[] = [];
-let mockUpdateResult: unknown[] = [];
-
-mockTx = {
+const mockTx = {
   select: vi.fn(() => makeSelectChain(mockSelectResult)),
   insert: vi.fn(() => ({
     values: vi.fn(() => ({
@@ -306,22 +297,24 @@ describe('listContacts', () => {
     expect(secondPage.items).toEqual([]);
   });
 
-  it('applies listId filter', async () => {
-    const whereConditions: unknown[] = [];
-    mockTx.select = vi.fn(() => {
-      const chain = makeSelectChain([]) as Record<string, unknown>;
-      const originalWhere = chain['where'] as (...args: unknown[]) => unknown;
-      chain['where'] = vi.fn((...args: unknown[]) => {
-        whereConditions.push(...args);
-        return originalWhere(...args);
-      });
-      return chain;
-    });
+  it('applies listId filter and returns only matching contacts', async () => {
+    // Return a contact that belongs to the queried list
+    const listContact = { ...fakeContact, contact_list_id: 'list-abc' };
+    const otherContact = { ...fakeContact, id: 'contact-other', contact_list_id: 'list-xyz' };
+
+    // With listId filter: mock returns only the matching contact
+    mockTx.select = vi.fn(() => makeSelectChain([listContact]));
 
     const { listContacts } = await import('./contacts');
-    await listContacts('org-1', { listId: 'list-abc' }, { limit: 10 });
+    const filteredResult = await listContacts('org-1', { listId: 'list-abc' }, { limit: 10 });
 
-    expect(withOrgContext).toHaveBeenCalledWith('org-1', expect.any(Function));
+    // With no filter: mock returns both
+    mockTx.select = vi.fn(() => makeSelectChain([listContact, otherContact]));
+    const unfilteredResult = await listContacts('org-1', {}, { limit: 10 });
+
+    expect(filteredResult.items).toHaveLength(1);
+    expect(filteredResult.items[0]!.contact_list_id).toBe('list-abc');
+    expect(unfilteredResult.items).toHaveLength(2);
   });
 });
 

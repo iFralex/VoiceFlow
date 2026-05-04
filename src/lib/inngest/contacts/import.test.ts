@@ -2,6 +2,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // ─── Mocks ───────────────────────────────────────────────────────────────────
 
+vi.mock('@/lib/env', () => ({
+  env: {
+    CONTACTS_MAX_ROWS_PER_ORG: 1_000_000,
+  },
+}));
+
 const mockUpdateListImportStatus = vi.fn().mockResolvedValue(undefined);
 const mockUpdateListCounts = vi.fn().mockResolvedValue(undefined);
 const mockBulkUpsertContacts = vi.fn();
@@ -48,9 +54,6 @@ vi.mock('@/lib/supabase/admin', () => ({
 }));
 
 // DB context mocks — opt-out and RPO queries
-let mockOptOutSelectResult: { phone_e164: string }[] = [];
-let mockRpoSelectResult: { phone_e164: string; is_blocked: boolean }[] = [];
-
 const mockTx = {
   select: vi.fn(),
   insert: vi.fn(),
@@ -58,18 +61,9 @@ const mockTx = {
   execute: vi.fn().mockResolvedValue(undefined),
 };
 
-// Track which query is being made
-let queryCount = 0;
-
 vi.mock('@/lib/db/context', () => ({
-  withOrgContext: vi.fn(async (_orgId: string, fn: (tx: unknown) => Promise<unknown>) => {
-    queryCount++;
-    // Alternate between opt-out query (withOrgContext) and audit (withOrgContext)
-    return fn(mockTx);
-  }),
-  withSystemContext: vi.fn(async (fn: (tx: unknown) => Promise<unknown>) => {
-    return fn(mockTx);
-  }),
+  withOrgContext: vi.fn(async (_orgId: string, fn: (tx: unknown) => Promise<unknown>) => fn(mockTx)),
+  withSystemContext: vi.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn(mockTx)),
 }));
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
@@ -105,9 +99,6 @@ const importData = {
 describe('processContactsImport', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    queryCount = 0;
-    mockOptOutSelectResult = [];
-    mockRpoSelectResult = [];
 
     // Default: CSV download succeeds
     const fakeBlob = new Blob(['telefono\n3401234567\nnot-a-phone']);

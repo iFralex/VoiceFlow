@@ -42,7 +42,7 @@ const PHONE_HEADERS = new Set([
   'numero_di_telefono',
   'phone_number',
   'cell',
-  'celllular',
+  'cellular',
   'phonenumber',
 ]);
 

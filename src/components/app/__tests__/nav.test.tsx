@@ -80,7 +80,7 @@ describe('Nav', () => {
     expect(hrefs).toEqual([
       '/dashboard',
       '/campagne',
-      '/contatti',
+      '/contacts',
       '/script',
       '/credit',
       '/impostazioni',

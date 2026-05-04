@@ -63,7 +63,7 @@ describe('CommandPalette', () => {
 
     it('renders Contatti item', () => {
       renderOpen();
-      expect(screen.getByTestId('cmd-nav-contatti')).toBeTruthy();
+      expect(screen.getByTestId('cmd-nav-contacts')).toBeTruthy();
     });
 
     it('renders Script item', () => {

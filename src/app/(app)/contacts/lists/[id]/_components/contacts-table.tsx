@@ -458,15 +458,17 @@ function ContactRowActions({
     });
   }, [contact, t, onRefresh]);
 
-  const handleDelete = useCallback(async () => {
-    const result = await deleteContact({ contactId: contact.id });
-    if (result.ok) {
-      toast.success(t('action_delete_success'));
-      onRefresh();
-    } else {
-      toast.error(result.message);
-    }
-  }, [contact, t, onRefresh]);
+  const handleDelete = useCallback(() => {
+    startTransition(async () => {
+      const result = await deleteContact({ contactId: contact.id });
+      if (result.ok) {
+        toast.success(t('action_delete_success'));
+        onRefresh();
+      } else {
+        toast.error(result.message);
+      }
+    });
+  }, [contact, t, onRefresh, startTransition]);
 
   return (
     <DropdownMenu>

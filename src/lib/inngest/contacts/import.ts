@@ -25,6 +25,7 @@ import { recordAudit } from '@/lib/db/audit';
 import { withOrgContext, withSystemContext } from '@/lib/db/context';
 import type { NewContact } from '@/lib/db/schema';
 import { optOutRegistry, rpoSnapshots } from '@/lib/db/schema';
+import { env } from '@/lib/env';
 import { sendInngestEvent } from '@/lib/inngest/client';
 import { updateListCounts, updateListImportStatus } from '@/lib/services/contact_lists';
 import { bulkUpsertContacts, countContactsForOrg } from '@/lib/services/contacts';
@@ -78,6 +79,16 @@ async function storeErrorsArtifact(
  * inserted with the correct state; existing contacts keep their DB-stored
  * values (ON CONFLICT SET does not overwrite opt_out / rpo_status).
  */
+const ENRICH_BATCH_SIZE = 500;
+
+function chunkArray<T>(arr: T[], size: number): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) {
+    chunks.push(arr.slice(i, i + size));
+  }
+  return chunks;
+}
+
 async function enrichWithOptOutAndRpo(
   orgId: string,
   validRows: NewContact[],
@@ -85,29 +96,36 @@ async function enrichWithOptOutAndRpo(
   if (validRows.length === 0) return [];
 
   const phones = validRows.map((r) => r.phone_e164);
+  const phoneChunks = chunkArray(phones, ENRICH_BATCH_SIZE);
 
-  // Opt-out registry — org-scoped
-  const optOutPhones = await withOrgContext(orgId, async (tx) => {
-    const results = await tx
-      .select({ phone_e164: optOutRegistry.phone_e164 })
-      .from(optOutRegistry)
-      .where(
-        and(
-          eq(optOutRegistry.org_id, orgId),
-          inArray(optOutRegistry.phone_e164, phones),
-        ),
-      );
-    return new Set(results.map((r) => r.phone_e164));
-  });
+  // Opt-out registry — org-scoped; query in batches to stay within PG parameter limit
+  const optOutPhones = new Set<string>();
+  for (const chunk of phoneChunks) {
+    await withOrgContext(orgId, async (tx) => {
+      const results = await tx
+        .select({ phone_e164: optOutRegistry.phone_e164 })
+        .from(optOutRegistry)
+        .where(
+          and(
+            eq(optOutRegistry.org_id, orgId),
+            inArray(optOutRegistry.phone_e164, chunk),
+          ),
+        );
+      for (const r of results) optOutPhones.add(r.phone_e164);
+    });
+  }
 
-  // RPO snapshots — system-owned, no org scope
-  const rpoMap = await withSystemContext(async (tx) => {
-    const results = await tx
-      .select({ phone_e164: rpoSnapshots.phone_e164, is_blocked: rpoSnapshots.is_blocked })
-      .from(rpoSnapshots)
-      .where(inArray(rpoSnapshots.phone_e164, phones));
-    return new Map(results.map((r) => [r.phone_e164, r.is_blocked]));
-  });
+  // RPO snapshots — system-owned, no org scope; same batching
+  const rpoMap = new Map<string, boolean>();
+  for (const chunk of phoneChunks) {
+    await withSystemContext(async (tx) => {
+      const results = await tx
+        .select({ phone_e164: rpoSnapshots.phone_e164, is_blocked: rpoSnapshots.is_blocked })
+        .from(rpoSnapshots)
+        .where(inArray(rpoSnapshots.phone_e164, chunk));
+      for (const r of results) rpoMap.set(r.phone_e164, r.is_blocked);
+    });
+  }
 
   return validRows.map((row) => {
     const isBlocked = rpoMap.get(row.phone_e164);
@@ -153,8 +171,7 @@ export async function processContactsImport(
   const enrichedRows = await enrichWithOptOutAndRpo(orgId, parseResult.validRows);
 
   // Step 4: bulk-upsert (guarded by org-level contact cap)
-  const maxPerOrg =
-    parseInt(process.env['CONTACTS_MAX_ROWS_PER_ORG'] ?? '1000000', 10) || 1_000_000;
+  const maxPerOrg = env.CONTACTS_MAX_ROWS_PER_ORG;
 
   let upsertCounts = { insertedCount: 0, updatedCount: 0, skippedCount: 0 };
   if (enrichedRows.length > 0) {

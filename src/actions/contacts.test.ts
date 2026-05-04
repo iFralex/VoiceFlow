@@ -14,7 +14,6 @@ const {
   mockListContacts,
   mockRecordAudit,
   mockWithOrgContext,
-  mockCollectAllContacts,
   mockContactsToCsv,
   mockCreateSignedUrl,
   mockStorageUpload,
@@ -29,7 +28,6 @@ const {
   mockListContacts: vi.fn(),
   mockRecordAudit: vi.fn(),
   mockWithOrgContext: vi.fn(),
-  mockCollectAllContacts: vi.fn(),
   mockContactsToCsv: vi.fn(),
   mockCreateSignedUrl: vi.fn(),
   mockStorageUpload: vi.fn(),
@@ -64,7 +62,6 @@ vi.mock('@/lib/db/context', () => ({
 }));
 
 vi.mock('@/lib/inngest/contacts/export', () => ({
-  collectAllContacts: mockCollectAllContacts,
   contactsToCsv: mockContactsToCsv,
 }));
 
@@ -80,12 +77,14 @@ vi.mock('@/lib/supabase/admin', () => ({
 }));
 
 import {
+  addManualContact,
   bulkDeleteContacts,
   bulkMarkContactsOptOut,
   deleteContact,
   exportContactsCsv,
   getContactListStatus,
   getImportErrorsUrl,
+  importDncList,
   markContactOptOut,
   triggerContactsImport,
 } from './contacts';
@@ -95,18 +94,21 @@ const VALID_CONTACT_ID = 'cccccccc-dddd-4eee-8fff-000000000002';
 const ORG_ID = 'eeeeeeee-ffff-4000-8000-000000000001';
 const USER_ID = 'user-1';
 
+const VALID_STORAGE_PATH = `${ORG_ID}/uploads/file.csv`;
+
 describe('triggerContactsImport', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockGetAuthContext.mockResolvedValue({ orgId: ORG_ID, userId: USER_ID, role: 'operator' });
     mockRequireCapability.mockResolvedValue(undefined);
     mockSendInngestEvent.mockResolvedValue(undefined);
+    mockGetContactList.mockResolvedValue({ id: VALID_LIST_ID, import_status: 'pending' });
   });
 
   it('sends an Inngest event with correct data and returns ok', async () => {
     const result = await triggerContactsImport({
       listId: VALID_LIST_ID,
-      storagePath: 'org-123/uploads/file.csv',
+      storagePath: VALID_STORAGE_PATH,
       consentBasis: 'consent',
       contactType: 'b2c',
     });
@@ -130,7 +132,7 @@ describe('triggerContactsImport', () => {
   it('includes consentEvidence when provided', async () => {
     await triggerContactsImport({
       listId: VALID_LIST_ID,
-      storagePath: 'org-123/uploads/file.csv',
+      storagePath: VALID_STORAGE_PATH,
       consentBasis: 'legitimate_interest',
       consentEvidence: 'Newsletter signup',
     });
@@ -145,7 +147,7 @@ describe('triggerContactsImport', () => {
   it('includes columnMapping when provided', async () => {
     await triggerContactsImport({
       listId: VALID_LIST_ID,
-      storagePath: 'org-123/uploads/file.csv',
+      storagePath: VALID_STORAGE_PATH,
       consentBasis: 'consent',
       columnMapping: { phone: 'tel', firstName: 'nome' },
     });
@@ -162,7 +164,7 @@ describe('triggerContactsImport', () => {
   it('returns error when listId is not a valid UUID', async () => {
     const result = await triggerContactsImport({
       listId: 'not-a-uuid',
-      storagePath: 'path/file.csv',
+      storagePath: VALID_STORAGE_PATH,
       consentBasis: 'consent',
     });
 
@@ -181,12 +183,38 @@ describe('triggerContactsImport', () => {
     expect(mockSendInngestEvent).not.toHaveBeenCalled();
   });
 
+  it('returns error when storagePath does not belong to calling org', async () => {
+    const result = await triggerContactsImport({
+      listId: VALID_LIST_ID,
+      storagePath: 'other-org-id/uploads/file.csv',
+      consentBasis: 'consent',
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.message).toBe('storage_path_forbidden');
+    expect(mockSendInngestEvent).not.toHaveBeenCalled();
+  });
+
+  it('returns error when list does not belong to calling org', async () => {
+    mockGetContactList.mockResolvedValue(null);
+
+    const result = await triggerContactsImport({
+      listId: VALID_LIST_ID,
+      storagePath: VALID_STORAGE_PATH,
+      consentBasis: 'consent',
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.message).toBe('list_not_found');
+    expect(mockSendInngestEvent).not.toHaveBeenCalled();
+  });
+
   it('returns error when sendInngestEvent throws', async () => {
     mockSendInngestEvent.mockRejectedValueOnce(new Error('Network error'));
 
     const result = await triggerContactsImport({
       listId: VALID_LIST_ID,
-      storagePath: 'org-123/uploads/file.csv',
+      storagePath: VALID_STORAGE_PATH,
       consentBasis: 'consent',
     });
 
@@ -502,5 +530,152 @@ describe('exportContactsCsv', () => {
 
     const result = await exportContactsCsv({});
     expect(result.ok).toBe(false);
+  });
+});
+
+describe('addManualContact', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockGetAuthContext.mockResolvedValue({ orgId: ORG_ID, userId: USER_ID });
+    mockRequireCapability.mockResolvedValue(undefined);
+    mockUpsertContact.mockResolvedValue({ inserted: true });
+  });
+
+  it('returns ok with inserted=true when new contact is created', async () => {
+    const result = await addManualContact({
+      listId: VALID_LIST_ID,
+      phone: '+39 340 123 4567',
+      firstName: 'Mario',
+      consentBasis: 'consent',
+      contactType: 'b2c',
+    });
+
+    expect(result.ok).toBe(true);
+    expect(result.inserted).toBe(true);
+    expect(mockUpsertContact).toHaveBeenCalledWith(
+      ORG_ID,
+      expect.objectContaining({
+        phone_e164: '+393401234567',
+        first_name: 'Mario',
+        contact_list_id: VALID_LIST_ID,
+      }),
+    );
+  });
+
+  it('returns ok with inserted=false when contact already exists', async () => {
+    mockUpsertContact.mockResolvedValue({ inserted: false });
+
+    const result = await addManualContact({
+      listId: VALID_LIST_ID,
+      phone: '+393401234567',
+      consentBasis: 'consent',
+    });
+
+    expect(result.ok).toBe(true);
+    expect(result.inserted).toBe(false);
+  });
+
+  it('returns error when phone number is invalid', async () => {
+    const result = await addManualContact({
+      listId: VALID_LIST_ID,
+      phone: 'not-a-phone',
+      consentBasis: 'consent',
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.message).toBe('phone_invalid');
+    expect(mockUpsertContact).not.toHaveBeenCalled();
+  });
+
+  it('returns error when listId is invalid UUID', async () => {
+    const result = await addManualContact({
+      listId: 'bad-uuid',
+      phone: '+393401234567',
+      consentBasis: 'consent',
+    });
+
+    expect(result.ok).toBe(false);
+    expect(mockUpsertContact).not.toHaveBeenCalled();
+  });
+
+  it('treats empty string email as undefined', async () => {
+    await addManualContact({
+      listId: VALID_LIST_ID,
+      phone: '+393401234567',
+      email: '',
+      consentBasis: 'consent',
+    });
+
+    expect(mockUpsertContact).toHaveBeenCalledWith(
+      ORG_ID,
+      expect.objectContaining({ email: null }),
+    );
+  });
+
+  it('returns error when service throws', async () => {
+    mockUpsertContact.mockRejectedValueOnce(new Error('upsert_failed'));
+
+    const result = await addManualContact({
+      listId: VALID_LIST_ID,
+      phone: '+393401234567',
+      consentBasis: 'consent',
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.message).toBe('upsert_failed');
+  });
+});
+
+describe('importDncList', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockGetAuthContext.mockResolvedValue({ orgId: ORG_ID, userId: USER_ID });
+    mockRequireCapability.mockResolvedValue(undefined);
+    mockMarkOptOut.mockResolvedValue(undefined);
+  });
+
+  it('imports valid phone numbers and returns counts', async () => {
+    const csvText = 'telefono\n+393401234567\n+393407654321';
+    const result = await importDncList({ csvText });
+
+    expect(result.ok).toBe(true);
+    expect(result.processedCount).toBe(2);
+    expect(result.invalidCount).toBe(0);
+    expect(mockMarkOptOut).toHaveBeenCalledTimes(2);
+    expect(mockMarkOptOut).toHaveBeenCalledWith(ORG_ID, '+393401234567', 'dealer_input');
+  });
+
+  it('skips header rows matching common column names', async () => {
+    const csvText = 'phone\n+393401234567';
+    const result = await importDncList({ csvText });
+
+    expect(result.ok).toBe(true);
+    expect(result.processedCount).toBe(1);
+    expect(mockMarkOptOut).toHaveBeenCalledTimes(1);
+  });
+
+  it('counts invalid phone numbers without stopping', async () => {
+    const csvText = '+393401234567\nnot-a-phone\n+393407654321';
+    const result = await importDncList({ csvText });
+
+    expect(result.ok).toBe(true);
+    expect(result.processedCount).toBe(2);
+    expect(result.invalidCount).toBe(1);
+  });
+
+  it('returns error when csvText is empty', async () => {
+    const result = await importDncList({ csvText: '' });
+
+    expect(result.ok).toBe(false);
+    expect(mockMarkOptOut).not.toHaveBeenCalled();
+  });
+
+  it('returns error when markOptOut throws', async () => {
+    mockMarkOptOut.mockRejectedValueOnce(new Error('registry_error'));
+
+    const result = await importDncList({ csvText: '+393401234567' });
+
+    expect(result.ok).toBe(false);
+    expect(result.message).toBe('registry_error');
   });
 });

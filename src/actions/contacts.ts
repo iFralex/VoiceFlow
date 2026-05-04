@@ -62,6 +62,15 @@ export async function triggerContactsImport(input: TriggerInput): Promise<Action
     const { listId, storagePath, consentBasis, contactType, consentEvidence, columnMapping } =
       parsed.data;
 
+    // Security: storagePath must belong to the calling org to prevent reading other orgs' files
+    if (!storagePath.startsWith(`${orgId}/`)) {
+      return { ok: false, message: 'storage_path_forbidden' };
+    }
+
+    // Verify the contact list belongs to the calling org
+    const list = await getContactList(orgId, listId);
+    if (!list) return { ok: false, message: 'list_not_found' };
+
     const eventData: ContactsImportRequestedData = { orgId, listId, storagePath, consentBasis };
     if (contactType !== undefined) eventData.contactType = contactType;
     if (consentEvidence) eventData.consentEvidence = consentEvidence;
