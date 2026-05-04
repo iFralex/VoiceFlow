@@ -223,9 +223,9 @@ export async function requireCapability(capability: Capability): Promise<void>;
 
 ### Task 17: E2E auth flow
 
-- [ ] Playwright `e2e/auth.spec.ts`: sign up via magic link (using Supabase Inbucket-style local mail catcher), land on onboarding, create org, see dashboard
-- [ ] Playwright `e2e/org.spec.ts`: invite member, accept invite as second user, switch active org, change role, remove member
-- [ ] Mark completed
+- [x] Playwright `e2e/auth.spec.ts`: sign up via magic link (using Supabase Inbucket-style local mail catcher), land on onboarding, create org, see dashboard
+- [x] Playwright `e2e/org.spec.ts`: invite member, accept invite as second user, switch active org, change role, remove member
+- [x] Mark completed
 
 ### Task 18: Definition of Done
 
