@@ -22,8 +22,8 @@ The browser uploads directly to Supabase Storage via a pre-signed URL — the fi
 
 ### Task 1: Phone-number normalisation utility
 
-- [ ] Install `libphonenumber-js`
-- [ ] Create `src/lib/utils/phone.ts` with:
+- [x] Install `libphonenumber-js`
+- [x] Create `src/lib/utils/phone.ts` with:
 
 ```typescript
 import { parsePhoneNumberFromString, type CountryCode } from 'libphonenumber-js';
@@ -39,8 +39,8 @@ export function classifyLineType(e164: string): 'mobile' | 'fixed' | 'unknown';
 export function formatItalianDisplay(e164: string): string;
 ```
 
-- [ ] Add unit tests covering: leading zero, "0039" prefix, "+39" prefix, missing country code with IT fallback, mobile vs fixed, malformed input
-- [ ] Mark completed
+- [x] Add unit tests covering: leading zero, "0039" prefix, "+39" prefix, missing country code with IT fallback, mobile vs fixed, malformed input
+- [x] Mark completed
 
 ### Task 2: Contact list service
 
