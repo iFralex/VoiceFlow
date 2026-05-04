@@ -486,7 +486,8 @@
     "not_found": "Script non trovato",
     "voice_sample_listen": "Ascolta un esempio",
     "voice_sample_loading": "Generazione in corso…",
-    "voice_sample_error": "Impossibile generare il campione audio"
+    "voice_sample_error": "Impossibile generare il campione audio",
+    "required_fields": "Campi richiesti"
   },
   "errors": {
     "title": "Errore",

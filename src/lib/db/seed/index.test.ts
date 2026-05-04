@@ -111,14 +111,14 @@ describe('seed/index', () => {
   });
 
   describe('seed (orchestrator)', () => {
-    it('calls both seedScriptTemplates and seedCreditPackages', async () => {
+    it('calls seedScriptTemplates, seedCreditPackages, and seedVoiceCatalogue', async () => {
       const chain = makeInsertChain();
       vi.mocked(db.insert).mockReturnValue(chain as never);
 
       await seed();
 
-      // insert is called once for script_templates and once for credit_packages
-      expect(db.insert).toHaveBeenCalledTimes(2);
+      // insert is called once each for script_templates, credit_packages, and voice_catalogue
+      expect(db.insert).toHaveBeenCalledTimes(3);
     });
   });
 });

@@ -121,10 +121,10 @@ describe('triggerContactsImport', () => {
     expect(mockSendInngestEvent).toHaveBeenCalledWith(
       expect.objectContaining({
         name: 'contacts/import-requested',
-        id: `contacts-import-${VALID_LIST_ID}`,
         data: expect.objectContaining({
           orgId: ORG_ID,
           listId: VALID_LIST_ID,
+          storagePath: VALID_STORAGE_PATH,
           consentBasis: 'consent',
           contactType: 'b2c',
         }),

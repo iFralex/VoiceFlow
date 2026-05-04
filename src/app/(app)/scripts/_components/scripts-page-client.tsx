@@ -120,7 +120,7 @@ export function ScriptsPageClient({ templateCards, scripts }: Props) {
               </CardHeader>
               <CardContent className="flex-1">
                 <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Campi richiesti
+                  {t('required_fields')}
                 </p>
                 <div className="flex flex-wrap gap-1">
                   {tpl.requiredFields.map((field) => (

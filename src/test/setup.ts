@@ -457,6 +457,7 @@ const _italianStrings: Record<string, Record<string, string>> = {
     voice_sample_listen: 'Ascolta un esempio',
     voice_sample_loading: 'Generazione in corso\u2026',
     voice_sample_error: 'Impossibile generare il campione audio',
+    required_fields: 'Campi richiesti',
   },
   errors: {
     title: 'Errore',

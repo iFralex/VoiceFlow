@@ -68,7 +68,7 @@ describe('CommandPalette', () => {
 
     it('renders Script item', () => {
       renderOpen();
-      expect(screen.getByTestId('cmd-nav-script')).toBeTruthy();
+      expect(screen.getByTestId('cmd-nav-scripts')).toBeTruthy();
     });
 
     it('renders Credito item', () => {

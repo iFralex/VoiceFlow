@@ -81,7 +81,7 @@ describe('Nav', () => {
       '/dashboard',
       '/campagne',
       '/contacts',
-      '/script',
+      '/scripts',
       '/credit',
       '/impostazioni',
     ]);

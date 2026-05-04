@@ -186,7 +186,7 @@ export function NewScriptWizard({ templates, initialTemplateSlug, preamble, outc
               </CardHeader>
               <CardContent className="flex-1">
                 <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Campi richiesti
+                  {t('required_fields')}
                 </p>
                 <div className="flex flex-wrap gap-1">
                   {tpl.schema.required.map((field) => (

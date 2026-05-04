@@ -486,7 +486,8 @@
     "not_found": "Script not found",
     "voice_sample_listen": "Listen to a sample",
     "voice_sample_loading": "Generating…",
-    "voice_sample_error": "Could not generate audio sample"
+    "voice_sample_error": "Could not generate audio sample",
+    "required_fields": "Required fields"
   },
   "errors": {
     "title": "Error",

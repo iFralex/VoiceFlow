@@ -16,8 +16,9 @@ import {
 import { TEMPLATE_SCHEMAS } from '@/lib/voice/templates/schemas';
 import type { TemplateSlug } from '@/lib/voice/templates/schemas';
 
-// Prompts directory resolved relative to this file at runtime.
-const PROMPTS_DIR = path.join(__dirname, '../voice/templates/prompts');
+// Prompts directory resolved relative to project root, compatible with Next.js
+// production builds where __dirname points inside .next/server/chunks/.
+const PROMPTS_DIR = path.join(process.cwd(), 'src', 'lib', 'voice', 'templates', 'prompts');
 
 // ---------------------------------------------------------------------------
 // Error types
@@ -57,6 +58,27 @@ function coerceVariablesToStrings(
       result[key] = value.map((v) => String(v)).join(', ');
     } else {
       result[key] = String(value ?? '');
+    }
+  }
+  return result;
+}
+
+/**
+ * Ensures every property declared in the template's JSON Schema has an entry
+ * in `vars`, inserting an empty string for any key that is absent (i.e.
+ * optional fields the user did not supply). This prevents `interpolate` from
+ * throwing "Missing variable" for optional placeholders used in the prompt.
+ */
+function fillMissingSchemaFields(
+  vars: Record<string, string>,
+  schema: unknown,
+): Record<string, string> {
+  const props =
+    (schema as { properties?: Record<string, unknown> } | null)?.properties ?? {};
+  const result = { ...vars };
+  for (const key of Object.keys(props)) {
+    if (!(key in result)) {
+      result[key] = '';
     }
   }
   return result;
@@ -164,8 +186,11 @@ export async function createScript(
     }
 
     // Compliance check: verify AI Act preamble and first-message disclosure.
-    const stringVarsForCheck = coerceVariablesToStrings(
-      input.variables as Record<string, unknown>,
+    // Fill in empty strings for optional fields absent from user input so that
+    // interpolate does not throw "Missing variable" for optional placeholders.
+    const stringVarsForCheck = fillMissingSchemaFields(
+      coerceVariablesToStrings(input.variables as Record<string, unknown>),
+      template.variable_schema,
     );
     const assembledPrompt = assembleSystemPrompt({
       templateBody: template.system_prompt,
@@ -219,8 +244,11 @@ export async function updateScript(
     );
 
     // Compliance check: verify AI Act preamble and first-message disclosure.
-    const stringVarsForCheck = coerceVariablesToStrings(
-      patch.variables as Record<string, unknown>,
+    // Fill in empty strings for optional fields absent from user input so that
+    // interpolate does not throw "Missing variable" for optional placeholders.
+    const stringVarsForCheck = fillMissingSchemaFields(
+      coerceVariablesToStrings(patch.variables as Record<string, unknown>),
+      existing.template.variable_schema,
     );
     const assembledPrompt = assembleSystemPrompt({
       templateBody: existing.template.system_prompt,

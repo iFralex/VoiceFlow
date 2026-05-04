@@ -147,7 +147,7 @@ const voiceSampleCache = new Map<string, { dataUrl: string; expiresAt: number }>
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
 function resolveElevenLabsVoiceId(voiceId: string | null | undefined): string {
-  if (voiceId && !voiceId.startsWith('elevenlabs-placeholder-')) {
+  if (voiceId && !voiceId.includes('placeholder')) {
     return voiceId;
   }
   return ELEVENLABS_DEFAULT_VOICE_ID;
@@ -184,6 +184,7 @@ export async function previewVoiceSampleAction(
 
   try {
     const { orgId } = await getAuthContext();
+    await requireCapability('scripts.edit');
 
     const [{ firstMessage }, script] = await Promise.all([
       previewSystemPromptService(orgId, parsed.data.scriptId),
@@ -212,6 +213,7 @@ export async function previewVoiceSampleAction(
 
     return { ok: true, audioDataUrl: dataUrl };
   } catch (e) {
-    return { ok: false, status: 'error', message: e instanceof Error ? e.message : 'error' };
+    console.error('[previewVoiceSampleAction]', e);
+    return { ok: false, status: 'error', message: 'Errore durante la sintesi vocale.' };
   }
 }

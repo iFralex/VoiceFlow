@@ -32,7 +32,7 @@ export const PRIMARY_NAV_ITEMS: NavItem[] = [
   { href: '/dashboard', labelKey: 'dashboard', icon: Icons.LayoutDashboard },
   { href: '/campagne', labelKey: 'campaigns', icon: Icons.Megaphone },
   { href: '/contacts', labelKey: 'contacts', icon: Icons.Users },
-  { href: '/script', labelKey: 'scripts', icon: Icons.FileText },
+  { href: '/scripts', labelKey: 'scripts', icon: Icons.FileText },
   {
     href: '/credit',
     labelKey: 'credit',

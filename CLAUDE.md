@@ -11,7 +11,8 @@
 - `pnpm test:e2e` — Playwright end-to-end tests (requires running app on port 3000)
 - `pnpm db:generate` — generate Drizzle migration from schema changes
 - `pnpm db:migrate` — apply all migrations via `DATABASE_DIRECT_URL` (not pooler)
-- `pnpm db:seed` — upsert seed data (script templates + credit packages)
+- `pnpm db:seed` — upsert seed data (script templates + voice catalogue + credit packages)
+- `pnpm db:seed --bump <slug>` — publish a new version of one template without overwriting existing scripts
 
 ## Database Access Pattern (CRITICAL)
 
@@ -34,6 +35,8 @@ await withSystemContext(async (tx) => {
   // cron jobs, retention sweeps, RPO bulk checks
 });
 ```
+
+System-owned tables (`script_templates`, `voice_catalogue`, `credit_packages`) have no RLS and must be queried via `withSystemContext`, never `withOrgContext`.
 
 Inside `(app)/` Server Components and Server Actions, use `dbForRequest()` which auto-resolves the org from middleware headers:
 
@@ -84,6 +87,9 @@ Default connection: `postgresql://postgres:postgres@localhost:5433/vox_auto_test
 Contact import limits (optional, validated in `env.ts`):
 - `CONTACTS_MAX_ROWS_PER_UPLOAD` — max rows per single CSV upload (default: 100,000)
 - `CONTACTS_MAX_ROWS_PER_ORG` — max total non-deleted contacts per org (default: 1,000,000)
+
+Voice preview (optional, validated in `env.ts`):
+- `ELEVENLABS_API_KEY` — ElevenLabs API key. When absent, `previewVoiceSampleAction` returns `{ ok: false, status: 'not_configured' }` and the UI hides the "Ascolta un esempio" button.
 
 ## Migration Naming
 
@@ -201,6 +207,9 @@ Capability → role mapping (`src/lib/auth/context.ts`): `owner` has all capabil
 Contact capabilities (plan 06):
 - `contacts.upload` — create contact lists, upload CSVs, trigger imports, mark opt-out; granted to `operator`+
 - `contacts.delete` — soft-delete contacts; granted to `admin`+ only (`operator` does NOT have this)
+
+Script capabilities (plan 07):
+- `scripts.edit` — create, update, copy, delete scripts; granted to `operator`+
 
 ## Supabase Clients
 

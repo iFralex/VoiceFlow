@@ -35,6 +35,7 @@ export default defineConfig({
           include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
           exclude: ['src/**/*.integration.test.ts'],
           setupFiles: ['src/test/setup.ts'],
+          env: { SKIP_ENV_VALIDATION: 'true' },
         },
       },
       {
