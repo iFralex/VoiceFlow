@@ -202,10 +202,10 @@ export async function previewSystemPrompt(
 
 ### Task 12: Voice catalogue table (foundation; population in plan 08)
 
-- [ ] Migration `0009_voice_catalogue.sql`: create `voice_catalogue` (`id` uuid PK, `provider` enum same as calls, `external_voice_id`, `display_name`, `language` default `it-IT`, `gender`, `style`, `sample_url`, `active`, `default_for_templates` text array, `created_at`)
-- [ ] Drizzle schema, no RLS (system-owned)
-- [ ] Seed two placeholder ElevenLabs Italian voices (real IDs filled in plan 08); plan 07 only ensures the table exists and templates' `default_voice_id` references it
-- [ ] Mark completed
+- [x] Migration `0009_voice_catalogue.sql`: create `voice_catalogue` (`id` uuid PK, `provider` enum same as calls, `external_voice_id`, `display_name`, `language` default `it-IT`, `gender`, `style`, `sample_url`, `active`, `default_for_templates` text array, `created_at`)
+- [x] Drizzle schema, no RLS (system-owned)
+- [x] Seed two placeholder ElevenLabs Italian voices (real IDs filled in plan 08); plan 07 only ensures the table exists and templates' `default_voice_id` references it
+- [x] Mark completed
 
 ### Task 13: Compliance verification at script save
 

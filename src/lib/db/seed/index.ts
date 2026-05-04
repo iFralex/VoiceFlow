@@ -6,9 +6,11 @@ import {
   scriptTemplateSeedData,
   TEMPLATE_DEFINITIONS,
 } from './script_templates';
+import { voiceCatalogueSeedData } from './voice_catalogue';
 import { withSystemContext } from '../context';
 import { creditPackages } from '../schema/credit_packages';
 import { scriptTemplates } from '../schema/script_templates';
+import { voiceCatalogue } from '../schema/voice_catalogue';
 
 export async function seedScriptTemplates(): Promise<void> {
   await withSystemContext(async (tx) => {
@@ -86,6 +88,26 @@ export async function seedCreditPackages(): Promise<void> {
   });
 }
 
+export async function seedVoiceCatalogue(): Promise<void> {
+  await withSystemContext(async (tx) => {
+    await tx
+      .insert(voiceCatalogue)
+      .values(voiceCatalogueSeedData)
+      .onConflictDoUpdate({
+        target: [voiceCatalogue.external_voice_id, voiceCatalogue.provider],
+        set: {
+          display_name: sql`excluded.display_name`,
+          language: sql`excluded.language`,
+          gender: sql`excluded.gender`,
+          style: sql`excluded.style`,
+          sample_url: sql`excluded.sample_url`,
+          active: sql`excluded.active`,
+          default_for_templates: sql`excluded.default_for_templates`,
+        },
+      });
+  });
+}
+
 export async function seed(): Promise<void> {
   console.warn('Seeding script templates...');
   await seedScriptTemplates();
@@ -94,6 +116,10 @@ export async function seed(): Promise<void> {
   console.warn('Seeding credit packages...');
   await seedCreditPackages();
   console.warn(`  ✓ ${creditPackageSeedData.length} credit packages upserted`);
+
+  console.warn('Seeding voice catalogue...');
+  await seedVoiceCatalogue();
+  console.warn(`  ✓ ${voiceCatalogueSeedData.length} voice catalogue entries upserted`);
 
   console.warn('Seed complete.');
 }

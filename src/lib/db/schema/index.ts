@@ -20,3 +20,4 @@ export * from './webhooks_outgoing';
 export * from './webhook_deliveries';
 export * from './personal_access_tokens';
 export * from './auth_signins';
+export * from './voice_catalogue';
