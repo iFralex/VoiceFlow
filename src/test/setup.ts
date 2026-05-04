@@ -220,6 +220,11 @@ const _italianStrings: Record<string, Record<string, string>> = {
     dnc_success: '{count} numeri aggiunti alla lista do-not-call',
     dnc_no_valid_numbers: 'Nessun numero valido trovato nel file',
     dnc_error: "Errore durante l'importazione",
+    export_btn: 'Esporta CSV',
+    export_exporting: 'Esportazione…',
+    export_success: 'Esportazione completata — il download inizierà a breve',
+    export_deferred: 'Esportazione avviata — riceverai una notifica al completamento',
+    export_error: "Errore durante l'esportazione",
   },
   credit: {
     top_up: 'Ricarica',

@@ -10,7 +10,14 @@ const {
   mockGetContactList,
   mockMarkOptOut,
   mockSoftDeleteContact,
+  mockUpsertContact,
+  mockListContacts,
+  mockRecordAudit,
+  mockWithOrgContext,
+  mockCollectAllContacts,
+  mockContactsToCsv,
   mockCreateSignedUrl,
+  mockStorageUpload,
 } = vi.hoisted(() => ({
   mockGetAuthContext: vi.fn(),
   mockRequireCapability: vi.fn(),
@@ -18,7 +25,14 @@ const {
   mockGetContactList: vi.fn(),
   mockMarkOptOut: vi.fn(),
   mockSoftDeleteContact: vi.fn(),
+  mockUpsertContact: vi.fn(),
+  mockListContacts: vi.fn(),
+  mockRecordAudit: vi.fn(),
+  mockWithOrgContext: vi.fn(),
+  mockCollectAllContacts: vi.fn(),
+  mockContactsToCsv: vi.fn(),
   mockCreateSignedUrl: vi.fn(),
+  mockStorageUpload: vi.fn(),
 }));
 
 vi.mock('@/lib/auth/context', () => ({
@@ -37,6 +51,21 @@ vi.mock('@/lib/services/contact_lists', () => ({
 vi.mock('@/lib/services/contacts', () => ({
   markOptOut: mockMarkOptOut,
   softDeleteContact: mockSoftDeleteContact,
+  upsertContact: mockUpsertContact,
+  listContacts: mockListContacts,
+}));
+
+vi.mock('@/lib/db/audit', () => ({
+  recordAudit: mockRecordAudit,
+}));
+
+vi.mock('@/lib/db/context', () => ({
+  withOrgContext: (...args: unknown[]) => mockWithOrgContext(...args),
+}));
+
+vi.mock('@/lib/inngest/contacts/export', () => ({
+  collectAllContacts: mockCollectAllContacts,
+  contactsToCsv: mockContactsToCsv,
 }));
 
 vi.mock('@/lib/supabase/admin', () => ({
@@ -44,6 +73,7 @@ vi.mock('@/lib/supabase/admin', () => ({
     storage: {
       from: () => ({
         createSignedUrl: mockCreateSignedUrl,
+        upload: mockStorageUpload,
       }),
     },
   },
@@ -53,6 +83,7 @@ import {
   bulkDeleteContacts,
   bulkMarkContactsOptOut,
   deleteContact,
+  exportContactsCsv,
   getContactListStatus,
   getImportErrorsUrl,
   markContactOptOut,
@@ -335,6 +366,141 @@ describe('getImportErrorsUrl', () => {
     });
 
     const result = await getImportErrorsUrl(VALID_LIST_ID);
+    expect(result.ok).toBe(false);
+  });
+});
+
+describe('exportContactsCsv', () => {
+  const makeContact = (phone: string) => ({
+    id: `c-${phone}`,
+    org_id: ORG_ID,
+    contact_list_id: VALID_LIST_ID,
+    phone_e164: phone,
+    first_name: 'Mario',
+    last_name: 'Rossi',
+    email: null,
+    consent_basis: 'consent' as const,
+    consent_evidence: null,
+    contact_type: 'b2c' as const,
+    rpo_status: 'unchecked' as const,
+    rpo_checked_at: null,
+    opt_out: false,
+    opt_out_reason: null,
+    metadata: null,
+    created_at: new Date('2024-01-01'),
+    deleted_at: null,
+  });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockGetAuthContext.mockResolvedValue({ orgId: ORG_ID, userId: USER_ID, role: 'operator' });
+    mockRequireCapability.mockResolvedValue(undefined);
+    mockSendInngestEvent.mockResolvedValue(undefined);
+    mockRecordAudit.mockResolvedValue(undefined);
+    mockWithOrgContext.mockImplementation(async (_orgId: unknown, fn: (tx: unknown) => Promise<unknown>) => fn({}));
+
+    // Default: 3 contacts, fits inline limit
+    mockListContacts.mockResolvedValue({
+      items: [makeContact('+393401111111'), makeContact('+393402222222'), makeContact('+393403333333')],
+      nextCursor: undefined,
+    });
+    mockContactsToCsv.mockReturnValue('phone_e164,first_name\n+393401111111,Mario');
+    mockStorageUpload.mockResolvedValue({ data: {}, error: null });
+    mockCreateSignedUrl.mockResolvedValue({
+      data: { signedUrl: 'https://example.com/export.csv' },
+      error: null,
+    });
+  });
+
+  it('returns a signed URL for inline export (<= 10k rows)', async () => {
+    const result = await exportContactsCsv({});
+
+    expect(result.ok).toBe(true);
+    expect(result.url).toBe('https://example.com/export.csv');
+    expect(result.deferred).toBeUndefined();
+  });
+
+  it('uploads the CSV to correct storage path', async () => {
+    await exportContactsCsv({});
+
+    expect(mockStorageUpload).toHaveBeenCalledWith(
+      expect.stringMatching(new RegExp(`^${ORG_ID}/exports/contacts-.*\\.csv$`)),
+      expect.any(String),
+      expect.objectContaining({ contentType: 'text/csv' }),
+    );
+  });
+
+  it('records an audit log entry', async () => {
+    await exportContactsCsv({});
+
+    expect(mockWithOrgContext).toHaveBeenCalled();
+    expect(mockRecordAudit).toHaveBeenCalledWith(
+      {},
+      expect.objectContaining({
+        orgId: ORG_ID,
+        actorUserId: USER_ID,
+        actorType: 'user',
+        action: 'contact_list.export_completed',
+      }),
+    );
+  });
+
+  it('defers to Inngest when there are more than inline limit rows', async () => {
+    // Simulate nextCursor being set (more rows exist)
+    mockListContacts.mockResolvedValue({
+      items: Array.from({ length: 100 }, (_, i) => makeContact(`+3934000000${i.toString().padStart(2, '0')}`)),
+      nextCursor: 'some-cursor',
+    });
+
+    const result = await exportContactsCsv({});
+
+    expect(result.ok).toBe(true);
+    expect(result.deferred).toBe(true);
+    expect(result.exportId).toBeDefined();
+    expect(mockSendInngestEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'contacts/export-requested' }),
+    );
+    expect(mockStorageUpload).not.toHaveBeenCalled();
+  });
+
+  it('records audit entry for deferred export too', async () => {
+    mockListContacts.mockResolvedValue({
+      items: [makeContact('+393401111111')],
+      nextCursor: 'some-cursor',
+    });
+
+    await exportContactsCsv({});
+
+    expect(mockRecordAudit).toHaveBeenCalledWith(
+      {},
+      expect.objectContaining({
+        action: 'contact_list.export_requested',
+        metadata: expect.objectContaining({ deferred: true }),
+      }),
+    );
+  });
+
+  it('passes listId filter to listContacts', async () => {
+    await exportContactsCsv({ listId: VALID_LIST_ID });
+
+    expect(mockListContacts).toHaveBeenCalledWith(
+      ORG_ID,
+      expect.objectContaining({ listId: VALID_LIST_ID }),
+      expect.any(Object),
+    );
+  });
+
+  it('returns error when upload fails', async () => {
+    mockStorageUpload.mockResolvedValue({ data: null, error: { message: 'storage error' } });
+
+    const result = await exportContactsCsv({});
+    expect(result.ok).toBe(false);
+  });
+
+  it('returns error when signing URL fails', async () => {
+    mockCreateSignedUrl.mockResolvedValue({ data: null, error: { message: 'sign error' } });
+
+    const result = await exportContactsCsv({});
     expect(result.ok).toBe(false);
   });
 });

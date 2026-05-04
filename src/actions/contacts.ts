@@ -1,16 +1,30 @@
 'use server';
 
+import { randomUUID } from 'node:crypto';
+
 import { z } from 'zod';
 
 import { getAuthContext, requireCapability } from '@/lib/auth/context';
+import { recordAudit } from '@/lib/db/audit';
+import { withOrgContext } from '@/lib/db/context';
 import { sendInngestEvent } from '@/lib/inngest/client';
-import { CONTACTS_IMPORT_REQUESTED } from '@/lib/inngest/contacts/events';
-import type { ContactsImportRequestedData } from '@/lib/inngest/contacts/events';
+import {
+  CONTACTS_EXPORT_REQUESTED,
+  CONTACTS_IMPORT_REQUESTED,
+} from '@/lib/inngest/contacts/events';
+import type {
+  ContactsExportRequestedData,
+  ContactsImportRequestedData,
+} from '@/lib/inngest/contacts/events';
+import { contactsToCsv } from '@/lib/inngest/contacts/export';
 import { getContactList } from '@/lib/services/contact_lists';
-import { markOptOut, softDeleteContact, upsertContact } from '@/lib/services/contacts';
+import { listContacts, markOptOut, softDeleteContact, upsertContact } from '@/lib/services/contacts';
+import type { RpoStatus } from '@/lib/services/contacts';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import type { ActionResult } from '@/lib/utils/action-toast';
 import { normaliseToE164 } from '@/lib/utils/phone';
+
+const EXPORT_INLINE_LIMIT = 10_000;
 
 const triggerSchema = z.object({
   listId: z.string().uuid(),
@@ -302,5 +316,119 @@ export async function getImportErrorsUrl(listId: string): Promise<ActionResult &
     return { ok: true, url: data.signedUrl };
   } catch (e) {
     return { ok: false, message: e instanceof Error ? e.message : 'error' };
+  }
+}
+
+const exportFiltersSchema = z.object({
+  listId: z.string().uuid().optional(),
+  optOut: z.boolean().optional(),
+  rpoStatus: z.enum(['clear', 'blocked', 'unchecked']).optional(),
+  search: z.string().max(200).optional(),
+});
+
+/**
+ * Exports contacts matching the given filters to a CSV file in Supabase Storage
+ * and returns a 1-hour signed download URL.
+ *
+ * For <= 10,000 rows the export runs synchronously and returns `{ ok: true, url }`.
+ * For > 10,000 rows the export is deferred to an Inngest function and returns
+ * `{ ok: true, deferred: true, exportId }` — the caller can poll for completion.
+ *
+ * Every invocation records an audit log entry.
+ */
+export async function exportContactsCsv(
+  input: z.infer<typeof exportFiltersSchema>,
+): Promise<ActionResult & { url?: string; deferred?: boolean; exportId?: string }> {
+  const parsed = exportFiltersSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? 'validation_error' };
+  }
+
+  try {
+    const { orgId, userId } = await getAuthContext();
+    await requireCapability('contacts.upload');
+
+    const filters = parsed.data as {
+      listId?: string;
+      optOut?: boolean;
+      rpoStatus?: RpoStatus;
+      search?: string;
+    };
+    const exportId = randomUUID();
+
+    // Probe: fetch up to EXPORT_INLINE_LIMIT rows.
+    // If nextCursor is set there are more rows than the limit — defer to Inngest.
+    const { items, nextCursor } = await listContacts(orgId, filters, {
+      limit: EXPORT_INLINE_LIMIT,
+    });
+    const overLimit = nextCursor !== undefined;
+
+    if (overLimit) {
+      // Defer to Inngest for large exports
+      const eventData: ContactsExportRequestedData = {
+        orgId,
+        exportId,
+        requestedByUserId: userId,
+        filters,
+      };
+
+      await sendInngestEvent({
+        name: CONTACTS_EXPORT_REQUESTED,
+        data: eventData as unknown as Record<string, unknown>,
+        id: `contacts-export-${exportId}`,
+      });
+
+      // Record audit for the export request
+      await withOrgContext(orgId, async (tx) => {
+        await recordAudit(tx, {
+          orgId,
+          actorUserId: userId,
+          actorType: 'user',
+          action: 'contact_list.export_requested',
+          subjectType: 'contact_list',
+          subjectId: exportId,
+          metadata: { filters, deferred: true },
+        });
+      });
+
+      return { ok: true, deferred: true, exportId };
+    }
+
+    // Inline export: generate, upload, sign
+    const csv = contactsToCsv(items);
+    const path = `${orgId}/exports/contacts-${exportId}.csv`;
+
+    const { error: uploadError } = await supabaseAdmin.storage
+      .from('csv-uploads')
+      .upload(path, csv, { contentType: 'text/csv', upsert: true });
+
+    if (uploadError) {
+      return { ok: false, message: `export_upload_failed: ${uploadError.message}` };
+    }
+
+    const { data: signData, error: signError } = await supabaseAdmin.storage
+      .from('csv-uploads')
+      .createSignedUrl(path, 3600);
+
+    if (signError ?? !signData?.signedUrl) {
+      return { ok: false, message: 'export_sign_failed' };
+    }
+
+    // Record audit
+    await withOrgContext(orgId, async (tx) => {
+      await recordAudit(tx, {
+        orgId,
+        actorUserId: userId,
+        actorType: 'user',
+        action: 'contact_list.export_completed',
+        subjectType: 'contact_list',
+        subjectId: exportId,
+        metadata: { rowCount: items.length, storagePath: path, filters },
+      });
+    });
+
+    return { ok: true, url: signData.signedUrl, exportId };
+  } catch (e) {
+    return { ok: false, message: e instanceof Error ? e.message : 'export_failed' };
   }
 }

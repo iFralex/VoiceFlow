@@ -224,10 +224,10 @@ export async function parseContactsCsv(
 
 ### Task 13: CSV export
 
-- [ ] Add `exportContactsCsv(orgId, filters)` Server Action returning a signed URL after writing the export to `<org_id>/exports/contacts-<timestamp>.csv`
-- [ ] Run the heavy export inside an Inngest function for >10k rows
-- [ ] Audit log entry on every export
-- [ ] Mark completed
+- [x] Add `exportContactsCsv(orgId, filters)` Server Action returning a signed URL after writing the export to `<org_id>/exports/contacts-<timestamp>.csv`
+- [x] Run the heavy export inside an Inngest function for >10k rows
+- [x] Audit log entry on every export
+- [x] Mark completed
 
 ### Task 14: Edge cases and limits
 

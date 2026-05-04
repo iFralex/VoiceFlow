@@ -218,7 +218,12 @@
     "dnc_submitting": "Importing…",
     "dnc_success": "{count} numbers added to the do-not-call list",
     "dnc_no_valid_numbers": "No valid numbers found in the file",
-    "dnc_error": "Error during import"
+    "dnc_error": "Error during import",
+    "export_btn": "Export CSV",
+    "export_exporting": "Exporting…",
+    "export_success": "Export complete — download will start shortly",
+    "export_deferred": "Export started — you'll be notified when it's ready",
+    "export_error": "Error during export"
   },
   "credit": {
     "title": "Credit",
