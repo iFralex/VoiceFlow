@@ -121,10 +121,10 @@ export function assembleSystemPrompt(args: {
 
 ### Task 7: Seed updater
 
-- [ ] Update `src/lib/db/seed/script_templates.ts` (started in plan 02) to read each template's three components from disk (system prompt, first message, schema/tools) at seed time
-- [ ] Idempotent UPSERT on `(slug, version)`; bumping a template's version creates a new row and leaves old versions intact
-- [ ] Add a CLI flag `--bump <slug>` to bump a specific template's version when authoring iteratively
-- [ ] Mark completed
+- [x] Update `src/lib/db/seed/script_templates.ts` (started in plan 02) to read each template's three components from disk (system prompt, first message, schema/tools) at seed time
+- [x] Idempotent UPSERT on `(slug, version)`; bumping a template's version creates a new row and leaves old versions intact
+- [x] Add a CLI flag `--bump <slug>` to bump a specific template's version when authoring iteratively
+- [x] Mark completed
 
 ### Task 8: Script service
 
