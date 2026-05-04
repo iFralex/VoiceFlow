@@ -150,13 +150,13 @@ export async function parseContactsCsv(
 
 ### Task 5: CSV upload — pre-signed URL endpoint
 
-- [ ] Create `src/app/api/uploads/contacts/route.ts` (POST): authenticated, requires capability `contacts.upload`
-- [ ] Body: `{ filename: string; sizeBytes: number; contentType: string; }`
-- [ ] Validate: `contentType ∈ ['text/csv', 'application/vnd.ms-excel', 'text/plain']`, `sizeBytes ≤ 50 * 1024 * 1024`
-- [ ] Generate Supabase Storage signed upload URL valid for 5 minutes, path `<org_id>/uploads/<uuid>-<sanitized-filename>`
-- [ ] Insert a placeholder `contact_lists` row with status indicator (add column `import_status` enum `pending|parsing|completed|failed`, migration `0008_contact_list_import_status.sql`)
-- [ ] Return `{ uploadUrl, listId, storagePath }`
-- [ ] Mark completed
+- [x] Create `src/app/api/uploads/contacts/route.ts` (POST): authenticated, requires capability `contacts.upload`
+- [x] Body: `{ filename: string; sizeBytes: number; contentType: string; }`
+- [x] Validate: `contentType ∈ ['text/csv', 'application/vnd.ms-excel', 'text/plain']`, `sizeBytes ≤ 50 * 1024 * 1024`
+- [x] Generate Supabase Storage signed upload URL valid for 5 minutes, path `<org_id>/uploads/<uuid>-<sanitized-filename>`
+- [x] Insert a placeholder `contact_lists` row with status indicator (add column `import_status` enum `pending|parsing|completed|failed`, migration `0016_contact_list_import_status.sql`)
+- [x] Return `{ uploadUrl, listId, storagePath }`
+- [x] Mark completed
 
 ### Task 6: Inngest function — parse and ingest
 

@@ -113,6 +113,13 @@
       "when": 1777800275499,
       "tag": "0015_auth_signins_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1777800275500,
+      "tag": "0016_contact_list_import_status",
+      "breakpoints": true
     }
   ]
 }
