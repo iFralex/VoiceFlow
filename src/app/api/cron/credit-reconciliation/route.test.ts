@@ -123,7 +123,7 @@ const CRON_SECRET = 'test-cron-secret-16chars';
 // ---------------------------------------------------------------------------
 
 /** Builds a select mock that returns `rows` for a simple from/where/then chain. */
-function makeSelectMock(rows: unknown[]) {
+function _makeSelectMock(rows: unknown[]) {
   const chainEnd = {
     then: (resolve: (v: unknown) => void) => resolve(rows),
     where: vi.fn(() => ({

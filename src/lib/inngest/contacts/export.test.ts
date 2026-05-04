@@ -115,7 +115,7 @@ describe('collectAllContacts', () => {
     expect(mockListContacts).toHaveBeenCalledWith(
       'org-1',
       { listId: 'list-1', optOut: false, search: 'Mario' },
-      { limit: 1000, cursor: undefined },
+      { limit: 1000 },
     );
   });
 });

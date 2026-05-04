@@ -20,6 +20,7 @@ import type { Contact } from '@/lib/db/schema';
 import { sendInngestEvent } from '@/lib/inngest/client';
 import { listContacts } from '@/lib/services/contacts';
 import type { RpoStatus } from '@/lib/services/contacts';
+import { CSV_UPLOADS_BUCKET as CSV_BUCKET } from '@/lib/storage/signed';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 
 import {
@@ -27,8 +28,6 @@ import {
   type ContactsExportCompletedData,
   type ContactsExportRequestedData,
 } from './events';
-
-const CSV_BUCKET = 'csv-uploads';
 const EXPORT_PAGE_SIZE = 1000;
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -141,7 +140,7 @@ export async function processContactsExport(
 
   await sendInngestEvent({
     name: CONTACTS_EXPORT_COMPLETED,
-    data: completedData as unknown as Record<string, unknown>,
+    data: completedData,
     id: `contacts-export-completed-${exportId}`,
   });
 

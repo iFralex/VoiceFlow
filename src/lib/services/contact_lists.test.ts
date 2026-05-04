@@ -54,6 +54,7 @@ const fakeList = {
   source_file_path: null,
   total_count: 0,
   valid_count: 0,
+  import_status: 'pending' as const,
   created_at: new Date(),
 };
 

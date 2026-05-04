@@ -4,13 +4,11 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { getAuthContext, hasCapability } from '@/lib/auth/context';
-import { supabaseAdmin } from '@/lib/supabase/admin';
 import { createContactList } from '@/lib/services/contact_lists';
-
-const BUCKET = 'csv-uploads';
+import { CSV_UPLOADS_BUCKET as BUCKET } from '@/lib/storage/signed';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 const MAX_SIZE_BYTES = 50 * 1024 * 1024; // 50 MB
 const ALLOWED_CONTENT_TYPES = ['text/csv', 'application/vnd.ms-excel', 'text/plain'] as const;
-const SIGNED_URL_TTL_SECONDS = 5 * 60; // 5 minutes
 
 const BodySchema = z.object({
   filename: z.string().min(1).max(255),

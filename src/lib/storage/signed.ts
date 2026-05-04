@@ -11,7 +11,8 @@
 import { getAuthContext } from '@/lib/auth/context';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 
-const BUCKET = 'csv-uploads';
+export const CSV_UPLOADS_BUCKET = 'csv-uploads';
+const BUCKET = CSV_UPLOADS_BUCKET;
 
 /**
  * Returns the org ID encoded as the first segment of a storage path.

@@ -1,8 +1,8 @@
 'use client';
 
 import { AlertCircle, CheckCircle2, CloudUpload } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import Papa from 'papaparse';
 import { useCallback, useRef, useState, useTransition } from 'react';
 import { toast } from 'sonner';
@@ -35,6 +35,7 @@ const PHONE_HEADERS = new Set([
   'numero_di_telefono',
   'phone_number',
   'cell',
+  'cellular',
   'phonenumber',
 ]);
 

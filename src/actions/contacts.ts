@@ -20,6 +20,7 @@ import { contactsToCsv } from '@/lib/inngest/contacts/export';
 import { getContactList } from '@/lib/services/contact_lists';
 import { listContacts, markOptOut, softDeleteContact, upsertContact } from '@/lib/services/contacts';
 import type { RpoStatus } from '@/lib/services/contacts';
+import { CSV_UPLOADS_BUCKET } from '@/lib/storage/signed';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import type { ActionResult } from '@/lib/utils/action-toast';
 import { normaliseToE164 } from '@/lib/utils/phone';
@@ -31,7 +32,7 @@ const triggerSchema = z.object({
   storagePath: z.string().min(1),
   consentBasis: z.enum(['consent', 'legitimate_interest', 'existing_customer']),
   contactType: z.enum(['b2c', 'b2b']).optional(),
-  consentEvidence: z.string().optional(),
+  consentEvidence: z.string().max(500).optional(),
   columnMapping: z
     .object({
       phone: z.string().min(1),
@@ -86,7 +87,7 @@ export async function triggerContactsImport(input: TriggerInput): Promise<Action
 
     await sendInngestEvent({
       name: CONTACTS_IMPORT_REQUESTED,
-      data: eventData as unknown as Record<string, unknown>,
+      data: eventData,
       id: `contacts-import-${listId}`,
     });
 
@@ -319,7 +320,7 @@ export async function getImportErrorsUrl(listId: string): Promise<ActionResult &
     const { orgId } = await getAuthContext();
     const path = `${orgId}/uploads/${listId}-errors.json`;
     const { data, error } = await supabaseAdmin.storage
-      .from('csv-uploads')
+      .from(CSV_UPLOADS_BUCKET)
       .createSignedUrl(path, 3600);
     if (error || !data?.signedUrl) return { ok: false, message: 'errors_file_not_found' };
     return { ok: true, url: data.signedUrl };
@@ -383,7 +384,7 @@ export async function exportContactsCsv(
 
       await sendInngestEvent({
         name: CONTACTS_EXPORT_REQUESTED,
-        data: eventData as unknown as Record<string, unknown>,
+        data: eventData,
         id: `contacts-export-${exportId}`,
       });
 
@@ -408,7 +409,7 @@ export async function exportContactsCsv(
     const path = `${orgId}/exports/contacts-${exportId}.csv`;
 
     const { error: uploadError } = await supabaseAdmin.storage
-      .from('csv-uploads')
+      .from(CSV_UPLOADS_BUCKET)
       .upload(path, csv, { contentType: 'text/csv', upsert: true });
 
     if (uploadError) {
@@ -416,7 +417,7 @@ export async function exportContactsCsv(
     }
 
     const { data: signData, error: signError } = await supabaseAdmin.storage
-      .from('csv-uploads')
+      .from(CSV_UPLOADS_BUCKET)
       .createSignedUrl(path, 3600);
 
     if (signError ?? !signData?.signedUrl) {

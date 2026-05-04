@@ -32,7 +32,8 @@ function makeSelectChain(result: unknown[]): unknown {
   return thenable;
 }
 
-const mockTx = {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockTx: any = {
   select: vi.fn(() => makeSelectChain(mockSelectResult)),
   insert: vi.fn(() => ({
     values: vi.fn(() => ({

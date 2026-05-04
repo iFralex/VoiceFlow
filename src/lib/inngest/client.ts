@@ -2,7 +2,8 @@ import { env } from '@/lib/env';
 
 export interface InngestEventPayload {
   name: string;
-  data: Record<string, unknown>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  data: Record<string, any>;
   id?: string;
 }
 

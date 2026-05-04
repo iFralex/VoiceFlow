@@ -1,5 +1,4 @@
 import stripeProductsJson from '../../stripe/products.json';
-
 import { NewCreditPackage } from '../schema/credit_packages';
 
 const stripePriceMap = new Map(

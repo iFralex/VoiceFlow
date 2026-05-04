@@ -2,6 +2,7 @@ import Papa from 'papaparse';
 
 import type { NewContact } from '@/lib/db/schema';
 import { consentBasisEnum, contactTypeEnum } from '@/lib/db/schema';
+import { env } from '@/lib/env';
 import { normaliseToE164 } from '@/lib/utils/phone';
 
 export type ConsentBasis = (typeof consentBasisEnum.enumValues)[number];
@@ -24,9 +25,7 @@ export interface ColumnMapping {
 const MAX_FIELD_LENGTH = 200;
 const MAX_COLUMNS = 50;
 const MAX_HEADER_LINE_BYTES = 2 * 1024 * 1024; // 2 MB
-// Read caps from env with safe fallback for test environments where validation is skipped
-const MAX_ROWS_PER_UPLOAD =
-  parseInt(process.env['CONTACTS_MAX_ROWS_PER_UPLOAD'] ?? '100000', 10) || 100_000;
+const MAX_ROWS_PER_UPLOAD = env.CONTACTS_MAX_ROWS_PER_UPLOAD;
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 

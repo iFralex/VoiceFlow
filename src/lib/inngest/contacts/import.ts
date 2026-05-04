@@ -31,6 +31,7 @@ import { updateListCounts, updateListImportStatus } from '@/lib/services/contact
 import { bulkUpsertContacts, countContactsForOrg } from '@/lib/services/contacts';
 import type { CsvParseResult } from '@/lib/services/csv';
 import { parseContactsCsv } from '@/lib/services/csv';
+import { CSV_UPLOADS_BUCKET as CSV_BUCKET } from '@/lib/storage/signed';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 
 import {
@@ -38,8 +39,6 @@ import {
   type ContactsImportCompletedData,
   type ContactsImportRequestedData,
 } from './events';
-
-const CSV_BUCKET = 'csv-uploads';
 
 // ─── Private step helpers ────────────────────────────────────────────────────
 
@@ -225,7 +224,7 @@ export async function processContactsImport(
 
   await sendInngestEvent({
     name: CONTACTS_IMPORT_COMPLETED,
-    data: completedData as unknown as Record<string, unknown>,
+    data: completedData,
     id: `contacts-import-completed-${listId}`,
   });
 
