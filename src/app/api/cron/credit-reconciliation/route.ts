@@ -1,6 +1,6 @@
 import { timingSafeEqual } from 'crypto';
 
-import { and, desc, eq, gte, lt, lte, sql, sum } from 'drizzle-orm';
+import { and, desc, eq, gte, lt, sum } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
 
 import { recordAudit } from '@/lib/db/audit';
@@ -16,7 +16,6 @@ import { stripe } from '@/lib/stripe/client';
 
 function authorize(request: Request): boolean {
   const secret = env.CRON_SECRET;
-  if (!secret) return false;
   const auth = request.headers.get('authorization');
   const expected = `Bearer ${secret}`;
   if (!auth || auth.length !== expected.length) return false;

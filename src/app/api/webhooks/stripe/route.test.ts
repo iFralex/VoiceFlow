@@ -495,7 +495,7 @@ describe('POST /api/webhooks/stripe', () => {
         'stripe-webhook',
         -29900,
         `Stripe refund for charge ch_topup`,
-        { actorType: 'system' },
+        { actorType: 'system', allowNegative: true },
       );
       expect(mockRefundCall).not.toHaveBeenCalled();
     });

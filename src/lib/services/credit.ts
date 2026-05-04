@@ -20,7 +20,7 @@ async function lockBalance(tx: DbTx, orgId: string): Promise<number> {
     .select({ balance_after_cents: creditLedger.balance_after_cents })
     .from(creditLedger)
     .where(eq(creditLedger.org_id, orgId))
-    .orderBy(desc(creditLedger.created_at))
+    .orderBy(desc(creditLedger.created_at), desc(creditLedger.id))
     .limit(1)
     .for('update');
   return latest?.balance_after_cents ?? 0;
@@ -304,12 +304,12 @@ export async function releaseReservation(orgId: string, campaignId: string): Pro
         .where(
           and(
             eq(creditLedger.org_id, orgId),
-            eq(creditLedger.entry_type, 'charge'),
+            inArray(creditLedger.entry_type, ['charge', 'refund']),
             eq(creditLedger.reference_type, 'call'),
             inArray(creditLedger.reference_id, callIds),
           ),
         );
-      // charge delta_cents are negative; abs() gives the positive amount charged
+      // Net consumed = sum of charges (negative) + refunds (positive); abs() gives net amount
       totalCharged = Math.abs(Number(row?.total ?? 0));
     }
 
@@ -467,14 +467,14 @@ export async function adjust(
   byUserId: string,
   deltaCents: number,
   reason: string,
-  opts?: { actorType?: 'user' | 'system' },
+  opts?: { actorType?: 'user' | 'system'; allowNegative?: boolean },
 ): Promise<void> {
   const actorType = opts?.actorType ?? 'user';
   await withOrgContext(orgId, async (tx) => {
     const currentBalance = await lockBalance(tx, orgId);
     const newBalance = currentBalance + deltaCents;
 
-    if (newBalance < 0) {
+    if (newBalance < 0 && !opts?.allowNegative) {
       throw new Error('adjustment_would_overdraft');
     }
 

@@ -145,13 +145,14 @@ async function handleChargeRefunded(charge: Stripe.Charge): Promise<void> {
 
   if (!payment) return;
 
-  // Debit the refunded amount from the credit balance and mark the payment refunded
+  // Debit the refunded amount from the credit balance and mark the payment refunded.
+  // allowNegative: true because credits may already be spent when the refund arrives.
   await adjust(
     payment.org_id,
     'stripe-webhook',
     -refundedCents,
     `Stripe refund for charge ${charge.id}`,
-    { actorType: 'system' },
+    { actorType: 'system', allowNegative: true },
   );
 
   await withSystemContext(async (tx) => {
