@@ -48,6 +48,7 @@ export type SerializedOrg = {
 interface OrganizationSettingsClientProps {
   org: SerializedOrg;
   isOwner: boolean;
+  canUpdate: boolean;
 }
 
 function DeleteOrgDialog({ orgName }: { orgName: string }) {
@@ -96,7 +97,7 @@ function DeleteOrgDialog({ orgName }: { orgName: string }) {
   );
 }
 
-export function OrganizationSettingsClient({ org, isOwner }: OrganizationSettingsClientProps) {
+export function OrganizationSettingsClient({ org, isOwner, canUpdate }: OrganizationSettingsClientProps) {
   const t = useTranslations('settings');
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -166,7 +167,7 @@ export function OrganizationSettingsClient({ org, isOwner }: OrganizationSetting
               <FormItem>
                 <FormLabel>{t('org_name_label')}</FormLabel>
                 <FormControl>
-                  <Input {...field} disabled={!isOwner} />
+                  <Input {...field} disabled={!canUpdate} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -180,7 +181,7 @@ export function OrganizationSettingsClient({ org, isOwner }: OrganizationSetting
               <FormItem>
                 <FormLabel>{t('org_legal_name_label')}</FormLabel>
                 <FormControl>
-                  <Input placeholder={t('org_legal_name_placeholder')} {...field} disabled={!isOwner} />
+                  <Input placeholder={t('org_legal_name_placeholder')} {...field} disabled={!canUpdate} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -194,14 +195,14 @@ export function OrganizationSettingsClient({ org, isOwner }: OrganizationSetting
               <FormItem>
                 <FormLabel>{t('org_vat_label')}</FormLabel>
                 <FormControl>
-                  <Input placeholder={t('org_vat_placeholder')} {...field} disabled={!isOwner} />
+                  <Input placeholder={t('org_vat_placeholder')} {...field} disabled={!canUpdate} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
 
-          {isOwner && (
+          {canUpdate && (
             <Button type="submit" disabled={isPending}>
               {isPending ? t('org_save_submitting') : t('org_save_button')}
             </Button>

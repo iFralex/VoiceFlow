@@ -8,6 +8,7 @@ import { recordAudit } from '@/lib/db/audit';
 import { withSystemContext } from '@/lib/db/context';
 import { authSignins, webhookEvents } from '@/lib/db/schema';
 import { env } from '@/lib/env';
+import { acceptPendingInvites } from '@/lib/services/memberships';
 
 // ---------------------------------------------------------------------------
 // Payload schema
@@ -197,6 +198,10 @@ export async function POST(request: Request): Promise<Response> {
   if (isNewFingerprint) {
     await enqueueSuspiciousLoginAlert(userId, ip, userAgent);
   }
+
+  // Accept any pending membership invitations on sign-in so invited users
+  // gain org access on their first login without a separate acceptance step.
+  await acceptPendingInvites(userId);
 
   return NextResponse.json({ ok: true });
 }

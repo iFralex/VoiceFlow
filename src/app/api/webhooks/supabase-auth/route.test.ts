@@ -53,6 +53,10 @@ vi.mock('drizzle-orm', () => ({
   gte: (col: unknown, val: unknown) => ({ type: 'gte', col, val }),
 }));
 
+vi.mock('@/lib/services/memberships', () => ({
+  acceptPendingInvites: vi.fn().mockResolvedValue(undefined),
+}));
+
 // ---------------------------------------------------------------------------
 // Import after mocks
 // ---------------------------------------------------------------------------

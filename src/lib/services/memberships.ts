@@ -1,4 +1,4 @@
-import { and, eq, isNotNull } from 'drizzle-orm';
+import { and, eq, isNotNull, isNull } from 'drizzle-orm';
 
 import { recordAudit } from '@/lib/db/audit';
 import type { DbTx } from '@/lib/db/context';
@@ -108,7 +108,7 @@ export async function inviteMember(
       email_confirm: false,
     });
     if (error ?? !data.user) {
-      throw new Error(`failed_to_create_user: ${error?.message ?? 'unknown'}`);
+      throw new Error('failed_to_create_user');
     }
     inviteeId = data.user.id;
 
@@ -159,6 +159,35 @@ export async function inviteMember(
     void sendInviteEmail(input.email, orgId);
 
     return membership;
+  });
+}
+
+/**
+ * Accepts all pending membership invitations for a user.
+ * Called on SIGNED_IN webhook events so that invited users gain org access on first login.
+ */
+export async function acceptPendingInvites(userId: string): Promise<void> {
+  await withSystemContext(async (tx) => {
+    const pending = await tx
+      .select({ id: memberships.id, org_id: memberships.org_id })
+      .from(memberships)
+      .where(and(eq(memberships.user_id, userId), isNull(memberships.accepted_at)));
+
+    for (const m of pending) {
+      await tx
+        .update(memberships)
+        .set({ accepted_at: new Date() })
+        .where(and(eq(memberships.id, m.id), isNull(memberships.accepted_at)));
+
+      await recordAudit(tx, {
+        orgId: m.org_id,
+        actorUserId: userId,
+        actorType: 'user',
+        action: 'member.accepted',
+        subjectType: 'membership',
+        subjectId: m.id,
+      });
+    }
   });
 }
 

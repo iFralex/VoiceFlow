@@ -1,7 +1,7 @@
 import { count, eq } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
 
-import { getAuthContext } from '@/lib/auth/context';
+import { getAuthContext, hasCapability } from '@/lib/auth/context';
 import { dbForRequest } from '@/lib/db/client';
 import { memberships } from '@/lib/db/schema';
 import { getOrganization } from '@/lib/services/organizations';
@@ -33,5 +33,11 @@ export default async function OrganizationSettingsPage() {
     memberCount,
   };
 
-  return <OrganizationSettingsClient org={serialized} isOwner={role === 'owner'} />;
+  return (
+    <OrganizationSettingsClient
+      org={serialized}
+      isOwner={role === 'owner'}
+      canUpdate={hasCapability(role, 'org.update')}
+    />
+  );
 }
