@@ -388,6 +388,42 @@ describe('softDeleteContact', () => {
   });
 });
 
+// ─── countContactsForOrg ─────────────────────────────────────────────────────
+
+describe('countContactsForOrg', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('returns the count of active contacts for the org', async () => {
+    mockTx.select = vi.fn(() => makeSelectChain([{ total: 42 }]));
+
+    const { countContactsForOrg } = await import('./contacts');
+    const result = await countContactsForOrg('org-1');
+
+    expect(withOrgContext).toHaveBeenCalledWith('org-1', expect.any(Function));
+    expect(result).toBe(42);
+  });
+
+  it('returns 0 when no contacts exist', async () => {
+    mockTx.select = vi.fn(() => makeSelectChain([{ total: 0 }]));
+
+    const { countContactsForOrg } = await import('./contacts');
+    const result = await countContactsForOrg('org-1');
+
+    expect(result).toBe(0);
+  });
+
+  it('returns 0 when query returns empty result', async () => {
+    mockTx.select = vi.fn(() => makeSelectChain([]));
+
+    const { countContactsForOrg } = await import('./contacts');
+    const result = await countContactsForOrg('org-1');
+
+    expect(result).toBe(0);
+  });
+});
+
 // ─── markOptOut ───────────────────────────────────────────────────────────────
 
 describe('markOptOut', () => {

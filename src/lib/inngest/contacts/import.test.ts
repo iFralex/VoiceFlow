@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mockUpdateListImportStatus = vi.fn().mockResolvedValue(undefined);
 const mockUpdateListCounts = vi.fn().mockResolvedValue(undefined);
 const mockBulkUpsertContacts = vi.fn();
+const mockCountContactsForOrg = vi.fn().mockResolvedValue(0);
 const mockParseContactsCsv = vi.fn();
 const mockSendInngestEvent = vi.fn().mockResolvedValue(undefined);
 const mockRecordAudit = vi.fn().mockResolvedValue(undefined);
@@ -16,6 +17,7 @@ vi.mock('@/lib/services/contact_lists', () => ({
 
 vi.mock('@/lib/services/contacts', () => ({
   bulkUpsertContacts: (...args: unknown[]) => mockBulkUpsertContacts(...args),
+  countContactsForOrg: (...args: unknown[]) => mockCountContactsForOrg(...args),
 }));
 
 vi.mock('@/lib/services/csv', () => ({
@@ -401,5 +403,30 @@ describe('processContactsImport', () => {
     // Should not throw
     const result = await processContactsImport(importData);
     expect(result.status).toBe('completed');
+  });
+
+  it('throws and marks import failed when org contact limit is exceeded', async () => {
+    // Simulate org already at the cap
+    mockCountContactsForOrg.mockResolvedValue(1_000_000);
+
+    const { processContactsImport } = await import('./import');
+    await expect(processContactsImport(importData)).rejects.toThrow(
+      'org_contact_limit_exceeded',
+    );
+
+    const calls = mockUpdateListImportStatus.mock.calls;
+    const failCall = calls.find((c) => c[2] === 'failed');
+    expect(failCall).toBeDefined();
+  });
+
+  it('checks org count before bulk upsert when valid rows exist', async () => {
+    // Org has 0 contacts; cap not exceeded
+    mockCountContactsForOrg.mockResolvedValue(0);
+
+    const { processContactsImport } = await import('./import');
+    await processContactsImport(importData);
+
+    expect(mockCountContactsForOrg).toHaveBeenCalledWith('org-1');
+    expect(mockBulkUpsertContacts).toHaveBeenCalledOnce();
   });
 });

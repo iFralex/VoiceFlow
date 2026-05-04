@@ -22,6 +22,12 @@ export interface ColumnMapping {
 }
 
 const MAX_FIELD_LENGTH = 200;
+const MAX_COLUMNS = 50;
+const MAX_HEADER_LINE_BYTES = 2 * 1024 * 1024; // 2 MB
+// Read caps from env with safe fallback for test environments where validation is skipped
+const MAX_ROWS_PER_UPLOAD =
+  parseInt(process.env['CONTACTS_MAX_ROWS_PER_UPLOAD'] ?? '100000', 10) || 100_000;
+
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // Italian and English column name variants
@@ -151,6 +157,13 @@ export async function parseContactsCsv(
     csvText = await streamToString(input);
   }
 
+  // Defensive check: reject CSVs with a header line larger than 2 MB
+  const firstNewlineIdx = csvText.indexOf('\n');
+  const headerLineLength = firstNewlineIdx === -1 ? csvText.length : firstNewlineIdx;
+  if (headerLineLength > MAX_HEADER_LINE_BYTES) {
+    throw new Error('csv_header_too_large');
+  }
+
   const parsed = Papa.parse<Record<string, string>>(csvText, {
     header: true,
     skipEmptyLines: true,
@@ -158,6 +171,19 @@ export async function parseContactsCsv(
   });
 
   const headers = parsed.meta.fields ?? [];
+
+  // Defensive check: reject CSVs with more than 50 columns
+  if (headers.length > MAX_COLUMNS) {
+    throw new Error(`csv_too_many_columns: ${headers.length} columns (max ${MAX_COLUMNS})`);
+  }
+
+  // Hard cap: reject uploads exceeding the per-upload row limit
+  if (parsed.data.length > MAX_ROWS_PER_UPLOAD) {
+    throw new Error(
+      `csv_too_many_rows: ${parsed.data.length} rows (max ${MAX_ROWS_PER_UPLOAD})`,
+    );
+  }
+
   const mapping = options.columnMapping ?? detectColumns(headers);
 
   if (!mapping) {
@@ -227,7 +253,9 @@ export async function parseContactsCsv(
       last_name: lastName ?? null,
       email: email ?? null,
       consent_basis: consentBasis,
-      consent_evidence: options.consentEvidence ?? null,
+      consent_evidence: options.consentEvidence
+        ? sanitiseField(options.consentEvidence) || null
+        : null,
       contact_type: contactType,
       metadata: { _original_row: row },
     });

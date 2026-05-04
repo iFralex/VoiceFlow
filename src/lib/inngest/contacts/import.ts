@@ -23,13 +23,13 @@ import { and, eq, inArray } from 'drizzle-orm';
 
 import { recordAudit } from '@/lib/db/audit';
 import { withOrgContext, withSystemContext } from '@/lib/db/context';
-import { optOutRegistry, rpoSnapshots } from '@/lib/db/schema';
-import { bulkUpsertContacts } from '@/lib/services/contacts';
-import { updateListCounts, updateListImportStatus } from '@/lib/services/contact_lists';
-import { parseContactsCsv } from '@/lib/services/csv';
-import type { CsvParseResult } from '@/lib/services/csv';
 import type { NewContact } from '@/lib/db/schema';
+import { optOutRegistry, rpoSnapshots } from '@/lib/db/schema';
 import { sendInngestEvent } from '@/lib/inngest/client';
+import { updateListCounts, updateListImportStatus } from '@/lib/services/contact_lists';
+import { bulkUpsertContacts, countContactsForOrg } from '@/lib/services/contacts';
+import type { CsvParseResult } from '@/lib/services/csv';
+import { parseContactsCsv } from '@/lib/services/csv';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 
 import {
@@ -152,9 +152,19 @@ export async function processContactsImport(
   // Step 3: enrich — resolve opt-out and RPO state for each valid row
   const enrichedRows = await enrichWithOptOutAndRpo(orgId, parseResult.validRows);
 
-  // Step 4: bulk-upsert
+  // Step 4: bulk-upsert (guarded by org-level contact cap)
+  const maxPerOrg =
+    parseInt(process.env['CONTACTS_MAX_ROWS_PER_ORG'] ?? '1000000', 10) || 1_000_000;
+
   let upsertCounts = { insertedCount: 0, updatedCount: 0, skippedCount: 0 };
   if (enrichedRows.length > 0) {
+    const currentOrgCount = await countContactsForOrg(orgId);
+    if (currentOrgCount + enrichedRows.length > maxPerOrg) {
+      await updateListImportStatus(orgId, listId, 'failed');
+      throw new Error(
+        `org_contact_limit_exceeded: org ${orgId} has ${currentOrgCount} contacts; adding ${enrichedRows.length} would exceed limit of ${maxPerOrg}`,
+      );
+    }
     upsertCounts = await bulkUpsertContacts(orgId, enrichedRows);
   }
 

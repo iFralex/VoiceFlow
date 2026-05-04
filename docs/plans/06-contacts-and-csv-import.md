@@ -231,11 +231,11 @@ export async function parseContactsCsv(
 
 ### Task 14: Edge cases and limits
 
-- [ ] Hard cap: 100,000 contacts per upload (configurable env)
-- [ ] Hard cap: 1,000,000 contacts per organization (configurable env)
-- [ ] Reject CSVs with >50 columns or >2MB header line (defensive against malformed files)
-- [ ] Sanitize all imported strings: strip control chars, cap length to 200 chars per field
-- [ ] Mark completed
+- [x] Hard cap: 100,000 contacts per upload (configurable env)
+- [x] Hard cap: 1,000,000 contacts per organization (configurable env)
+- [x] Reject CSVs with >50 columns or >2MB header line (defensive against malformed files)
+- [x] Sanitize all imported strings: strip control chars, cap length to 200 chars per field
+- [x] Mark completed
 
 ### Task 15: Integration tests
 

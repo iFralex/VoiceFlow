@@ -1,4 +1,4 @@
-import { and, desc, eq, ilike, inArray, isNull, lt, or, sql } from 'drizzle-orm';
+import { and, count, desc, eq, ilike, inArray, isNull, lt, or, sql } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
 
 import { recordAudit } from '@/lib/db/audit';
@@ -222,6 +222,16 @@ export async function softDeleteContact(
       subjectType: 'contact',
       subjectId: contactId,
     });
+  });
+}
+
+export async function countContactsForOrg(orgId: string): Promise<number> {
+  return withOrgContext(orgId, async (tx) => {
+    const [result] = await tx
+      .select({ total: count() })
+      .from(contacts)
+      .where(and(eq(contacts.org_id, orgId), isNull(contacts.deleted_at)));
+    return result?.total ?? 0;
   });
 }
 

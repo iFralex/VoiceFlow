@@ -46,6 +46,8 @@ const Env = z.object({
   CRON_SECRET: z.string().min(16),
   CREDIT_SOFT_THRESHOLD_MINUTES: z.coerce.number().int().nonnegative().default(30),
   CREDIT_HARD_THRESHOLD_CENTS: z.coerce.number().int().nonnegative().default(0),
+  CONTACTS_MAX_ROWS_PER_UPLOAD: z.coerce.number().int().positive().default(100_000),
+  CONTACTS_MAX_ROWS_PER_ORG: z.coerce.number().int().positive().default(1_000_000),
 });
 
 // Convert empty strings to undefined so optional validators don't reject blank env vars
