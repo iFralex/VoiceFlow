@@ -361,9 +361,7 @@ export function CreditPageClient({
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="mt-3 flex items-center justify-between text-sm text-muted-foreground">
-            <span>
-              {total} {total === 1 ? 'movimento' : 'movimenti'}
-            </span>
+            <span>{t('ledger_count', { count: total })}</span>
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"

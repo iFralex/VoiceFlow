@@ -165,7 +165,8 @@
     "filter_date_to": "A",
     "export_csv": "Esporta CSV",
     "ledger_col_invoice": "Fattura",
-    "invoice_link": "Scarica"
+    "invoice_link": "Scarica",
+    "ledger_count": "{count, plural, one {# movimento} other {# movimenti}}"
   },
   "settings": {
     "title": "Impostazioni",

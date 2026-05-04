@@ -47,8 +47,8 @@ export function SuccessClient({ stripeSessionId, paymentId, initialStatus, initi
     const result = await checkPaymentStatus(stripeSessionId);
     if (result.ok && result.status === 'succeeded') {
       setBalance({ balanceCents: result.balanceCents ?? 0, remainingMinutes: result.remainingMinutes ?? 0 });
+      setStatus('succeeded');
     }
-    setStatus('succeeded');
   }
 
   useEffect(() => {
@@ -113,9 +113,9 @@ export function SuccessClient({ stripeSessionId, paymentId, initialStatus, initi
 
     return () => {
       clearPolling();
-      if (paymentId) {
+      if (channel) {
         const supabase = getSupabaseBrowserClient();
-        void supabase.removeChannel(supabase.channel(`payment-${paymentId}`));
+        void supabase.removeChannel(channel);
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

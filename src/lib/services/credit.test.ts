@@ -351,20 +351,17 @@ describe('releaseReservation', () => {
     );
   });
 
-  it('releases zero when all reserved credit was consumed by charges', async () => {
+  it('is a no-op when all reserved credit was consumed by charges (unused = 0)', async () => {
     selectResults.push([{ delta_cents: -500 }]); // reservation = 500
     selectResults.push([{ id: CALL_ID }]); // one call
     selectResults.push([{ total: '-500' }]); // exactly 500 charged
-    selectResults.push([{ balance_after_cents: 0 }]); // lockBalance
-    insertResults.push([LEDGER_ROW]);
 
     const { releaseReservation } = await import('./credit');
     await releaseReservation(ORG_ID, CAMPAIGN_ID);
 
-    const valuesCall = mockTx.insert.mock.results[0]?.value.values;
-    expect(valuesCall).toHaveBeenCalledWith(
-      expect.objectContaining({ entry_type: 'release', delta_cents: 0 }),
-    );
+    // No ledger entry should be written when nothing remains to release
+    expect(mockTx.insert).not.toHaveBeenCalled();
+    expect(mockRecordAudit).not.toHaveBeenCalled();
   });
 
   it('is a no-op when no reservation entry exists', async () => {

@@ -165,7 +165,8 @@
     "filter_date_to": "To",
     "export_csv": "Export CSV",
     "ledger_col_invoice": "Invoice",
-    "invoice_link": "Download"
+    "invoice_link": "Download",
+    "ledger_count": "{count, plural, one {# transaction} other {# transactions}}"
   },
   "settings": {
     "title": "Settings",

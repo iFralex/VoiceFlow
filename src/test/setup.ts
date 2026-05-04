@@ -147,6 +147,7 @@ const _italianStrings: Record<string, Record<string, string>> = {
     export_csv: 'Esporta CSV',
     ledger_col_invoice: 'Fattura',
     invoice_link: 'Scarica',
+    ledger_count: '{count} movimenti',
   },
   table: {
     columns: 'Colonne',

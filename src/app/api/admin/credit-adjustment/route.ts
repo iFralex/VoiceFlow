@@ -8,7 +8,7 @@ import { adjust } from '@/lib/services/credit';
 
 const BodySchema = z.object({
   orgId: z.string().uuid(),
-  deltaCents: z.number().int(),
+  deltaCents: z.number().int().min(-10_000_000).max(10_000_000),
   reason: z.string().min(1),
 });
 

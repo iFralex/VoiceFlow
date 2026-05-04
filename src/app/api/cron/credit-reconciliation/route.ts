@@ -1,3 +1,5 @@
+import { timingSafeEqual } from 'crypto';
+
 import { and, desc, eq, gte, lt, lte, sql, sum } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
 
@@ -16,7 +18,9 @@ function authorize(request: Request): boolean {
   const secret = env.CRON_SECRET;
   if (!secret) return false;
   const auth = request.headers.get('authorization');
-  return auth === `Bearer ${secret}`;
+  const expected = `Bearer ${secret}`;
+  if (!auth || auth.length !== expected.length) return false;
+  return timingSafeEqual(Buffer.from(auth), Buffer.from(expected));
 }
 
 // ---------------------------------------------------------------------------
@@ -80,7 +84,7 @@ export async function reconcilePendingPayments(): Promise<ReconcileResult> {
               invoice_url: invoiceUrl,
               completed_at: new Date(),
             })
-            .where(eq(payments.id, payment.id));
+            .where(and(eq(payments.id, payment.id), eq(payments.status, 'pending')));
 
           await recordAudit(tx, {
             orgId: payment.org_id,

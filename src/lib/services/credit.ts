@@ -316,6 +316,8 @@ export async function releaseReservation(orgId: string, campaignId: string): Pro
     }
 
     const unused = Math.max(0, reservedCents - totalCharged);
+    if (unused === 0) return; // fully consumed — no ledger entry needed
+
     const currentBalance = await lockBalance(tx, orgId);
     const newBalance = currentBalance + unused;
 

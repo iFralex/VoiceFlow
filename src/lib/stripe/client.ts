@@ -1,10 +1,9 @@
+import { eq } from 'drizzle-orm';
 import Stripe from 'stripe';
 
-import { env } from '@/lib/env';
-import { withOrgContext } from '@/lib/db/context';
-import { db } from '@/lib/db/client';
+import { withOrgContext, withSystemContext } from '@/lib/db/context';
 import { organizations } from '@/lib/db/schema/organizations';
-import { eq } from 'drizzle-orm';
+import { env } from '@/lib/env';
 
 /**
  * Singleton Stripe client with pinned API version.
@@ -20,17 +19,19 @@ export const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
  */
 export async function getOrCreateCustomerForOrg(orgId: string): Promise<string> {
   // Read the org to check for existing customer id
-  const [org] = await db
-    .select({
-      id: organizations.id,
-      name: organizations.name,
-      legal_name: organizations.legal_name,
-      vat_number: organizations.vat_number,
-      stripe_customer_id: organizations.stripe_customer_id,
-    })
-    .from(organizations)
-    .where(eq(organizations.id, orgId))
-    .limit(1);
+  const [org] = await withSystemContext(async (tx) =>
+    tx
+      .select({
+        id: organizations.id,
+        name: organizations.name,
+        legal_name: organizations.legal_name,
+        vat_number: organizations.vat_number,
+        stripe_customer_id: organizations.stripe_customer_id,
+      })
+      .from(organizations)
+      .where(eq(organizations.id, orgId))
+      .limit(1),
+  );
 
   if (!org) {
     throw new Error(`Organization not found: ${orgId}`);
