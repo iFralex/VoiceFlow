@@ -1,3 +1,5 @@
+import { timingSafeEqual } from 'crypto';
+
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
@@ -13,7 +15,12 @@ const BodySchema = z.object({
 export async function POST(request: Request): Promise<Response> {
   const token = request.headers.get('x-admin-token');
 
-  if (!token || token !== env.INTERNAL_ADMIN_TOKEN) {
+  const isValid =
+    token !== null &&
+    token.length === env.INTERNAL_ADMIN_TOKEN.length &&
+    timingSafeEqual(Buffer.from(token), Buffer.from(env.INTERNAL_ADMIN_TOKEN));
+
+  if (!isValid) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

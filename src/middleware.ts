@@ -7,6 +7,7 @@ import { type NextRequest, NextResponse } from 'next/server';
  *   - Auth pages (login, signup, verify, accedi)
  *   - Auth callback (/auth/*)
  *   - Webhook endpoints (signature-verified by their own route handlers)
+ *   - Cron and admin API routes (authenticated by their own token checks)
  *   - Marketing home and dev kitchen-sink
  */
 function isPublicPath(pathname: string): boolean {
@@ -18,6 +19,8 @@ function isPublicPath(pathname: string): boolean {
     pathname.startsWith('/accedi') ||
     pathname.startsWith('/auth/') ||
     pathname.startsWith('/api/webhooks/') ||
+    pathname.startsWith('/api/cron/') ||
+    pathname.startsWith('/api/admin/') ||
     pathname.startsWith('/_kitchen-sink')
   );
 }

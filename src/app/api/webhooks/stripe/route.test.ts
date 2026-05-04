@@ -495,6 +495,7 @@ describe('POST /api/webhooks/stripe', () => {
         'stripe-webhook',
         -29900,
         `Stripe refund for charge ch_topup`,
+        { actorType: 'system' },
       );
       expect(mockRefundCall).not.toHaveBeenCalled();
     });
@@ -543,12 +544,9 @@ describe('POST /api/webhooks/stripe', () => {
       setupUpdate();
 
       await POST(makeRequest(event));
-      // Only the dedup insert and the processed_at update are called
-      // (no org update)
-      const updateCalls = (mockUpdate as ReturnType<typeof vi.fn>).mock.calls;
-      // The organizations table update should not have been called;
-      // only the webhookEvents.processed_at update
-      expect(updateCalls.length).toBeGreaterThanOrEqual(0); // flexible; just verify no crash
+      // Only the webhookEvents.processed_at update should be called,
+      // not an organizations update (handler returns early when org_id is absent)
+      expect(mockUpdate).toHaveBeenCalledTimes(1);
     });
   });
 

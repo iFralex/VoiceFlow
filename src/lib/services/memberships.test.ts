@@ -396,7 +396,7 @@ describe('updateMemberRole', () => {
     const selfOwner = { ...fakeOwnerMembership };
     selectResults.push([{ role: 'owner' }]); // caller role
     selectResults.push([selfOwner]); // target (self, owner)
-    selectResults.push([{ id: 'm-1' }]); // countAcceptedOwners → 1
+    selectResults.push([{ total: 1 }]); // countAcceptedOwners → 1
 
     const { updateMemberRole } = await import('./memberships');
     await expect(updateMemberRole('org-1', 'u-1', 'm-1', 'admin')).rejects.toThrow(
@@ -408,7 +408,7 @@ describe('updateMemberRole', () => {
     const selfOwner = { ...fakeOwnerMembership };
     selectResults.push([{ role: 'owner' }]); // caller role
     selectResults.push([selfOwner]); // target (self, owner)
-    selectResults.push([{ id: 'm-1' }, { id: 'm-99' }]); // countAcceptedOwners → 2
+    selectResults.push([{ total: 2 }]); // countAcceptedOwners → 2
 
     const { updateMemberRole } = await import('./memberships');
     await expect(updateMemberRole('org-1', 'u-1', 'm-1', 'admin')).resolves.toBeUndefined();
@@ -488,7 +488,7 @@ describe('removeMember', () => {
   it('throws sole_owner_cannot_be_removed when last owner removes self', async () => {
     selectResults.push([{ role: 'owner' }]); // caller role
     selectResults.push([fakeOwnerMembership]); // target (self, owner)
-    selectResults.push([{ id: 'm-1' }]); // countAcceptedOwners → 1
+    selectResults.push([{ total: 1 }]); // countAcceptedOwners → 1
 
     const { removeMember } = await import('./memberships');
     await expect(removeMember('org-1', 'u-1', 'm-1')).rejects.toThrow(
@@ -499,7 +499,7 @@ describe('removeMember', () => {
   it('allows owner to remove self when another owner exists', async () => {
     selectResults.push([{ role: 'owner' }]); // caller role
     selectResults.push([fakeOwnerMembership]); // target (self, owner)
-    selectResults.push([{ id: 'm-1' }, { id: 'm-99' }]); // countAcceptedOwners → 2
+    selectResults.push([{ total: 2 }]); // countAcceptedOwners → 2
 
     const { removeMember } = await import('./memberships');
     await expect(removeMember('org-1', 'u-1', 'm-1')).resolves.toBeUndefined();

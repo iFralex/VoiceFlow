@@ -35,6 +35,19 @@ await withSystemContext(async (tx) => {
 });
 ```
 
+Inside `(app)/` Server Components and Server Actions, use `dbForRequest()` which auto-resolves the org from middleware headers:
+
+```ts
+import { dbForRequest } from '@/lib/db/client';
+
+const { orgId, withOrgContext } = await dbForRequest();
+await withOrgContext(async (tx) => {
+  return tx.select().from(contacts).where(eq(contacts.org_id, orgId));
+});
+```
+
+An ESLint `no-restricted-syntax` rule enforces this: importing `db` directly inside `src/app/(app)/**` or `src/actions/**` is a lint error.
+
 Calling the bare `db` client directly bypasses Row Level Security. Never do this in request handlers.
 
 ## Audit Logging

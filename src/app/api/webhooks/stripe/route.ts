@@ -148,6 +148,7 @@ async function handleChargeRefunded(charge: Stripe.Charge): Promise<void> {
     'stripe-webhook',
     -refundedCents,
     `Stripe refund for charge ${charge.id}`,
+    { actorType: 'system' },
   );
 
   await withSystemContext(async (tx) => {

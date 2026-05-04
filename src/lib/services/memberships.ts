@@ -1,4 +1,4 @@
-import { and, eq, isNotNull, isNull } from 'drizzle-orm';
+import { and, count, eq, isNotNull, isNull } from 'drizzle-orm';
 
 import { recordAudit } from '@/lib/db/audit';
 import type { DbTx } from '@/lib/db/context';
@@ -41,8 +41,8 @@ async function requireCallerRole(
 }
 
 async function countAcceptedOwners(tx: DbTx, orgId: string): Promise<number> {
-  const owners = await tx
-    .select({ id: memberships.id })
+  const [result] = await tx
+    .select({ total: count() })
     .from(memberships)
     .where(
       and(
@@ -51,7 +51,7 @@ async function countAcceptedOwners(tx: DbTx, orgId: string): Promise<number> {
         isNotNull(memberships.accepted_at),
       ),
     );
-  return owners.length;
+  return result?.total ?? 0;
 }
 
 // ─── Email stub ───────────────────────────────────────────────────────────────

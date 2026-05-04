@@ -4,8 +4,8 @@ import { recordAudit } from '@/lib/db/audit';
 import type { DbTx } from '@/lib/db/context';
 import { withOrgContext, withSystemContext } from '@/lib/db/context';
 import { auditLog, calls, creditEntryTypeEnum, creditLedger, creditPackages, payments } from '@/lib/db/schema';
-import { CREDIT_LOW_BALANCE_EVENT } from '@/lib/inngest/handlers/credit';
 import { sendInngestEvent } from '@/lib/inngest/client';
+import { CREDIT_LOW_BALANCE_EVENT } from '@/lib/inngest/handlers/credit';
 
 // ─── Internal helpers ──────────────────────────────────────────────────────────
 
@@ -374,6 +374,10 @@ export async function chargeForCall(
   await withOrgContext(orgId, async (tx) => {
     const currentBalance = await lockBalance(tx, orgId);
     const candidateBalance = currentBalance - costCents;
+
+    if (candidateBalance < 0) {
+      throw new Error('insufficient_credit');
+    }
 
     const [inserted] = await tx
       .insert(creditLedger)
