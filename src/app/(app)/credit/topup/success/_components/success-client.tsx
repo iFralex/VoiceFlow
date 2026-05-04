@@ -36,6 +36,21 @@ export function SuccessClient({ stripeSessionId, paymentId, initialStatus, initi
   const timedOut = useRef(false);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  function clearPolling() {
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+      pollingRef.current = null;
+    }
+  }
+
+  async function fetchBalance() {
+    const result = await checkPaymentStatus(stripeSessionId);
+    if (result.ok && result.status === 'succeeded') {
+      setBalance({ balanceCents: result.balanceCents ?? 0, remainingMinutes: result.remainingMinutes ?? 0 });
+    }
+    setStatus('succeeded');
+  }
+
   useEffect(() => {
     // Already resolved — nothing to do
     if (status === 'succeeded' || status === 'failed' || status === 'not_found') return;
@@ -105,21 +120,6 @@ export function SuccessClient({ stripeSessionId, paymentId, initialStatus, initi
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  function clearPolling() {
-    if (pollingRef.current) {
-      clearInterval(pollingRef.current);
-      pollingRef.current = null;
-    }
-  }
-
-  async function fetchBalance() {
-    const result = await checkPaymentStatus(stripeSessionId);
-    if (result.ok && result.status === 'succeeded') {
-      setBalance({ balanceCents: result.balanceCents ?? 0, remainingMinutes: result.remainingMinutes ?? 0 });
-    }
-    setStatus('succeeded');
-  }
 
   if (status === 'succeeded') {
     return (

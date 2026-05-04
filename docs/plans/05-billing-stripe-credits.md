@@ -237,15 +237,15 @@ export function computeCallCost(args: { durationSeconds: number; perMinuteCents:
 
 ### Task 18: E2E billing flow with Stripe test mode
 
-- [ ] Playwright `e2e/billing.spec.ts`:
+- [x] Playwright `e2e/billing.spec.ts`:
   - sign in as a test user
   - navigate to `/credit/topup`, click Starter
   - on Stripe Checkout fill the test card `4242 4242 4242 4242`, complete payment
   - assert redirect to success page
   - wait for Realtime/poll, assert balance shows €299 / 700 minutes
   - assert ledger has a topup entry
-- [ ] Use Stripe CLI's `stripe trigger` or test-clock features for SCA edge cases
-- [ ] Mark completed
+- [x] Use Stripe CLI's `stripe trigger` or test-clock features for SCA edge cases
+- [x] Mark completed
 
 ### Task 19: Definition of Done
 
