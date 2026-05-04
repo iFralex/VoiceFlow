@@ -140,14 +140,14 @@ export function computeCallCost(args: { durationSeconds: number; perMinuteCents:
 
 ### Task 7: Stripe Checkout Session creation
 
-- [ ] Create Server Action `createTopupSession({ packageId })`:
+- [x] Create Server Action `createTopupSession({ packageId })`:
   - resolves the active org and member capability `billing.topup`
   - looks up `credit_packages` row for the requested slug
   - calls `getOrCreateCustomerForOrg`
   - creates a `checkout.Session` in mode `payment` with `line_items: [{ price: stripe_price_id, quantity: 1 }]`, `success_url`, `cancel_url`, `automatic_tax: { enabled: true }`, `metadata: { org_id, package_id, internal_session_id }`, `customer: stripeCustomerId`, `payment_method_types: ['card', 'sepa_debit']`, `invoice_creation: { enabled: true }`, `customer_update: { address: 'auto', name: 'auto' }`
   - inserts a `payments` row with `status: 'pending'` recording the `stripe_session_id`
   - returns the session URL
-- [ ] Mark completed
+- [x] Mark completed
 
 ### Task 8: Top-up page
 

@@ -1,4 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
+// Mock the db context so billing-rules.ts (an indirect dependency) doesn't
+// attempt to import the real db client, which would trigger env validation.
+vi.mock('@/lib/db/context', () => ({
+  withOrgContext: vi.fn(),
+  withSystemContext: vi.fn(),
+}));
 
 import { estimateCampaignCost } from './campaign-cost-estimator';
 
