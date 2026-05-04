@@ -51,7 +51,7 @@ The model is "cash before service": credit must be reserved at campaign launch a
 
 ### Task 4: Credit service — balance and ledger writes
 
-- [ ] Create `src/lib/services/credit.ts` exposing:
+- [x] Create `src/lib/services/credit.ts` exposing:
 
 ```typescript
 export async function getBalance(
@@ -97,10 +97,10 @@ export async function adjust(
 ): Promise<void>;
 ```
 
-- [ ] Every function runs inside `db.transaction` with `SELECT ... FOR UPDATE` on the latest ledger row to serialise concurrent writes per org and avoid stale running balance
-- [ ] All operations are idempotent on `(org_id, reference_type, reference_id, entry_type)` — duplicate webhook deliveries become no-ops
-- [ ] `remainingMinutes` is computed against the org's last-purchased package per-minute rate (or weighted average — implement weighted average for fairness when multiple packages co-exist)
-- [ ] Mark completed
+- [x] Every function runs inside `db.transaction` with `SELECT ... FOR UPDATE` on the latest ledger row to serialise concurrent writes per org and avoid stale running balance
+- [x] All operations are idempotent on `(org_id, reference_type, reference_id, entry_type)` — duplicate webhook deliveries become no-ops
+- [x] `remainingMinutes` is computed against the org's last-purchased package per-minute rate (or weighted average — implement weighted average for fairness when multiple packages co-exist)
+- [x] Mark completed
 
 ### Task 5: Per-call billing computation
 
