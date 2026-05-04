@@ -195,12 +195,12 @@ export async function parseContactsCsv(
 
 ### Task 9: All-contacts view
 
-- [ ] Create `src/app/(app)/contacts/page.tsx`:
+- [x] Create `src/app/(app)/contacts/page.tsx`:
   - tabs: "Liste" (default), "Tutti i contatti", "Opt-out"
   - "Liste" lists all contact lists with counts and creation date; CTA "Carica nuova lista"
   - "Tutti i contatti" same data table as list detail but unscoped to a list
   - "Opt-out" filters automatically `opt_out=true` and shows source/reason
-- [ ] Mark completed
+- [x] Mark completed
 
 ### Task 10: Manual contact addition
 

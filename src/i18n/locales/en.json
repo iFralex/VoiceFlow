@@ -188,7 +188,19 @@
     "no_contacts_in_list": "No contacts in this list",
     "no_contacts_match": "No contacts match your filters",
     "status_opted_out": "Opted out",
-    "status_active": "Active"
+    "status_active": "Active",
+    "tab_lists": "Lists",
+    "tab_all": "All contacts",
+    "tab_opt_out": "Opt-out",
+    "upload_new_list": "Upload new list",
+    "no_lists": "No lists found",
+    "list_col_name": "Name",
+    "list_col_source": "Source",
+    "list_col_contacts": "Contacts",
+    "list_col_status": "Status",
+    "list_col_created": "Created",
+    "all_contacts_title": "All contacts",
+    "opt_out_title": "Opted-out contacts"
   },
   "credit": {
     "title": "Credit",
