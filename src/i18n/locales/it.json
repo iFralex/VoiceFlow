@@ -130,7 +130,17 @@
     "recommended_starter": "Concessionario piccolo",
     "recommended_growth": "Concessionario medio",
     "recommended_scale": "Grande concessionario o rete",
-    "vat_included": "IVA inclusa"
+    "vat_included": "IVA inclusa",
+    "topup_success_title": "Pagamento completato",
+    "topup_success_subtitle": "Il tuo saldo è stato aggiornato. Puoi iniziare ad utilizzare i tuoi crediti.",
+    "topup_success_balance": "{minutes} minuti disponibili",
+    "topup_success_cta": "Vai alla dashboard",
+    "topup_pending_title": "Verifica pagamento in corso…",
+    "topup_pending_subtitle": "Attendi mentre confermiamo il tuo pagamento.",
+    "topup_timeout_title": "Pagamento in elaborazione",
+    "topup_timeout_message": "Riceverai un'email appena il pagamento è confermato.",
+    "topup_session_not_found": "Sessione non trovata.",
+    "topup_back_to_topup": "Torna alla ricarica"
   },
   "settings": {
     "title": "Impostazioni",

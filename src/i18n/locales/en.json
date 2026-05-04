@@ -130,7 +130,17 @@
     "recommended_starter": "Small dealership",
     "recommended_growth": "Medium dealership",
     "recommended_scale": "Large dealership or network",
-    "vat_included": "VAT included"
+    "vat_included": "VAT included",
+    "topup_success_title": "Payment completed",
+    "topup_success_subtitle": "Your balance has been updated. You can now use your credits.",
+    "topup_success_balance": "{minutes} minutes available",
+    "topup_success_cta": "Go to dashboard",
+    "topup_pending_title": "Verifying payment…",
+    "topup_pending_subtitle": "Please wait while we confirm your payment.",
+    "topup_timeout_title": "Payment processing",
+    "topup_timeout_message": "You will receive an email once the payment is confirmed.",
+    "topup_session_not_found": "Session not found.",
+    "topup_back_to_topup": "Back to top-up"
   },
   "settings": {
     "title": "Settings",

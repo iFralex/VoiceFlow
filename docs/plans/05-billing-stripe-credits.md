@@ -159,13 +159,13 @@ export function computeCallCost(args: { durationSeconds: number; perMinuteCents:
 
 ### Task 9: Success page with reconciliation poll
 
-- [ ] Create `src/app/(app)/credit/topup/success/page.tsx`:
+- [x] Create `src/app/(app)/credit/topup/success/page.tsx`:
   - fetches the matching `payments` row by `stripe_session_id`
   - if `status = succeeded` → show success state with new balance (link to dashboard)
   - if still `pending` → polling loop (every 2s, max 30s) checking `payments.status` server-side
   - after 30s timeout → fallback message "Riceverai un'email appena il pagamento è confermato"
-- [ ] Use Supabase Realtime subscription to `payments` row as an alternative to polling (Realtime publication enabled in plan 02)
-- [ ] Mark completed
+- [x] Use Supabase Realtime subscription to `payments` row as an alternative to polling (Realtime publication enabled in plan 02)
+- [x] Mark completed
 
 ### Task 10: Stripe webhook handler
 

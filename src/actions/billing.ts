@@ -1,12 +1,13 @@
 'use server';
 
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { getAuthContext, requireCapability } from '@/lib/auth/context';
 import { withOrgContext, withSystemContext } from '@/lib/db/context';
 import { creditPackages, payments } from '@/lib/db/schema';
 import { env } from '@/lib/env';
+import { getBalance } from '@/lib/services/credit';
 import { getOrCreateCustomerForOrg, stripe } from '@/lib/stripe';
 import type { ActionResult } from '@/lib/utils/action-toast';
 
@@ -83,4 +84,36 @@ export async function createTopupSession(
   });
 
   return { ok: true, url: session.url };
+}
+
+export type PaymentStatusResult =
+  | { ok: false; message: string }
+  | { ok: true; status: 'pending' | 'succeeded' | 'failed' | 'refunded'; balanceCents?: number; remainingMinutes?: number };
+
+/**
+ * Returns the current status of a payment by stripe_session_id.
+ * When succeeded, also returns the org's current credit balance.
+ * Called by the success page client component for polling.
+ */
+export async function checkPaymentStatus(stripeSessionId: string): Promise<PaymentStatusResult> {
+  const { orgId } = await getAuthContext();
+
+  const [payment] = await withOrgContext(orgId, async (tx) => {
+    return tx
+      .select({ id: payments.id, status: payments.status })
+      .from(payments)
+      .where(and(eq(payments.stripe_session_id, stripeSessionId), eq(payments.org_id, orgId)))
+      .limit(1);
+  });
+
+  if (!payment) {
+    return { ok: false, message: 'payment_not_found' };
+  }
+
+  if (payment.status === 'succeeded') {
+    const balance = await getBalance(orgId);
+    return { ok: true, status: 'succeeded', ...balance };
+  }
+
+  return { ok: true, status: payment.status };
 }
