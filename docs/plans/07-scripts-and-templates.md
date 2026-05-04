@@ -128,7 +128,7 @@ export function assembleSystemPrompt(args: {
 
 ### Task 8: Script service
 
-- [ ] Create `src/lib/services/scripts.ts` exposing:
+- [x] Create `src/lib/services/scripts.ts` exposing:
 
 ```typescript
 export async function listScripts(orgId: string): Promise<Script[]>;
@@ -169,9 +169,9 @@ export async function previewSystemPrompt(
 ): Promise<{ systemPrompt: string; firstMessage: string }>;
 ```
 
-- [ ] `createScript` and `updateScript` validate variables against the template's `variable_schema` using AJV (or Zod via JSON Schema)
-- [ ] `deleteScript` blocked if the script is referenced by any non-completed campaign (emit a typed error consumed by the UI)
-- [ ] Mark completed
+- [x] `createScript` and `updateScript` validate variables against the template's `variable_schema` using AJV (or Zod via JSON Schema)
+- [x] `deleteScript` blocked if the script is referenced by any non-completed campaign (emit a typed error consumed by the UI)
+- [x] Mark completed
 
 ### Task 9: Scripts list page
 
