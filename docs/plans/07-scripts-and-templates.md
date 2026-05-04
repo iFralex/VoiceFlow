@@ -101,10 +101,10 @@ export function assembleSystemPrompt(args: {
 
 ### Task 5: First-message templates
 
-- [ ] Each template has a separate `first-message.txt` rendering the literal first utterance the agent speaks (the disclosure)
-- [ ] These are the `firstMessage` parameters passed to the voice provider in plan 08
-- [ ] Variables interpolated the same way as system prompts
-- [ ] Mark completed
+- [x] Each template has a separate `first-message.txt` rendering the literal first utterance the agent speaks (the disclosure)
+- [x] These are the `firstMessage` parameters passed to the voice provider in plan 08
+- [x] Variables interpolated the same way as system prompts
+- [x] Mark completed
 
 ### Task 6: Tool definitions per template
 

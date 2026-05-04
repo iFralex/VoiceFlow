@@ -1,0 +1,1 @@
+Buongiorno, sono {{salesperson_first_name}}, un assistente vocale automatico che chiama per conto di {{dealership_name}}. Questa chiamata è gestita da un sistema di intelligenza artificiale. La contatto riguardo al suo {{current_vehicle_model}}, per una breve valutazione di rinnovo che potrebbe interessarle. Ha un momento per parlare?
