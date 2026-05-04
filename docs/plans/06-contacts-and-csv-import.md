@@ -44,7 +44,7 @@ export function formatItalianDisplay(e164: string): string;
 
 ### Task 2: Contact list service
 
-- [ ] Create `src/lib/services/contact_lists.ts` with:
+- [x] Create `src/lib/services/contact_lists.ts` with:
 
 ```typescript
 export async function createContactList(
@@ -75,7 +75,7 @@ export async function updateListCounts(
 ): Promise<void>;
 ```
 
-- [ ] Mark completed
+- [x] Mark completed
 
 ### Task 3: Contact service
 
