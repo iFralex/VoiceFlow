@@ -48,12 +48,12 @@ Scripts are versioned at template level (`script_templates.version`). A per-org 
 
 ### Task 3: System prompts — remaining four templates
 
-- [ ] Author `appointment-confirm.txt`: focus on conferma, gestione richiesta sposta/disdici, riepilogo dati appuntamento
-- [ ] Author `car-renewal.txt`: tono consultivo, riferimento al veicolo attuale, soglia di interesse esplicita
-- [ ] Author `post-sale-followup.txt`: focus su soddisfazione, escalation a umano in caso di problema, programmazione tagliando
-- [ ] Author `csi-survey.txt`: questionario strutturato a domande con scala 1–10, tono neutrale (no commerciale), termina richiamando l'importanza per la casa madre
-- [ ] All five files committed in the repo and read by the seed runner
-- [ ] Mark completed
+- [x] Author `appointment-confirm.txt`: focus on conferma, gestione richiesta sposta/disdici, riepilogo dati appuntamento
+- [x] Author `car-renewal.txt`: tono consultivo, riferimento al veicolo attuale, soglia di interesse esplicita
+- [x] Author `post-sale-followup.txt`: focus su soddisfazione, escalation a umano in caso di problema, programmazione tagliando
+- [x] Author `csi-survey.txt`: questionario strutturato a domande con scala 1–10, tono neutrale (no commerciale), termina richiamando l'importanza per la casa madre
+- [x] All five files committed in the repo and read by the seed runner
+- [x] Mark completed
 
 ### Task 4: Canonical AI Act disclosure preamble
 
