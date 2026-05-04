@@ -23,14 +23,14 @@ Scripts are versioned at template level (`script_templates.version`). A per-org 
 
 ### Task 1: Variable JSON Schema definitions
 
-- [ ] Create `src/lib/voice/templates/schemas/` with one TS file per template exporting a JSON Schema (Zod-derived where convenient):
+- [x] Create `src/lib/voice/templates/schemas/` with one TS file per template exporting a JSON Schema (Zod-derived where convenient):
   - `lead-reactivation.schema.ts`: `dealership_name`, `brand`, `salesperson_first_name`, `available_slots` (array of "DD/MM HH:MM"), `lead_origin_context` (free text), `incentive_to_offer` (optional string)
   - `appointment-confirm.schema.ts`: `dealership_name`, `appointment_date`, `appointment_time`, `service_type` (`test_drive` | `service_appointment` | `delivery`), `vehicle_model` (optional), `salesperson_first_name`
   - `car-renewal.schema.ts`: `dealership_name`, `salesperson_first_name`, `current_vehicle_model`, `years_since_purchase`, `available_slots`, `trade_in_offer_summary` (optional)
   - `post-sale-followup.schema.ts`: `dealership_name`, `vehicle_model`, `delivery_date`, `salesperson_first_name`, `service_reminder_window` ("3 mesi" | "6 mesi" | "12 mesi")
   - `csi-survey.schema.ts`: `dealership_name`, `manufacturer_brand`, `vehicle_model`, `service_type` (`sales` | `service`), `last_interaction_date`
-- [ ] Each schema enforces required fields, max length per field (256 chars), and patterns where applicable (Italian time format)
-- [ ] Mark completed
+- [x] Each schema enforces required fields, max length per field (256 chars), and patterns where applicable (Italian time format)
+- [x] Mark completed
 
 ### Task 2: System prompt authoring — `lead-reactivation`
 
