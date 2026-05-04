@@ -10,6 +10,7 @@ export const organizations = pgTable('organizations', {
   vat_number: text('vat_number'),
   country: text('country').notNull().default('IT'),
   timezone: text('timezone').notNull().default('Europe/Rome'),
+  stripe_customer_id: text('stripe_customer_id'),
   created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   deleted_at: timestamp('deleted_at', { withTimezone: true }),
 });

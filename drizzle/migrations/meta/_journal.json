@@ -99,6 +99,13 @@
       "when": 1777800275497,
       "tag": "0013_auth_signins",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1777800275498,
+      "tag": "0014_stripe_customer",
+      "breakpoints": true
     }
   ]
 }

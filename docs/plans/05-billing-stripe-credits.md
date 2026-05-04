@@ -41,13 +41,13 @@ The model is "cash before service": credit must be reserved at campaign launch a
 
 ### Task 3: Stripe SDK wrapper
 
-- [ ] Install `stripe` package
-- [ ] Create `src/lib/stripe/client.ts` exporting a singleton Stripe client built from `STRIPE_SECRET_KEY` with API version pinned
-- [ ] Define helper `getOrCreateCustomerForOrg(orgId)`:
+- [x] Install `stripe` package
+- [x] Create `src/lib/stripe/client.ts` exporting a singleton Stripe client built from `STRIPE_SECRET_KEY` with API version pinned
+- [x] Define helper `getOrCreateCustomerForOrg(orgId)`:
   - look up `organizations.stripe_customer_id` (add column via migration `0007_stripe_customer.sql` — add `stripe_customer_id` to `organizations`)
   - if missing, create a Stripe Customer with metadata `org_id`, `vat_number`, `legal_name`, persist back
   - return Stripe customer id
-- [ ] Mark completed
+- [x] Mark completed
 
 ### Task 4: Credit service — balance and ledger writes
 
