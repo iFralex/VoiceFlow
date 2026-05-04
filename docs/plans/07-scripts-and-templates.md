@@ -34,8 +34,8 @@ Scripts are versioned at template level (`script_templates.version`). A per-org 
 
 ### Task 2: System prompt authoring — `lead-reactivation`
 
-- [ ] Author the Italian-language system prompt in `src/lib/voice/templates/prompts/lead-reactivation.txt`
-- [ ] Required content blocks:
+- [x] Author the Italian-language system prompt in `src/lib/voice/templates/prompts/lead-reactivation.txt`
+- [x] Required content blocks:
   - **Persona**: "Sei [salesperson_first_name], assistente vocale automatico per [dealership_name], concessionario [brand]"
   - **Mandatory disclosure** (in addition to the canonical preamble enforced separately): explicit AI nature in first sentence
   - **Goal**: capire se il contatto è ancora interessato a un veicolo della marca, e in caso fissare appuntamento
@@ -43,8 +43,8 @@ Scripts are versioned at template level (`script_templates.version`). A per-org 
   - **Hard rules**: mai inventare offerte non listate; mai pressione su numeri/prezzi specifici; rispetto immediato di "non chiamarmi più"
   - **Slot availability**: usare `{{available_slots}}` quando si propone appuntamento
   - **Outcome triggers**: quando invocare quale tool
-- [ ] Length target: 800–1200 words for stable LLM behaviour
-- [ ] Mark completed
+- [x] Length target: 800–1200 words for stable LLM behaviour
+- [x] Mark completed
 
 ### Task 3: System prompts — remaining four templates
 
