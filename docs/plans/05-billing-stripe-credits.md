@@ -169,19 +169,19 @@ export function computeCallCost(args: { durationSeconds: number; perMinuteCents:
 
 ### Task 10: Stripe webhook handler
 
-- [ ] Create `src/app/api/webhooks/stripe/route.ts`:
+- [x] Create `src/app/api/webhooks/stripe/route.ts`:
   - read raw body (Next.js: `await req.text()`), verify signature with `stripe.webhooks.constructEvent`
   - dedupe via `webhook_events` table by `(provider='stripe', provider_event_id=event.id)`
   - persist event payload regardless of processing outcome
-- [ ] Handle these event types:
+- [x] Handle these event types:
   - `checkout.session.completed`: update `payments.status='succeeded'`, call `topUp` to credit the ledger, set `payments.invoice_url` if available, audit log
   - `checkout.session.expired`: update `payments.status='failed'`
   - `payment_intent.payment_failed`: update payment, send notification (email handled in plan 13)
   - `charge.refunded`: call `refundCall` if metadata maps to a call OR adjust the ledger if it's a top-up refund (admin action)
   - `customer.updated`: sync VAT/legal name back to `organizations` if changed
-- [ ] All processing happens via `withSystemContext` (cross-org work) but always operates on the explicit `org_id` extracted from session metadata
-- [ ] Return 200 within 3 seconds; defer heavy work (email, etc.) to Inngest events
-- [ ] Mark completed
+- [x] All processing happens via `withSystemContext` (cross-org work) but always operates on the explicit `org_id` extracted from session metadata
+- [x] Return 200 within 3 seconds; defer heavy work (email, etc.) to Inngest events
+- [x] Mark completed
 
 ### Task 11: Stripe webhook signature verification utility
 
