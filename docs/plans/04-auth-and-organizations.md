@@ -229,11 +229,11 @@ export async function requireCapability(capability: Capability): Promise<void>;
 
 ### Task 18: Definition of Done
 
-- [ ] Magic-link signin works end to end
-- [ ] User signing up with no org lands on onboarding; creating an org leads to dashboard
-- [ ] Member invite + accept flow works including emails
-- [ ] All four roles enforce capabilities correctly (unit + e2e tests green)
-- [ ] Cross-org isolation tests pass
-- [ ] Personal Access Tokens can be created, used, and revoked
-- [ ] All actions write to `audit_log` (verified by integration tests)
-- [ ] Mark completed
+- [x] Magic-link signin works end to end
+- [x] User signing up with no org lands on onboarding; creating an org leads to dashboard
+- [x] Member invite + accept flow works including emails
+- [x] All four roles enforce capabilities correctly (unit + e2e tests green)
+- [x] Cross-org isolation tests pass
+- [x] Personal Access Tokens can be created, used, and revoked
+- [x] All actions write to `audit_log` (verified by integration tests)
+- [x] Mark completed

@@ -88,7 +88,7 @@ export function TopBar({ onMobileMenuClick, creditBalance, user, className }: To
         </Button>
 
         {/* User menu */}
-        <UserMenu user={user} />
+        <UserMenu {...(user !== undefined ? { user } : {})} />
       </div>
     </header>
   );
