@@ -33,7 +33,20 @@ function encodeCursor(c: PageCursor): string {
 }
 
 function decodeCursor(cursor: string): PageCursor {
-  return JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8')) as PageCursor;
+  try {
+    const decoded = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8')) as unknown;
+    if (
+      typeof decoded !== 'object' ||
+      decoded === null ||
+      typeof (decoded as Record<string, unknown>).createdAt !== 'string' ||
+      typeof (decoded as Record<string, unknown>).id !== 'string'
+    ) {
+      throw new Error('invalid_cursor');
+    }
+    return decoded as PageCursor;
+  } catch {
+    throw new Error('invalid_cursor');
+  }
 }
 
 export async function upsertContact(
@@ -150,7 +163,8 @@ export async function listContacts(
       conditions.push(eq(contacts.rpo_status, filters.rpoStatus));
     }
     if (filters.search) {
-      const pattern = `%${filters.search}%`;
+      const escaped = filters.search.replace(/[%_\\]/g, '\\$&');
+      const pattern = `%${escaped}%`;
       conditions.push(
         or(
           ilike(contacts.first_name, pattern),

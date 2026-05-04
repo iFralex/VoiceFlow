@@ -88,7 +88,6 @@ export async function triggerContactsImport(input: TriggerInput): Promise<Action
     await sendInngestEvent({
       name: CONTACTS_IMPORT_REQUESTED,
       data: eventData,
-      id: `contacts-import-${listId}`,
     });
 
     return { ok: true };
@@ -280,7 +279,7 @@ export async function importDncList(
   if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? 'validation_error' };
 
   try {
-    const { orgId } = await getAuthContext();
+    const { orgId, userId } = await getAuthContext();
     await requireCapability('contacts.upload');
 
     const lines = parsed.data.csvText
@@ -305,6 +304,18 @@ export async function importDncList(
     }
 
     await bulkMarkOptOut(orgId, validPhones, 'dealer_input');
+
+    await withOrgContext(orgId, async (tx) => {
+      await recordAudit(tx, {
+        orgId,
+        actorUserId: userId,
+        actorType: 'user',
+        action: 'contact.bulk_opt_out',
+        subjectType: 'org',
+        subjectId: orgId,
+        metadata: { count: validPhones.length, source: 'dealer_input' },
+      });
+    });
 
     return { ok: true, processedCount: validPhones.length, invalidCount };
   } catch (e) {
