@@ -317,15 +317,15 @@ export function nextWindowOpen(
 
 ### Task 19: Integration tests
 
-- [ ] Test: launching a campaign with 50 contacts produces 50 `calls` rows in `pending` and 50 dispatched events
-- [ ] Test: pause halts new dispatches; resume continues
-- [ ] Test: cancel terminates all pending and releases credit
-- [ ] Test: contact opted-out between planning and dispatch is skipped
-- [ ] Test: time-window: dispatching at 22:30 sleeps until 09:00 next weekday
-- [ ] Test: insufficient credit aborts launch
-- [ ] Test: retry policy schedules correct follow-up events
-- [ ] Test: end-to-end happy path with mocked Vapi adapter
-- [ ] Mark completed
+- [x] Test: launching a campaign with 50 contacts produces 50 `calls` rows in `pending` and 50 dispatched events
+- [x] Test: pause halts new dispatches; resume continues
+- [x] Test: cancel terminates all pending and releases credit
+- [x] Test: contact opted-out between planning and dispatch is skipped
+- [x] Test: time-window: dispatching at 22:30 sleeps until 09:00 next weekday
+- [x] Test: insufficient credit aborts launch
+- [x] Test: retry policy schedules correct follow-up events
+- [x] Test: end-to-end happy path with mocked Vapi adapter
+- [x] Mark completed
 
 ### Task 20: Definition of Done
 
