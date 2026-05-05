@@ -46,6 +46,8 @@ import {
   ContactNotEligibleError,
   InsufficientCreditError,
   campaignDispatchCallHandler,
+  checkConcurrencySlot,
+  getActiveConcurrencyCount,
   nextWindowOpen,
   verifyCreditAvailable,
   verifyContactStillEligible,
@@ -157,6 +159,97 @@ describe('waitForCallWindow', () => {
   });
 });
 
+// ─── Tests: getActiveConcurrencyCount / checkConcurrencySlot ─────────────────
+
+describe('getActiveConcurrencyCount', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('returns the count of dialing + in_progress calls', async () => {
+    mockSelect.mockReturnValue({
+      from: vi.fn(() => ({
+        where: vi.fn().mockResolvedValue([{ cnt: 3 }]),
+      })),
+    });
+    const result = await getActiveConcurrencyCount(ORG, CAMPAIGN);
+    expect(result).toBe(3);
+  });
+
+  it('returns 0 when no active calls', async () => {
+    mockSelect.mockReturnValue({
+      from: vi.fn(() => ({
+        where: vi.fn().mockResolvedValue([{ cnt: 0 }]),
+      })),
+    });
+    const result = await getActiveConcurrencyCount(ORG, CAMPAIGN);
+    expect(result).toBe(0);
+  });
+
+  it('returns 0 when query returns empty array', async () => {
+    mockSelect.mockReturnValue({
+      from: vi.fn(() => ({
+        where: vi.fn().mockResolvedValue([]),
+      })),
+    });
+    const result = await getActiveConcurrencyCount(ORG, CAMPAIGN);
+    expect(result).toBe(0);
+  });
+});
+
+describe('checkConcurrencySlot', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('returns null when active calls are below limit', async () => {
+    mockSelect.mockReturnValue({
+      from: vi.fn(() => ({
+        where: vi.fn().mockResolvedValue([{ cnt: 2 }]),
+      })),
+    });
+    const result = await checkConcurrencySlot(ORG, CAMPAIGN, 5);
+    expect(result).toBeNull();
+  });
+
+  it('returns a future Date when active calls equal limit', async () => {
+    vi.useFakeTimers({ now: new Date('2025-01-15T09:00:00Z') });
+    mockSelect.mockReturnValue({
+      from: vi.fn(() => ({
+        where: vi.fn().mockResolvedValue([{ cnt: 5 }]),
+      })),
+    });
+    const result = await checkConcurrencySlot(ORG, CAMPAIGN, 5);
+    vi.useRealTimers();
+    expect(result).toBeInstanceOf(Date);
+    expect(result!.getTime()).toBeGreaterThan(new Date('2025-01-15T09:00:00Z').getTime());
+  });
+
+  it('returns a future Date when active calls exceed limit', async () => {
+    vi.useFakeTimers({ now: new Date('2025-01-15T09:00:00Z') });
+    mockSelect.mockReturnValue({
+      from: vi.fn(() => ({
+        where: vi.fn().mockResolvedValue([{ cnt: 8 }]),
+      })),
+    });
+    const result = await checkConcurrencySlot(ORG, CAMPAIGN, 5);
+    vi.useRealTimers();
+    expect(result).toBeInstanceOf(Date);
+  });
+
+  it('returns null when limit is 0 and active count is 0', async () => {
+    mockSelect.mockReturnValue({
+      from: vi.fn(() => ({
+        where: vi.fn().mockResolvedValue([{ cnt: 0 }]),
+      })),
+    });
+    // Edge case: limit 0 means "no calls allowed" — active (0) is NOT < 0
+    const result = await checkConcurrencySlot(ORG, CAMPAIGN, 0);
+    // 0 < 0 is false → slot full → should return a date
+    expect(result).toBeInstanceOf(Date);
+  });
+});
+
 // ─── Tests: verifyContactStillEligible ────────────────────────────────────────
 
 describe('verifyContactStillEligible', () => {
@@ -260,6 +353,57 @@ describe('campaignDispatchCallHandler', () => {
     vi.mocked(getBalance).mockResolvedValue({ balanceCents: 5000, remainingMinutes: 100 });
   });
 
+  it('returns deferUntil when campaign concurrency limit is saturated', async () => {
+    // Wednesday inside window: 09:00 UTC = 10:00 Rome (CET +1) — inside 09:00–19:00
+    vi.useFakeTimers({ now: new Date('2025-01-15T09:00:00Z') });
+    vi.mocked(requireRunning).mockResolvedValue(runningCampaign); // concurrency_limit = 5
+
+    // active count = 5 (at limit)
+    mockSelect.mockReturnValue({
+      from: vi.fn(() => ({
+        where: vi.fn().mockResolvedValue([{ cnt: 5 }]),
+      })),
+    });
+
+    const result = await campaignDispatchCallHandler(dispatchData);
+
+    vi.useRealTimers();
+    expect(result).not.toBeNull();
+    expect(result).toHaveProperty('deferUntil');
+    expect((result as { deferUntil: Date }).deferUntil).toBeInstanceOf(Date);
+    expect(dispatchCall).not.toHaveBeenCalled();
+  });
+
+  it('proceeds when concurrency slot is available', async () => {
+    vi.useFakeTimers({ now: new Date('2025-01-15T09:00:00Z') });
+    vi.mocked(requireRunning).mockResolvedValue(runningCampaign); // concurrency_limit = 5
+
+    // 1st select: concurrency gate (active = 3 < 5 = limit → slot available)
+    // 2nd select: contact eligibility query
+    let callCount = 0;
+    mockSelect.mockImplementation(() => {
+      callCount++;
+      if (callCount === 1) {
+        return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 3 }]) })) };
+      }
+      return {
+        from: vi.fn(() => ({
+          where: vi.fn(() => ({
+            limit: vi.fn().mockResolvedValue([
+              { deleted_at: null, opt_out: false, rpo_status: 'clear' },
+            ]),
+          })),
+        })),
+      };
+    });
+
+    const result = await campaignDispatchCallHandler(dispatchData);
+
+    vi.useRealTimers();
+    expect(result).toBeNull();
+    expect(dispatchCall).toHaveBeenCalledWith(ORG, CALL);
+  });
+
   it('returns null and skips when campaign is paused', async () => {
     vi.mocked(requireRunning).mockResolvedValue({
       ...runningCampaign,
@@ -294,7 +438,7 @@ describe('campaignDispatchCallHandler', () => {
     vi.useRealTimers();
     expect(result).not.toBeNull();
     expect(result).toHaveProperty('sleepUntil');
-    expect(result!.sleepUntil).toBeInstanceOf(Date);
+    expect((result as { sleepUntil: Date }).sleepUntil).toBeInstanceOf(Date);
     expect(dispatchCall).not.toHaveBeenCalled();
   });
 
@@ -303,15 +447,25 @@ describe('campaignDispatchCallHandler', () => {
     vi.useFakeTimers({ now: new Date('2025-01-15T09:00:00Z') });
     vi.mocked(requireRunning).mockResolvedValue(runningCampaign);
 
-    // Contact opted out
-    mockSelect.mockReturnValue({
-      from: vi.fn(() => ({
-        where: vi.fn(() => ({
-          limit: vi.fn().mockResolvedValue([
-            { deleted_at: null, opt_out: true, rpo_status: 'clear' },
-          ]),
+    // 1st select call: concurrency gate → returns count 0 (slot available)
+    // 2nd select call: contact eligibility → opted out
+    let callCount = 0;
+    mockSelect.mockImplementation(() => {
+      callCount++;
+      if (callCount === 1) {
+        // concurrency gate: select({ cnt }).from(calls).where(...)  — no .limit()
+        return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 0 }]) })) };
+      }
+      // eligibility: select(...).from(contacts).where(...).limit(1)
+      return {
+        from: vi.fn(() => ({
+          where: vi.fn(() => ({
+            limit: vi.fn().mockResolvedValue([
+              { deleted_at: null, opt_out: true, rpo_status: 'clear' },
+            ]),
+          })),
         })),
-      })),
+      };
     });
 
     const result = await campaignDispatchCallHandler(dispatchData);
@@ -325,14 +479,22 @@ describe('campaignDispatchCallHandler', () => {
   it('propagates InsufficientCreditError when credit is too low', async () => {
     vi.useFakeTimers({ now: new Date('2025-01-15T09:00:00Z') });
     vi.mocked(requireRunning).mockResolvedValue(runningCampaign);
-    mockSelect.mockReturnValue({
-      from: vi.fn(() => ({
-        where: vi.fn(() => ({
-          limit: vi.fn().mockResolvedValue([
-            { deleted_at: null, opt_out: false, rpo_status: 'clear' },
-          ]),
+
+    let callCount = 0;
+    mockSelect.mockImplementation(() => {
+      callCount++;
+      if (callCount === 1) {
+        return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 0 }]) })) };
+      }
+      return {
+        from: vi.fn(() => ({
+          where: vi.fn(() => ({
+            limit: vi.fn().mockResolvedValue([
+              { deleted_at: null, opt_out: false, rpo_status: 'clear' },
+            ]),
+          })),
         })),
-      })),
+      };
     });
     vi.mocked(getBalance).mockResolvedValue({ balanceCents: 0, remainingMinutes: 0 });
 
@@ -345,14 +507,22 @@ describe('campaignDispatchCallHandler', () => {
   it('dispatches call when all checks pass', async () => {
     vi.useFakeTimers({ now: new Date('2025-01-15T09:00:00Z') });
     vi.mocked(requireRunning).mockResolvedValue(runningCampaign);
-    mockSelect.mockReturnValue({
-      from: vi.fn(() => ({
-        where: vi.fn(() => ({
-          limit: vi.fn().mockResolvedValue([
-            { deleted_at: null, opt_out: false, rpo_status: 'clear' },
-          ]),
+
+    let callCount = 0;
+    mockSelect.mockImplementation(() => {
+      callCount++;
+      if (callCount === 1) {
+        return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 0 }]) })) };
+      }
+      return {
+        from: vi.fn(() => ({
+          where: vi.fn(() => ({
+            limit: vi.fn().mockResolvedValue([
+              { deleted_at: null, opt_out: false, rpo_status: 'clear' },
+            ]),
+          })),
         })),
-      })),
+      };
     });
 
     const result = await campaignDispatchCallHandler(dispatchData);

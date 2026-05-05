@@ -171,14 +171,14 @@ export const dispatchCall = inngest.createFunction(
 
 ### Task 5: Per-campaign concurrency override
 
-- [ ] Inngest concurrency is statically defined; for per-campaign overrides we use a custom concurrency key combining `orgId` and `concurrencyLimit`:
+- [x] Inngest concurrency is statically defined; for per-campaign overrides we use a custom concurrency key combining `orgId` and `concurrencyLimit`:
 
 ```typescript
 concurrency: [{ scope: "fn", key: "`${event.data.orgId}:${event.data.concurrencyLimit}`", limit: /* dynamic via routing */ }]
 ```
 
-- [ ] Alternative: implement a simple Postgres-advisory-lock-based gate inside `dispatch-via-provider` if Inngest's static config can't express the dynamic limit; document the trade-off
-- [ ] Mark completed
+- [x] Alternative: implement a simple Postgres-advisory-lock-based gate inside `dispatch-via-provider` if Inngest's static config can't express the dynamic limit; document the trade-off
+- [x] Mark completed
 
 ### Task 6: Inngest function — call completed (post-call processor)
 

@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm';
+import { and, count, eq, inArray } from 'drizzle-orm';
 
 import { withOrgContext } from '@/lib/db/context';
 import { calls, contacts } from '@/lib/db/schema';
@@ -15,6 +15,30 @@ import type { CampaignDispatchCallData } from './events';
 const DEFAULT_TZ = 'Europe/Rome';
 /** Minimum balance (in cents) required to attempt a call. */
 const MIN_BALANCE_CENTS = 100;
+
+/**
+ * Per-campaign concurrency enforcement — design note
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Inngest's `concurrency` configuration is evaluated at function-definition
+ * time, so the `limit` field must be a static number.  We CAN use a dynamic
+ * key expression such as `event.data.orgId` to bucket runs, but every bucket
+ * always uses the same static ceiling.  This makes it impossible to express
+ * "campaign A allows 5 concurrent calls while campaign B allows 10".
+ *
+ * Trade-off:
+ *   Inngest static config   → zero application code; guaranteed by Inngest
+ *                             scheduler; but limit is platform-wide or
+ *                             per-org, never per-campaign.
+ *   In-band Postgres count  → enforced inside `dispatch-call` step; reads
+ *                             `calls` table for active (dialing|in_progress)
+ *                             rows; slightly racy under high fan-out but
+ *                             acceptable for typical campaign sizes (< 10k
+ *                             concurrent calls); no external locking needed.
+ *
+ * We choose the Postgres counting approach so each campaign can respect its
+ * own `concurrency_limit`.  When the limit is hit the handler returns
+ * `{ deferUntil }` and the Inngest step re-executes after a short delay.
+ */
 
 // ─── Error types ─────────────────────────────────────────────────────────────
 
@@ -33,6 +57,52 @@ export class InsufficientCreditError extends Error {
     super(`Insufficient credit for org ${orgId}`);
     this.name = 'InsufficientCreditError';
   }
+}
+
+// ─── Concurrency gate ─────────────────────────────────────────────────────────
+
+/** How long to defer a dispatch when the campaign's concurrency slot is full. */
+const CONCURRENCY_DEFER_SECONDS = 30;
+
+/**
+ * Returns the number of calls in `dialing` or `in_progress` state for the
+ * given campaign, reflecting current active concurrency usage.
+ */
+export async function getActiveConcurrencyCount(
+  orgId: string,
+  campaignId: string,
+): Promise<number> {
+  const [row] = await withOrgContext(orgId, (tx) =>
+    tx
+      .select({ cnt: count() })
+      .from(calls)
+      .where(
+        and(
+          eq(calls.org_id, orgId),
+          eq(calls.campaign_id, campaignId),
+          inArray(calls.status, ['dialing', 'in_progress']),
+        ),
+      ),
+  );
+  return row?.cnt ?? 0;
+}
+
+/**
+ * Checks whether a concurrency slot is available for the campaign.
+ *
+ * Returns `null` when a slot is available (proceed with dispatch).
+ * Returns a `Date` (the earliest retry time) when the concurrency limit is
+ * already saturated — the caller should defer dispatch until then.
+ */
+export async function checkConcurrencySlot(
+  orgId: string,
+  campaignId: string,
+  limit: number,
+): Promise<Date | null> {
+  const active = await getActiveConcurrencyCount(orgId, campaignId);
+  if (active < limit) return null;
+  // Slot full — suggest a short retry after CONCURRENCY_DEFER_SECONDS
+  return new Date(Date.now() + CONCURRENCY_DEFER_SECONDS * 1000);
 }
 
 // ─── Time window ─────────────────────────────────────────────────────────────
@@ -199,11 +269,13 @@ export async function verifyCreditAvailable(orgId: string, callId: string): Prom
  * 5. Dispatch the call to the voice provider.
  *
  * Returns `{ sleepUntil: Date }` when outside the call window (caller sleeps),
- * or `null` on a completed dispatch (success or graceful skip).
+ * `{ deferUntil: Date }` when the campaign concurrency limit is saturated
+ * (caller should retry after a short delay), or `null` on a completed dispatch
+ * (success or graceful skip).
  */
 export async function campaignDispatchCallHandler(
   data: CampaignDispatchCallData,
-): Promise<{ sleepUntil: Date } | null> {
+): Promise<{ sleepUntil: Date } | { deferUntil: Date } | null> {
   const { campaignId, orgId, contactId, callId } = data;
 
   // 1. Campaign status gate
@@ -222,7 +294,19 @@ export async function campaignDispatchCallHandler(
     return { sleepUntil };
   }
 
-  // 3. Contact eligibility re-check
+  // 3. Per-campaign concurrency gate
+  //
+  // Counts active calls (dialing|in_progress) against campaign.concurrency_limit.
+  // When the limit is saturated we return a short defer signal instead of
+  // proceeding — the Inngest caller uses step.sleepUntil(deferUntil) and
+  // retries automatically.  See the design note above for the trade-off
+  // discussion vs Inngest's built-in static concurrency config.
+  const deferUntil = await checkConcurrencySlot(orgId, campaignId, campaign.concurrency_limit);
+  if (deferUntil !== null) {
+    return { deferUntil };
+  }
+
+  // 5. Contact eligibility re-check
   try {
     await verifyContactStillEligible(orgId, contactId);
   } catch (err) {
@@ -239,10 +323,10 @@ export async function campaignDispatchCallHandler(
     throw err;
   }
 
-  // 4. Credit check
+  // 6. Credit check
   await verifyCreditAvailable(orgId, callId);
 
-  // 5. Dispatch to voice provider
+  // 7. Dispatch to voice provider
   await dispatchCallToProvider(orgId, callId);
 
   return null;

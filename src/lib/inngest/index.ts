@@ -17,6 +17,8 @@ export {
   waitForCallWindow,
   verifyContactStillEligible,
   verifyCreditAvailable,
+  checkConcurrencySlot,
+  getActiveConcurrencyCount,
   ContactNotEligibleError,
   InsufficientCreditError,
 } from './campaigns/dispatch';
