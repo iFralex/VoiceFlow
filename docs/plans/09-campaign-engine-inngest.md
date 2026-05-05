@@ -278,12 +278,12 @@ export function nextWindowOpen(
 
 ### Task 14: Campaigns list page
 
-- [ ] Create `src/app/(app)/campaigns/page.tsx`:
+- [x] Create `src/app/(app)/campaigns/page.tsx`:
   - tabs: Tutte, Bozze, In corso, Completate, Annullate
   - data table with columns: nome, script, contatti, stato, costo stimato/effettivo, creata
   - row actions: visualizza, metti in pausa/riprendi, annulla, duplica
   - empty state with CTA "Crea prima campagna"
-- [ ] Mark completed
+- [x] Mark completed
 
 ### Task 15: Campaign detail page (overview tab)
 

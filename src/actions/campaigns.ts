@@ -6,6 +6,7 @@ import { getAuthContext, requireCapability } from '@/lib/auth/context';
 import {
   cancelCampaign as cancelCampaignService,
   createCampaign as createCampaignService,
+  duplicateCampaign as duplicateCampaignService,
   launchCampaign as launchCampaignService,
   pauseCampaign as pauseCampaignService,
   resumeCampaign as resumeCampaignService,
@@ -145,6 +146,25 @@ export async function cancelCampaignAction(
     await requireCapability('campaigns.launch');
     await cancelCampaignService(orgId, userId, parsed.data.campaignId);
     return { ok: true };
+  } catch (e) {
+    return { ok: false, message: e instanceof Error ? e.message : 'error' };
+  }
+}
+
+// ─── Duplicate ─────────────────────────────────────────────────────────────────
+
+export async function duplicateCampaignAction(
+  input: z.infer<typeof campaignIdSchema>,
+): Promise<ActionResult & { campaignId?: string }> {
+  const parsed = campaignIdSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? 'validation_error' };
+  }
+  try {
+    const { orgId, userId } = await getAuthContext();
+    await requireCapability('campaigns.launch');
+    const copy = await duplicateCampaignService(orgId, userId, parsed.data.campaignId);
+    return { ok: true, campaignId: copy.id };
   } catch (e) {
     return { ok: false, message: e instanceof Error ? e.message : 'error' };
   }

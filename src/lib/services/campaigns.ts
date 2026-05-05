@@ -474,6 +474,29 @@ export async function listCampaigns(
   return nextCursor !== undefined ? { items, nextCursor } : { items };
 }
 
+/**
+ * Creates a copy of an existing campaign in `draft` state, preserving all
+ * settings (script, contact list, time window, concurrency) but clearing
+ * scheduling, launch timestamps, and costs.
+ */
+export async function duplicateCampaign(
+  orgId: string,
+  byUserId: string,
+  campaignId: string,
+): Promise<Campaign> {
+  const original = await getCampaign(orgId, campaignId);
+  if (!original) throw new Error('campaign_not_found');
+
+  return createCampaign(orgId, byUserId, {
+    name: `${original.name} (copia)`,
+    scriptId: original.script_id,
+    contactListId: original.contact_list_id,
+    concurrencyLimit: original.concurrency_limit,
+    timeWindowStart: original.time_window_start,
+    timeWindowEnd: original.time_window_end,
+  });
+}
+
 // ─── Internal helpers for Inngest functions ────────────────────────────────────
 
 /**
