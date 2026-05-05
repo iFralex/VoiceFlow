@@ -299,14 +299,14 @@ export async function fetchCallTimeline(orgId: string, callId: string): Promise<
 
 ### Task 17: E2E test call against staging
 
-- [ ] Playwright `e2e/voice-test-call.spec.ts` runs only against staging (skipped in CI):
+- [x] Playwright `e2e/voice-test-call.spec.ts` runs only against staging (skipped in CI):
   - sign in
   - create a script from `lead-reactivation` template
   - click "Chiamami ora" with a known test number that auto-records and auto-hangs-up
   - poll `/calls/<id>` page until status `completed`
   - assert recording and transcript present
   - assert outcome is one of expected enum values
-- [ ] Mark completed
+- [x] Mark completed
 
 ### Task 18: Definition of Done
 
