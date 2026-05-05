@@ -84,12 +84,12 @@ export async function listCampaigns(
 
 ### Task 2: Eligibility filter
 
-- [ ] Create `src/lib/services/eligibility.ts` with `findEligibleContactsForCampaign(orgId, campaignId)`:
+- [x] Create `src/lib/services/eligibility.ts` with `findEligibleContactsForCampaign(orgId, campaignId)`:
   - SELECT FROM contact_list's contacts JOIN opt_out_registry LEFT JOIN recent calls(48h)
   - WHERE `deleted_at IS NULL`, `opt_out=false`, `rpo_status != 'blocked'`, no successful call attempt in last 48h, phone present and E.164-valid
   - return list of `{ contactId, phoneE164, attemptNumber }` ordered by an attempt strategy (oldest first by created_at)
-- [ ] Add unit test verifying each filter
-- [ ] Mark completed
+- [x] Add unit test verifying each filter
+- [x] Mark completed
 
 ### Task 3: Inngest function — campaign launched (planner)
 
