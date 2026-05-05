@@ -12,7 +12,8 @@ import { nextWindowOpen } from '@/lib/utils/time-window';
 
 export { nextWindowOpen };
 
-import type { CampaignDispatchCallData } from './events';
+import type { CampaignDispatchCallData, VoiceProviderDegradedData } from './events';
+import { VOICE_PROVIDER_DEGRADED_EVENT } from './events';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -61,6 +62,129 @@ export class InsufficientCreditError extends Error {
     super(`Insufficient credit for org ${orgId}`);
     this.name = 'InsufficientCreditError';
   }
+}
+
+// ─── Provider degradation detection ──────────────────────────────────────────
+
+/**
+ * Sliding window (ms) used for provider degradation detection.
+ * Counts provider errors vs. total terminal calls in this window.
+ */
+export const PROVIDER_DEGRADATION_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
+
+/**
+ * Fraction of dispatches that must fail with `provider_error` within the
+ * detection window before `system/voice-provider-degraded` is emitted.
+ */
+export const PROVIDER_DEGRADATION_THRESHOLD = 0.05; // 5%
+
+/**
+ * Marks a single call as definitively failed due to a voice-provider error.
+ *
+ * Called by the `onDispatchFailure` handler after all Inngest retry attempts
+ * for `campaign/dispatch-call` are exhausted.
+ *
+ * Credit note: no immediate per-call credit release is performed here.
+ * The campaign reservation is released in aggregate by `markCampaignCompleted`
+ * → `releaseReservation` once all calls reach a terminal state.  Because a
+ * `provider_error` call has no `charge` ledger entry, its estimated cost is
+ * automatically included in the unused portion returned at campaign close.
+ */
+export async function markCallProviderError(orgId: string, callId: string): Promise<void> {
+  await withOrgContext(orgId, async (tx) => {
+    await tx
+      .update(calls)
+      .set({ status: 'failed', error_code: 'provider_error' })
+      .where(and(eq(calls.id, callId), eq(calls.org_id, orgId)));
+
+    await recordAudit(tx, {
+      orgId,
+      actorType: 'system',
+      action: 'call.failed',
+      subjectType: 'call',
+      subjectId: callId,
+      metadata: { reason: 'provider_error' },
+    });
+  });
+}
+
+/**
+ * Checks whether the provider error rate for a campaign exceeds the
+ * degradation threshold (default 5%) within the last 10-minute window.
+ *
+ * The window uses `calls.created_at` as a proxy for dispatch time — calls are
+ * created at planning time (immediately before dispatch events are sent), so
+ * this gives a reasonable signal for recently-active campaigns.
+ *
+ * When the threshold is exceeded, emits `system/voice-provider-degraded`
+ * with a deduplicated event id scoped to the current 10-minute slot, so at
+ * most one alert fires per window per campaign.
+ */
+export async function checkProviderDegradation(orgId: string, campaignId: string): Promise<void> {
+  const windowStart = new Date(Date.now() - PROVIDER_DEGRADATION_WINDOW_MS);
+
+  const terminalStatuses = ['failed', 'completed', 'no_answer', 'voicemail', 'busy'] as const;
+
+  const rows = await withOrgContext(orgId, (tx) =>
+    tx
+      .select({ error_code: calls.error_code })
+      .from(calls)
+      .where(
+        and(
+          eq(calls.org_id, orgId),
+          eq(calls.campaign_id, campaignId),
+          gt(calls.created_at, windowStart),
+          inArray(calls.status, [...terminalStatuses]),
+        ),
+      ),
+  );
+
+  const totalCount = rows.length;
+  if (totalCount === 0) return;
+
+  const errorCount = rows.filter((r) => r.error_code === 'provider_error').length;
+  const errorRate = errorCount / totalCount;
+
+  if (errorRate <= PROVIDER_DEGRADATION_THRESHOLD) return;
+
+  // Deduplicate: one alert per campaign per 10-minute slot
+  const windowSlot = Math.floor(Date.now() / PROVIDER_DEGRADATION_WINDOW_MS);
+
+  await sendInngestEvent({
+    name: VOICE_PROVIDER_DEGRADED_EVENT,
+    data: {
+      orgId,
+      campaignId,
+      errorCount,
+      totalCount,
+      errorRate,
+    } satisfies VoiceProviderDegradedData,
+    id: `provider-degraded-${campaignId}-${windowSlot}`,
+  });
+}
+
+/**
+ * Dead-letter handler for `campaign/dispatch-call` — called after all Inngest
+ * retry attempts are exhausted (i.e. the voice provider rejected the call 3
+ * times in a row).
+ *
+ * Responsibilities:
+ * 1. Mark the call `failed / provider_error`.
+ * 2. Check whether the per-campaign provider error rate in the last 10 minutes
+ *    exceeds the degradation threshold (5%) and emit an alert event if so.
+ *
+ * This function should be wired to the Inngest function's `onFailure` callback
+ * once the Inngest SDK is fully integrated (plan 09 follow-up).
+ */
+export async function onDispatchFailure(data: CampaignDispatchCallData): Promise<void> {
+  const { orgId, callId, campaignId } = data;
+
+  await markCallProviderError(orgId, callId);
+
+  // Degradation check is best-effort — alert failures must never propagate
+  await checkProviderDegradation(orgId, campaignId).catch((e: unknown) => {
+    console.error('[dispatch] Provider degradation check failed for campaign', campaignId, e);
+  });
 }
 
 // ─── Org-level cooldown ───────────────────────────────────────────────────────

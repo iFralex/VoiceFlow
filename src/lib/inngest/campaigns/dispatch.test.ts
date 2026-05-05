@@ -52,11 +52,16 @@ import {
   ContactNotEligibleError,
   DEFAULT_ORG_COOLDOWN_MS,
   InsufficientCreditError,
+  PROVIDER_DEGRADATION_THRESHOLD,
+  PROVIDER_DEGRADATION_WINDOW_MS,
   campaignDispatchCallHandler,
   checkConcurrencySlot,
   checkOrgLevelCooldown,
+  checkProviderDegradation,
   getActiveConcurrencyCount,
+  markCallProviderError,
   nextWindowOpen,
+  onDispatchFailure,
   verifyCreditAvailable,
   verifyContactStillEligible,
   waitForCallWindow,
@@ -753,5 +758,200 @@ describe('campaignDispatchCallHandler', () => {
     vi.useRealTimers();
     expect(result).toBeNull();
     expect(dispatchCall).toHaveBeenCalledWith(ORG, CALL);
+  });
+});
+
+// ─── Tests: markCallProviderError ────────────────────────────────────────────
+
+describe('markCallProviderError', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockUpdate.mockReturnValue({ set: mockSet });
+    mockSet.mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) });
+  });
+
+  it('marks the call as failed with error_code=provider_error', async () => {
+    await markCallProviderError(ORG, CALL);
+
+    expect(mockUpdate).toHaveBeenCalledOnce();
+    expect(mockSet).toHaveBeenCalledWith({ status: 'failed', error_code: 'provider_error' });
+  });
+
+  it('writes an audit log entry', async () => {
+    await markCallProviderError(ORG, CALL);
+
+    expect(recordAudit).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        orgId: ORG,
+        actorType: 'system',
+        action: 'call.failed',
+        subjectType: 'call',
+        subjectId: CALL,
+        metadata: { reason: 'provider_error' },
+      }),
+    );
+  });
+});
+
+// ─── Tests: checkProviderDegradation ─────────────────────────────────────────
+
+describe('checkProviderDegradation', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(sendInngestEvent).mockResolvedValue(undefined);
+  });
+
+  it('exports correct constants', () => {
+    expect(PROVIDER_DEGRADATION_WINDOW_MS).toBe(10 * 60 * 1000);
+    expect(PROVIDER_DEGRADATION_THRESHOLD).toBe(0.05);
+  });
+
+  it('does not emit event when no terminal calls in window', async () => {
+    mockSelect.mockReturnValue({
+      from: vi.fn(() => ({
+        where: vi.fn().mockResolvedValue([]),
+      })),
+    });
+
+    await checkProviderDegradation(ORG, CAMPAIGN);
+    expect(sendInngestEvent).not.toHaveBeenCalled();
+  });
+
+  it('does not emit event when error rate is below threshold (2 of 100 = 2%)', async () => {
+    const rows = [
+      ...Array(2).fill({ error_code: 'provider_error' }),
+      ...Array(98).fill({ error_code: null }),
+    ];
+    mockSelect.mockReturnValue({
+      from: vi.fn(() => ({
+        where: vi.fn().mockResolvedValue(rows),
+      })),
+    });
+
+    await checkProviderDegradation(ORG, CAMPAIGN);
+    expect(sendInngestEvent).not.toHaveBeenCalled();
+  });
+
+  it('does not emit event when error rate is exactly at threshold (5 of 100 = 5%)', async () => {
+    const rows = [
+      ...Array(5).fill({ error_code: 'provider_error' }),
+      ...Array(95).fill({ error_code: null }),
+    ];
+    mockSelect.mockReturnValue({
+      from: vi.fn(() => ({
+        where: vi.fn().mockResolvedValue(rows),
+      })),
+    });
+
+    await checkProviderDegradation(ORG, CAMPAIGN);
+    // threshold is strictly > 5%, so 5% exactly should NOT trigger
+    expect(sendInngestEvent).not.toHaveBeenCalled();
+  });
+
+  it('emits voice-provider-degraded when error rate exceeds threshold (6 of 100 = 6%)', async () => {
+    const rows = [
+      ...Array(6).fill({ error_code: 'provider_error' }),
+      ...Array(94).fill({ error_code: null }),
+    ];
+    mockSelect.mockReturnValue({
+      from: vi.fn(() => ({
+        where: vi.fn().mockResolvedValue(rows),
+      })),
+    });
+
+    vi.useFakeTimers({ now: new Date('2025-01-15T10:00:00Z') });
+    await checkProviderDegradation(ORG, CAMPAIGN);
+    vi.useRealTimers();
+
+    expect(sendInngestEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'system/voice-provider-degraded',
+        data: expect.objectContaining({
+          orgId: ORG,
+          campaignId: CAMPAIGN,
+          errorCount: 6,
+          totalCount: 100,
+          errorRate: 0.06,
+        }),
+      }),
+    );
+  });
+
+  it('uses a deterministic event id scoped to the 10-minute window slot', async () => {
+    const rows = Array(10).fill({ error_code: 'provider_error' });
+    mockSelect.mockReturnValue({
+      from: vi.fn(() => ({
+        where: vi.fn().mockResolvedValue(rows),
+      })),
+    });
+
+    const fixedNow = new Date('2025-01-15T10:00:00Z');
+    vi.useFakeTimers({ now: fixedNow });
+    await checkProviderDegradation(ORG, CAMPAIGN);
+    vi.useRealTimers();
+
+    const expectedSlot = Math.floor(fixedNow.getTime() / PROVIDER_DEGRADATION_WINDOW_MS);
+    expect(sendInngestEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: `provider-degraded-${CAMPAIGN}-${expectedSlot}`,
+      }),
+    );
+  });
+});
+
+// ─── Tests: onDispatchFailure ─────────────────────────────────────────────────
+
+describe('onDispatchFailure', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockUpdate.mockReturnValue({ set: mockSet });
+    mockSet.mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) });
+    vi.mocked(sendInngestEvent).mockResolvedValue(undefined);
+  });
+
+  it('marks the call as failed with provider_error', async () => {
+    mockSelect.mockReturnValue({
+      from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([]) })),
+    });
+
+    await onDispatchFailure({ campaignId: CAMPAIGN, orgId: ORG, contactId: CONTACT, callId: CALL, attempt: 1 });
+
+    expect(mockUpdate).toHaveBeenCalledOnce();
+    expect(mockSet).toHaveBeenCalledWith({ status: 'failed', error_code: 'provider_error' });
+  });
+
+  it('runs degradation check after marking the call failed', async () => {
+    mockSelect.mockReturnValue({
+      from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([]) })),
+    });
+
+    await onDispatchFailure({ campaignId: CAMPAIGN, orgId: ORG, contactId: CONTACT, callId: CALL, attempt: 1 });
+
+    // Degradation check ran (select was called for degradation query)
+    expect(mockSelect).toHaveBeenCalled();
+  });
+
+  it('does not throw when degradation check fails', async () => {
+    mockUpdate.mockReturnValue({ set: mockSet });
+    mockSet.mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) });
+
+    // Make select fail on the degradation check call
+    let callCount = 0;
+    mockSelect.mockImplementation(() => {
+      callCount++;
+      if (callCount >= 1) {
+        return {
+          from: vi.fn(() => ({
+            where: vi.fn().mockRejectedValue(new Error('DB error')),
+          })),
+        };
+      }
+    });
+
+    // Should resolve without throwing despite degradation check failure
+    await expect(
+      onDispatchFailure({ campaignId: CAMPAIGN, orgId: ORG, contactId: CONTACT, callId: CALL, attempt: 1 }),
+    ).resolves.toBeUndefined();
   });
 });

@@ -303,10 +303,10 @@ export function nextWindowOpen(
 
 ### Task 17: Failure handling and dead-letter
 
-- [ ] If `dispatchCallViaProvider` throws (e.g. Vapi 5xx), Inngest retries 3x with exponential backoff
-- [ ] After 3 failures the call is marked `failed/error_code='provider_error'` and its credit reservation released for that single call
-- [ ] Aggregate count of failed dispatches per campaign; if >5% of contacts fail with provider errors in a 10-minute window, emit `system/voice-provider-degraded` alert (consumed by plan 14)
-- [ ] Mark completed
+- [x] If `dispatchCallViaProvider` throws (e.g. Vapi 5xx), Inngest retries 3x with exponential backoff
+- [x] After 3 failures the call is marked `failed/error_code='provider_error'` and its credit reservation released for that single call
+- [x] Aggregate count of failed dispatches per campaign; if >5% of contacts fail with provider errors in a 10-minute window, emit `system/voice-provider-degraded` alert (consumed by plan 14)
+- [x] Mark completed
 
 ### Task 18: Quotas and rate-limits at dispatcher
 

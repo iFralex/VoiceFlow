@@ -4,11 +4,13 @@ export {
   CAMPAIGN_LAUNCHED_EVENT,
   CAMPAIGN_DISPATCH_CALL_EVENT,
   CAMPAIGN_COMPLETED_EVENT,
+  VOICE_PROVIDER_DEGRADED_EVENT,
 } from './campaigns/events';
 export type {
   CampaignLaunchedData,
   CampaignDispatchCallData,
   CampaignCompletedData,
+  VoiceProviderDegradedData,
 } from './campaigns/events';
 export { campaignLaunchedHandler, createPendingCallRows } from './campaigns/launched';
 export { campaignCompletedHandler, countActiveCalls } from './campaigns/completed';
@@ -20,8 +22,13 @@ export {
   verifyCreditAvailable,
   checkConcurrencySlot,
   getActiveConcurrencyCount,
+  markCallProviderError,
+  checkProviderDegradation,
+  onDispatchFailure,
   ContactNotEligibleError,
   InsufficientCreditError,
+  PROVIDER_DEGRADATION_WINDOW_MS,
+  PROVIDER_DEGRADATION_THRESHOLD,
 } from './campaigns/dispatch';
 export { CREDIT_LOW_BALANCE_EVENT } from './handlers/credit';
 export type { CreditLowBalanceData } from './handlers/credit';
