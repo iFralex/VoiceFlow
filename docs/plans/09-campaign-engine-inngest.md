@@ -133,7 +133,7 @@ export const campaignLaunched = inngest.createFunction(
 
 ### Task 4: Inngest function — dispatch-call (per-contact)
 
-- [ ] Create `src/lib/inngest/campaigns/dispatch.ts`:
+- [x] Create `src/lib/inngest/campaigns/dispatch.ts`:
 
 ```typescript
 export const dispatchCall = inngest.createFunction(
@@ -163,11 +163,11 @@ export const dispatchCall = inngest.createFunction(
 );
 ```
 
-- [ ] `waitForCallWindow` computes seconds until window opens in Europe/Rome and uses `step.sleepUntil`
-- [ ] `verifyContactStillEligible` aborts gracefully if the contact opted out or was deleted between planning and dispatch
-- [ ] `verifyCreditAvailable` aborts and marks call `failed/error_code='insufficient_credit'` if balance too low — also emits `credit/low-balance` event
-- [ ] Per-campaign concurrency override implemented in Task 5
-- [ ] Mark completed
+- [x] `waitForCallWindow` computes seconds until window opens in Europe/Rome and uses `step.sleepUntil`
+- [x] `verifyContactStillEligible` aborts gracefully if the contact opted out or was deleted between planning and dispatch
+- [x] `verifyCreditAvailable` aborts and marks call `failed/error_code='insufficient_credit'` if balance too low — also emits `credit/low-balance` event
+- [x] Per-campaign concurrency override implemented in Task 5
+- [x] Mark completed
 
 ### Task 5: Per-campaign concurrency override
 

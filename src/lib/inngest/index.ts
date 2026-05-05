@@ -11,6 +11,15 @@ export type {
   CampaignCompletedData,
 } from './campaigns/events';
 export { campaignLaunchedHandler, createPendingCallRows } from './campaigns/launched';
+export {
+  campaignDispatchCallHandler,
+  nextWindowOpen,
+  waitForCallWindow,
+  verifyContactStillEligible,
+  verifyCreditAvailable,
+  ContactNotEligibleError,
+  InsufficientCreditError,
+} from './campaigns/dispatch';
 export { CREDIT_LOW_BALANCE_EVENT } from './handlers/credit';
 export type { CreditLowBalanceData } from './handlers/credit';
 export {
