@@ -288,14 +288,14 @@ export async function fetchCallTimeline(orgId: string, callId: string): Promise<
 
 ### Task 16: Integration tests
 
-- [ ] Mock Vapi API and webhook signatures via `msw` fixtures
-- [ ] Test: `dispatchCall` sends the right payload (system prompt assembled with preamble first; first message contains disclosure)
-- [ ] Test: webhook signature verification rejects malformed signatures
-- [ ] Test: duplicate `call.ended` webhook is no-op (idempotency)
-- [ ] Test: tool invocation idempotent
-- [ ] Test: classifier runs only when no tool outcome exists
-- [ ] Test: cross-org RLS prevents reading another org's calls
-- [ ] Mark completed
+- [x] Mock Vapi API and webhook signatures via `msw` fixtures
+- [x] Test: `dispatchCall` sends the right payload (system prompt assembled with preamble first; first message contains disclosure)
+- [x] Test: webhook signature verification rejects malformed signatures
+- [x] Test: duplicate `call.ended` webhook is no-op (idempotency)
+- [x] Test: tool invocation idempotent
+- [x] Test: classifier runs only when no tool outcome exists
+- [x] Test: cross-org RLS prevents reading another org's calls
+- [x] Mark completed
 
 ### Task 17: E2E test call against staging
 
