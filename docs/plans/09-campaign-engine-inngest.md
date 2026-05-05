@@ -204,11 +204,11 @@ export const callCompleted = inngest.createFunction(
 
 ### Task 7: Inngest function — campaign completed (terminal state)
 
-- [ ] Create `src/lib/inngest/campaigns/completed.ts`:
+- [x] Create `src/lib/inngest/campaigns/completed.ts`:
   - listens for `call/completed` events; on each, checks if `pending+dialing+in_progress` count for the campaign hit zero
   - when zero: transition campaign to `completed`, call `releaseReservation` for unused credit, emit `campaign/completed` event consumed by plan 12 (final report email)
-- [ ] Use a database advisory lock or upsert pattern to avoid double-finalisation
-- [ ] Mark completed
+- [x] Use a database advisory lock or upsert pattern to avoid double-finalisation
+- [x] Mark completed
 
 ### Task 8: Cron — campaign aggregation
 

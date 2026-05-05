@@ -11,6 +11,7 @@ export type {
   CampaignCompletedData,
 } from './campaigns/events';
 export { campaignLaunchedHandler, createPendingCallRows } from './campaigns/launched';
+export { campaignCompletedHandler, countActiveCalls } from './campaigns/completed';
 export {
   campaignDispatchCallHandler,
   nextWindowOpen,
