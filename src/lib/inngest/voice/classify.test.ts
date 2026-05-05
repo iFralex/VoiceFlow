@@ -1,9 +1,13 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
 vi.mock('@/lib/voice/classifier', () => ({
   classifyTranscript: vi.fn(),
+}));
+
+vi.mock('@/lib/voice/disclosure', () => ({
+  checkDisclosure: vi.fn(),
 }));
 
 vi.mock('@/lib/inngest/client', () => ({
@@ -47,8 +51,9 @@ mockUpdate.mockReturnValue(updateChain);
 
 import { classifyCallHandler } from './classify';
 import { classifyTranscript } from '@/lib/voice/classifier';
+import { checkDisclosure } from '@/lib/voice/disclosure';
 import { sendInngestEvent } from '@/lib/inngest/client';
-import { QUALITY_OUTCOME_MISMATCH_EVENT } from './events';
+import { QUALITY_OUTCOME_MISMATCH_EVENT, QUALITY_DISCLOSURE_MISSING_EVENT } from './events';
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -57,9 +62,11 @@ const ORG_ID = 'org-uuid-classify-test';
 
 const BASE_DATA = { callId: CALL_ID, orgId: ORG_ID };
 
+// Segments include the AI Act disclosure phrase so tests that check for
+// no-disclosure-event still pass by default (checkDisclosure is mocked).
 const SEGMENTS = [
-  { speaker: 'agent', text: 'Buongiorno.', startMs: 0, endMs: 1000 },
-  { speaker: 'caller', text: 'Non sono interessato.', startMs: 1100, endMs: 2000 },
+  { speaker: 'agent', text: 'Sono un assistente vocale automatico della concessionaria.', startMs: 0, endMs: 3000 },
+  { speaker: 'caller', text: 'Non sono interessato.', startMs: 3100, endMs: 4000 },
 ];
 
 function makeSelectChain(rows: unknown[]) {
@@ -78,6 +85,12 @@ function makeTranscriptBlob(segments: unknown[]) {
 }
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
+
+beforeEach(() => {
+  // Default: disclosure is present — existing tests are unaffected by Task 12.
+  vi.mocked(checkDisclosure).mockReturnValue(true);
+  mockUpdate.mockReturnValue(updateChain);
+});
 
 afterEach(() => {
   vi.clearAllMocks();
@@ -294,5 +307,135 @@ describe('classifyCallHandler', () => {
     expect(updateChain.set).toHaveBeenCalledWith(
       expect.objectContaining({ outcome_confidence: '0.90' }),
     );
+  });
+
+  // ─── Task 12: AI disclosure verification ──────────────────────────────────
+
+  describe('disclosure verification', () => {
+    it('updates metadata and emits disclosure-missing when phrase absent', async () => {
+      vi.mocked(checkDisclosure).mockReturnValue(false);
+
+      mockSelect
+        .mockReturnValueOnce(
+          makeSelectChain([{ outcome: null, transcript_path: `transcripts/${ORG_ID}/${CALL_ID}.json` }]),
+        )
+        .mockReturnValueOnce(makeSelectChain([{ outcome: null }]));
+
+      mockDownload.mockResolvedValue({
+        data: makeTranscriptBlob(SEGMENTS),
+        error: null,
+      });
+
+      vi.mocked(classifyTranscript).mockResolvedValue({
+        outcome: 'not_interested',
+        confidence: 0.88,
+        reasoning: 'No interest.',
+      });
+
+      vi.mocked(sendInngestEvent).mockResolvedValue(undefined);
+
+      await classifyCallHandler(BASE_DATA);
+
+      // metadata update must have been called
+      expect(updateChain.set).toHaveBeenCalledWith(
+        expect.objectContaining({ metadata: { disclosure_verified: false } }),
+      );
+
+      // disclosure-missing event must have been emitted
+      expect(sendInngestEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: QUALITY_DISCLOSURE_MISSING_EVENT,
+          data: { callId: CALL_ID, orgId: ORG_ID },
+          id: `disclosure-missing-${CALL_ID}`,
+        }),
+      );
+    });
+
+    it('does not update metadata or emit event when phrase is present', async () => {
+      vi.mocked(checkDisclosure).mockReturnValue(true);
+
+      mockSelect
+        .mockReturnValueOnce(
+          makeSelectChain([{ outcome: null, transcript_path: `transcripts/${ORG_ID}/${CALL_ID}.json` }]),
+        )
+        .mockReturnValueOnce(makeSelectChain([{ outcome: null }]));
+
+      mockDownload.mockResolvedValue({
+        data: makeTranscriptBlob(SEGMENTS),
+        error: null,
+      });
+
+      vi.mocked(classifyTranscript).mockResolvedValue({
+        outcome: 'interested',
+        confidence: 0.9,
+        reasoning: 'Interest shown.',
+      });
+
+      await classifyCallHandler(BASE_DATA);
+
+      // Only the outcome update should appear — no metadata set call
+      expect(updateChain.set).not.toHaveBeenCalledWith(
+        expect.objectContaining({ metadata: expect.anything() }),
+      );
+      // No disclosure event
+      expect(sendInngestEvent).not.toHaveBeenCalledWith(
+        expect.objectContaining({ name: QUALITY_DISCLOSURE_MISSING_EVENT }),
+      );
+    });
+
+    it('still emits disclosure-missing even when a tool outcome is already set', async () => {
+      // Tool outcome was set concurrently — handler would normally return early
+      // after the mismatch check, but the disclosure check runs before that.
+      vi.mocked(checkDisclosure).mockReturnValue(false);
+
+      mockSelect
+        .mockReturnValueOnce(
+          makeSelectChain([{ outcome: null, transcript_path: `transcripts/${ORG_ID}/${CALL_ID}.json` }]),
+        )
+        .mockReturnValueOnce(makeSelectChain([{ outcome: 'appointment_booked' }]));
+
+      mockDownload.mockResolvedValue({
+        data: makeTranscriptBlob(SEGMENTS),
+        error: null,
+      });
+
+      vi.mocked(classifyTranscript).mockResolvedValue({
+        outcome: 'not_interested',
+        confidence: 0.7,
+        reasoning: 'Disagrees.',
+      });
+
+      vi.mocked(sendInngestEvent).mockResolvedValue(undefined);
+
+      await classifyCallHandler(BASE_DATA);
+
+      // Disclosure event must still be emitted
+      expect(sendInngestEvent).toHaveBeenCalledWith(
+        expect.objectContaining({ name: QUALITY_DISCLOSURE_MISSING_EVENT }),
+      );
+    });
+
+    it('passes the parsed transcript segments to checkDisclosure', async () => {
+      mockSelect
+        .mockReturnValueOnce(
+          makeSelectChain([{ outcome: null, transcript_path: `transcripts/${ORG_ID}/${CALL_ID}.json` }]),
+        )
+        .mockReturnValueOnce(makeSelectChain([{ outcome: null }]));
+
+      mockDownload.mockResolvedValue({
+        data: makeTranscriptBlob(SEGMENTS),
+        error: null,
+      });
+
+      vi.mocked(classifyTranscript).mockResolvedValue({
+        outcome: 'not_interested',
+        confidence: 0.8,
+        reasoning: 'Test.',
+      });
+
+      await classifyCallHandler(BASE_DATA);
+
+      expect(checkDisclosure).toHaveBeenCalledWith(SEGMENTS);
+    });
   });
 });

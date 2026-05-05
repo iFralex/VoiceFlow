@@ -254,11 +254,11 @@ export async function fetchCallTimeline(orgId: string, callId: string): Promise<
 
 ### Task 12: AI disclosure verification
 
-- [ ] In `call.classify` add a step that runs a lightweight check: search the first 30 seconds of the transcript for the literal substring "assistente vocale automatico" (case-insensitive)
-- [ ] If absent, set `calls.metadata.disclosure_verified=false` and emit `quality.disclosure-missing` event
-- [ ] Surface in the QA dashboard for human review (plan 14); does not block billing
-- [ ] Add unit tests on synthetic transcripts
-- [ ] Mark completed
+- [x] In `call.classify` add a step that runs a lightweight check: search the first 30 seconds of the transcript for the literal substring "assistente vocale automatico" (case-insensitive)
+- [x] If absent, set `calls.metadata.disclosure_verified=false` and emit `quality.disclosure-missing` event
+- [x] Surface in the QA dashboard for human review (plan 14); does not block billing
+- [x] Add unit tests on synthetic transcripts
+- [x] Mark completed
 
 ### Task 13: Live transfer support
 

@@ -47,6 +47,18 @@ export interface CallTransferredData {
  */
 export const QUALITY_OUTCOME_MISMATCH_EVENT = 'quality/outcome-mismatch' as const;
 
+/**
+ * Emitted when the AI Act disclosure phrase ("assistente vocale automatico")
+ * is not found in the first 30 seconds of the call transcript.  Consumed by
+ * the QA dashboard (plan 14) for human review; does not block billing.
+ */
+export const QUALITY_DISCLOSURE_MISSING_EVENT = 'quality/disclosure-missing' as const;
+
+export interface QualityDisclosureMissingData {
+  callId: string;
+  orgId: string;
+}
+
 export interface QualityOutcomeMismatchData {
   callId: string;
   orgId: string;

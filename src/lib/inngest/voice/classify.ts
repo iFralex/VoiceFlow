@@ -23,10 +23,11 @@ import { calls } from '@/lib/db/schema';
 import { sendInngestEvent } from '@/lib/inngest/client';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { classifyTranscript } from '@/lib/voice/classifier';
+import { checkDisclosure } from '@/lib/voice/disclosure';
 import { CALL_MEDIA_BUCKET } from '@/lib/voice/persistence';
 import type { TranscriptSegment } from '@/lib/voice/types';
 import type { CallClassifyData } from './events';
-import { QUALITY_OUTCOME_MISMATCH_EVENT } from './events';
+import { QUALITY_DISCLOSURE_MISSING_EVENT, QUALITY_OUTCOME_MISMATCH_EVENT } from './events';
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 
@@ -69,10 +70,28 @@ export async function classifyCallHandler(data: CallClassifyData): Promise<void>
   const transcriptJson = await transcriptBlob.text();
   const segments = JSON.parse(transcriptJson) as TranscriptSegment[];
 
-  // 3. Run the outcome classifier
+  // 3. Check AI Act disclosure (spec §12.3): verify that the required phrase
+  //    appears within the first 30 seconds.  Runs regardless of whether a
+  //    tool-driven outcome has already been set.
+  const disclosureVerified = checkDisclosure(segments);
+  if (!disclosureVerified) {
+    await withOrgContext(orgId, async (tx) => {
+      await tx
+        .update(calls)
+        .set({ metadata: { disclosure_verified: false } })
+        .where(and(eq(calls.id, callId), eq(calls.org_id, orgId)));
+    });
+    await sendInngestEvent({
+      name: QUALITY_DISCLOSURE_MISSING_EVENT,
+      data: { callId, orgId },
+      id: `disclosure-missing-${callId}`,
+    });
+  }
+
+  // 4. Run the outcome classifier
   const result = await classifyTranscript(segments);
 
-  // 4. Re-read outcome to detect race with a concurrent tool invocation
+  // 5. Re-read outcome to detect race with a concurrent tool invocation
   const [current] = await withOrgContext(orgId, (tx) =>
     tx
       .select({ outcome: calls.outcome })
@@ -104,7 +123,7 @@ export async function classifyCallHandler(data: CallClassifyData): Promise<void>
     return;
   }
 
-  // 5. No tool outcome — persist the inferred outcome.
+  // 6. No tool outcome — persist the inferred outcome.
   // The `isNull(calls.outcome)` guard ensures idempotency even if two classify
   // functions somehow run in parallel.
   await withOrgContext(orgId, async (tx) => {

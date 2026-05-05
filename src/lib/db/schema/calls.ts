@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { boolean, index, integer, numeric, pgEnum, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { boolean, index, integer, jsonb, numeric, pgEnum, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 import { campaigns } from './campaigns';
 import { contacts } from './contacts';
@@ -53,6 +53,7 @@ export const calls = pgTable(
     recording_path: text('recording_path'),
     transcript_path: text('transcript_path'),
     transferred_to_agent: boolean('transferred_to_agent').notNull().default(false),
+    metadata: jsonb('metadata'),
     error_code: text('error_code'),
     started_at: timestamp('started_at', { withTimezone: true }),
     ended_at: timestamp('ended_at', { withTimezone: true }),

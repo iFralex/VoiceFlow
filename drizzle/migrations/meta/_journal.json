@@ -134,6 +134,13 @@
       "when": 1777800275502,
       "tag": "0018_voice_catalogue",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1777800275503,
+      "tag": "0019_calls_metadata",
+      "breakpoints": true
     }
   ]
 }
