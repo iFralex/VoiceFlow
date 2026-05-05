@@ -10,6 +10,7 @@ import {
 } from '@/lib/db/schema';
 import type { Campaign } from '@/lib/db/schema';
 import { sendInngestEvent } from '@/lib/inngest/client';
+import { getVoiceProviderByName } from '@/lib/voice/factory';
 
 import { computePerMinuteCents } from './billing-rules';
 import { estimateCampaignCost } from './campaign-cost-estimator';
@@ -350,14 +351,29 @@ export async function resumeCampaign(
 }
 
 /**
- * Cancels a campaign. Sets status to `cancelled` and releases the unused
- * credit reservation back to the org's balance.
+ * Cancels a campaign. Sets status to `cancelled`, releases the unused
+ * credit reservation back to the org's balance, and signals the voice
+ * provider to terminate any currently dialing or in-progress calls.
  */
 export async function cancelCampaign(
   orgId: string,
   byUserId: string,
   campaignId: string,
 ): Promise<void> {
+  // Fetch active calls before cancelling so we can terminate them afterwards.
+  const activeCalls = await withOrgContext(orgId, async (tx) => {
+    return tx
+      .select({ provider: calls.provider, provider_call_id: calls.provider_call_id })
+      .from(calls)
+      .where(
+        and(
+          eq(calls.org_id, orgId),
+          eq(calls.campaign_id, campaignId),
+          inArray(calls.status, ['dialing', 'in_progress']),
+        ),
+      );
+  });
+
   await withOrgContext(orgId, async (tx) => {
     const [updated] = await tx
       .update(campaigns)
@@ -386,6 +402,20 @@ export async function cancelCampaign(
   // Release reservation outside the status-update transaction so a failed
   // release doesn't block the cancellation write.
   await releaseReservation(orgId, campaignId);
+
+  // Terminate in-progress calls best-effort — don't fail the cancellation if
+  // the provider returns an error (the call may have already ended).
+  for (const call of activeCalls) {
+    if (!call.provider_call_id) continue;
+    try {
+      await getVoiceProviderByName(call.provider).cancelCall(call.provider_call_id);
+    } catch (err) {
+      console.error(
+        `[cancelCampaign] Failed to terminate provider call ${call.provider_call_id}:`,
+        err,
+      );
+    }
+  }
 }
 
 // ─── Read helpers ───────────────────────────────────────────────────────────────

@@ -553,7 +553,9 @@ const _italianStrings: Record<string, Record<string, string>> = {
     pause_confirm_desc:
       'Le chiamate in corso continueranno fino al termine; nessuna nuova chiamata sarà avviata.',
     cancel_confirm_title: 'Annulla la campagna',
-    cancel_confirm_desc: "L'annullamento è immediato e rilascia il credito riservato.",
+    cancel_confirm_desc:
+      "L'annullamento è immediato: le chiamate in corso verranno terminate e il credito riservato verrà rilasciato.",
+    cancel_typed_confirm_hint: 'Per confermare, digita il nome della campagna qui sotto:',
     pause_success: 'Campagna messa in pausa',
     resume_success: 'Campagna ripresa',
     cancel_success: 'Campagna annullata',

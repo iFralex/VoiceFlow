@@ -12,8 +12,20 @@ import {
   pauseCampaignAction,
   resumeCampaignAction,
 } from '@/actions/campaigns';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { Input } from '@/components/ui/input';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { toastResult } from '@/lib/utils/action-toast';
 
@@ -78,6 +90,86 @@ function formatDuration(totalSeconds: number): string {
   const seconds = totalSeconds % 60;
   if (minutes === 0) return `${seconds}s`;
   return `${minutes}m ${seconds}s`;
+}
+
+// ---------------------------------------------------------------------------
+// Typed-name cancel confirmation dialog
+// ---------------------------------------------------------------------------
+
+/**
+ * A destructive confirm dialog that requires the user to type the campaign name
+ * before the confirm button is enabled. Used for the irreversible cancel action.
+ */
+function TypedCancelDialog({
+  campaignName,
+  trigger,
+  onConfirm,
+}: {
+  campaignName: string;
+  trigger: React.ReactNode;
+  onConfirm: () => void | Promise<void>;
+}) {
+  const t = useTranslations('campaigns');
+  const tc = useTranslations('common');
+  const [open, setOpen] = React.useState(false);
+  const [typedName, setTypedName] = React.useState('');
+  const [pending, setPending] = React.useState(false);
+
+  const isMatch = typedName.trim() === campaignName.trim();
+
+  function handleOpenChange(next: boolean) {
+    setOpen(next);
+    if (!next) setTypedName('');
+  }
+
+  async function handleConfirm() {
+    if (!isMatch) return;
+    setPending(true);
+    try {
+      await onConfirm();
+      setOpen(false);
+    } finally {
+      setPending(false);
+      setTypedName('');
+    }
+  }
+
+  return (
+    <AlertDialog open={open} onOpenChange={handleOpenChange}>
+      <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{t('cancel_confirm_title')}</AlertDialogTitle>
+          <AlertDialogDescription>{t('cancel_confirm_desc')}</AlertDialogDescription>
+        </AlertDialogHeader>
+        <div className="py-2">
+          <p className="mb-2 text-sm text-muted-foreground">
+            {t('cancel_typed_confirm_hint')}
+          </p>
+          <Input
+            value={typedName}
+            onChange={(e) => setTypedName(e.target.value)}
+            placeholder={campaignName}
+            disabled={pending}
+            autoComplete="off"
+          />
+        </div>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={pending}>{tc('cancel')}</AlertDialogCancel>
+          <AlertDialogAction
+            variant="destructive"
+            disabled={!isMatch || pending}
+            onClick={(e) => {
+              e.preventDefault();
+              void handleConfirm();
+            }}
+          >
+            {pending ? tc('loading') : t('action_cancel')}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -211,15 +303,18 @@ export function CampaignDetailClient({
         {/* Action buttons */}
         <div className="flex flex-wrap items-center gap-2">
           {canPause && (
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={pending}
-              onClick={() => void handlePause()}
-            >
-              <Pause className="mr-1 size-3" />
-              {t('action_pause')}
-            </Button>
+            <ConfirmDialog
+              trigger={
+                <Button variant="outline" size="sm" disabled={pending}>
+                  <Pause className="mr-1 size-3" />
+                  {t('action_pause')}
+                </Button>
+              }
+              title={t('pause_confirm_title')}
+              description={t('pause_confirm_desc')}
+              confirmLabel={t('action_pause')}
+              onConfirm={handlePause}
+            />
           )}
 
           {canResume && (
@@ -235,16 +330,14 @@ export function CampaignDetailClient({
           )}
 
           {canCancel && (
-            <ConfirmDialog
+            <TypedCancelDialog
+              campaignName={campaign.name}
               trigger={
                 <Button variant="outline" size="sm" disabled={pending}>
                   <X className="mr-1 size-3" />
                   {t('action_cancel')}
                 </Button>
               }
-              title={t('cancel_confirm_title')}
-              description={t('cancel_confirm_desc')}
-              confirmLabel={t('action_cancel')}
               onConfirm={handleCancel}
             />
           )}

@@ -296,10 +296,10 @@ export function nextWindowOpen(
 
 ### Task 16: Campaign pause/cancel UX
 
-- [ ] Pausa: confirm dialog "Le chiamate in corso continueranno fino al termine; nessuna nuova chiamata sarà avviata"; calls `pauseCampaign`; in-flight Inngest steps complete naturally
-- [ ] Annulla: harder confirm dialog requiring typing the campaign name; calls `cancelCampaign`; signals provider to terminate in-progress calls (`provider.cancelCall` for each `dialing|in_progress`); releases reservation immediately
-- [ ] Both surface as toasts on success
-- [ ] Mark completed
+- [x] Pausa: confirm dialog "Le chiamate in corso continueranno fino al termine; nessuna nuova chiamata sarà avviata"; calls `pauseCampaign`; in-flight Inngest steps complete naturally
+- [x] Annulla: harder confirm dialog requiring typing the campaign name; calls `cancelCampaign`; signals provider to terminate in-progress calls (`provider.cancelCall` for each `dialing|in_progress`); releases reservation immediately
+- [x] Both surface as toasts on success
+- [x] Mark completed
 
 ### Task 17: Failure handling and dead-letter
 

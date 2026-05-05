@@ -129,9 +129,17 @@ function CampaignRowActions({ campaign }: { campaign: SerializedCampaign }) {
         </DropdownMenuItem>
 
         {canPause && (
-          <DropdownMenuItem onSelect={() => void handlePause()}>
-            {t('action_pause')}
-          </DropdownMenuItem>
+          <ConfirmDialog
+            trigger={
+              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                {t('action_pause')}
+              </DropdownMenuItem>
+            }
+            title={t('pause_confirm_title')}
+            description={t('pause_confirm_desc')}
+            confirmLabel={t('action_pause')}
+            onConfirm={handlePause}
+          />
         )}
 
         {canResume && (
