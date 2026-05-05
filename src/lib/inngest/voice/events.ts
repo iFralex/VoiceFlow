@@ -22,3 +22,18 @@ export interface CallClassifyData {
   callId: string;
   orgId: string;
 }
+
+export const APPOINTMENT_BOOKED_EVENT = 'appointment/booked' as const;
+export const CALL_TRANSFERRED_EVENT = 'call/transferred' as const;
+
+export interface AppointmentBookedData {
+  callId: string;
+  orgId: string;
+  appointmentId: string;
+}
+
+export interface CallTransferredData {
+  callId: string;
+  orgId: string;
+  reason: string;
+}

@@ -23,6 +23,7 @@ import { chargeForCall } from '@/lib/services/credit';
 import { getVoiceProvider } from '@/lib/voice/factory';
 import { assembleSystemPrompt, interpolate } from '@/lib/voice/prompt/preamble';
 import { TEMPLATE_TOOLS } from '@/lib/voice/templates/tools';
+import { dispatchToolSideEffect } from '@/lib/voice/tools/handlers';
 import type { ToolDefinition, TranscriptSegment } from '@/lib/voice/types';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -406,8 +407,12 @@ export async function recordCallEnded(
 }
 
 /**
- * Records a tool invocation during a call (from webhook: function-call).
- * The actual side-effect handlers live in Task 10 (src/lib/voice/tools/handlers.ts).
+ * Records a tool invocation during a call (from webhook: function-call) and
+ * runs the corresponding side-effect handler inside the same transaction.
+ *
+ * The audit record and all DB side effects (outcome update, appointment insert,
+ * opt-out registry, etc.) are committed atomically. Inngest events that need to
+ * fire after the commit are emitted outside the transaction.
  */
 export async function recordToolInvocation(
   callId: string,
@@ -425,7 +430,7 @@ export async function recordToolInvocation(
 
   const orgId = row.org_id;
 
-  await withOrgContext(orgId, async (tx) => {
+  const { inngestEvents } = await withOrgContext(orgId, async (tx) => {
     await recordAudit(tx, {
       orgId,
       actorType: 'webhook',
@@ -434,7 +439,14 @@ export async function recordToolInvocation(
       subjectId: callId,
       metadata: { tool, args },
     });
+
+    return dispatchToolSideEffect(tx, orgId, callId, tool, args);
   });
+
+  // Emit events outside the transaction so Inngest failures don't roll back the DB write.
+  for (const event of inngestEvents) {
+    await sendInngestEvent(event);
+  }
 }
 
 /**

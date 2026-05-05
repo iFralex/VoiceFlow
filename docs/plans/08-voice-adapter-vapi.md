@@ -230,16 +230,16 @@ export async function fetchCallTimeline(orgId: string, callId: string): Promise<
 
 ### Task 10: Tool handlers — side effects
 
-- [ ] Create `src/lib/voice/tools/handlers.ts` mapping each tool name to a side-effect function:
+- [x] Create `src/lib/voice/tools/handlers.ts` mapping each tool name to a side-effect function:
   - `book_appointment(orgId, callId, args)`: insert `appointments` row, set `calls.appointment_id`, set `calls.outcome='appointment_booked'`, emit `appointment.booked` Inngest event
   - `mark_not_interested(orgId, callId, args)`: set `calls.outcome='not_interested'`
   - `mark_wrong_number(orgId, callId, args)`: set `calls.outcome='wrong_number'`, soft-update contact metadata (number flagged)
   - `request_callback(orgId, callId, args)`: set `calls.outcome='callback_requested'`, store window in metadata, schedule Inngest event for re-attempt within window
   - `transfer_to_human_agent(orgId, callId, args)`: set `calls.transferred_to_agent=true`, emit Inngest event for plan 13's notification handler
   - `register_opt_out(orgId, callId, args)`: insert into `opt_out_registry`, set contact `opt_out=true`, set `calls.outcome='do_not_call'`
-- [ ] Tool handlers run inside the same transaction as the call status update (consistency over speed)
-- [ ] All handlers idempotent: re-invoking with the same `(callId, tool)` is a no-op
-- [ ] Mark completed
+- [x] Tool handlers run inside the same transaction as the call status update (consistency over speed)
+- [x] All handlers idempotent: re-invoking with the same `(callId, tool)` is a no-op
+- [x] Mark completed
 
 ### Task 11: Outcome classifier — inferred path
 
