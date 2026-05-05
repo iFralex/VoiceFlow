@@ -182,15 +182,14 @@ export async function previewVoiceSampleAction(
     const { orgId } = await getAuthContext();
     await requireCapability('scripts.edit');
 
-    const [{ firstMessage }, script] = await Promise.all([
-      previewSystemPromptService(orgId, parsed.data.scriptId),
-      getScriptService(orgId, parsed.data.scriptId),
-    ]);
-
+    // Fetch script first so a missing script returns a clear error rather than
+    // being swallowed as a generic synthesis error from previewSystemPromptService.
+    const script = await getScriptService(orgId, parsed.data.scriptId);
     if (!script) {
       return { ok: false, status: 'error', message: 'script_not_found' };
     }
 
+    const { firstMessage } = await previewSystemPromptService(orgId, parsed.data.scriptId);
     const textToSynthesize = firstMessage.slice(0, 60);
     const voiceId = resolveElevenLabsVoiceId(
       script.voice_id ?? script.template.default_voice_id,

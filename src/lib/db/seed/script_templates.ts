@@ -9,8 +9,9 @@ import { postSaleFollowupJsonSchema } from '@/lib/voice/templates/schemas/post-s
 
 import { NewScriptTemplate } from '../schema/script_templates';
 
-// Resolved at module load time; works for both tsx CLI runs and vitest.
-const PROMPTS_DIR = path.join(__dirname, '../../voice/templates/prompts');
+// process.cwd() resolves to the project root in both tsx CLI runs and Next.js
+// production builds, unlike __dirname which points inside .next/server/chunks/.
+const PROMPTS_DIR = path.join(process.cwd(), 'src', 'lib', 'voice', 'templates', 'prompts');
 
 function readPromptFile(filename: string): string {
   const fullPath = path.join(PROMPTS_DIR, filename);

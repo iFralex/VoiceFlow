@@ -1,10 +1,10 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import { and, desc, eq, inArray, not } from 'drizzle-orm';
+import { and, desc, eq, inArray, isNotNull, not } from 'drizzle-orm';
 
 import { recordAudit } from '@/lib/db/audit';
-import { withOrgContext } from '@/lib/db/context';
+import { withOrgContext, withSystemContext } from '@/lib/db/context';
 import { campaigns, scripts, scriptTemplates } from '@/lib/db/schema';
 import type { Script, ScriptTemplate } from '@/lib/db/schema';
 import { TEMPLATE_DEFINITIONS } from '@/lib/db/seed/script_templates';
@@ -133,22 +133,71 @@ export async function listScripts(orgId: string): Promise<Script[]> {
   });
 }
 
+export async function listScriptsWithTemplates(orgId: string): Promise<
+  Array<{
+    id: string;
+    name: string;
+    template_slug: string;
+    template_name: string;
+    updated_at: Date;
+  }>
+> {
+  const scriptRows = await withOrgContext(orgId, async (tx) => {
+    return tx
+      .select({
+        id: scripts.id,
+        name: scripts.name,
+        template_id: scripts.template_id,
+        updated_at: scripts.updated_at,
+      })
+      .from(scripts)
+      .where(eq(scripts.org_id, orgId))
+      .orderBy(desc(scripts.updated_at));
+  });
+
+  if (scriptRows.length === 0) return [];
+
+  const templateIds = [...new Set(scriptRows.map((r) => r.template_id))];
+  // script_templates is a system-owned table — must use withSystemContext.
+  const templateRows = await withSystemContext(async (tx) => {
+    return tx
+      .select({ id: scriptTemplates.id, slug: scriptTemplates.slug, name: scriptTemplates.name })
+      .from(scriptTemplates)
+      .where(inArray(scriptTemplates.id, templateIds));
+  });
+
+  const templateMap = new Map(templateRows.map((t) => [t.id, t]));
+  return scriptRows.flatMap((s) => {
+    const tmpl = templateMap.get(s.template_id);
+    if (!tmpl) return [];
+    return [{ id: s.id, name: s.name, template_slug: tmpl.slug, template_name: tmpl.name, updated_at: s.updated_at }];
+  });
+}
+
 export async function getScript(
   orgId: string,
   scriptId: string,
 ): Promise<(Script & { template: ScriptTemplate }) | null> {
-  return withOrgContext(orgId, async (tx) => {
+  const script = await withOrgContext(orgId, async (tx) => {
     const rows = await tx
-      .select({ script: scripts, template: scriptTemplates })
+      .select()
       .from(scripts)
-      .innerJoin(scriptTemplates, eq(scripts.template_id, scriptTemplates.id))
       .where(and(eq(scripts.id, scriptId), eq(scripts.org_id, orgId)));
-
-    const row = rows[0];
-    if (!row) return null;
-
-    return { ...row.script, template: row.template };
+    return rows[0] ?? null;
   });
+  if (!script) return null;
+
+  // script_templates is a system-owned table — must use withSystemContext.
+  const template = await withSystemContext(async (tx) => {
+    const rows = await tx
+      .select()
+      .from(scriptTemplates)
+      .where(eq(scriptTemplates.id, script.template_id));
+    return rows[0] ?? null;
+  });
+  if (!template) return null;
+
+  return { ...script, template };
 }
 
 export async function createScript(
@@ -164,42 +213,47 @@ export async function createScript(
 ): Promise<Script> {
   await validateVariables(input.templateSlug, input.variables);
 
-  return withOrgContext(orgId, async (tx) => {
-    // Resolve the template — latest published by slug, or a specific version.
-    const baseConditions = [eq(scriptTemplates.slug, input.templateSlug)];
-    if (input.templateVersion !== undefined) {
-      baseConditions.push(eq(scriptTemplates.version, input.templateVersion));
-    }
+  // Resolve the template from the system-owned table (withSystemContext required).
+  const baseConditions = [
+    eq(scriptTemplates.slug, input.templateSlug),
+    isNotNull(scriptTemplates.published_at),
+  ];
+  if (input.templateVersion !== undefined) {
+    baseConditions.push(eq(scriptTemplates.version, input.templateVersion));
+  }
 
-    const templateRows = await tx
+  const template = await withSystemContext(async (tx) => {
+    const rows = await tx
       .select()
       .from(scriptTemplates)
       .where(and(...baseConditions))
       .orderBy(desc(scriptTemplates.version))
       .limit(1);
+    return rows[0] ?? null;
+  });
 
-    const template = templateRows[0];
-    if (!template) {
-      throw new Error(
-        `Template not found: slug="${input.templateSlug}"${input.templateVersion !== undefined ? `, version=${input.templateVersion}` : ''}`,
-      );
-    }
-
-    // Compliance check: verify AI Act preamble and first-message disclosure.
-    // Fill in empty strings for optional fields absent from user input so that
-    // interpolate does not throw "Missing variable" for optional placeholders.
-    const stringVarsForCheck = fillMissingSchemaFields(
-      coerceVariablesToStrings(input.variables as Record<string, unknown>),
-      template.variable_schema,
+  if (!template) {
+    throw new Error(
+      `Template not found: slug="${input.templateSlug}"${input.templateVersion !== undefined ? `, version=${input.templateVersion}` : ''}`,
     );
-    const assembledPrompt = assembleSystemPrompt({
-      templateBody: template.system_prompt,
-      variables: stringVarsForCheck,
-    });
-    const firstMsgTpl = readFirstMessageTemplate(input.templateSlug);
-    const firstMsg = interpolate(firstMsgTpl, stringVarsForCheck);
-    verifyComplianceOrThrow(assembledPrompt, firstMsg);
+  }
 
+  // Compliance check: verify AI Act preamble and first-message disclosure.
+  // Fill in empty strings for optional fields absent from user input so that
+  // interpolate does not throw "Missing variable" for optional placeholders.
+  const stringVarsForCheck = fillMissingSchemaFields(
+    coerceVariablesToStrings(input.variables as Record<string, unknown>),
+    template.variable_schema,
+  );
+  const assembledPrompt = assembleSystemPrompt({
+    templateBody: template.system_prompt,
+    variables: stringVarsForCheck,
+  });
+  const firstMsgTpl = readFirstMessageTemplate(input.templateSlug);
+  const firstMsg = interpolate(firstMsgTpl, stringVarsForCheck);
+  verifyComplianceOrThrow(assembledPrompt, firstMsg);
+
+  return withOrgContext(orgId, async (tx) => {
     const [created] = await tx
       .insert(scripts)
       .values({

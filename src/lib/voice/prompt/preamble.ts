@@ -100,7 +100,6 @@ export function interpolate(
   // Sanitize values once upfront
   const sanitized: Record<string, string> = {};
   for (const key of Object.keys(variables)) {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     let value = variables[key]!;
     // Strip all C0 control characters (including tab and newline) from slot values
     value = value.replace(CONTROL_CHARS_RE, '');

@@ -1,33 +1,16 @@
-import { desc, eq } from 'drizzle-orm';
-
-import { getAuthContext } from '@/lib/auth/context';
-import { dbForRequest } from '@/lib/db/client';
-import { scripts, scriptTemplates } from '@/lib/db/schema';
-import { TEMPLATE_DEFINITIONS } from '@/lib/db/seed/script_templates';
 import { t as serverT } from '@/i18n/server';
+import { getAuthContext } from '@/lib/auth/context';
+import { TEMPLATE_DEFINITIONS } from '@/lib/db/seed/script_templates';
+import { listScriptsWithTemplates } from '@/lib/services/scripts';
 
 import type { SerializedScript, TemplateCard } from './_components/scripts-page-client';
 import { ScriptsPageClient } from './_components/scripts-page-client';
 
 export default async function ScriptsPage() {
   const { orgId } = await getAuthContext();
-  const { withOrgContext } = await dbForRequest();
   const tScripts = await serverT('scripts');
 
-  const rows = await withOrgContext(async (tx) => {
-    return tx
-      .select({
-        id: scripts.id,
-        name: scripts.name,
-        template_slug: scriptTemplates.slug,
-        template_name: scriptTemplates.name,
-        updated_at: scripts.updated_at,
-      })
-      .from(scripts)
-      .innerJoin(scriptTemplates, eq(scripts.template_id, scriptTemplates.id))
-      .where(eq(scripts.org_id, orgId))
-      .orderBy(desc(scripts.updated_at));
-  });
+  const rows = await listScriptsWithTemplates(orgId);
 
   const templateCards: TemplateCard[] = TEMPLATE_DEFINITIONS.map((def) => {
     const schema = def.variableSchema as { required?: string[] };

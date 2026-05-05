@@ -50,10 +50,11 @@ export async function bumpScriptTemplate(slug: string): Promise<void> {
   // Query the current max version from the database so repeated --bump calls
   // always insert the next version rather than overwriting a previously bumped row.
   const bumpedVersion = await withSystemContext(async (tx) => {
-    const [{ maxVersion }] = await tx
+    const rows = await tx
       .select({ maxVersion: max(scriptTemplates.version) })
       .from(scriptTemplates)
       .where(eq(scriptTemplates.slug, slug));
+    const maxVersion = rows[0]?.maxVersion;
     return (maxVersion ?? def.version) + 1;
   });
   const rows = buildScriptTemplateSeedData({ [slug]: bumpedVersion });

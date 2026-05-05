@@ -109,6 +109,54 @@ function resetQueues() {
   deleteResultQueue.length = 0;
 }
 
+// ─── listScriptsWithTemplates ─────────────────────────────────────────────────
+
+describe('listScriptsWithTemplates', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    resetQueues();
+    mockTx.select.mockImplementation(() => {
+      const result = selectResultQueue.shift() ?? [];
+      return makeSelectChain(result);
+    });
+  });
+
+  it('returns empty array when no scripts exist', async () => {
+    selectResultQueue.push([]); // scripts query returns empty
+    const { listScriptsWithTemplates } = await import('./scripts');
+
+    const result = await listScriptsWithTemplates('org-1');
+    expect(result).toEqual([]);
+  });
+
+  it('returns merged script+template rows', async () => {
+    const scriptRow = { id: fakeScript.id, name: fakeScript.name, template_id: fakeScript.template_id, updated_at: fakeScript.updated_at };
+    const templateRow = { id: fakeTemplate.id, slug: fakeTemplate.slug, name: fakeTemplate.name };
+    selectResultQueue.push([scriptRow]); // scripts query (withOrgContext)
+    selectResultQueue.push([templateRow]); // scriptTemplates query (withSystemContext)
+    const { listScriptsWithTemplates } = await import('./scripts');
+
+    const result = await listScriptsWithTemplates('org-1');
+    expect(result).toEqual([{
+      id: fakeScript.id,
+      name: fakeScript.name,
+      template_slug: fakeTemplate.slug,
+      template_name: fakeTemplate.name,
+      updated_at: fakeScript.updated_at,
+    }]);
+  });
+
+  it('excludes scripts whose template is not found', async () => {
+    const scriptRow = { id: fakeScript.id, name: fakeScript.name, template_id: fakeScript.template_id, updated_at: fakeScript.updated_at };
+    selectResultQueue.push([scriptRow]); // scripts query
+    selectResultQueue.push([]); // templates query returns empty (orphaned script)
+    const { listScriptsWithTemplates } = await import('./scripts');
+
+    const result = await listScriptsWithTemplates('org-1');
+    expect(result).toEqual([]);
+  });
+});
+
 // ─── listScripts ─────────────────────────────────────────────────────────────
 
 describe('listScripts', () => {
@@ -161,7 +209,8 @@ describe('getScript', () => {
   });
 
   it('returns script with template when found', async () => {
-    selectResultQueue.push([{ script: fakeScript, template: fakeTemplate }]);
+    selectResultQueue.push([fakeScript]); // scripts query (withOrgContext)
+    selectResultQueue.push([fakeTemplate]); // scriptTemplates query (withSystemContext)
     const { getScript } = await import('./scripts');
 
     const result = await getScript('org-1', 'script-1');
@@ -319,8 +368,9 @@ describe('updateScript', () => {
   });
 
   it('validates variables when patch includes variables', async () => {
-    // getScript (withOrgContext call 1) returns the existing script+template
-    selectResultQueue.push([{ script: fakeScript, template: fakeTemplate }]);
+    // getScript: scripts query then scriptTemplates query
+    selectResultQueue.push([fakeScript]);
+    selectResultQueue.push([fakeTemplate]);
     updateResultQueue.push([{ ...fakeScript, variables: fakeVariables }]);
 
     const { updateScript } = await import('./scripts');
@@ -332,7 +382,8 @@ describe('updateScript', () => {
   });
 
   it('throws variable validation error when patching with invalid variables', async () => {
-    selectResultQueue.push([{ script: fakeScript, template: fakeTemplate }]);
+    selectResultQueue.push([fakeScript]);
+    selectResultQueue.push([fakeTemplate]);
 
     const { updateScript } = await import('./scripts');
     await expect(
@@ -358,7 +409,8 @@ describe('updateScript', () => {
     vi.mocked(readFileSync).mockReturnValueOnce(
       'Buongiorno, sono {{salesperson_first_name}} di {{dealership_name}}, concessionario {{brand}}.',
     );
-    selectResultQueue.push([{ script: fakeScript, template: fakeTemplate }]);
+    selectResultQueue.push([fakeScript]);
+    selectResultQueue.push([fakeTemplate]);
     const { updateScript } = await import('./scripts');
 
     await expect(
@@ -432,7 +484,7 @@ describe('previewSystemPrompt', () => {
   });
 
   it('throws script_not_found when script does not exist', async () => {
-    selectResultQueue.push([]); // getScript returns null
+    selectResultQueue.push([]); // scripts query returns null → getScript returns null
     const { previewSystemPrompt } = await import('./scripts');
 
     await expect(previewSystemPrompt('org-1', 'script-missing')).rejects.toThrow(
@@ -441,7 +493,8 @@ describe('previewSystemPrompt', () => {
   });
 
   it('assembles system prompt with AI Act preamble', async () => {
-    selectResultQueue.push([{ script: fakeScript, template: fakeTemplate }]);
+    selectResultQueue.push([fakeScript]); // scripts query
+    selectResultQueue.push([fakeTemplate]); // scriptTemplates query
     const { previewSystemPrompt } = await import('./scripts');
 
     const result = await previewSystemPrompt('org-1', 'script-1');
@@ -456,7 +509,8 @@ describe('previewSystemPrompt', () => {
   });
 
   it('returns interpolated first message', async () => {
-    selectResultQueue.push([{ script: fakeScript, template: fakeTemplate }]);
+    selectResultQueue.push([fakeScript]); // scripts query
+    selectResultQueue.push([fakeTemplate]); // scriptTemplates query
     const { previewSystemPrompt } = await import('./scripts');
 
     const result = await previewSystemPrompt('org-1', 'script-1');
@@ -467,7 +521,8 @@ describe('previewSystemPrompt', () => {
   });
 
   it('coerces array variables to comma-separated string', async () => {
-    selectResultQueue.push([{ script: fakeScript, template: fakeTemplate }]);
+    selectResultQueue.push([fakeScript]); // scripts query
+    selectResultQueue.push([fakeTemplate]); // scriptTemplates query
     const { previewSystemPrompt } = await import('./scripts');
 
     const result = await previewSystemPrompt('org-1', 'script-1');

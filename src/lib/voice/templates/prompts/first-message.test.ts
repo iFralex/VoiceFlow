@@ -1,6 +1,8 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+
 import { describe, expect, it } from 'vitest';
+
 import { interpolate } from '@/lib/voice/prompt/preamble';
 
 const PROMPTS_DIR = path.join(__dirname);
