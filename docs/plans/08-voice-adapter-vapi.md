@@ -204,7 +204,7 @@ export async function fetchCallTimeline(orgId: string, callId: string): Promise<
 
 ### Task 8: Vapi webhook handler
 
-- [ ] Create `src/app/api/webhooks/vapi/route.ts`:
+- [x] Create `src/app/api/webhooks/vapi/route.ts`:
   - read raw body, verify HMAC against `VAPI_WEBHOOK_SECRET`
   - dedupe via `webhook_events`
   - persist payload
@@ -215,8 +215,8 @@ export async function fetchCallTimeline(orgId: string, callId: string): Promise<
     - `transcript.partial` → ignored (we only consume final)
     - `status-update` → update `calls.status` if mapping exists
   - return 200 within 3s
-- [ ] Add unit test using a fixture payload + known signature
-- [ ] Mark completed
+- [x] Add unit test using a fixture payload + known signature
+- [x] Mark completed
 
 ### Task 9: Recording and transcript persistence
 
