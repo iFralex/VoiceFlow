@@ -8,6 +8,7 @@ export function getVoiceProvider(): VoiceProvider {
   switch (env.VOICE_PROVIDER) {
     case 'vapi':
       if (!env.VAPI_API_KEY) throw new Error('VAPI_API_KEY not configured');
+      if (!env.VAPI_ASSISTANT_ID) throw new Error('VAPI_ASSISTANT_ID not configured');
       return new VapiAdapter(env.VAPI_API_KEY);
     case 'retell':
       if (!env.RETELL_API_KEY) throw new Error('RETELL_API_KEY not configured');

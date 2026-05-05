@@ -16,6 +16,7 @@
  */
 
 import { classifyAndFinaliseCall } from '@/lib/services/calls';
+import { VoiceProviderError } from '@/lib/voice/errors';
 import { persistCallArtifacts, RecordingNotReadyError } from '@/lib/voice/persistence';
 
 import type { CallCompletedData } from './events';
@@ -37,6 +38,15 @@ export async function persistCallArtifactsHandler(data: CallCompletedData): Prom
     if (err instanceof RecordingNotReadyError) {
       // Re-throw so Inngest retries with back-off
       throw err;
+    }
+    if (
+      err instanceof VoiceProviderError &&
+      err.code === 'vapi.recording_not_available'
+    ) {
+      // No recording for this call (e.g. no_answer, busy, failed) — skip artifact
+      // persistence. These calls also have no transcript, so classification is not
+      // possible. The call status already reflects the outcome (set by recordCallEnded).
+      return;
     }
     // For all other errors, wrap with context and re-throw
     throw new Error(

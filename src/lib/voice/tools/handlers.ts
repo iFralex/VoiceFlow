@@ -51,9 +51,35 @@ async function loadCallContact(
   return { contactId: callRow.contactId, phoneE164: contactRow.phoneE164 };
 }
 
-/** Parses "YYYY-MM-DD" + "HH:MM" into a Date (server local time). */
+/**
+ * Parses "YYYY-MM-DD" + "HH:MM" as Europe/Rome local time and returns the
+ * corresponding UTC Date. Uses the Intl API to resolve the UTC offset for the
+ * given date, correctly handling CET (UTC+1) and CEST (UTC+2) daylight saving.
+ */
 function parseScheduledAt(date: string, time: string): Date {
-  return new Date(`${date}T${time}:00`);
+  // Step 1: treat the input as UTC to obtain a reference instant.
+  const candidate = new Date(`${date}T${time}:00Z`);
+
+  // Step 2: format that UTC instant as Europe/Rome local time.
+  // sv-SE locale produces "YYYY-MM-DD HH:MM:SS" which is easy to re-parse.
+  const romeStr = new Intl.DateTimeFormat('sv-SE', {
+    timeZone: 'Europe/Rome',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  }).format(candidate);
+
+  // Step 3: parse that Rome local time back as UTC to get the offset direction.
+  const romeAsUtc = new Date(romeStr.replace(' ', 'T') + 'Z').getTime();
+
+  // Step 4: subtract the offset to obtain the true UTC instant.
+  // offset = romeAsUtc - candidateUtc = positive (Rome is ahead of UTC)
+  const offset = romeAsUtc - candidate.getTime();
+  return new Date(candidate.getTime() - offset);
 }
 
 // ─── Individual handlers ──────────────────────────────────────────────────────
@@ -156,11 +182,14 @@ async function runRequestCallback(
   tx: DbTx,
   orgId: string,
   callId: string,
-  _args: { preferred_window: string },
+  args: { preferred_window: string },
 ): Promise<ToolSideEffectResult> {
   await tx
     .update(calls)
-    .set({ outcome: 'callback_requested' })
+    .set({
+      outcome: 'callback_requested',
+      metadata: sql`COALESCE(${calls.metadata}, '{}'::jsonb) || ${JSON.stringify({ callback_window: args.preferred_window })}::jsonb`,
+    })
     .where(and(eq(calls.id, callId), eq(calls.org_id, orgId), isNull(calls.outcome)));
 
   return { inngestEvents: [] };
@@ -220,21 +249,21 @@ async function runRegisterOptOut(
 
 async function runConfirmAppointment(
   tx: DbTx,
-  _orgId: string,
+  orgId: string,
   callId: string,
   _args: { confirmation_text: string },
 ): Promise<ToolSideEffectResult> {
   await tx
     .update(appointments)
     .set({ status: 'confirmed' })
-    .where(eq(appointments.call_id, callId));
+    .where(and(eq(appointments.call_id, callId), eq(appointments.org_id, orgId)));
 
   return { inngestEvents: [] };
 }
 
 async function runRescheduleAppointment(
   tx: DbTx,
-  _orgId: string,
+  orgId: string,
   callId: string,
   args: { new_date: string; new_time: string; contact_confirmation_text: string },
 ): Promise<ToolSideEffectResult> {
@@ -245,7 +274,7 @@ async function runRescheduleAppointment(
       status: 'booked',
       notes: args.contact_confirmation_text,
     })
-    .where(eq(appointments.call_id, callId));
+    .where(and(eq(appointments.call_id, callId), eq(appointments.org_id, orgId)));
 
   return { inngestEvents: [] };
 }
