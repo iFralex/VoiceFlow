@@ -28,6 +28,7 @@ const Env = z.object({
   INNGEST_SIGNING_KEY: z.string().min(1),
   VOICE_PROVIDER: z.enum(['vapi', 'retell']).default('vapi'),
   VAPI_API_KEY: z.string().min(1).optional(),
+  VAPI_ASSISTANT_ID: z.string().min(1).optional(),
   VAPI_WEBHOOK_SECRET: z.string().min(1).optional(),
   RETELL_API_KEY: z.string().min(1).optional(),
   RETELL_WEBHOOK_SECRET: z.string().min(1).optional(),

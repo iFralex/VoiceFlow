@@ -91,11 +91,11 @@ export function getVoiceProvider(): VoiceProvider {
 
 ### Task 3: Vapi assistant configuration
 
-- [ ] In Vapi dashboard create a "VoiceFlow Outbound Assistant" with the per-call override pattern: assistant id only carries default settings; per-call we pass `assistantOverrides` for system prompt, first message, voice, tools
-- [ ] Configure ElevenLabs as TTS provider and OpenAI gpt-4o (or current best) as the LLM in the Vapi assistant defaults
-- [ ] Configure Vapi to send webhook events to `${APP_URL}/api/webhooks/vapi`
-- [ ] Save assistant id into env as `VAPI_ASSISTANT_ID`
-- [ ] Mark completed
+- [x] In Vapi dashboard create a "VoiceFlow Outbound Assistant" with the per-call override pattern: assistant id only carries default settings; per-call we pass `assistantOverrides` for system prompt, first message, voice, tools
+- [x] Configure ElevenLabs as TTS provider and OpenAI gpt-4o (or current best) as the LLM in the Vapi assistant defaults
+- [x] Configure Vapi to send webhook events to `${APP_URL}/api/webhooks/vapi`
+- [x] Save assistant id into env as `VAPI_ASSISTANT_ID`
+- [x] Mark completed
 
 ### Task 4: Vapi adapter implementation
 
