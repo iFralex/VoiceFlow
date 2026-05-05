@@ -1,4 +1,6 @@
-import { and, eq } from 'drizzle-orm';
+import { timingSafeEqual } from 'crypto';
+
+import { and, eq, inArray } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
 
 import { withOrgContext, withSystemContext } from '@/lib/db/context';
@@ -85,8 +87,15 @@ export async function POST(request: Request): Promise<Response> {
   const rawBody = await request.text();
 
   // Verify shared secret. Vapi sends the configured serverUrlSecret as x-vapi-secret.
+  // Use timingSafeEqual to prevent timing side-channel attacks.
   const incomingSecret = request.headers.get('x-vapi-secret');
-  if (!env.VAPI_WEBHOOK_SECRET || incomingSecret !== env.VAPI_WEBHOOK_SECRET) {
+  const configuredSecret = env.VAPI_WEBHOOK_SECRET;
+  if (
+    !configuredSecret ||
+    !incomingSecret ||
+    incomingSecret.length !== configuredSecret.length ||
+    !timingSafeEqual(Buffer.from(incomingSecret), Buffer.from(configuredSecret))
+  ) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -182,7 +191,9 @@ export async function POST(request: Request): Promise<Response> {
             // Reuse the idempotent recordCallStarted handler for the in_progress transition
             await recordCallStarted(callId, providerCallId);
           } else if (mappedStatus === 'dialing') {
-            // Call is still ringing/queued — look up org_id and update status
+            // Call is still ringing/queued — look up org_id and update status.
+            // Guard against overwriting a terminal status with 'dialing' when
+            // delayed/out-of-order webhooks arrive.
             const [row] = await withSystemContext((tx) =>
               tx
                 .select({ org_id: calls.org_id })
@@ -195,7 +206,12 @@ export async function POST(request: Request): Promise<Response> {
                 await tx
                   .update(calls)
                   .set({ status: 'dialing' })
-                  .where(eq(calls.id, callId));
+                  .where(
+                    and(
+                      eq(calls.id, callId),
+                      inArray(calls.status, ['pending', 'dialing']),
+                    ),
+                  );
               });
             }
           }

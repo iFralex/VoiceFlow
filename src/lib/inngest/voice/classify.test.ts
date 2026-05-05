@@ -49,11 +49,12 @@ mockUpdate.mockReturnValue(updateChain);
 
 // ─── Module under test ────────────────────────────────────────────────────────
 
-import { classifyCallHandler } from './classify';
+import { sendInngestEvent } from '@/lib/inngest/client';
 import { classifyTranscript } from '@/lib/voice/classifier';
 import { checkDisclosure } from '@/lib/voice/disclosure';
-import { sendInngestEvent } from '@/lib/inngest/client';
-import { QUALITY_OUTCOME_MISMATCH_EVENT, QUALITY_DISCLOSURE_MISSING_EVENT } from './events';
+
+import { classifyCallHandler } from './classify';
+import { QUALITY_DISCLOSURE_MISSING_EVENT, QUALITY_OUTCOME_MISMATCH_EVENT } from './events';
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -127,6 +128,20 @@ describe('classifyCallHandler', () => {
         outcome_confidence: '0.92',
       }),
     );
+    expect(sendInngestEvent).not.toHaveBeenCalled();
+  });
+
+  it('skips classifier when tool outcome already set on first read', async () => {
+    // First select: call already has a tool-driven outcome — early exit
+    mockSelect.mockReturnValueOnce(
+      makeSelectChain([{ outcome: 'appointment_booked', transcript_path: `transcripts/${ORG_ID}/${CALL_ID}.json` }]),
+    );
+
+    await classifyCallHandler(BASE_DATA);
+
+    // Classifier must not run when outcome is already set
+    expect(classifyTranscript).not.toHaveBeenCalled();
+    expect(mockUpdate).not.toHaveBeenCalled();
     expect(sendInngestEvent).not.toHaveBeenCalled();
   });
 
@@ -336,9 +351,10 @@ describe('classifyCallHandler', () => {
 
       await classifyCallHandler(BASE_DATA);
 
-      // metadata update must have been called
+      // metadata update must have been called with a SQL merge expression
+      // (not a plain object, to avoid overwriting existing metadata keys)
       expect(updateChain.set).toHaveBeenCalledWith(
-        expect.objectContaining({ metadata: { disclosure_verified: false } }),
+        expect.objectContaining({ metadata: expect.anything() }),
       );
 
       // disclosure-missing event must have been emitted

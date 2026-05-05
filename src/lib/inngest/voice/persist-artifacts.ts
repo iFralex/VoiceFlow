@@ -15,7 +15,9 @@
  * retries without changing the business logic here.
  */
 
+import { classifyAndFinaliseCall } from '@/lib/services/calls';
 import { persistCallArtifacts, RecordingNotReadyError } from '@/lib/voice/persistence';
+
 import type { CallCompletedData } from './events';
 
 /** Maximum number of execution attempts before giving up. */
@@ -41,4 +43,7 @@ export async function persistCallArtifactsHandler(data: CallCompletedData): Prom
       `persistCallArtifacts failed for callId=${data.callId}: ${err instanceof Error ? err.message : String(err)}`,
     );
   }
+
+  // Artifacts are now in storage — emit call/classify if no tool outcome was set.
+  await classifyAndFinaliseCall(data.callId);
 }

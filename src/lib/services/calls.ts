@@ -1,7 +1,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray, sql } from 'drizzle-orm';
 
 import { recordAudit } from '@/lib/db/audit';
 import { withOrgContext, withSystemContext } from '@/lib/db/context';
@@ -18,6 +18,7 @@ import {
 import { TEMPLATE_DEFINITIONS } from '@/lib/db/seed/script_templates';
 import { env } from '@/lib/env';
 import { sendInngestEvent } from '@/lib/inngest/client';
+import { CALL_CLASSIFY_EVENT, CALL_COMPLETED_EVENT } from '@/lib/inngest/voice/events';
 import { computeCallCost, computePerMinuteCents } from '@/lib/services/billing-rules';
 import { chargeForCall } from '@/lib/services/credit';
 import { getVoiceProvider } from '@/lib/voice/factory';
@@ -28,11 +29,11 @@ import type { ToolDefinition, TranscriptSegment } from '@/lib/voice/types';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-/** Inngest event emitted when a call ends; triggers artifact persistence (Task 9). */
-export const CALL_COMPLETED_EVENT = 'call/completed' as const;
-
-/** Inngest event emitted to request outcome classification (Task 11). */
-export const CALL_CLASSIFY_EVENT = 'call/classify' as const;
+// CALL_COMPLETED_EVENT and CALL_CLASSIFY_EVENT are imported from
+// '@/lib/inngest/voice/events' — that file is the canonical source.
+// Re-export them so existing imports of these constants from this module
+// continue to work.
+export { CALL_CLASSIFY_EVENT, CALL_COMPLETED_EVENT };
 
 const PROMPTS_DIR = path.join(process.cwd(), 'src', 'lib', 'voice', 'templates', 'prompts');
 const MAX_CALL_DURATION_SECONDS = 600;
@@ -228,7 +229,7 @@ export async function dispatchCall(orgId: string, callId: string): Promise<void>
 
   // 8. Pick a caller number from the phone pool
   //    Plan 10 extends this with Vapi-specific number IDs and rotation logic.
-  const [phone] = await withSystemContext((tx) =>
+  const [phone] = await withOrgContext(orgId, (tx) =>
     tx
       .select({ e164: phoneNumbers.e164 })
       .from(phoneNumbers)
@@ -293,8 +294,9 @@ export async function dispatchCall(orgId: string, callId: string): Promise<void>
   });
 
   // 11. Persist provider_call_id and transition to 'dialing'.
-  //     Store leave_voicemail_message in metadata so recordCallEnded can set
-  //     the correct outcome when AMD detects a voicemail.
+  //     Merge leave_voicemail_message into existing metadata (which may already
+  //     contain test_call, initiated_by, and voice_id_override keys set by the
+  //     test-call endpoint) so that none of those keys are lost.
   await withOrgContext(orgId, async (tx) => {
     await tx
       .update(calls)
@@ -302,7 +304,7 @@ export async function dispatchCall(orgId: string, callId: string): Promise<void>
         provider_call_id: providerCallId,
         status: 'dialing',
         provider: provider.name as Call['provider'],
-        metadata: { leave_voicemail_message: leaveVoicemailMessage },
+        metadata: sql`COALESCE(${calls.metadata}, '{}'::jsonb) || ${JSON.stringify({ leave_voicemail_message: leaveVoicemailMessage })}::jsonb`,
       })
       .where(and(eq(calls.id, callId), eq(calls.org_id, orgId)));
 

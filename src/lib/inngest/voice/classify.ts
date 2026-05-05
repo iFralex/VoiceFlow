@@ -16,7 +16,7 @@
  * by `outcome IS NULL` so a second run is a no-op if the first already wrote.
  */
 
-import { and, eq, isNull } from 'drizzle-orm';
+import { and, eq, isNull, sql } from 'drizzle-orm';
 
 import { withOrgContext } from '@/lib/db/context';
 import { calls } from '@/lib/db/schema';
@@ -26,6 +26,7 @@ import { classifyTranscript } from '@/lib/voice/classifier';
 import { checkDisclosure } from '@/lib/voice/disclosure';
 import { CALL_MEDIA_BUCKET } from '@/lib/voice/persistence';
 import type { TranscriptSegment } from '@/lib/voice/types';
+
 import type { CallClassifyData } from './events';
 import { QUALITY_DISCLOSURE_MISSING_EVENT, QUALITY_OUTCOME_MISMATCH_EVENT } from './events';
 
@@ -42,8 +43,8 @@ export async function classifyCallHandler(data: CallClassifyData): Promise<void>
   const [call] = await withOrgContext(orgId, (tx) =>
     tx
       .select({
-        outcome: calls.outcome,
         transcript_path: calls.transcript_path,
+        outcome: calls.outcome,
       })
       .from(calls)
       .where(and(eq(calls.id, callId), eq(calls.org_id, orgId)))
@@ -55,6 +56,9 @@ export async function classifyCallHandler(data: CallClassifyData): Promise<void>
   if (!call.transcript_path) {
     throw new Error(`Call ${callId} has no transcript_path — cannot classify`);
   }
+
+  // Early exit: a tool-driven outcome was already set; skip the expensive classifier.
+  if (call.outcome !== null && call.outcome !== undefined) return;
 
   // 2. Download transcript from Supabase Storage
   const { data: transcriptBlob, error: downloadError } = await supabaseAdmin.storage
@@ -78,7 +82,9 @@ export async function classifyCallHandler(data: CallClassifyData): Promise<void>
     await withOrgContext(orgId, async (tx) => {
       await tx
         .update(calls)
-        .set({ metadata: { disclosure_verified: false } })
+        .set({
+          metadata: sql`COALESCE(${calls.metadata}, '{}'::jsonb) || '{"disclosure_verified": false}'::jsonb`,
+        })
         .where(and(eq(calls.id, callId), eq(calls.org_id, orgId)));
     });
     await sendInngestEvent({

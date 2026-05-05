@@ -1,5 +1,10 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 
+// Mock classifyAndFinaliseCall so it doesn't attempt DB connections in unit tests
+vi.mock('@/lib/services/calls', () => ({
+  classifyAndFinaliseCall: vi.fn().mockResolvedValue(undefined),
+}));
+
 // Mock the persistence module so we can test the handler in isolation
 vi.mock('@/lib/voice/persistence', () => {
   class RecordingNotReadyError extends Error {
@@ -15,8 +20,10 @@ vi.mock('@/lib/voice/persistence', () => {
   };
 });
 
-import { persistCallArtifactsHandler } from './persist-artifacts';
+import { classifyAndFinaliseCall } from '@/lib/services/calls';
 import { persistCallArtifacts, RecordingNotReadyError } from '@/lib/voice/persistence';
+
+import { persistCallArtifactsHandler } from './persist-artifacts';
 
 const CALL_ID = 'call-uuid-handler-test';
 const ORG_ID = 'org-uuid-handler-test';
@@ -40,6 +47,7 @@ describe('persistCallArtifactsHandler', () => {
     await expect(persistCallArtifactsHandler(BASE_DATA)).resolves.toBeUndefined();
 
     expect(persistCallArtifacts).toHaveBeenCalledWith(CALL_ID);
+    expect(classifyAndFinaliseCall).toHaveBeenCalledWith(CALL_ID);
   });
 
   it('re-throws RecordingNotReadyError so Inngest retries', async () => {
