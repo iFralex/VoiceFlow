@@ -3,7 +3,7 @@ import * as path from 'node:path';
 
 import { notFound } from 'next/navigation';
 
-import { getAuthContext } from '@/lib/auth/context';
+import { getAuthContext, hasCapability } from '@/lib/auth/context';
 import { TEMPLATE_DEFINITIONS } from '@/lib/db/seed/script_templates';
 import { env } from '@/lib/env';
 import { getScript } from '@/lib/services/scripts';
@@ -32,7 +32,7 @@ type PageProps = {
 
 export default async function ScriptDetailPage({ params }: PageProps) {
   const { id } = await params;
-  const { orgId } = await getAuthContext();
+  const { orgId, role } = await getAuthContext();
 
   const row = await getScript(orgId, id);
   if (!row) notFound();
@@ -67,6 +67,7 @@ export default async function ScriptDetailPage({ params }: PageProps) {
       preamble={AI_ACT_PREAMBLE_IT}
       outcomeInstructions={OUTCOME_CLASSIFICATION_INSTRUCTIONS_IT}
       elevenLabsConfigured={!!env.ELEVENLABS_API_KEY}
+      testCallEnabled={hasCapability(role, 'org.manage')}
     />
   );
 }

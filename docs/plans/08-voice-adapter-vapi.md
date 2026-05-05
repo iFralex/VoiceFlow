@@ -278,13 +278,13 @@ export async function fetchCallTimeline(orgId: string, callId: string): Promise<
 
 ### Task 15: Internal test-call endpoint
 
-- [ ] Create `src/app/api/internal/test-call/route.ts` (gated by capability `org.manage` and a feature flag `internal.test_call`):
+- [x] Create `src/app/api/internal/test-call/route.ts` (gated by capability `org.manage` and a feature flag `internal.test_call`):
   - body: `{ scriptId: string; toNumber: string; voiceIdOverride?: string }`
   - dispatches a one-off call against the script (creates a synthetic single-contact campaign or bypasses campaign tables via a `test_call` mode flag on `calls`)
   - returns `{ callId }`
-- [ ] UI in `/scripts/<id>` page: "Chiamami ora" button asking for an Italian number; verifies the number belongs to a member of the org (security: someone could try to weaponise the test endpoint)
-- [ ] Hard rate limit: 10 test calls per org per day
-- [ ] Mark completed
+- [x] UI in `/scripts/<id>` page: "Chiamami ora" button asking for an Italian number; verifies the number belongs to a member of the org (security: someone could try to weaponise the test endpoint)
+- [x] Hard rate limit: 10 test calls per org per day
+- [x] Mark completed
 
 ### Task 16: Integration tests
 

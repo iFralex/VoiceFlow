@@ -222,8 +222,9 @@ export async function dispatchCall(orgId: string, callId: string): Promise<void>
   });
   const firstMessage = interpolate(readFirstMessageTemplate(template.slug), stringVars);
 
-  // 7. Pick voice: script override → template default → last-resort fallback
-  const voiceId = script.voice_id ?? template.default_voice_id ?? 'it-IT-placeholder';
+  // 7. Pick voice: test-call override → script override → template default → last-resort fallback
+  const callMetaVoiceOverride = (call.metadata as Record<string, unknown> | null)?.['voice_id_override'] as string | null | undefined;
+  const voiceId = (callMetaVoiceOverride || undefined) ?? script.voice_id ?? template.default_voice_id ?? 'it-IT-placeholder';
 
   // 8. Pick a caller number from the phone pool
   //    Plan 10 extends this with Vapi-specific number IDs and rotation logic.

@@ -16,6 +16,15 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toastResult } from '@/lib/utils/action-toast';
@@ -80,15 +89,20 @@ function coerceVariables(raw: Record<string, unknown>): VariableValues {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
+// Italian E.164 regex — kept in sync with the API route validation
+const ITALIAN_E164_RE = /^\+39\d{6,11}$/;
+
 type Props = {
   script: SerializedScriptDetail;
   templateInfo: TemplateInfo | null;
   preamble: string;
   outcomeInstructions: string;
   elevenLabsConfigured: boolean;
+  /** When true, the "Chiamami ora" test-call button is shown (owner role only). */
+  testCallEnabled: boolean;
 };
 
-export function ScriptDetailClient({ script, templateInfo, preamble, outcomeInstructions, elevenLabsConfigured }: Props) {
+export function ScriptDetailClient({ script, templateInfo, preamble, outcomeInstructions, elevenLabsConfigured, testCallEnabled }: Props) {
   const t = useTranslations('scripts');
   const router = useRouter();
   const [isSaving, startSaveTransition] = useTransition();
@@ -97,6 +111,12 @@ export function ScriptDetailClient({ script, templateInfo, preamble, outcomeInst
   const [isLoadingSample, startSampleTransition] = useTransition();
   const [sampleError, setSampleError] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Test-call dialog state
+  const [testCallOpen, setTestCallOpen] = useState(false);
+  const [testCallPhone, setTestCallPhone] = useState('');
+  const [testCallPhoneError, setTestCallPhoneError] = useState<string | null>(null);
+  const [isTestCalling, startTestCallTransition] = useTransition();
 
   const [scriptName, setScriptName] = useState(script.name);
   const [voiceId, setVoiceId] = useState(script.voice_id ?? '');
@@ -196,6 +216,39 @@ export function ScriptDetailClient({ script, templateInfo, preamble, outcomeInst
     });
   }
 
+  function handleTestCall() {
+    // Validate Italian E.164
+    if (!ITALIAN_E164_RE.test(testCallPhone.trim())) {
+      setTestCallPhoneError(t('test_call_phone_invalid'));
+      return;
+    }
+    setTestCallPhoneError(null);
+
+    startTestCallTransition(async () => {
+      const res = await fetch('/api/internal/test-call', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scriptId: script.id, toNumber: testCallPhone.trim() }),
+      });
+
+      if (res.status === 429) {
+        toast.error(t('test_call_rate_limit'));
+        return;
+      }
+
+      const json = (await res.json()) as { callId?: string; error?: string };
+
+      if (!res.ok || !json.callId) {
+        toast.error(t('test_call_error'));
+        return;
+      }
+
+      toast.success(t('test_call_success', { callId: json.callId.slice(0, 8) }));
+      setTestCallOpen(false);
+      setTestCallPhone('');
+    });
+  }
+
   function handlePlaySample() {
     setSampleError(null);
     startSampleTransition(async () => {
@@ -253,6 +306,46 @@ export function ScriptDetailClient({ script, templateInfo, preamble, outcomeInst
               {t('use_in_campaign')}
             </Link>
           </Button>
+          {testCallEnabled && (
+            <Dialog open={testCallOpen} onOpenChange={setTestCallOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  {t('test_call_button')}
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>{t('test_call_dialog_title')}</DialogTitle>
+                  <DialogDescription>{t('test_call_dialog_description')}</DialogDescription>
+                </DialogHeader>
+                <div className="space-y-2 py-2">
+                  <Label htmlFor="test-call-phone">{t('test_call_phone_label')}</Label>
+                  <Input
+                    id="test-call-phone"
+                    value={testCallPhone}
+                    onChange={(e) => {
+                      setTestCallPhone(e.target.value);
+                      if (testCallPhoneError) setTestCallPhoneError(null);
+                    }}
+                    placeholder={t('test_call_phone_placeholder')}
+                    type="tel"
+                    disabled={isTestCalling}
+                  />
+                  {testCallPhoneError && (
+                    <p className="text-xs text-destructive">{testCallPhoneError}</p>
+                  )}
+                </div>
+                <DialogFooter>
+                  <Button
+                    onClick={handleTestCall}
+                    disabled={isTestCalling}
+                  >
+                    {isTestCalling ? t('test_call_submitting') : t('test_call_submit')}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
       </div>
 

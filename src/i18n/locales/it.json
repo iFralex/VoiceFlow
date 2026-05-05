@@ -487,7 +487,18 @@
     "voice_sample_listen": "Ascolta un esempio",
     "voice_sample_loading": "Generazione in corso…",
     "voice_sample_error": "Impossibile generare il campione audio",
-    "required_fields": "Campi richiesti"
+    "required_fields": "Campi richiesti",
+    "test_call_button": "Chiamami ora",
+    "test_call_dialog_title": "Chiama di prova",
+    "test_call_dialog_description": "Inserisci il tuo numero di telefono italiano per ricevere una chiamata di prova con questo script. Limite: 10 chiamate di prova al giorno per organizzazione.",
+    "test_call_phone_label": "Numero di telefono",
+    "test_call_phone_placeholder": "+393331234567",
+    "test_call_phone_invalid": "Inserisci un numero di telefono italiano in formato E.164 (es. +393331234567)",
+    "test_call_submit": "Avvia chiamata",
+    "test_call_submitting": "Avvio in corso…",
+    "test_call_success": "Chiamata di prova avviata (ID: {callId})",
+    "test_call_rate_limit": "Limite di 10 chiamate di prova al giorno raggiunto. Riprova domani.",
+    "test_call_error": "Impossibile avviare la chiamata di prova"
   },
   "errors": {
     "title": "Errore",

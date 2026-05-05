@@ -487,7 +487,18 @@
     "voice_sample_listen": "Listen to a sample",
     "voice_sample_loading": "Generating…",
     "voice_sample_error": "Could not generate audio sample",
-    "required_fields": "Required fields"
+    "required_fields": "Required fields",
+    "test_call_button": "Call me now",
+    "test_call_dialog_title": "Test call",
+    "test_call_dialog_description": "Enter your Italian phone number to receive a test call with this script. Limit: 10 test calls per day per organisation.",
+    "test_call_phone_label": "Phone number",
+    "test_call_phone_placeholder": "+393331234567",
+    "test_call_phone_invalid": "Enter a valid Italian E.164 phone number (e.g. +393331234567)",
+    "test_call_submit": "Start call",
+    "test_call_submitting": "Starting…",
+    "test_call_success": "Test call started (ID: {callId})",
+    "test_call_rate_limit": "Daily limit of 10 test calls reached. Try again tomorrow.",
+    "test_call_error": "Could not start test call"
   },
   "errors": {
     "title": "Error",
