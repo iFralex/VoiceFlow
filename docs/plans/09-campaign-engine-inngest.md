@@ -287,12 +287,12 @@ export function nextWindowOpen(
 
 ### Task 15: Campaign detail page (overview tab)
 
-- [ ] Create `src/app/(app)/campaigns/[id]/page.tsx` with three tabs (live and results in plan 12; here just overview):
+- [x] Create `src/app/(app)/campaigns/[id]/page.tsx` with three tabs (live and results in plan 12; here just overview):
   - KPI grid: chiamate totali / completate / fallite, tasso di completamento, lead qualificati, appuntamenti fissati, credito consumato, durata media chiamata
   - status badge with last status change time
   - action buttons: Pausa, Riprendi, Annulla, Duplica, Esporta risultati
   - script and contact-list refs as clickable links
-- [ ] Mark completed
+- [x] Mark completed
 
 ### Task 16: Campaign pause/cancel UX
 
