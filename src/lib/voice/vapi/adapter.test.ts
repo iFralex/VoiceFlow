@@ -139,6 +139,69 @@ describe('VapiAdapter', () => {
       expect(hasTransferTool).toBe(false);
     });
 
+    it('sends voicemailDetection with enabled=true when amdEnabled=true', async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ id: TEST_CALL_ID }),
+      });
+      vi.stubGlobal('fetch', fetchMock);
+
+      await makeAdapter().createCall({ ...baseParams, amdEnabled: true });
+
+      const body = JSON.parse((fetchMock.mock.calls[0]![1] as RequestInit).body as string);
+      expect(body.assistantOverrides.voicemailDetection).toEqual({
+        provider: 'twilio',
+        enabled: true,
+      });
+    });
+
+    it('sends voicemailDetection with enabled=false when amdEnabled=false', async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ id: TEST_CALL_ID }),
+      });
+      vi.stubGlobal('fetch', fetchMock);
+
+      await makeAdapter().createCall({ ...baseParams, amdEnabled: false });
+
+      const body = JSON.parse((fetchMock.mock.calls[0]![1] as RequestInit).body as string);
+      expect(body.assistantOverrides.voicemailDetection).toEqual({
+        provider: 'twilio',
+        enabled: false,
+      });
+    });
+
+    it('includes voicemailMessage in assistantOverrides when provided', async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ id: TEST_CALL_ID }),
+      });
+      vi.stubGlobal('fetch', fetchMock);
+
+      await makeAdapter().createCall({
+        ...baseParams,
+        voicemailMessage: 'Salve, le lascio un messaggio da parte di AutoRoma.',
+      });
+
+      const body = JSON.parse((fetchMock.mock.calls[0]![1] as RequestInit).body as string);
+      expect(body.assistantOverrides.voicemailMessage).toBe(
+        'Salve, le lascio un messaggio da parte di AutoRoma.',
+      );
+    });
+
+    it('omits voicemailMessage from assistantOverrides when not provided', async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ id: TEST_CALL_ID }),
+      });
+      vi.stubGlobal('fetch', fetchMock);
+
+      await makeAdapter().createCall(baseParams);
+
+      const body = JSON.parse((fetchMock.mock.calls[0]![1] as RequestInit).body as string);
+      expect(body.assistantOverrides).not.toHaveProperty('voicemailMessage');
+    });
+
     it('includes metadata and serverUrl in the payload', async () => {
       const fetchMock = vi.fn().mockResolvedValue({
         ok: true,

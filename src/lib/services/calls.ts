@@ -36,6 +36,7 @@ export const CALL_CLASSIFY_EVENT = 'call/classify' as const;
 
 const PROMPTS_DIR = path.join(process.cwd(), 'src', 'lib', 'voice', 'templates', 'prompts');
 const MAX_CALL_DURATION_SECONDS = 600;
+const VOICEMAIL_MESSAGE_TEMPLATE_FILE = 'voicemail-message.txt';
 
 // ─── Error types ─────────────────────────────────────────────────────────────
 
@@ -92,6 +93,11 @@ function readFirstMessageTemplate(templateSlug: string): string {
   const def = TEMPLATE_DEFINITIONS.find((d) => d.slug === templateSlug);
   if (!def) throw new Error(`Unknown template slug: ${templateSlug}`);
   const filePath = path.join(PROMPTS_DIR, def.firstMessageFile);
+  return fs.readFileSync(filePath, 'utf-8').trim();
+}
+
+function readVoicemailMessageTemplate(): string {
+  const filePath = path.join(PROMPTS_DIR, VOICEMAIL_MESSAGE_TEMPLATE_FILE);
   return fs.readFileSync(filePath, 'utf-8').trim();
 }
 
@@ -253,6 +259,16 @@ export async function dispatchCall(orgId: string, callId: string): Promise<void>
       ? scriptVars['transfer_target_phone']
       : undefined;
 
+  // Per-script AMD voicemail policy. Default is false (hang up on AMD) which is
+  // the safer choice for compliance in Phase 1. When true, the provider is
+  // instructed to wait for the beep and read a pre-authored AI Act compliant
+  // voicemail message.
+  const leaveVoicemailMessage = scriptVars['leave_voicemail_message'] === true;
+  let voicemailMessage: string | undefined;
+  if (leaveVoicemailMessage) {
+    voicemailMessage = interpolate(readVoicemailMessageTemplate(), stringVars);
+  }
+
   const { providerCallId } = await provider.createCall({
     toNumber: contact.phone_e164,
     fromNumber: phone.e164,
@@ -272,9 +288,12 @@ export async function dispatchCall(orgId: string, callId: string): Promise<void>
     amdEnabled: true,
     recordingEnabled: true,
     ...(transferTargetPhone !== undefined && { transferTargetPhone }),
+    ...(voicemailMessage !== undefined && { voicemailMessage }),
   });
 
-  // 11. Persist provider_call_id and transition to 'dialing'
+  // 11. Persist provider_call_id and transition to 'dialing'.
+  //     Store leave_voicemail_message in metadata so recordCallEnded can set
+  //     the correct outcome when AMD detects a voicemail.
   await withOrgContext(orgId, async (tx) => {
     await tx
       .update(calls)
@@ -282,6 +301,7 @@ export async function dispatchCall(orgId: string, callId: string): Promise<void>
         provider_call_id: providerCallId,
         status: 'dialing',
         provider: provider.name as Call['provider'],
+        metadata: { leave_voicemail_message: leaveVoicemailMessage },
       })
       .where(and(eq(calls.id, callId), eq(calls.org_id, orgId)));
 
@@ -355,7 +375,7 @@ export async function recordCallEnded(
 ): Promise<void> {
   const [row] = await withSystemContext((tx) =>
     tx
-      .select({ org_id: calls.org_id })
+      .select({ org_id: calls.org_id, metadata: calls.metadata })
       .from(calls)
       .where(eq(calls.id, callId))
       .limit(1),
@@ -373,6 +393,15 @@ export async function recordCallEnded(
 
   const terminalStatus = mapEndedReasonToStatus(args.endedReason);
 
+  // For voicemail calls, determine the outcome from the stored per-call policy:
+  // - leave_voicemail_message=true  → voicemail_left (the AI read a message after the beep)
+  // - leave_voicemail_message=false → voicemail_no_message (hung up on AMD, default)
+  let voicemailOutcome: Call['outcome'] | null = null;
+  if (terminalStatus === 'voicemail') {
+    const meta = (row.metadata as Record<string, unknown> | null) ?? {};
+    voicemailOutcome = meta['leave_voicemail_message'] === true ? 'voicemail_left' : 'voicemail_no_message';
+  }
+
   await withOrgContext(orgId, async (tx) => {
     await tx
       .update(calls)
@@ -381,6 +410,7 @@ export async function recordCallEnded(
         ended_at: new Date(),
         billable_seconds: billableSeconds,
         cost_cents: costCents,
+        ...(voicemailOutcome !== null && { outcome: voicemailOutcome }),
       })
       .where(eq(calls.id, callId));
 

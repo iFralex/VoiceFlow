@@ -346,6 +346,40 @@ describe('dispatchCall', () => {
     expect(callArgs.systemPrompt).toContain('AutoRoma');
     expect(callArgs.systemPrompt).toContain('Volkswagen');
   });
+
+  it('does not pass voicemailMessage when leave_voicemail_message is false (default)', async () => {
+    queueDispatchSelectResults();
+
+    const { dispatchCall } = await import('./calls');
+    await dispatchCall(ORG_ID, CALL_ID);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const callArgs = (mockCreateCall.mock.calls[0] as any[])[0] as Record<string, unknown>;
+    expect(callArgs).not.toHaveProperty('voicemailMessage');
+  });
+
+  it('passes voicemailMessage when leave_voicemail_message=true in script variables', async () => {
+    const scriptWithVoicemail = {
+      ...fakeScript,
+      variables: { ...fakeScript.variables, leave_voicemail_message: true },
+    };
+    selectResultQueue.push(
+      [fakeCall],
+      [fakeCampaign],
+      [scriptWithVoicemail],
+      [fakeTemplate],
+      [fakeContact],
+      [fakePhone],
+    );
+
+    const { dispatchCall } = await import('./calls');
+    await dispatchCall(ORG_ID, CALL_ID);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const callArgs = (mockCreateCall.mock.calls[0] as any[])[0] as Record<string, unknown>;
+    expect(typeof callArgs['voicemailMessage']).toBe('string');
+    expect((callArgs['voicemailMessage'] as string).length).toBeGreaterThan(0);
+  });
 });
 
 // ─── recordCallStarted ────────────────────────────────────────────────────────
@@ -377,7 +411,7 @@ describe('recordCallStarted', () => {
 
 describe('recordCallEnded', () => {
   it('updates call status, computes billing, charges credits, emits event', async () => {
-    selectResultQueue.push([{ org_id: ORG_ID }]);
+    selectResultQueue.push([{ org_id: ORG_ID, metadata: null }]);
 
     const { recordCallEnded, CALL_COMPLETED_EVENT } = await import('./calls');
     await recordCallEnded(CALL_ID, {
@@ -396,7 +430,7 @@ describe('recordCallEnded', () => {
   });
 
   it('maps "voicemail" endedReason to voicemail status', async () => {
-    selectResultQueue.push([{ org_id: ORG_ID }]);
+    selectResultQueue.push([{ org_id: ORG_ID, metadata: null }]);
 
     const { recordCallEnded } = await import('./calls');
     await recordCallEnded(CALL_ID, { durationSeconds: 10, endedReason: 'voicemail' });
@@ -406,8 +440,43 @@ describe('recordCallEnded', () => {
     expect(setArgs.status).toBe('voicemail');
   });
 
+  it('sets outcome=voicemail_no_message when voicemail detected and leave_voicemail_message=false', async () => {
+    selectResultQueue.push([{ org_id: ORG_ID, metadata: { leave_voicemail_message: false } }]);
+
+    const { recordCallEnded } = await import('./calls');
+    await recordCallEnded(CALL_ID, { durationSeconds: 5, endedReason: 'voicemail' });
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const setArgs = (mockTx.update.mock.results[0] as any).value.set.mock.calls[0][0] as Record<string, unknown>;
+    expect(setArgs.status).toBe('voicemail');
+    expect(setArgs.outcome).toBe('voicemail_no_message');
+  });
+
+  it('sets outcome=voicemail_left when voicemail detected and leave_voicemail_message=true', async () => {
+    selectResultQueue.push([{ org_id: ORG_ID, metadata: { leave_voicemail_message: true } }]);
+
+    const { recordCallEnded } = await import('./calls');
+    await recordCallEnded(CALL_ID, { durationSeconds: 15, endedReason: 'voicemail' });
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const setArgs = (mockTx.update.mock.results[0] as any).value.set.mock.calls[0][0] as Record<string, unknown>;
+    expect(setArgs.status).toBe('voicemail');
+    expect(setArgs.outcome).toBe('voicemail_left');
+  });
+
+  it('does not set outcome for non-voicemail end reasons', async () => {
+    selectResultQueue.push([{ org_id: ORG_ID, metadata: null }]);
+
+    const { recordCallEnded } = await import('./calls');
+    await recordCallEnded(CALL_ID, { durationSeconds: 90, endedReason: 'assistant-ended-call' });
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const setArgs = (mockTx.update.mock.results[0] as any).value.set.mock.calls[0][0] as Record<string, unknown>;
+    expect(setArgs).not.toHaveProperty('outcome');
+  });
+
   it('maps "no-answer" endedReason to no_answer status', async () => {
-    selectResultQueue.push([{ org_id: ORG_ID }]);
+    selectResultQueue.push([{ org_id: ORG_ID, metadata: null }]);
 
     const { recordCallEnded } = await import('./calls');
     await recordCallEnded(CALL_ID, { durationSeconds: 5, endedReason: 'no-answer' });
@@ -418,7 +487,7 @@ describe('recordCallEnded', () => {
   });
 
   it('does not charge when costCents is 0', async () => {
-    selectResultQueue.push([{ org_id: ORG_ID }]);
+    selectResultQueue.push([{ org_id: ORG_ID, metadata: null }]);
     mockComputeCallCost.mockReturnValueOnce({ billableSeconds: 0, costCents: 0 });
 
     const { recordCallEnded } = await import('./calls');

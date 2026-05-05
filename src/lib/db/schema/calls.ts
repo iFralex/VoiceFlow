@@ -25,6 +25,7 @@ export const callOutcomeEnum = pgEnum('call_outcome', [
   'wrong_number',
   'callback_requested',
   'voicemail_left',
+  'voicemail_no_message',
   'do_not_call',
 ]);
 

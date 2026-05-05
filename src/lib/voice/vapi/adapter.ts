@@ -83,6 +83,13 @@ export class VapiAdapter implements VoiceProvider {
         backgroundDenoisingEnabled: true,
         maxDurationSeconds: params.maxDurationSeconds,
         hipaaEnabled: false,
+        voicemailDetection: {
+          provider: 'twilio',
+          enabled: params.amdEnabled,
+        },
+        ...(params.voicemailMessage !== undefined && {
+          voicemailMessage: params.voicemailMessage,
+        }),
       },
       metadata: params.metadata,
       serverUrl: params.webhookUrl,

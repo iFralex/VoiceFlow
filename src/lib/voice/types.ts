@@ -21,6 +21,8 @@ export interface CreateCallParams {
   recordingEnabled: boolean;
   /** E.164 phone number to warm-transfer to when the AI invokes transfer_to_human_agent. */
   transferTargetPhone?: string;
+  /** Message the AI should read after the voicemail beep. Requires amdEnabled=true. */
+  voicemailMessage?: string;
 }
 
 export type TranscriptSegment = {

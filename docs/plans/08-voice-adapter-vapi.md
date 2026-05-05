@@ -270,11 +270,11 @@ export async function fetchCallTimeline(orgId: string, callId: string): Promise<
 
 ### Task 14: AMD (answering machine detection)
 
-- [ ] Configure Vapi to enable AMD on every call (`amdEnabled: true` per `CreateCallParams`)
-- [ ] On `call.ended` with `endedReason='voicemail'` (or equivalent Vapi flag), set `calls.status='voicemail'` and `calls.outcome='voicemail_left'` if a voicemail message was left, else `voicemail_no_message`
-- [ ] Per-script policy: `leave_voicemail_message` boolean (default false in Phase 1; the simpler "hang up on AMD" behaviour is safer for compliance)
-- [ ] If `leave_voicemail_message=true`, after AMD the agent waits for the beep (Vapi's voicemail-detection-then-message capability) and reads a short pre-authored message also bound by the AI Act preamble (templated separately)
-- [ ] Mark completed
+- [x] Configure Vapi to enable AMD on every call (`amdEnabled: true` per `CreateCallParams`)
+- [x] On `call.ended` with `endedReason='voicemail'` (or equivalent Vapi flag), set `calls.status='voicemail'` and `calls.outcome='voicemail_left'` if a voicemail message was left, else `voicemail_no_message`
+- [x] Per-script policy: `leave_voicemail_message` boolean (default false in Phase 1; the simpler "hang up on AMD" behaviour is safer for compliance)
+- [x] If `leave_voicemail_message=true`, after AMD the agent waits for the beep (Vapi's voicemail-detection-then-message capability) and reads a short pre-authored message also bound by the AI Act preamble (templated separately)
+- [x] Mark completed
 
 ### Task 15: Internal test-call endpoint
 
