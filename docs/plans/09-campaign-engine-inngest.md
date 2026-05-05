@@ -212,12 +212,12 @@ export const callCompleted = inngest.createFunction(
 
 ### Task 8: Cron — campaign aggregation
 
-- [ ] Create `src/app/api/cron/aggregate-campaigns/route.ts` (path already in `vercel.json` from plan 01) running every 5 minutes:
+- [x] Create `src/app/api/cron/aggregate-campaigns/route.ts` (path already in `vercel.json` from plan 01) running every 5 minutes:
   - select `running` campaigns
   - for each, recompute live counters: total, pending, dialing, in-progress, completed by outcome, qualified-leads count, appointments-booked count, credit consumed
   - write to a `campaign_stats` materialised table or compute and cache via Inngest
-- [ ] Used by the dashboard for fast reads (avoid per-page-load aggregation)
-- [ ] Mark completed
+- [x] Used by the dashboard for fast reads (avoid per-page-load aggregation)
+- [x] Mark completed
 
 ### Task 9: Migration — `campaign_stats` table
 
