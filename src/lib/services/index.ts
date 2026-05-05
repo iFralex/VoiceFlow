@@ -1,5 +1,6 @@
 export * from './billing-rules';
 export * from './campaign-cost-estimator';
+export * from './campaigns';
 export * from './contact_lists';
 export * from './contacts';
 export * from './csv';

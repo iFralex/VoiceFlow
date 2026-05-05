@@ -23,7 +23,7 @@ The dispatch chain is fan-out then per-contact, with concurrency keyed on `org_i
 
 ### Task 1: Campaign service
 
-- [ ] Create `src/lib/services/campaigns.ts`:
+- [x] Create `src/lib/services/campaigns.ts`:
 
 ```typescript
 export async function createCampaign(
@@ -71,7 +71,7 @@ export async function listCampaigns(
 ): Promise<{ items: CampaignWithStats[]; nextCursor?: string }>;
 ```
 
-- [ ] `launchCampaign` runs in a transaction:
+- [x] `launchCampaign` runs in a transaction:
   1. validate campaign in `draft|scheduled` state
   2. resolve contact count (eligible: not opt-out, RPO clear or unchecked, no recent call attempt within 48h, valid phone)
   3. compute `estimatedMaxCents` via `estimateCampaignCost`
@@ -79,8 +79,8 @@ export async function listCampaigns(
   5. transition campaign to `running` (or `scheduled` if `scheduledStart > now`)
   6. emit Inngest event `campaign/launched`
   7. write audit log
-- [ ] `pauseCampaign` sets status `paused`; resume returns to `running`; cancel sets `cancelled` and releases reservation
-- [ ] Mark completed
+- [x] `pauseCampaign` sets status `paused`; resume returns to `running`; cancel sets `cancelled` and releases reservation
+- [x] Mark completed
 
 ### Task 2: Eligibility filter
 
