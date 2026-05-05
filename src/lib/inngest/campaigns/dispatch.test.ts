@@ -2,6 +2,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
+vi.mock('@/lib/db/audit', () => ({
+  recordAudit: vi.fn().mockResolvedValue(undefined),
+}));
+
 vi.mock('@/lib/inngest/client', () => ({
   sendInngestEvent: vi.fn(),
 }));
@@ -42,11 +46,15 @@ import { dispatchCall } from '@/lib/services/calls';
 import { requireRunning } from '@/lib/services/campaigns';
 import { getBalance } from '@/lib/services/credit';
 
+import { recordAudit } from '@/lib/db/audit';
+
 import {
   ContactNotEligibleError,
+  DEFAULT_ORG_COOLDOWN_MS,
   InsufficientCreditError,
   campaignDispatchCallHandler,
   checkConcurrencySlot,
+  checkOrgLevelCooldown,
   getActiveConcurrencyCount,
   nextWindowOpen,
   verifyCreditAvailable,
@@ -250,6 +258,59 @@ describe('checkConcurrencySlot', () => {
   });
 });
 
+// ─── Tests: checkOrgLevelCooldown ────────────────────────────────────────────
+
+describe('checkOrgLevelCooldown', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  const setupCooldownQuery = (result: unknown[]) => {
+    mockSelect.mockReturnValue({
+      from: vi.fn(() => ({
+        where: vi.fn(() => ({
+          orderBy: vi.fn(() => ({
+            limit: vi.fn().mockResolvedValue(result),
+          })),
+        })),
+      })),
+    });
+  };
+
+  it('returns null when no recent cross-campaign call exists', async () => {
+    setupCooldownQuery([]);
+    const result = await checkOrgLevelCooldown(ORG, CAMPAIGN, CONTACT);
+    expect(result).toBeNull();
+  });
+
+  it('returns the created_at date of the most recent cross-campaign call', async () => {
+    const recentDate = new Date('2025-01-14T10:00:00Z');
+    setupCooldownQuery([{ created_at: recentDate }]);
+    const result = await checkOrgLevelCooldown(ORG, CAMPAIGN, CONTACT);
+    expect(result).toEqual(recentDate);
+  });
+
+  it('exports the correct default cooldown constant (7 days)', () => {
+    expect(DEFAULT_ORG_COOLDOWN_MS).toBe(7 * 24 * 60 * 60 * 1000);
+  });
+
+  it('accepts a custom cooldown duration', async () => {
+    setupCooldownQuery([]);
+    const result = await checkOrgLevelCooldown(ORG, CAMPAIGN, CONTACT, 24 * 60 * 60 * 1000);
+    expect(result).toBeNull();
+    expect(mockSelect).toHaveBeenCalledOnce();
+  });
+
+  it('calls withOrgContext with the correct orgId', async () => {
+    setupCooldownQuery([]);
+    const { withOrgContext } = await import('@/lib/db/context');
+    vi.clearAllMocks();
+    setupCooldownQuery([]);
+    await checkOrgLevelCooldown(ORG, CAMPAIGN, CONTACT);
+    expect(withOrgContext).toHaveBeenCalledWith(ORG, expect.any(Function));
+  });
+});
+
 // ─── Tests: verifyContactStillEligible ────────────────────────────────────────
 
 describe('verifyContactStillEligible', () => {
@@ -380,18 +441,31 @@ describe('campaignDispatchCallHandler', () => {
 
     // 1st select: concurrency gate (active = 3 < 5 = limit → slot available)
     // 2nd select: contact eligibility query
+    // 3rd select: org-level cooldown check (no recent cross-campaign call)
     let callCount = 0;
     mockSelect.mockImplementation(() => {
       callCount++;
       if (callCount === 1) {
         return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 3 }]) })) };
       }
+      if (callCount === 2) {
+        return {
+          from: vi.fn(() => ({
+            where: vi.fn(() => ({
+              limit: vi.fn().mockResolvedValue([
+                { deleted_at: null, opt_out: false, rpo_status: 'clear' },
+              ]),
+            })),
+          })),
+        };
+      }
+      // 3rd call: cooldown check → no recent cross-campaign call
       return {
         from: vi.fn(() => ({
           where: vi.fn(() => ({
-            limit: vi.fn().mockResolvedValue([
-              { deleted_at: null, opt_out: false, rpo_status: 'clear' },
-            ]),
+            orderBy: vi.fn(() => ({
+              limit: vi.fn().mockResolvedValue([]),
+            })),
           })),
         })),
       };
@@ -476,22 +550,94 @@ describe('campaignDispatchCallHandler', () => {
     expect(dispatchCall).not.toHaveBeenCalled();
   });
 
-  it('propagates InsufficientCreditError when credit is too low', async () => {
+  it('marks call failed and returns null when org-level cooldown applies', async () => {
+    // Wednesday 10:00 UTC = 11:00 Rome — inside window
     vi.useFakeTimers({ now: new Date('2025-01-15T09:00:00Z') });
     vi.mocked(requireRunning).mockResolvedValue(runningCampaign);
 
+    const recentCallDate = new Date('2025-01-14T10:00:00Z');
+
+    // 1st: concurrency (slot available), 2nd: eligibility (ok), 3rd: cooldown (recent call)
     let callCount = 0;
     mockSelect.mockImplementation(() => {
       callCount++;
       if (callCount === 1) {
         return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 0 }]) })) };
       }
+      if (callCount === 2) {
+        return {
+          from: vi.fn(() => ({
+            where: vi.fn(() => ({
+              limit: vi.fn().mockResolvedValue([
+                { deleted_at: null, opt_out: false, rpo_status: 'clear' },
+              ]),
+            })),
+          })),
+        };
+      }
+      // 3rd call: cooldown check → recent cross-campaign call found
       return {
         from: vi.fn(() => ({
           where: vi.fn(() => ({
-            limit: vi.fn().mockResolvedValue([
-              { deleted_at: null, opt_out: false, rpo_status: 'clear' },
-            ]),
+            orderBy: vi.fn(() => ({
+              limit: vi.fn().mockResolvedValue([{ created_at: recentCallDate }]),
+            })),
+          })),
+        })),
+      };
+    });
+
+    const result = await campaignDispatchCallHandler(dispatchData);
+
+    vi.useRealTimers();
+    expect(result).toBeNull();
+    // Call row marked as failed
+    expect(mockUpdate).toHaveBeenCalledOnce();
+    expect(mockSet).toHaveBeenCalledWith({ status: 'failed', error_code: 'cooldown_org_level' });
+    // Audit log written
+    expect(recordAudit).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        actorType: 'system',
+        action: 'call.skipped',
+        subjectType: 'call',
+        subjectId: CALL,
+        metadata: expect.objectContaining({ reason: 'cooldown_org_level', contactId: CONTACT }),
+      }),
+    );
+    // Provider call NOT dispatched
+    expect(dispatchCall).not.toHaveBeenCalled();
+  });
+
+  it('propagates InsufficientCreditError when credit is too low', async () => {
+    vi.useFakeTimers({ now: new Date('2025-01-15T09:00:00Z') });
+    vi.mocked(requireRunning).mockResolvedValue(runningCampaign);
+
+    // 1st: concurrency, 2nd: eligibility, 3rd: cooldown (none)
+    let callCount = 0;
+    mockSelect.mockImplementation(() => {
+      callCount++;
+      if (callCount === 1) {
+        return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 0 }]) })) };
+      }
+      if (callCount === 2) {
+        return {
+          from: vi.fn(() => ({
+            where: vi.fn(() => ({
+              limit: vi.fn().mockResolvedValue([
+                { deleted_at: null, opt_out: false, rpo_status: 'clear' },
+              ]),
+            })),
+          })),
+        };
+      }
+      // cooldown check → no recent cross-campaign call
+      return {
+        from: vi.fn(() => ({
+          where: vi.fn(() => ({
+            orderBy: vi.fn(() => ({
+              limit: vi.fn().mockResolvedValue([]),
+            })),
           })),
         })),
       };
@@ -508,18 +654,31 @@ describe('campaignDispatchCallHandler', () => {
     vi.useFakeTimers({ now: new Date('2025-01-15T09:00:00Z') });
     vi.mocked(requireRunning).mockResolvedValue(runningCampaign);
 
+    // 1st: concurrency gate, 2nd: eligibility, 3rd: cooldown
     let callCount = 0;
     mockSelect.mockImplementation(() => {
       callCount++;
       if (callCount === 1) {
         return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 0 }]) })) };
       }
+      if (callCount === 2) {
+        return {
+          from: vi.fn(() => ({
+            where: vi.fn(() => ({
+              limit: vi.fn().mockResolvedValue([
+                { deleted_at: null, opt_out: false, rpo_status: 'clear' },
+              ]),
+            })),
+          })),
+        };
+      }
+      // cooldown check → no recent cross-campaign call
       return {
         from: vi.fn(() => ({
           where: vi.fn(() => ({
-            limit: vi.fn().mockResolvedValue([
-              { deleted_at: null, opt_out: false, rpo_status: 'clear' },
-            ]),
+            orderBy: vi.fn(() => ({
+              limit: vi.fn().mockResolvedValue([]),
+            })),
           })),
         })),
       };
@@ -559,18 +718,31 @@ describe('campaignDispatchCallHandler', () => {
       scheduledFor: pastDate.toISOString(),
     };
 
+    // 1st: concurrency gate, 2nd: eligibility, 3rd: cooldown
     let callCount = 0;
     mockSelect.mockImplementation(() => {
       callCount++;
       if (callCount === 1) {
         return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 0 }]) })) };
       }
+      if (callCount === 2) {
+        return {
+          from: vi.fn(() => ({
+            where: vi.fn(() => ({
+              limit: vi.fn().mockResolvedValue([{
+                deleted_at: null, opt_out: false, rpo_status: 'clear',
+              }]),
+            })),
+          })),
+        };
+      }
+      // cooldown check → no recent cross-campaign call
       return {
         from: vi.fn(() => ({
           where: vi.fn(() => ({
-            limit: vi.fn().mockResolvedValue([{
-              deleted_at: null, opt_out: false, rpo_status: 'clear',
-            }]),
+            orderBy: vi.fn(() => ({
+              limit: vi.fn().mockResolvedValue([]),
+            })),
           })),
         })),
       };

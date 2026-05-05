@@ -262,19 +262,19 @@ export function nextWindowOpen(
 
 ### Task 12: Per-contact cooldown across campaigns
 
-- [ ] When dispatching, also check if another **campaign** in the same org has called this contact in the last 7 days (default; configurable)
-- [ ] If yes, skip with `error_code='cooldown_org_level'` and audit log
-- [ ] Prevents the dealer from accidentally double-calling a recently-contacted person
-- [ ] Mark completed
+- [x] When dispatching, also check if another **campaign** in the same org has called this contact in the last 7 days (default; configurable)
+- [x] If yes, skip with `error_code='cooldown_org_level'` and audit log
+- [x] Prevents the dealer from accidentally double-calling a recently-contacted person
+- [x] Mark completed
 
 ### Task 13: Campaign creation wizard (UI)
 
-- [ ] Create `src/app/(app)/campaigns/new/page.tsx` with three-step wizard per spec §5.4:
+- [x] Create `src/app/(app)/campaigns/new/page.tsx` with three-step wizard per spec §5.4:
   1. **Script**: list available scripts (from plan 07); preview the assembled system prompt
   2. **Contact list**: pick existing list or jump to upload (plan 06)
   3. **Schedule and review**: campaign name, optional `scheduled_start`, time-window override (with legal-envelope clamp), concurrency override, estimated cost summary, credit-balance check
-- [ ] On final confirm, call `createCampaign` then immediately `launchCampaign` (or just `createCampaign` and leave in `scheduled` state if `scheduled_start` set)
-- [ ] Mark completed
+- [x] On final confirm, call `createCampaign` then immediately `launchCampaign` (or just `createCampaign` and leave in `scheduled` state if `scheduled_start` set)
+- [x] Mark completed
 
 ### Task 14: Campaigns list page
 

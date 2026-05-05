@@ -1,5 +1,6 @@
-import { and, count, eq, inArray } from 'drizzle-orm';
+import { and, count, desc, eq, gt, inArray, ne } from 'drizzle-orm';
 
+import { recordAudit } from '@/lib/db/audit';
 import { withOrgContext } from '@/lib/db/context';
 import { calls, contacts } from '@/lib/db/schema';
 import { sendInngestEvent } from '@/lib/inngest/client';
@@ -60,6 +61,48 @@ export class InsufficientCreditError extends Error {
     super(`Insufficient credit for org ${orgId}`);
     this.name = 'InsufficientCreditError';
   }
+}
+
+// ─── Org-level cooldown ───────────────────────────────────────────────────────
+
+/** Default cross-campaign contact cooldown: 7 days in milliseconds. */
+export const DEFAULT_ORG_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000;
+
+/**
+ * Checks whether the contact has been called by any **other** campaign in the
+ * same org within the cooldown window (default 7 days).
+ *
+ * Returns the `created_at` timestamp of the most recent such call when a
+ * cooldown applies, or `null` when the contact is safe to call.
+ *
+ * Purpose: prevents a contact from being double-called by multiple campaigns
+ * running concurrently in the same org within the cooldown period.
+ */
+export async function checkOrgLevelCooldown(
+  orgId: string,
+  campaignId: string,
+  contactId: string,
+  cooldownMs: number = DEFAULT_ORG_COOLDOWN_MS,
+): Promise<Date | null> {
+  const cutoff = new Date(Date.now() - cooldownMs);
+
+  const [recentCall] = await withOrgContext(orgId, (tx) =>
+    tx
+      .select({ created_at: calls.created_at })
+      .from(calls)
+      .where(
+        and(
+          eq(calls.org_id, orgId),
+          eq(calls.contact_id, contactId),
+          ne(calls.campaign_id, campaignId),
+          gt(calls.created_at, cutoff),
+        ),
+      )
+      .orderBy(desc(calls.created_at))
+      .limit(1),
+  );
+
+  return recentCall?.created_at ?? null;
 }
 
 // ─── Concurrency gate ─────────────────────────────────────────────────────────
@@ -267,6 +310,37 @@ export async function campaignDispatchCallHandler(
       return null;
     }
     throw err;
+  }
+
+  // 5.5 Org-level cross-campaign cooldown check
+  //
+  // Prevents a contact from being called by multiple campaigns in the same org
+  // within the cooldown window (default 7 days).  When a recent call from
+  // another campaign is found, the pre-created call row is marked
+  // `failed/cooldown_org_level` and an audit entry is written, then the handler
+  // returns null (graceful skip — not an error from Inngest's perspective).
+  const recentCrossCall = await checkOrgLevelCooldown(orgId, campaignId, contactId);
+  if (recentCrossCall !== null) {
+    await withOrgContext(orgId, async (tx) => {
+      await tx
+        .update(calls)
+        .set({ status: 'failed', error_code: 'cooldown_org_level' })
+        .where(and(eq(calls.id, callId), eq(calls.org_id, orgId)));
+      await recordAudit(tx, {
+        orgId,
+        actorType: 'system',
+        action: 'call.skipped',
+        subjectType: 'call',
+        subjectId: callId,
+        metadata: {
+          reason: 'cooldown_org_level',
+          contactId,
+          campaignId,
+          recentCallAt: recentCrossCall.toISOString(),
+        },
+      });
+    });
+    return null;
   }
 
   // 6. Credit check
