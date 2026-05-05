@@ -154,12 +154,12 @@ export class VapiAdapter implements VoiceProvider {
 
 ### Task 5: Retell adapter (parallel implementation)
 
-- [ ] Create `src/lib/voice/retell/adapter.ts` implementing the same interface using Retell's API
-- [ ] Map our `endCallFunctions` to Retell's custom functions schema
-- [ ] Configure Retell webhook url and shared secret
-- [ ] Wire in factory under `VOICE_PROVIDER=retell`
-- [ ] Treat as fallback: not used in production by default but kept tested in CI
-- [ ] Mark completed
+- [x] Create `src/lib/voice/retell/adapter.ts` implementing the same interface using Retell's API
+- [x] Map our `endCallFunctions` to Retell's custom functions schema
+- [x] Configure Retell webhook url and shared secret
+- [x] Wire in factory under `VOICE_PROVIDER=retell`
+- [x] Treat as fallback: not used in production by default but kept tested in CI
+- [x] Mark completed
 
 ### Task 6: Voice catalogue population
 

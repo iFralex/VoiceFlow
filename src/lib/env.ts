@@ -31,6 +31,7 @@ const Env = z.object({
   VAPI_ASSISTANT_ID: z.string().min(1).optional(),
   VAPI_WEBHOOK_SECRET: z.string().min(1).optional(),
   RETELL_API_KEY: z.string().min(1).optional(),
+  RETELL_AGENT_ID: z.string().min(1).optional(),
   RETELL_WEBHOOK_SECRET: z.string().min(1).optional(),
   TWILIO_ACCOUNT_SID: z.string().min(1).optional(),
   TWILIO_AUTH_TOKEN: z.string().min(1).optional(),

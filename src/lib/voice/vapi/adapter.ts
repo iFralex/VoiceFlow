@@ -1,15 +1,9 @@
 import { env } from '@/lib/env';
 import type { VoiceProvider, CreateCallParams, TranscriptSegment, ToolDefinition } from '../types';
+import { VoiceProviderError } from '../errors';
 
-export class VoiceProviderError extends Error {
-  constructor(
-    public readonly code: string,
-    public readonly detail: string,
-  ) {
-    super(`[${code}] ${detail}`);
-    this.name = 'VoiceProviderError';
-  }
-}
+// Re-export so existing imports from this module continue to work
+export { VoiceProviderError } from '../errors';
 
 // Vapi REST API response shapes (minimal — only fields we consume)
 interface VapiCallResponse {
