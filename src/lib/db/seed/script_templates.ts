@@ -8,6 +8,12 @@ import { leadReactivationJsonSchema } from '@/lib/voice/templates/schemas/lead-r
 import { postSaleFollowupJsonSchema } from '@/lib/voice/templates/schemas/post-sale-followup.schema';
 
 import { NewScriptTemplate } from '../schema/script_templates';
+import {
+  CHIARA_VOICE_ID,
+  GIULIA_VOICE_ID,
+  MARCO_VOICE_ID,
+  SOFIA_VOICE_ID,
+} from './voice_catalogue';
 
 // process.cwd() resolves to the project root in both tsx CLI runs and Next.js
 // production builds, unlike __dirname which points inside .next/server/chunks/.
@@ -41,7 +47,7 @@ export const TEMPLATE_DEFINITIONS: TemplateDef[] = [
     promptFile: 'lead-reactivation.txt',
     firstMessageFile: 'lead-reactivation-first-message.txt',
     variableSchema: leadReactivationJsonSchema,
-    defaultVoiceId: 'it-IT-wavenet-placeholder',
+    defaultVoiceId: GIULIA_VOICE_ID,
   },
   {
     slug: 'appointment-confirm',
@@ -50,7 +56,7 @@ export const TEMPLATE_DEFINITIONS: TemplateDef[] = [
     promptFile: 'appointment-confirm.txt',
     firstMessageFile: 'appointment-confirm-first-message.txt',
     variableSchema: appointmentConfirmJsonSchema,
-    defaultVoiceId: 'it-IT-wavenet-placeholder',
+    defaultVoiceId: GIULIA_VOICE_ID,
   },
   {
     slug: 'car-renewal',
@@ -59,7 +65,7 @@ export const TEMPLATE_DEFINITIONS: TemplateDef[] = [
     promptFile: 'car-renewal.txt',
     firstMessageFile: 'car-renewal-first-message.txt',
     variableSchema: carRenewalJsonSchema,
-    defaultVoiceId: 'it-IT-wavenet-placeholder',
+    defaultVoiceId: MARCO_VOICE_ID,
   },
   {
     slug: 'post-sale-followup',
@@ -68,7 +74,7 @@ export const TEMPLATE_DEFINITIONS: TemplateDef[] = [
     promptFile: 'post-sale-followup.txt',
     firstMessageFile: 'post-sale-followup-first-message.txt',
     variableSchema: postSaleFollowupJsonSchema,
-    defaultVoiceId: 'it-IT-wavenet-placeholder',
+    defaultVoiceId: SOFIA_VOICE_ID,
   },
   {
     slug: 'csi-survey',
@@ -77,7 +83,7 @@ export const TEMPLATE_DEFINITIONS: TemplateDef[] = [
     promptFile: 'csi-survey.txt',
     firstMessageFile: 'csi-survey-first-message.txt',
     variableSchema: csiSurveyJsonSchema,
-    defaultVoiceId: 'it-IT-wavenet-placeholder',
+    defaultVoiceId: CHIARA_VOICE_ID,
   },
 ];
 

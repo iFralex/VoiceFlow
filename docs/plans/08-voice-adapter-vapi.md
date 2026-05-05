@@ -163,13 +163,13 @@ export class VapiAdapter implements VoiceProvider {
 
 ### Task 6: Voice catalogue population
 
-- [ ] Update `src/lib/db/seed/voice_catalogue.ts` (table created in plan 07) with the actual ElevenLabs voice IDs to be used:
+- [x] Update `src/lib/db/seed/voice_catalogue.ts` (table created in plan 07) with the actual ElevenLabs voice IDs to be used:
   - 2 male voices for Italian sales tone
   - 2 female voices for Italian sales tone
   - 1 neutral voice for surveys (CSI)
-- [ ] Each row stores `provider='vapi'` (since both Vapi and Retell route through ElevenLabs and use the same external IDs), `external_voice_id`, `display_name`, `sample_url` to a short MP3 in Storage
-- [ ] Update template seeds (plan 07) to set `default_voice_id` referencing real entries
-- [ ] Mark completed
+- [x] Each row stores `provider='vapi'` (since both Vapi and Retell route through ElevenLabs and use the same external IDs), `external_voice_id`, `display_name`, `sample_url` to a short MP3 in Storage
+- [x] Update template seeds (plan 07) to set `default_voice_id` referencing real entries
+- [x] Mark completed
 
 ### Task 7: Call service — domain layer
 
