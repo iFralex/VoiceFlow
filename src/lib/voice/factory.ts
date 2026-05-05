@@ -1,14 +1,17 @@
 import { env } from '@/lib/env';
+
+import { RetellAdapter } from './retell/adapter';
 import type { VoiceProvider } from './types';
 import { VapiAdapter } from './vapi/adapter';
-import { RetellAdapter } from './retell/adapter';
 
 export function getVoiceProvider(): VoiceProvider {
   switch (env.VOICE_PROVIDER) {
     case 'vapi':
-      return new VapiAdapter(env.VAPI_API_KEY!);
+      if (!env.VAPI_API_KEY) throw new Error('VAPI_API_KEY not configured');
+      return new VapiAdapter(env.VAPI_API_KEY);
     case 'retell':
-      return new RetellAdapter(env.RETELL_API_KEY!);
+      if (!env.RETELL_API_KEY) throw new Error('RETELL_API_KEY not configured');
+      return new RetellAdapter(env.RETELL_API_KEY);
     default:
       throw new Error('Unknown voice provider');
   }

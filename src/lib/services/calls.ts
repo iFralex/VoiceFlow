@@ -415,7 +415,12 @@ export async function recordCallEnded(
         cost_cents: costCents,
         ...(voicemailOutcome !== null && { outcome: voicemailOutcome }),
       })
-      .where(eq(calls.id, callId));
+      .where(
+        and(
+          eq(calls.id, callId),
+          inArray(calls.status, ['pending', 'dialing', 'in_progress']),
+        ),
+      );
 
     await recordAudit(tx, {
       orgId,

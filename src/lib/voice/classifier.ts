@@ -11,6 +11,7 @@
  */
 
 import { env } from '@/lib/env';
+
 import type { TranscriptSegment } from './types';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -138,7 +139,12 @@ export async function classifyTranscript(
     throw new Error('Empty response content from OpenAI');
   }
 
-  const parsed = JSON.parse(content) as ClassificationResult;
+  let parsed: ClassificationResult;
+  try {
+    parsed = JSON.parse(content) as ClassificationResult;
+  } catch {
+    throw new Error(`Failed to parse OpenAI classifier response: ${content.slice(0, 200)}`);
+  }
 
   // Clamp confidence to [0, 1] in case the model returns an out-of-range value
   parsed.confidence = Math.max(0, Math.min(1, parsed.confidence));

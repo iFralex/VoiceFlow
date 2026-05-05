@@ -88,14 +88,18 @@ export async function POST(request: Request): Promise<Response> {
 
   // Verify shared secret. Vapi sends the configured serverUrlSecret as x-vapi-secret.
   // Use timingSafeEqual to prevent timing side-channel attacks.
-  const incomingSecret = request.headers.get('x-vapi-secret');
-  const configuredSecret = env.VAPI_WEBHOOK_SECRET;
-  if (
-    !configuredSecret ||
-    !incomingSecret ||
-    incomingSecret.length !== configuredSecret.length ||
-    !timingSafeEqual(Buffer.from(incomingSecret), Buffer.from(configuredSecret))
-  ) {
+  const incomingSecret = request.headers.get('x-vapi-secret') ?? '';
+  const configuredSecret = env.VAPI_WEBHOOK_SECRET ?? '';
+  // Always call timingSafeEqual on equal-length buffers to prevent length oracle attacks.
+  // An absent configured secret causes rejection via the all-zeroes comparison.
+  const incomingBuf = Buffer.from(incomingSecret, 'utf8');
+  const configuredBuf = Buffer.from(configuredSecret, 'utf8');
+  const maxLen = Math.max(incomingBuf.length, configuredBuf.length, 1);
+  const a = Buffer.alloc(maxLen);
+  const b = Buffer.alloc(maxLen);
+  incomingBuf.copy(a);
+  configuredBuf.copy(b);
+  if (!configuredSecret || !timingSafeEqual(a, b)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

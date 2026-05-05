@@ -15,14 +15,9 @@ import { and, eq, isNull, sql } from 'drizzle-orm';
 import type { DbTx } from '@/lib/db/context';
 import { appointments, calls, contacts, optOutRegistry } from '@/lib/db/schema';
 import type { InngestEventPayload } from '@/lib/inngest/client';
+import { APPOINTMENT_BOOKED_EVENT, CALL_TRANSFERRED_EVENT } from '@/lib/inngest/voice/events';
 
-// ─── Inngest event names emitted by these handlers ───────────────────────────
-
-/** Emitted when `book_appointment` tool is invoked successfully. */
-export const APPOINTMENT_BOOKED_EVENT = 'appointment/booked' as const;
-
-/** Emitted when `transfer_to_human_agent` tool is invoked. */
-export const CALL_TRANSFERRED_EVENT = 'call/transferred' as const;
+export { APPOINTMENT_BOOKED_EVENT, CALL_TRANSFERRED_EVENT };
 
 // ─── Return type ─────────────────────────────────────────────────────────────
 

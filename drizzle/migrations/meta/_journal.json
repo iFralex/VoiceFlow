@@ -148,6 +148,13 @@
       "when": 1777800275504,
       "tag": "0020_voicemail_no_message_outcome",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1777800275505,
+      "tag": "0021_call_media_storage",
+      "breakpoints": true
     }
   ]
 }

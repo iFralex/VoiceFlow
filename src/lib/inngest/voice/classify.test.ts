@@ -132,16 +132,26 @@ describe('classifyCallHandler', () => {
   });
 
   it('skips classifier when tool outcome already set on first read', async () => {
-    // First select: call already has a tool-driven outcome — early exit
+    // First select: call already has a tool-driven outcome
+    // Disclosure check still runs (regulatory requirement), but classifier is skipped.
     mockSelect.mockReturnValueOnce(
       makeSelectChain([{ outcome: 'appointment_booked', transcript_path: `transcripts/${ORG_ID}/${CALL_ID}.json` }]),
     );
+
+    mockDownload.mockResolvedValue({
+      data: makeTranscriptBlob(SEGMENTS),
+      error: null,
+    });
 
     await classifyCallHandler(BASE_DATA);
 
     // Classifier must not run when outcome is already set
     expect(classifyTranscript).not.toHaveBeenCalled();
-    expect(mockUpdate).not.toHaveBeenCalled();
+    // Outcome columns must not be updated
+    expect(updateChain.set).not.toHaveBeenCalledWith(
+      expect.objectContaining({ outcome: expect.any(String) }),
+    );
+    // No disclosure-missing event (checkDisclosure returns true by default in beforeEach)
     expect(sendInngestEvent).not.toHaveBeenCalled();
   });
 
@@ -167,8 +177,10 @@ describe('classifyCallHandler', () => {
 
     await classifyCallHandler(BASE_DATA);
 
-    // Must not overwrite since tool outcome already set
-    expect(mockUpdate).not.toHaveBeenCalled();
+    // Must not overwrite the tool-driven outcome (disclosure metadata update is allowed)
+    expect(updateChain.set).not.toHaveBeenCalledWith(
+      expect.objectContaining({ outcome: expect.any(String) }),
+    );
     // No mismatch — no quality event
     expect(sendInngestEvent).not.toHaveBeenCalled();
   });
@@ -209,8 +221,10 @@ describe('classifyCallHandler', () => {
         }),
       }),
     );
-    // Must not update the call's outcome
-    expect(mockUpdate).not.toHaveBeenCalled();
+    // Must not update the call's outcome (disclosure metadata update is allowed)
+    expect(updateChain.set).not.toHaveBeenCalledWith(
+      expect.objectContaining({ outcome: expect.any(String) }),
+    );
   });
 
   it('returns early when call not found (first select)', async () => {
@@ -242,7 +256,9 @@ describe('classifyCallHandler', () => {
 
     await classifyCallHandler(BASE_DATA);
 
-    expect(mockUpdate).not.toHaveBeenCalled();
+    expect(updateChain.set).not.toHaveBeenCalledWith(
+      expect.objectContaining({ outcome: expect.any(String) }),
+    );
     expect(sendInngestEvent).not.toHaveBeenCalled();
   });
 
@@ -389,11 +405,7 @@ describe('classifyCallHandler', () => {
 
       await classifyCallHandler(BASE_DATA);
 
-      // Only the outcome update should appear — no metadata set call
-      expect(updateChain.set).not.toHaveBeenCalledWith(
-        expect.objectContaining({ metadata: expect.anything() }),
-      );
-      // No disclosure event
+      // disclosure_verified=true is written to metadata — no disclosure-missing event
       expect(sendInngestEvent).not.toHaveBeenCalledWith(
         expect.objectContaining({ name: QUALITY_DISCLOSURE_MISSING_EVENT }),
       );

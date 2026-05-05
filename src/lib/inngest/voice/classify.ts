@@ -57,9 +57,6 @@ export async function classifyCallHandler(data: CallClassifyData): Promise<void>
     throw new Error(`Call ${callId} has no transcript_path — cannot classify`);
   }
 
-  // Early exit: a tool-driven outcome was already set; skip the expensive classifier.
-  if (call.outcome !== null && call.outcome !== undefined) return;
-
   // 2. Download transcript from Supabase Storage
   const { data: transcriptBlob, error: downloadError } = await supabaseAdmin.storage
     .from(CALL_MEDIA_BUCKET)
@@ -75,8 +72,9 @@ export async function classifyCallHandler(data: CallClassifyData): Promise<void>
   const segments = JSON.parse(transcriptJson) as TranscriptSegment[];
 
   // 3. Check AI Act disclosure (spec §12.3): verify that the required phrase
-  //    appears within the first 30 seconds.  Runs regardless of whether a
-  //    tool-driven outcome has already been set.
+  //    appears within the first 30 seconds.  Always runs, even when a
+  //    tool-driven outcome has already been set — disclosure is a regulatory
+  //    requirement independent of classification.
   const disclosureVerified = checkDisclosure(segments);
   if (!disclosureVerified) {
     await withOrgContext(orgId, async (tx) => {
@@ -92,7 +90,19 @@ export async function classifyCallHandler(data: CallClassifyData): Promise<void>
       data: { callId, orgId },
       id: `disclosure-missing-${callId}`,
     });
+  } else {
+    await withOrgContext(orgId, async (tx) => {
+      await tx
+        .update(calls)
+        .set({
+          metadata: sql`COALESCE(${calls.metadata}, '{}'::jsonb) || '{"disclosure_verified": true}'::jsonb`,
+        })
+        .where(and(eq(calls.id, callId), eq(calls.org_id, orgId)));
+    });
   }
+
+  // Early exit: a tool-driven outcome was already set; skip the expensive classifier.
+  if (call.outcome !== null && call.outcome !== undefined) return;
 
   // 4. Run the outcome classifier
   const result = await classifyTranscript(segments);
