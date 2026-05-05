@@ -329,10 +329,10 @@ export function nextWindowOpen(
 
 ### Task 20: Definition of Done
 
-- [ ] All four Inngest functions deployed and observable in Inngest dashboard
-- [ ] Time-window enforcement verified across DST transitions
-- [ ] Concurrency limits enforced and tested
-- [ ] Pause/cancel work cleanly with reservation release
-- [ ] Per-call retries respect 48h spacing and time-of-day variation
-- [ ] Aggregate stats updated within 5 minutes of activity
-- [ ] Mark completed
+- [x] All four Inngest functions deployed and observable in Inngest dashboard
+- [x] Time-window enforcement verified across DST transitions
+- [x] Concurrency limits enforced and tested
+- [x] Pause/cancel work cleanly with reservation release
+- [x] Per-call retries respect 48h spacing and time-of-day variation
+- [x] Aggregate stats updated within 5 minutes of activity
+- [x] Mark completed
