@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState, useTransition } from 'react';
+import { toast } from 'sonner';
 
 import { copyScriptAction, deleteScriptAction, previewVoiceSampleAction, updateScriptAction } from '@/actions/scripts';
 import { Button } from '@/components/ui/button';
@@ -182,9 +183,15 @@ export function ScriptDetailClient({ script, templateInfo, preamble, outcomeInst
   function handleDelete() {
     startDeleteTransition(async () => {
       const result = await deleteScriptAction({ scriptId: script.id });
-      toastResult(result, t('delete_success'));
       if (result.ok) {
+        toast.success(t('delete_success'));
         router.push('/scripts');
+      } else {
+        toast.error(
+          result.message === 'delete_error_referenced'
+            ? t('delete_error_referenced')
+            : result.message,
+        );
       }
     });
   }

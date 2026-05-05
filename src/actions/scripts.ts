@@ -120,11 +120,7 @@ export async function deleteScriptAction(
     return { ok: true };
   } catch (e) {
     if (e instanceof ScriptReferencedByCampaignError) {
-      return {
-        ok: false,
-        message:
-          'Questo script è utilizzato da campagne attive. Completale o annullale prima.',
-      };
+      return { ok: false, message: 'delete_error_referenced' };
     }
     return { ok: false, message: e instanceof Error ? e.message : 'error' };
   }
