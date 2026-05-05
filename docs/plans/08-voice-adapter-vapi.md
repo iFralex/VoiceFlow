@@ -220,13 +220,13 @@ export async function fetchCallTimeline(orgId: string, callId: string): Promise<
 
 ### Task 9: Recording and transcript persistence
 
-- [ ] Create `src/lib/voice/persistence.ts` with `persistCallArtifacts(callId)`:
+- [x] Create `src/lib/voice/persistence.ts` with `persistCallArtifacts(callId)`:
   - read `calls.provider_call_id` and `calls.provider`
   - call `provider.fetchRecording` and stream the MP3 into Supabase Storage path `recordings/<org_id>/<call_id>.mp3`
   - call `provider.fetchTranscript`, format as JSON `[{ speaker, text, startMs, endMs }]`, upload to `transcripts/<org_id>/<call_id>.json`
   - update `calls.recording_path` and `calls.transcript_path`
-- [ ] Run inside Inngest function `call.persist-artifacts` triggered by `call.completed` (with retry; fetching is sometimes available only minutes after the event)
-- [ ] Mark completed
+- [x] Run inside Inngest function `call.persist-artifacts` triggered by `call.completed` (with retry; fetching is sometimes available only minutes after the event)
+- [x] Mark completed
 
 ### Task 10: Tool handlers — side effects
 
