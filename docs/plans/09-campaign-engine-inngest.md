@@ -251,14 +251,14 @@ export function nextWindowOpen(
 
 ### Task 11: Retry policy
 
-- [ ] Per-contact retry rules (spec §10.2):
+- [x] Per-contact retry rules (spec §10.2):
   - max 3 attempts per contact per campaign
   - minimum 48h between attempts
   - second attempt at a different time-of-day from the first (random within window, but ≥3h offset)
-- [ ] Implementation: when `call.completed` ends in `no_answer` or `busy`, schedule a follow-up `campaign/dispatch-call` event with `step.sendEvent` and `delay`
-- [ ] Track attempts on the `calls` row (`attempt_number` column added in migration `0011_call_attempt.sql`)
-- [ ] If all attempts exhausted, set `calls.status='failed'` with `error_code='max_attempts_reached'`
-- [ ] Mark completed
+- [x] Implementation: when `call.completed` ends in `no_answer` or `busy`, schedule a follow-up `campaign/dispatch-call` event with `step.sendEvent` and `delay`
+- [x] Track attempts on the `calls` row (`attempt_number` column added in migration `0023_call_attempt.sql`)
+- [x] If all attempts exhausted, set `calls.status='failed'` with `error_code='max_attempts_reached'`
+- [x] Mark completed
 
 ### Task 12: Per-contact cooldown across campaigns
 

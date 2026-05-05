@@ -162,6 +162,13 @@
       "when": 1777800275506,
       "tag": "0022_campaign_stats",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1777800275507,
+      "tag": "0023_call_attempt",
+      "breakpoints": true
     }
   ]
 }

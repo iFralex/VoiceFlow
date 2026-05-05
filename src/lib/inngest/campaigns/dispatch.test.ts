@@ -531,4 +531,55 @@ describe('campaignDispatchCallHandler', () => {
     expect(result).toBeNull();
     expect(dispatchCall).toHaveBeenCalledWith(ORG, CALL);
   });
+
+  it('returns sleepUntil when scheduledFor is in the future', async () => {
+    const futureDate = new Date(Date.now() + 48 * 3600 * 1000);
+    const dataWithSchedule = {
+      ...dispatchData,
+      scheduledFor: futureDate.toISOString(),
+    };
+
+    const result = await campaignDispatchCallHandler(dataWithSchedule);
+
+    expect(result).toHaveProperty('sleepUntil');
+    const { sleepUntil } = result as { sleepUntil: Date };
+    expect(sleepUntil.getTime()).toBeCloseTo(futureDate.getTime(), -3); // within 1 second
+    expect(dispatchCall).not.toHaveBeenCalled();
+    // requireRunning should NOT have been called — we returned early
+    expect(requireRunning).not.toHaveBeenCalled();
+  });
+
+  it('proceeds normally when scheduledFor is in the past', async () => {
+    vi.useFakeTimers({ now: new Date('2025-01-15T09:00:00Z') });
+    vi.mocked(requireRunning).mockResolvedValue(runningCampaign);
+
+    const pastDate = new Date('2025-01-13T09:00:00Z'); // 2 days ago
+    const dataWithPastSchedule = {
+      ...dispatchData,
+      scheduledFor: pastDate.toISOString(),
+    };
+
+    let callCount = 0;
+    mockSelect.mockImplementation(() => {
+      callCount++;
+      if (callCount === 1) {
+        return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 0 }]) })) };
+      }
+      return {
+        from: vi.fn(() => ({
+          where: vi.fn(() => ({
+            limit: vi.fn().mockResolvedValue([{
+              deleted_at: null, opt_out: false, rpo_status: 'clear',
+            }]),
+          })),
+        })),
+      };
+    });
+
+    const result = await campaignDispatchCallHandler(dataWithPastSchedule);
+
+    vi.useRealTimers();
+    expect(result).toBeNull();
+    expect(dispatchCall).toHaveBeenCalledWith(ORG, CALL);
+  });
 });

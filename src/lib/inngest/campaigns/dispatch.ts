@@ -214,6 +214,16 @@ export async function campaignDispatchCallHandler(
 ): Promise<{ sleepUntil: Date } | { deferUntil: Date } | null> {
   const { campaignId, orgId, contactId, callId } = data;
 
+  // 0. Scheduled-for gate: enforce minimum delay for retry attempts.
+  //    When `scheduledFor` is in the future the caller should sleep until then
+  //    before proceeding with the rest of the dispatch steps.
+  if (data.scheduledFor) {
+    const scheduledDate = new Date(data.scheduledFor);
+    if (scheduledDate > new Date()) {
+      return { sleepUntil: scheduledDate };
+    }
+  }
+
   // 1. Campaign status gate
   const campaign = await requireRunning(orgId, campaignId);
   if (campaign.status !== 'running') {

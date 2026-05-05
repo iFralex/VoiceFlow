@@ -55,6 +55,7 @@ export const calls = pgTable(
     transcript_path: text('transcript_path'),
     transferred_to_agent: boolean('transferred_to_agent').notNull().default(false),
     metadata: jsonb('metadata'),
+    attempt_number: integer('attempt_number').notNull().default(1),
     error_code: text('error_code'),
     started_at: timestamp('started_at', { withTimezone: true }),
     ended_at: timestamp('ended_at', { withTimezone: true }),

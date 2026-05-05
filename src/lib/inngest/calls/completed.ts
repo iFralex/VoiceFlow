@@ -10,7 +10,8 @@
  *
  * Step ordering is intentional: charge happens after the call duration is
  * persisted (by the webhook handler) but before classification so that a
- * classification failure never blocks billing.
+ * classification failure never blocks billing.  Retry scheduling (step 6)
+ * runs last so a retry is only booked after billing succeeds.
  *
  * When wired with the Inngest SDK each `step.run(...)` call gets automatic
  * retry and checkpointing.  For now the functions are plain async helpers that
@@ -21,13 +22,34 @@ import { and, eq, sql } from 'drizzle-orm';
 
 import { withOrgContext, withSystemContext } from '@/lib/db/context';
 import { calls, campaigns } from '@/lib/db/schema';
+import { CAMPAIGN_DISPATCH_CALL_EVENT } from '@/lib/inngest/campaigns/events';
 import { sendInngestEvent } from '@/lib/inngest/client';
 import { APPOINTMENT_BOOKED_EVENT } from '@/lib/inngest/voice/events';
 import { classifyAndFinaliseCall } from '@/lib/services/calls';
 import { chargeForCall } from '@/lib/services/credit';
 import { persistCallArtifacts } from '@/lib/voice/persistence';
 
+import type { CampaignDispatchCallData } from '../campaigns/events';
 import type { CallCompletedData } from '../voice/events';
+
+// ─── Retry constants ──────────────────────────────────────────────────────────
+
+/** Maximum number of attempts per contact per campaign (spec §10.2). */
+export const MAX_RETRY_ATTEMPTS = 3;
+
+/**
+ * Minimum delay between retry attempts in hours (spec §10.2).
+ * Ensures at least 48 hours pass before a follow-up call.
+ */
+const MIN_RETRY_DELAY_HOURS = 48;
+
+/**
+ * Additional random offset range (hours) applied on top of the 48h minimum.
+ * This shifts the retry to a different time-of-day (≥3h from the original).
+ * A random value in [3, 7) hours is added, producing a 3–7h time-of-day delta.
+ */
+const RETRY_TIME_OFFSET_HOURS_MIN = 3;
+const RETRY_TIME_OFFSET_HOURS_RANGE = 4;
 
 // ─── Step implementations ─────────────────────────────────────────────────────
 
@@ -153,6 +175,106 @@ export async function emitOutcomeEvents(callId: string): Promise<void> {
   }
 }
 
+// ─── Retry scheduling ─────────────────────────────────────────────────────────
+
+/**
+ * Schedules a follow-up dispatch if the call ended in a retryable state.
+ *
+ * Retryable terminal states: `no_answer`, `busy`.
+ *
+ * Per spec §10.2:
+ *  - Max 3 attempts per contact per campaign.
+ *  - Minimum 48h between attempts.
+ *  - Second attempt scheduled at a different time-of-day (≥3h offset from the
+ *    original call's hour, implemented via a 3–7h random additional offset).
+ *
+ * When a retry is warranted:
+ *  1. A new `calls` row is created in `pending` state with `attempt_number + 1`.
+ *  2. A `campaign/dispatch-call` event is sent with `scheduledFor` set to the
+ *     computed future time, causing the dispatch handler to sleep until then.
+ *
+ * When max attempts is reached, the current call is marked
+ * `failed / max_attempts_reached` and no further event is sent.
+ */
+export async function scheduleRetryIfNeeded(callId: string): Promise<void> {
+  const [call] = await withSystemContext((tx) =>
+    tx
+      .select({
+        org_id: calls.org_id,
+        campaign_id: calls.campaign_id,
+        contact_id: calls.contact_id,
+        status: calls.status,
+        attempt_number: calls.attempt_number,
+        started_at: calls.started_at,
+      })
+      .from(calls)
+      .where(eq(calls.id, callId))
+      .limit(1),
+  );
+
+  if (!call) return;
+
+  // Only retry on retryable statuses
+  if (call.status !== 'no_answer' && call.status !== 'busy') return;
+
+  if (call.attempt_number >= MAX_RETRY_ATTEMPTS) {
+    // Max attempts exhausted — mark the call as definitively failed
+    await withOrgContext(call.org_id, async (tx) => {
+      await tx
+        .update(calls)
+        .set({ status: 'failed', error_code: 'max_attempts_reached' })
+        .where(and(eq(calls.id, callId), eq(calls.org_id, call.org_id)));
+    });
+    return;
+  }
+
+  // Compute the earliest retry time: 48h + random 3–7h offset from call start.
+  // The offset ensures the second attempt falls at a different time-of-day
+  // (≥3h from the original).  The dispatch handler's time-window gate will
+  // further adjust to the next open window if the computed time falls outside
+  // the 09:00–19:00 envelope.
+  const base = call.started_at ?? new Date();
+  const offsetHours =
+    MIN_RETRY_DELAY_HOURS +
+    RETRY_TIME_OFFSET_HOURS_MIN +
+    Math.random() * RETRY_TIME_OFFSET_HOURS_RANGE;
+  const scheduledFor = new Date(base.getTime() + offsetHours * 3600 * 1000).toISOString();
+
+  const nextAttempt = call.attempt_number + 1;
+
+  // Create a new pending call row for the retry so the dashboard immediately
+  // reflects the upcoming attempt.
+  const [newCall] = await withOrgContext(call.org_id, async (tx) =>
+    tx
+      .insert(calls)
+      .values({
+        org_id: call.org_id,
+        campaign_id: call.campaign_id,
+        contact_id: call.contact_id,
+        provider: 'vapi',
+        status: 'pending',
+        attempt_number: nextAttempt,
+      })
+      .returning({ id: calls.id }),
+  );
+
+  if (!newCall) return;
+
+  // Send the future dispatch event (idempotent via deterministic id).
+  await sendInngestEvent({
+    name: CAMPAIGN_DISPATCH_CALL_EVENT,
+    data: {
+      campaignId: call.campaign_id,
+      orgId: call.org_id,
+      contactId: call.contact_id,
+      callId: newCall.id,
+      attempt: nextAttempt,
+      scheduledFor,
+    } satisfies CampaignDispatchCallData,
+    id: `retry-${callId}-attempt-${nextAttempt}`,
+  });
+}
+
 // ─── Main handler ─────────────────────────────────────────────────────────────
 
 /**
@@ -168,6 +290,7 @@ export async function emitOutcomeEvents(callId: string): Promise<void> {
  *   3. classify-if-needed — can fail without affecting 1 or 2
  *   4. update-campaign-stats — aggregation; non-blocking for billing
  *   5. emit-downstream    — fire-and-forward; last so no side-effects on retry
+ *   6. schedule-retry     — only if no_answer/busy; runs after billing succeeds
  */
 export async function callCompletedHandler(data: CallCompletedData): Promise<void> {
   const { callId } = data;
@@ -186,4 +309,8 @@ export async function callCompletedHandler(data: CallCompletedData): Promise<voi
 
   // Step 5: emit downstream events for CRM / opt-out integrations
   await emitOutcomeEvents(callId);
+
+  // Step 6: schedule a retry if the call ended in a retryable state
+  // (no_answer or busy) and attempts < MAX_RETRY_ATTEMPTS
+  await scheduleRetryIfNeeded(callId);
 }

@@ -15,6 +15,12 @@ export interface CampaignDispatchCallData {
   callId: string;
   /** 1-based attempt number */
   attempt: number;
+  /**
+   * ISO-8601 datetime before which dispatch should not proceed.
+   * Set on retry attempts to enforce the 48h minimum between attempts.
+   * The dispatch handler returns `{ sleepUntil }` when this is in the future.
+   */
+  scheduledFor?: string;
 }
 
 export interface CampaignCompletedData {

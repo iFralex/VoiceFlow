@@ -43,6 +43,13 @@ const mockUpdateTable = vi.fn(() => ({ set: mockUpdateSet }));
 mockOrgUpdate.mockImplementation(mockUpdateTable);
 mockOrgTx.update = mockOrgUpdate;
 
+// Org tx insert chain: tx.insert(...).values(...).returning(...)
+const mockInsertReturning = vi.fn();
+const mockInsertValues = vi.fn(() => ({ returning: mockInsertReturning }));
+const mockInsertTable = vi.fn(() => ({ values: mockInsertValues }));
+const mockOrgInsert = vi.fn().mockImplementation(mockInsertTable);
+mockOrgTx.insert = mockOrgInsert;
+
 // ─── Module under test ────────────────────────────────────────────────────────
 
 import { sendInngestEvent } from '@/lib/inngest/client';
@@ -51,11 +58,13 @@ import { chargeForCall } from '@/lib/services/credit';
 import { persistCallArtifacts } from '@/lib/voice/persistence';
 
 import {
+  MAX_RETRY_ATTEMPTS,
   callCompletedHandler,
   chargeCallToLedger,
   emitOutcomeEvents,
   incrementCampaignCounters,
   persistCallArtifactsStep,
+  scheduleRetryIfNeeded,
 } from './completed';
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
@@ -244,13 +253,147 @@ describe('emitOutcomeEvents', () => {
   });
 });
 
+// ─── Tests: scheduleRetryIfNeeded ────────────────────────────────────────────
+
+describe('scheduleRetryIfNeeded', () => {
+  const baseRetryCallRow = {
+    org_id: ORG_ID,
+    campaign_id: CAMPAIGN_ID,
+    contact_id: CONTACT_ID,
+    status: 'no_answer' as const,
+    attempt_number: 1,
+    started_at: new Date('2025-06-01T10:00:00Z'),
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockSystemSelect.mockReturnValue({ from: mockSystemFrom });
+    mockSystemFrom.mockReturnValue({ where: mockSystemWhere });
+    mockSystemWhere.mockReturnValue({ limit: mockSystemLimit });
+    vi.mocked(sendInngestEvent).mockResolvedValue(undefined);
+    mockOrgInsert.mockImplementation(mockInsertTable);
+    mockInsertTable.mockReturnValue({ values: mockInsertValues });
+    mockInsertValues.mockReturnValue({ returning: mockInsertReturning });
+    mockInsertReturning.mockResolvedValue([{ id: 'new-call-id' }]);
+    mockOrgUpdate.mockImplementation(mockUpdateTable);
+    mockUpdateTable.mockReturnValue({ set: mockUpdateSet });
+    mockUpdateSet.mockReturnValue({ where: mockUpdateWhere });
+    mockUpdateWhere.mockResolvedValue(undefined);
+  });
+
+  it('is a no-op when call not found', async () => {
+    mockSystemLimit.mockResolvedValue([]);
+
+    await scheduleRetryIfNeeded(CALL_ID);
+
+    expect(sendInngestEvent).not.toHaveBeenCalled();
+    expect(mockOrgInsert).not.toHaveBeenCalled();
+  });
+
+  it('is a no-op when status is completed', async () => {
+    mockSystemLimit.mockResolvedValue([{ ...baseRetryCallRow, status: 'completed' }]);
+
+    await scheduleRetryIfNeeded(CALL_ID);
+
+    expect(sendInngestEvent).not.toHaveBeenCalled();
+    expect(mockOrgInsert).not.toHaveBeenCalled();
+  });
+
+  it('is a no-op when status is failed', async () => {
+    mockSystemLimit.mockResolvedValue([{ ...baseRetryCallRow, status: 'failed' }]);
+
+    await scheduleRetryIfNeeded(CALL_ID);
+
+    expect(sendInngestEvent).not.toHaveBeenCalled();
+  });
+
+  it('schedules a retry when status is no_answer and attempt < max', async () => {
+    mockSystemLimit.mockResolvedValue([{ ...baseRetryCallRow, status: 'no_answer', attempt_number: 1 }]);
+
+    await scheduleRetryIfNeeded(CALL_ID);
+
+    expect(mockOrgInsert).toHaveBeenCalledOnce();
+    expect(sendInngestEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'campaign/dispatch-call',
+        data: expect.objectContaining({
+          campaignId: CAMPAIGN_ID,
+          orgId: ORG_ID,
+          contactId: CONTACT_ID,
+          callId: 'new-call-id',
+          attempt: 2,
+          scheduledFor: expect.any(String),
+        }),
+        id: `retry-${CALL_ID}-attempt-2`,
+      }),
+    );
+  });
+
+  it('schedules a retry when status is busy and attempt < max', async () => {
+    mockSystemLimit.mockResolvedValue([{ ...baseRetryCallRow, status: 'busy', attempt_number: 2 }]);
+
+    await scheduleRetryIfNeeded(CALL_ID);
+
+    expect(mockOrgInsert).toHaveBeenCalledOnce();
+    expect(sendInngestEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ attempt: 3 }),
+        id: `retry-${CALL_ID}-attempt-3`,
+      }),
+    );
+  });
+
+  it(`marks call failed with max_attempts_reached when attempt_number >= ${MAX_RETRY_ATTEMPTS}`, async () => {
+    mockSystemLimit.mockResolvedValue([{
+      ...baseRetryCallRow,
+      status: 'no_answer',
+      attempt_number: MAX_RETRY_ATTEMPTS,
+    }]);
+
+    await scheduleRetryIfNeeded(CALL_ID);
+
+    expect(mockOrgUpdate).toHaveBeenCalledOnce();
+    expect(mockUpdateSet).toHaveBeenCalledWith({
+      status: 'failed',
+      error_code: 'max_attempts_reached',
+    });
+    expect(sendInngestEvent).not.toHaveBeenCalled();
+    expect(mockOrgInsert).not.toHaveBeenCalled();
+  });
+
+  it('scheduledFor is at least 48h after started_at', async () => {
+    const startedAt = new Date('2025-06-01T10:00:00Z');
+    mockSystemLimit.mockResolvedValue([{ ...baseRetryCallRow, started_at: startedAt }]);
+
+    await scheduleRetryIfNeeded(CALL_ID);
+
+    const eventCall = vi.mocked(sendInngestEvent).mock.calls[0]![0];
+    const scheduledFor = new Date(eventCall.data.scheduledFor as string);
+    const diffHours = (scheduledFor.getTime() - startedAt.getTime()) / 3600_000;
+    expect(diffHours).toBeGreaterThanOrEqual(48 + 3);
+    expect(diffHours).toBeLessThan(48 + 7 + 1); // max with floating point tolerance
+  });
+
+  it('new call row has attempt_number = attempt + 1', async () => {
+    mockSystemLimit.mockResolvedValue([{ ...baseRetryCallRow, attempt_number: 1 }]);
+
+    await scheduleRetryIfNeeded(CALL_ID);
+
+    expect(mockInsertValues).toHaveBeenCalledWith(
+      expect.objectContaining({ attempt_number: 2 }),
+    );
+  });
+});
+
 // ─── Tests: callCompletedHandler ─────────────────────────────────────────────
 
 describe('callCompletedHandler', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    // Default: call found with appointment_booked outcome
+    // Default: call found — set up all 4 sequential system selects:
+    // 1. chargeCallToLedger, 2. incrementCampaignCounters,
+    // 3. emitOutcomeEvents, 4. scheduleRetryIfNeeded
     mockSystemSelect.mockReturnValue({ from: mockSystemFrom });
     mockSystemFrom.mockReturnValue({ where: mockSystemWhere });
     mockSystemWhere.mockReturnValue({ limit: mockSystemLimit });
@@ -266,8 +409,19 @@ describe('callCompletedHandler', () => {
         // incrementCampaignCounters lookup
         return Promise.resolve([{ org_id: ORG_ID, campaign_id: CAMPAIGN_ID }]);
       }
-      // emitOutcomeEvents lookup
-      return Promise.resolve([{ ...baseCallRow, outcome: 'not_interested' }]);
+      if (callCount === 3) {
+        // emitOutcomeEvents lookup
+        return Promise.resolve([{ ...baseCallRow, outcome: 'not_interested' }]);
+      }
+      // scheduleRetryIfNeeded lookup — status='completed' so no retry
+      return Promise.resolve([{
+        org_id: ORG_ID,
+        campaign_id: CAMPAIGN_ID,
+        contact_id: CONTACT_ID,
+        status: 'completed',
+        attempt_number: 1,
+        started_at: new Date(),
+      }]);
     });
 
     mockOrgUpdate.mockImplementation(mockUpdateTable);
@@ -281,7 +435,7 @@ describe('callCompletedHandler', () => {
     vi.mocked(sendInngestEvent).mockResolvedValue(undefined);
   });
 
-  it('executes all five steps in sequence', async () => {
+  it('executes all six steps in sequence', async () => {
     await callCompletedHandler({
       callId: CALL_ID,
       orgId: ORG_ID,
@@ -310,5 +464,33 @@ describe('callCompletedHandler', () => {
     });
 
     expect(order.indexOf('charge')).toBeLessThan(order.indexOf('classify'));
+  });
+
+  it('schedules a retry when call ends in no_answer', async () => {
+    let callCount = 0;
+    mockSystemLimit.mockImplementation(() => {
+      callCount++;
+      if (callCount === 1) return Promise.resolve([{ org_id: ORG_ID, cost_cents: 0 }]);
+      if (callCount === 2) return Promise.resolve([{ org_id: ORG_ID, campaign_id: CAMPAIGN_ID }]);
+      if (callCount === 3) return Promise.resolve([{ ...baseCallRow, outcome: null }]);
+      // scheduleRetryIfNeeded — no_answer, attempt 1
+      return Promise.resolve([{
+        org_id: ORG_ID, campaign_id: CAMPAIGN_ID, contact_id: CONTACT_ID,
+        status: 'no_answer', attempt_number: 1, started_at: new Date(),
+      }]);
+    });
+    mockOrgInsert.mockImplementation(mockInsertTable);
+    mockInsertTable.mockReturnValue({ values: mockInsertValues });
+    mockInsertValues.mockReturnValue({ returning: mockInsertReturning });
+    mockInsertReturning.mockResolvedValue([{ id: 'retry-call-id' }]);
+
+    await callCompletedHandler({
+      callId: CALL_ID, orgId: ORG_ID, durationSeconds: 0,
+      endedReason: 'no-answer', recordingUrl: null,
+    });
+
+    expect(sendInngestEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'campaign/dispatch-call' }),
+    );
   });
 });

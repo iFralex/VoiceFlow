@@ -55,4 +55,6 @@ export {
   chargeCallToLedger,
   incrementCampaignCounters,
   emitOutcomeEvents,
+  scheduleRetryIfNeeded,
+  MAX_RETRY_ATTEMPTS,
 } from './calls/completed';
