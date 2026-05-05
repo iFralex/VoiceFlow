@@ -99,7 +99,7 @@ export function getVoiceProvider(): VoiceProvider {
 
 ### Task 4: Vapi adapter implementation
 
-- [ ] Create `src/lib/voice/vapi/adapter.ts` implementing `VoiceProvider`:
+- [x] Create `src/lib/voice/vapi/adapter.ts` implementing `VoiceProvider`:
 
 ```typescript
 export class VapiAdapter implements VoiceProvider {
@@ -146,11 +146,11 @@ export class VapiAdapter implements VoiceProvider {
 }
 ```
 
-- [ ] Implement `cancelCall` calling Vapi DELETE `/call/{id}`
-- [ ] Implement `fetchRecording` returning the recording URL from the call object
-- [ ] Implement `fetchTranscript` returning Vapi's structured transcript and mapping speakers
-- [ ] Define `VoiceProviderError` typed error class for upstream catches
-- [ ] Mark completed
+- [x] Implement `cancelCall` calling Vapi DELETE `/call/{id}`
+- [x] Implement `fetchRecording` returning the recording URL from the call object
+- [x] Implement `fetchTranscript` returning Vapi's structured transcript and mapping speakers
+- [x] Define `VoiceProviderError` typed error class for upstream catches
+- [x] Mark completed
 
 ### Task 5: Retell adapter (parallel implementation)
 
