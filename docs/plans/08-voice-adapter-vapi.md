@@ -310,10 +310,10 @@ export async function fetchCallTimeline(orgId: string, callId: string): Promise<
 
 ### Task 18: Definition of Done
 
-- [ ] `VoiceProvider` interface stable, both Vapi and Retell adapters pass the same conformance test suite
-- [ ] Test call from the dashboard runs end to end
-- [ ] AI disclosure verified in transcripts (verification helper integrated)
-- [ ] Tool side effects all idempotent
-- [ ] Recordings and transcripts persisted to our Storage, retrievable via signed URL
-- [ ] Inferred classifier handles all standard cases with >80% confidence on a fixture corpus of 30 transcripts
-- [ ] Mark completed
+- [x] `VoiceProvider` interface stable, both Vapi and Retell adapters pass the same conformance test suite
+- [x] Test call from the dashboard runs end to end
+- [x] AI disclosure verified in transcripts (verification helper integrated)
+- [x] Tool side effects all idempotent
+- [x] Recordings and transcripts persisted to our Storage, retrievable via signed URL
+- [x] Inferred classifier handles all standard cases with >80% confidence on a fixture corpus of 30 transcripts
+- [x] Mark completed
