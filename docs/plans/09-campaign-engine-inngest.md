@@ -221,9 +221,9 @@ export const callCompleted = inngest.createFunction(
 
 ### Task 9: Migration — `campaign_stats` table
 
-- [ ] Add `0010_campaign_stats.sql`: per-campaign denormalised counters: `campaign_id PK`, `total_calls`, `pending_calls`, `dialing_calls`, `in_progress_calls`, `completed_calls`, `failed_calls`, `outcome_appointment_booked`, `outcome_interested`, `outcome_not_interested`, `outcome_wrong_number`, `outcome_callback`, `outcome_voicemail`, `outcome_do_not_call`, `total_billed_seconds`, `total_cost_cents`, `last_aggregated_at`
-- [ ] Drizzle schema entry; queryable by Server Components for fast dashboard rendering
-- [ ] Mark completed
+- [x] Add `0010_campaign_stats.sql`: per-campaign denormalised counters: `campaign_id PK`, `total_calls`, `pending_calls`, `dialing_calls`, `in_progress_calls`, `completed_calls`, `failed_calls`, `outcome_appointment_booked`, `outcome_interested`, `outcome_not_interested`, `outcome_wrong_number`, `outcome_callback`, `outcome_voicemail`, `outcome_do_not_call`, `total_billed_seconds`, `total_cost_cents`, `last_aggregated_at`
+- [x] Drizzle schema entry; queryable by Server Components for fast dashboard rendering
+- [x] Mark completed
 
 ### Task 10: Time-window utility
 
