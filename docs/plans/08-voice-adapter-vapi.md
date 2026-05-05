@@ -173,7 +173,7 @@ export class VapiAdapter implements VoiceProvider {
 
 ### Task 7: Call service — domain layer
 
-- [ ] Create `src/lib/services/calls.ts`:
+- [x] Create `src/lib/services/calls.ts`:
 
 ```typescript
 export async function createPendingCall(orgId: string, input: NewCall): Promise<Call>;
@@ -197,10 +197,10 @@ export async function classifyAndFinaliseCall(callId: string): Promise<void>;
 export async function fetchCallTimeline(orgId: string, callId: string): Promise<CallTimeline>;
 ```
 
-- [ ] `dispatchCall` resolves the campaign's script, assembles the system prompt and first message, picks a voice, picks a CLI from the pool (plan 10), calls `provider.createCall`, persists `provider_call_id`, transitions status `pending → dialing`
-- [ ] `recordCallEnded` persists recording and transcript paths to Storage (download from provider, upload to our bucket — see Task 9), transitions status, computes billable seconds, calls `chargeForCall` from plan 05, emits Inngest events for downstream actions
-- [ ] All operations wrapped in `withOrgContext` after resolving from `calls.org_id`
-- [ ] Mark completed
+- [x] `dispatchCall` resolves the campaign's script, assembles the system prompt and first message, picks a voice, picks a CLI from the pool (plan 10), calls `provider.createCall`, persists `provider_call_id`, transitions status `pending → dialing`
+- [x] `recordCallEnded` persists recording and transcript paths to Storage (download from provider, upload to our bucket — see Task 9), transitions status, computes billable seconds, calls `chargeForCall` from plan 05, emits Inngest events for downstream actions
+- [x] All operations wrapped in `withOrgContext` after resolving from `calls.org_id`
+- [x] Mark completed
 
 ### Task 8: Vapi webhook handler
 
