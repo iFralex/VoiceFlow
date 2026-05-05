@@ -243,14 +243,14 @@ export async function fetchCallTimeline(orgId: string, callId: string): Promise<
 
 ### Task 11: Outcome classifier — inferred path
 
-- [ ] Create `src/lib/voice/classifier.ts` with `classifyTranscript(transcript)`:
+- [x] Create `src/lib/voice/classifier.ts` with `classifyTranscript(transcript)`:
   - take the full transcript JSON
   - call OpenAI `gpt-4o-mini` (cheap, fast) with a structured-output JSON Schema returning `{ outcome: enum, confidence: number, reasoning: string }`
   - prompt instructs the model to use the same enum values as our DB outcome enum
-- [ ] Triggered from Inngest function `call.classify` after artifacts are persisted, only if no tool-driven outcome was already set
-- [ ] Persist result on `calls.outcome` and `calls.outcome_confidence`
-- [ ] If both tool and inferred outcomes exist (rare race) and they disagree, do NOT overwrite the tool outcome; emit a `quality.outcome-mismatch` event for the QA dashboard (plan 14)
-- [ ] Mark completed
+- [x] Triggered from Inngest function `call.classify` after artifacts are persisted, only if no tool-driven outcome was already set
+- [x] Persist result on `calls.outcome` and `calls.outcome_confidence`
+- [x] If both tool and inferred outcomes exist (rare race) and they disagree, do NOT overwrite the tool outcome; emit a `quality.outcome-mismatch` event for the QA dashboard (plan 14)
+- [x] Mark completed
 
 ### Task 12: AI disclosure verification
 

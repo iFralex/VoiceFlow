@@ -37,3 +37,25 @@ export interface CallTransferredData {
   orgId: string;
   reason: string;
 }
+
+// ─── Quality / QA events ─────────────────────────────────────────────────────
+
+/**
+ * Emitted when the inferred outcome (classifier) disagrees with the
+ * tool-driven outcome set by the LLM during the call.  Consumed by the
+ * QA dashboard (plan 14) for human review.
+ */
+export const QUALITY_OUTCOME_MISMATCH_EVENT = 'quality/outcome-mismatch' as const;
+
+export interface QualityOutcomeMismatchData {
+  callId: string;
+  orgId: string;
+  /** Outcome set by a tool invocation during the call (authoritative). */
+  toolOutcome: string;
+  /** Outcome inferred by the post-call transcript classifier. */
+  inferredOutcome: string;
+  /** Classifier confidence for the inferred outcome [0, 1]. */
+  inferredConfidence: number;
+  /** Brief classifier reasoning for auditing. */
+  reasoning: string;
+}
