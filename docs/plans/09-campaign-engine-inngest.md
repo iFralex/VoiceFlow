@@ -93,7 +93,7 @@ export async function listCampaigns(
 
 ### Task 3: Inngest function — campaign launched (planner)
 
-- [ ] Create `src/lib/inngest/campaigns/launched.ts`:
+- [x] Create `src/lib/inngest/campaigns/launched.ts`:
 
 ```typescript
 export const campaignLaunched = inngest.createFunction(
@@ -128,8 +128,8 @@ export const campaignLaunched = inngest.createFunction(
 );
 ```
 
-- [ ] `createPendingCallRows` inserts a `calls` row per contact in `pending` state, returning the precreated call ids; this lets the dashboard surface campaign progress immediately
-- [ ] Mark completed
+- [x] `createPendingCallRows` inserts a `calls` row per contact in `pending` state, returning the precreated call ids; this lets the dashboard surface campaign progress immediately
+- [x] Mark completed
 
 ### Task 4: Inngest function — dispatch-call (per-contact)
 

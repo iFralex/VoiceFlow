@@ -1,5 +1,16 @@
-export { sendInngestEvent } from './client';
+export { sendInngestEvent, sendInngestEvents } from './client';
 export type { InngestEventPayload } from './client';
+export {
+  CAMPAIGN_LAUNCHED_EVENT,
+  CAMPAIGN_DISPATCH_CALL_EVENT,
+  CAMPAIGN_COMPLETED_EVENT,
+} from './campaigns/events';
+export type {
+  CampaignLaunchedData,
+  CampaignDispatchCallData,
+  CampaignCompletedData,
+} from './campaigns/events';
+export { campaignLaunchedHandler, createPendingCallRows } from './campaigns/launched';
 export { CREDIT_LOW_BALANCE_EVENT } from './handlers/credit';
 export type { CreditLowBalanceData } from './handlers/credit';
 export {

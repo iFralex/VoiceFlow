@@ -31,3 +31,26 @@ export async function sendInngestEvent(event: InngestEventPayload): Promise<void
     throw new Error(`Inngest event send failed: ${response.status} ${response.statusText}`);
   }
 }
+
+/**
+ * Sends multiple events to Inngest in a single HTTP request (batch).
+ * Inngest's Events API accepts an array of events in one POST body.
+ */
+export async function sendInngestEvents(events: InngestEventPayload[]): Promise<void> {
+  if (events.length === 0) return;
+
+  const eventKey = env.INNGEST_EVENT_KEY;
+  const baseUrl = process.env['INNGEST_BASE_URL'] ?? 'https://inn.gs';
+
+  const response = await fetch(`${baseUrl}/e/${eventKey}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(
+      events.map((e) => ({ name: e.name, data: e.data, ...(e.id ? { id: e.id } : {}) })),
+    ),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Inngest batch event send failed: ${response.status} ${response.statusText}`);
+  }
+}
