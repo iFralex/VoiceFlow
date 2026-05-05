@@ -24,7 +24,7 @@ The adapter is the boundary at which Phase 2 will swap implementations to a prop
 
 ### Task 1: VoiceProvider interface
 
-- [ ] Create `src/lib/voice/types.ts` defining the canonical types per spec §8.2:
+- [x] Create `src/lib/voice/types.ts` defining the canonical types per spec §8.2:
 
 ```typescript
 export interface VoiceProvider {
@@ -64,7 +64,7 @@ export type ToolDefinition = {
 };
 ```
 
-- [ ] Mark completed
+- [x] Mark completed
 
 ### Task 2: Provider factory
 
