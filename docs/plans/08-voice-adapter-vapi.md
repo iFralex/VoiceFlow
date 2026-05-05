@@ -68,7 +68,7 @@ export type ToolDefinition = {
 
 ### Task 2: Provider factory
 
-- [ ] Create `src/lib/voice/factory.ts`:
+- [x] Create `src/lib/voice/factory.ts`:
 
 ```typescript
 import { env } from '@/lib/env';
@@ -87,7 +87,7 @@ export function getVoiceProvider(): VoiceProvider {
 }
 ```
 
-- [ ] Mark completed
+- [x] Mark completed
 
 ### Task 3: Vapi assistant configuration
 
