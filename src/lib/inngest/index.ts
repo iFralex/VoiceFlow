@@ -48,3 +48,10 @@ export {
   PERSIST_ARTIFACTS_MAX_ATTEMPTS,
 } from './voice/persist-artifacts';
 export { classifyCallHandler } from './voice/classify';
+export {
+  callCompletedHandler,
+  persistCallArtifactsStep,
+  chargeCallToLedger,
+  incrementCampaignCounters,
+  emitOutcomeEvents,
+} from './calls/completed';

@@ -182,7 +182,7 @@ concurrency: [{ scope: "fn", key: "`${event.data.orgId}:${event.data.concurrency
 
 ### Task 6: Inngest function — call completed (post-call processor)
 
-- [ ] Create `src/lib/inngest/calls/completed.ts`:
+- [x] Create `src/lib/inngest/calls/completed.ts`:
 
 ```typescript
 export const callCompleted = inngest.createFunction(
@@ -199,8 +199,8 @@ export const callCompleted = inngest.createFunction(
 );
 ```
 
-- [ ] Step ordering is important: charge happens after duration is known but before classification (classification can fail without affecting billing)
-- [ ] Mark completed
+- [x] Step ordering is important: charge happens after duration is known but before classification (classification can fail without affecting billing)
+- [x] Mark completed
 
 ### Task 7: Inngest function — campaign completed (terminal state)
 
