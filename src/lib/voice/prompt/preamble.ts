@@ -102,7 +102,7 @@ export function interpolate(
   for (const key of Object.keys(variables)) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     let value = variables[key]!;
-    // Strip control characters (tabs/newlines are allowed for multi-line slots)
+    // Strip all C0 control characters (including tab and newline) from slot values
     value = value.replace(CONTROL_CHARS_RE, '');
     // Cap to 256 chars
     if (value.length > 256) {

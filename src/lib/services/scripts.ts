@@ -334,8 +334,9 @@ export async function previewSystemPrompt(
   const script = await getScript(orgId, scriptId);
   if (!script) throw new Error('script_not_found');
 
-  const stringVars = coerceVariablesToStrings(
-    script.variables as Record<string, unknown>,
+  const stringVars = fillMissingSchemaFields(
+    coerceVariablesToStrings(script.variables as Record<string, unknown>),
+    script.template.variable_schema,
   );
 
   const systemPrompt = assembleSystemPrompt({

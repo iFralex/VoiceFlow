@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useTransition } from 'react';
 
-import { deleteScript } from '@/actions/scripts';
+import { deleteScriptAction } from '@/actions/scripts';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
@@ -54,7 +54,7 @@ function ScriptRow({
 
   function handleDelete() {
     startTransition(async () => {
-      const result = await deleteScript({ scriptId: script.id });
+      const result = await deleteScriptAction({ scriptId: script.id });
       toastResult(result, t('delete_success'));
       if (result.ok) onDeleted();
     });

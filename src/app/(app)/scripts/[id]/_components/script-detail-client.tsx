@@ -3,9 +3,9 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { useRef, useState, useTransition } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 
-import { copyScriptAction, deleteScript, previewVoiceSampleAction, updateScriptAction } from '@/actions/scripts';
+import { copyScriptAction, deleteScriptAction, previewVoiceSampleAction, updateScriptAction } from '@/actions/scripts';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -105,6 +105,12 @@ export function ScriptDetailClient({ script, templateInfo, preamble, outcomeInst
   const [nameError, setNameError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
 
+  useEffect(() => {
+    return () => {
+      audioRef.current?.pause();
+    };
+  }, []);
+
   function validateForm(): boolean {
     let valid = true;
     const errors: FieldErrors = {};
@@ -175,7 +181,7 @@ export function ScriptDetailClient({ script, templateInfo, preamble, outcomeInst
 
   function handleDelete() {
     startDeleteTransition(async () => {
-      const result = await deleteScript({ scriptId: script.id });
+      const result = await deleteScriptAction({ scriptId: script.id });
       toastResult(result, t('delete_success'));
       if (result.ok) {
         router.push('/scripts');
@@ -191,6 +197,7 @@ export function ScriptDetailClient({ script, templateInfo, preamble, outcomeInst
         setSampleError(t('voice_sample_error'));
         return;
       }
+      audioRef.current?.pause();
       const audio = new Audio(result.audioDataUrl);
       audioRef.current = audio;
       audio.play().catch(() => setSampleError(t('voice_sample_error')));

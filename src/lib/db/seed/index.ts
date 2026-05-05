@@ -1,4 +1,4 @@
-import { sql } from 'drizzle-orm';
+import { eq, max, sql } from 'drizzle-orm';
 
 import { creditPackageSeedData } from './credit_packages';
 import {
@@ -47,8 +47,17 @@ export async function bumpScriptTemplate(slug: string): Promise<void> {
     );
   }
 
-  const bumpedVersion = def.version + 1;
-  const rows = buildScriptTemplateSeedData({ [slug]: bumpedVersion });
+  // Query the current max version from the database so repeated --bump calls
+  // always insert the next version rather than overwriting a previously bumped row.
+  let bumpedVersion: number;
+  await withSystemContext(async (tx) => {
+    const [{ maxVersion }] = await tx
+      .select({ maxVersion: max(scriptTemplates.version) })
+      .from(scriptTemplates)
+      .where(eq(scriptTemplates.slug, slug));
+    bumpedVersion = (maxVersion ?? def.version) + 1;
+  });
+  const rows = buildScriptTemplateSeedData({ [slug]: bumpedVersion! });
   const row = rows.find((r) => r.slug === slug);
   if (!row) throw new Error(`Failed to build bumped row for slug "${slug}"`);
 

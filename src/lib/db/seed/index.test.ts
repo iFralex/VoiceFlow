@@ -1,13 +1,17 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
 // Mock the db client before importing seed functions.
-// transaction must be mocked because seedScriptTemplates/seedCreditPackages now
-// use withSystemContext, which calls db.transaction. We pass the same insert
-// mock as the tx so that db.insert call-count assertions still work.
+// transaction must be mocked because seed functions use withSystemContext, which
+// calls db.transaction. We pass insert and select mocks as the tx so that
+// assertion helpers still work.
 vi.mock('../client', () => {
   const insert = vi.fn();
-  const transaction = vi.fn((fn: (tx: unknown) => Promise<unknown>) => fn({ insert }));
-  return { db: { insert, transaction } };
+  // select chain used by bumpScriptTemplate to look up the current max version
+  const selectWhere = vi.fn().mockResolvedValue([{ maxVersion: 1 }]);
+  const selectFrom = vi.fn().mockReturnValue({ where: selectWhere });
+  const select = vi.fn().mockReturnValue({ from: selectFrom });
+  const transaction = vi.fn((fn: (tx: unknown) => Promise<unknown>) => fn({ insert, select }));
+  return { db: { insert, select, transaction } };
 });
 
 import { db } from '../client';

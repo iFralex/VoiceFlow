@@ -57,14 +57,14 @@ export {
 // ---------------------------------------------------------------------------
 
 import { bookAppointmentJsonSchema } from './book_appointment';
+import { confirmAppointmentJsonSchema } from './confirm_appointment';
 import { markNotInterestedJsonSchema } from './mark_not_interested';
 import { markWrongNumberJsonSchema } from './mark_wrong_number';
-import { requestCallbackJsonSchema } from './request_callback';
-import { transferToHumanAgentJsonSchema } from './transfer_to_human_agent';
 import { registerOptOutJsonSchema } from './register_opt_out';
-import { confirmAppointmentJsonSchema } from './confirm_appointment';
+import { requestCallbackJsonSchema } from './request_callback';
 import { rescheduleAppointmentJsonSchema } from './reschedule_appointment';
 import { submitSurveyResponseJsonSchema } from './submit_survey_response';
+import { transferToHumanAgentJsonSchema } from './transfer_to_human_agent';
 
 /** JSON Schema tool definitions for the LLM, keyed by template slug. */
 export const TEMPLATE_TOOLS = {
@@ -85,6 +85,8 @@ export const TEMPLATE_TOOLS = {
   'appointment-confirm': [
     confirmAppointmentJsonSchema,
     rescheduleAppointmentJsonSchema,
+    markNotInterestedJsonSchema,
+    markWrongNumberJsonSchema,
     transferToHumanAgentJsonSchema,
     requestCallbackJsonSchema,
     registerOptOutJsonSchema,
@@ -110,6 +112,7 @@ export const TEMPLATE_TOOLS = {
   'post-sale-followup': [
     bookAppointmentJsonSchema,
     markNotInterestedJsonSchema,
+    markWrongNumberJsonSchema,
     requestCallbackJsonSchema,
     transferToHumanAgentJsonSchema,
     registerOptOutJsonSchema,
@@ -117,10 +120,13 @@ export const TEMPLATE_TOOLS = {
 
   /**
    * csi-survey: structured questionnaire; primary tool is survey submission.
-   * Minimal escape hatches: transfer to human and opt-out.
+   * Escape hatches: callback, wrong number, not interested, transfer, opt-out.
    */
   'csi-survey': [
     submitSurveyResponseJsonSchema,
+    markNotInterestedJsonSchema,
+    markWrongNumberJsonSchema,
+    requestCallbackJsonSchema,
     transferToHumanAgentJsonSchema,
     registerOptOutJsonSchema,
   ],

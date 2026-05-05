@@ -80,6 +80,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 | `pnpm db:push`      | Push schema changes (dev only)   |
 | `pnpm db:studio`    | Open Drizzle Studio              |
 | `pnpm db:seed`      | Seed the database                |
+| `pnpm db:seed --bump <slug>` | Publish new template version without overwriting existing scripts |
 
 ## Visual Regression Tests
 

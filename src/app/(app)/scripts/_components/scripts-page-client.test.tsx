@@ -11,7 +11,7 @@ vi.mock('next/navigation', () => ({
 }));
 
 vi.mock('@/actions/scripts', () => ({
-  deleteScript: vi.fn().mockResolvedValue({ ok: true }),
+  deleteScriptAction: vi.fn().mockResolvedValue({ ok: true }),
 }));
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────

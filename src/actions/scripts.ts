@@ -106,7 +106,7 @@ const deleteScriptSchema = z.object({ scriptId: z.string().uuid() });
  * Deletes an org-owned script.
  * Blocked if the script is referenced by any non-completed/non-cancelled campaign.
  */
-export async function deleteScript(
+export async function deleteScriptAction(
   input: z.infer<typeof deleteScriptSchema>,
 ): Promise<ActionResult> {
   const parsed = deleteScriptSchema.safeParse(input);
