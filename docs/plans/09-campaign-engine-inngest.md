@@ -310,10 +310,10 @@ export function nextWindowOpen(
 
 ### Task 18: Quotas and rate-limits at dispatcher
 
-- [ ] Per-org daily call cap (default 5,000; configurable): if reached, defer remaining dispatches to next day
-- [ ] Per-CLI hourly cap (30/hour, plan 10 detail): dispatcher checks before calling provider; if cap hit, picks another CLI or sleeps
-- [ ] Platform-wide cap (Inngest `concurrency.limit: 100`) protects Twilio rate caps and contains blast radius
-- [ ] Mark completed
+- [x] Per-org daily call cap (default 5,000; configurable): if reached, defer remaining dispatches to next day
+- [x] Per-CLI hourly cap (30/hour, plan 10 detail): dispatcher checks before calling provider; if cap hit, picks another CLI or sleeps
+- [x] Platform-wide cap (Inngest `concurrency.limit: 100`) protects Twilio rate caps and contains blast radius
+- [x] Mark completed
 
 ### Task 19: Integration tests
 

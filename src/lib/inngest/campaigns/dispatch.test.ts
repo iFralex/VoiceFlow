@@ -50,12 +50,16 @@ import { recordAudit } from '@/lib/db/audit';
 
 import {
   ContactNotEligibleError,
+  DEFAULT_CLI_HOURLY_CAP,
   DEFAULT_ORG_COOLDOWN_MS,
+  DEFAULT_ORG_DAILY_CAP,
   InsufficientCreditError,
   PROVIDER_DEGRADATION_THRESHOLD,
   PROVIDER_DEGRADATION_WINDOW_MS,
   campaignDispatchCallHandler,
+  checkCliHourlyCap,
   checkConcurrencySlot,
+  checkOrgDailyCallCap,
   checkOrgLevelCooldown,
   checkProviderDegradation,
   getActiveConcurrencyCount,
@@ -444,16 +448,25 @@ describe('campaignDispatchCallHandler', () => {
     vi.useFakeTimers({ now: new Date('2025-01-15T09:00:00Z') });
     vi.mocked(requireRunning).mockResolvedValue(runningCampaign); // concurrency_limit = 5
 
-    // 1st select: concurrency gate (active = 3 < 5 = limit → slot available)
-    // 2nd select: contact eligibility query
-    // 3rd select: org-level cooldown check (no recent cross-campaign call)
+    // 1st select: daily cap check (100 today < 5000 cap → proceed)
+    // 2nd select: concurrency gate (active = 3 < 5 = limit → slot available)
+    // 3rd select: contact eligibility query
+    // 4th select: org-level cooldown check (no recent cross-campaign call)
+    // 5th select: CLI hourly cap — CLI count (1 active)
+    // 6th select: CLI hourly cap — calls in last hour (0 → under cap)
     let callCount = 0;
     mockSelect.mockImplementation(() => {
       callCount++;
       if (callCount === 1) {
-        return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 3 }]) })) };
+        // daily cap: 100 calls today (under 5000)
+        return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 100 }]) })) };
       }
       if (callCount === 2) {
+        // concurrency: 3 active (below limit 5)
+        return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 3 }]) })) };
+      }
+      if (callCount === 3) {
+        // eligibility: eligible contact
         return {
           from: vi.fn(() => ({
             where: vi.fn(() => ({
@@ -464,16 +477,24 @@ describe('campaignDispatchCallHandler', () => {
           })),
         };
       }
-      // 3rd call: cooldown check → no recent cross-campaign call
-      return {
-        from: vi.fn(() => ({
-          where: vi.fn(() => ({
-            orderBy: vi.fn(() => ({
-              limit: vi.fn().mockResolvedValue([]),
+      if (callCount === 4) {
+        // cooldown check → no recent cross-campaign call
+        return {
+          from: vi.fn(() => ({
+            where: vi.fn(() => ({
+              orderBy: vi.fn(() => ({
+                limit: vi.fn().mockResolvedValue([]),
+              })),
             })),
           })),
-        })),
-      };
+        };
+      }
+      if (callCount === 5) {
+        // CLI hourly cap: 1 active CLI
+        return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 1 }]) })) };
+      }
+      // 6th: CLI hourly call count: 0 (under cap)
+      return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 0 }]) })) };
     });
 
     const result = await campaignDispatchCallHandler(dispatchData);
@@ -526,13 +547,18 @@ describe('campaignDispatchCallHandler', () => {
     vi.useFakeTimers({ now: new Date('2025-01-15T09:00:00Z') });
     vi.mocked(requireRunning).mockResolvedValue(runningCampaign);
 
-    // 1st select call: concurrency gate → returns count 0 (slot available)
-    // 2nd select call: contact eligibility → opted out
+    // 1st select call: daily cap check → under cap
+    // 2nd select call: concurrency gate → returns count 0 (slot available)
+    // 3rd select call: contact eligibility → opted out (returns early)
     let callCount = 0;
     mockSelect.mockImplementation(() => {
       callCount++;
       if (callCount === 1) {
-        // concurrency gate: select({ cnt }).from(calls).where(...)  — no .limit()
+        // daily cap: 100 today (under 5000)
+        return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 100 }]) })) };
+      }
+      if (callCount === 2) {
+        // concurrency gate: slot available
         return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 0 }]) })) };
       }
       // eligibility: select(...).from(contacts).where(...).limit(1)
@@ -562,14 +588,20 @@ describe('campaignDispatchCallHandler', () => {
 
     const recentCallDate = new Date('2025-01-14T10:00:00Z');
 
-    // 1st: concurrency (slot available), 2nd: eligibility (ok), 3rd: cooldown (recent call)
+    // 1st: daily cap (under), 2nd: concurrency (slot available), 3rd: eligibility (ok), 4th: cooldown (recent call)
     let callCount = 0;
     mockSelect.mockImplementation(() => {
       callCount++;
       if (callCount === 1) {
-        return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 0 }]) })) };
+        // daily cap: under cap
+        return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 100 }]) })) };
       }
       if (callCount === 2) {
+        // concurrency: slot available
+        return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 0 }]) })) };
+      }
+      if (callCount === 3) {
+        // eligibility: ok
         return {
           from: vi.fn(() => ({
             where: vi.fn(() => ({
@@ -580,7 +612,7 @@ describe('campaignDispatchCallHandler', () => {
           })),
         };
       }
-      // 3rd call: cooldown check → recent cross-campaign call found
+      // 4th call: cooldown check → recent cross-campaign call found
       return {
         from: vi.fn(() => ({
           where: vi.fn(() => ({
@@ -618,14 +650,20 @@ describe('campaignDispatchCallHandler', () => {
     vi.useFakeTimers({ now: new Date('2025-01-15T09:00:00Z') });
     vi.mocked(requireRunning).mockResolvedValue(runningCampaign);
 
-    // 1st: concurrency, 2nd: eligibility, 3rd: cooldown (none)
+    // 1st: daily cap, 2nd: concurrency, 3rd: eligibility, 4th: cooldown (none); then credit fails → throws before CLI cap
     let callCount = 0;
     mockSelect.mockImplementation(() => {
       callCount++;
       if (callCount === 1) {
-        return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 0 }]) })) };
+        // daily cap: under cap
+        return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 100 }]) })) };
       }
       if (callCount === 2) {
+        // concurrency: slot available
+        return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 0 }]) })) };
+      }
+      if (callCount === 3) {
+        // eligibility: eligible
         return {
           from: vi.fn(() => ({
             where: vi.fn(() => ({
@@ -659,14 +697,20 @@ describe('campaignDispatchCallHandler', () => {
     vi.useFakeTimers({ now: new Date('2025-01-15T09:00:00Z') });
     vi.mocked(requireRunning).mockResolvedValue(runningCampaign);
 
-    // 1st: concurrency gate, 2nd: eligibility, 3rd: cooldown
+    // 1st: daily cap, 2nd: concurrency gate, 3rd: eligibility, 4th: cooldown, 5th: CLI count, 6th: CLI hourly calls
     let callCount = 0;
     mockSelect.mockImplementation(() => {
       callCount++;
       if (callCount === 1) {
-        return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 0 }]) })) };
+        // daily cap: 100 today (under 5000)
+        return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 100 }]) })) };
       }
       if (callCount === 2) {
+        // concurrency: slot available (0 active)
+        return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 0 }]) })) };
+      }
+      if (callCount === 3) {
+        // eligibility: eligible contact
         return {
           from: vi.fn(() => ({
             where: vi.fn(() => ({
@@ -677,16 +721,24 @@ describe('campaignDispatchCallHandler', () => {
           })),
         };
       }
-      // cooldown check → no recent cross-campaign call
-      return {
-        from: vi.fn(() => ({
-          where: vi.fn(() => ({
-            orderBy: vi.fn(() => ({
-              limit: vi.fn().mockResolvedValue([]),
+      if (callCount === 4) {
+        // cooldown check → no recent cross-campaign call
+        return {
+          from: vi.fn(() => ({
+            where: vi.fn(() => ({
+              orderBy: vi.fn(() => ({
+                limit: vi.fn().mockResolvedValue([]),
+              })),
             })),
           })),
-        })),
-      };
+        };
+      }
+      if (callCount === 5) {
+        // CLI hourly cap: 1 active CLI
+        return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 1 }]) })) };
+      }
+      // 6th: CLI hourly call count: 0 (under cap)
+      return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 0 }]) })) };
     });
 
     const result = await campaignDispatchCallHandler(dispatchData);
@@ -723,14 +775,20 @@ describe('campaignDispatchCallHandler', () => {
       scheduledFor: pastDate.toISOString(),
     };
 
-    // 1st: concurrency gate, 2nd: eligibility, 3rd: cooldown
+    // 1st: daily cap, 2nd: concurrency gate, 3rd: eligibility, 4th: cooldown, 5th: CLI count, 6th: CLI hourly calls
     let callCount = 0;
     mockSelect.mockImplementation(() => {
       callCount++;
       if (callCount === 1) {
-        return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 0 }]) })) };
+        // daily cap: under cap
+        return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 100 }]) })) };
       }
       if (callCount === 2) {
+        // concurrency: slot available
+        return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 0 }]) })) };
+      }
+      if (callCount === 3) {
+        // eligibility: eligible
         return {
           from: vi.fn(() => ({
             where: vi.fn(() => ({
@@ -741,16 +799,24 @@ describe('campaignDispatchCallHandler', () => {
           })),
         };
       }
-      // cooldown check → no recent cross-campaign call
-      return {
-        from: vi.fn(() => ({
-          where: vi.fn(() => ({
-            orderBy: vi.fn(() => ({
-              limit: vi.fn().mockResolvedValue([]),
+      if (callCount === 4) {
+        // cooldown: no recent cross-campaign call
+        return {
+          from: vi.fn(() => ({
+            where: vi.fn(() => ({
+              orderBy: vi.fn(() => ({
+                limit: vi.fn().mockResolvedValue([]),
+              })),
             })),
           })),
-        })),
-      };
+        };
+      }
+      if (callCount === 5) {
+        // CLI hourly cap: 1 active CLI
+        return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 1 }]) })) };
+      }
+      // 6th: CLI hourly call count: 0 (under cap)
+      return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 0 }]) })) };
     });
 
     const result = await campaignDispatchCallHandler(dataWithPastSchedule);
@@ -953,5 +1019,273 @@ describe('onDispatchFailure', () => {
     await expect(
       onDispatchFailure({ campaignId: CAMPAIGN, orgId: ORG, contactId: CONTACT, callId: CALL, attempt: 1 }),
     ).resolves.toBeUndefined();
+  });
+});
+
+// ─── Tests: checkOrgDailyCallCap ──────────────────────────────────────────────
+
+describe('checkOrgDailyCallCap', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('exports the correct default daily cap constant (5,000)', () => {
+    expect(DEFAULT_ORG_DAILY_CAP).toBe(5_000);
+  });
+
+  it('returns null when today call count is below cap', async () => {
+    vi.useFakeTimers({ now: new Date('2025-01-15T09:00:00Z') });
+    mockSelect.mockReturnValue({
+      from: vi.fn(() => ({
+        where: vi.fn().mockResolvedValue([{ cnt: 100 }]),
+      })),
+    });
+
+    const result = await checkOrgDailyCallCap(ORG, 5_000);
+    vi.useRealTimers();
+    expect(result).toBeNull();
+  });
+
+  it('returns null when today call count equals cap minus one', async () => {
+    vi.useFakeTimers({ now: new Date('2025-01-15T09:00:00Z') });
+    mockSelect.mockReturnValue({
+      from: vi.fn(() => ({
+        where: vi.fn().mockResolvedValue([{ cnt: 4_999 }]),
+      })),
+    });
+
+    const result = await checkOrgDailyCallCap(ORG, 5_000);
+    vi.useRealTimers();
+    expect(result).toBeNull();
+  });
+
+  it('returns midnight tomorrow (Europe/Rome) when cap is exactly reached', async () => {
+    vi.useFakeTimers({ now: new Date('2025-01-15T14:00:00Z') }); // 15:00 Rome CET
+    mockSelect.mockReturnValue({
+      from: vi.fn(() => ({
+        where: vi.fn().mockResolvedValue([{ cnt: 5_000 }]),
+      })),
+    });
+
+    const result = await checkOrgDailyCallCap(ORG, 5_000);
+    vi.useRealTimers();
+    expect(result).toBeInstanceOf(Date);
+    // Midnight Rome on 2025-01-16 = 2025-01-15T23:00:00Z (CET is UTC+1)
+    expect(result!.toISOString()).toBe('2025-01-15T23:00:00.000Z');
+  });
+
+  it('returns midnight tomorrow when cap is exceeded', async () => {
+    vi.useFakeTimers({ now: new Date('2025-01-15T14:00:00Z') });
+    mockSelect.mockReturnValue({
+      from: vi.fn(() => ({
+        where: vi.fn().mockResolvedValue([{ cnt: 6_000 }]),
+      })),
+    });
+
+    const result = await checkOrgDailyCallCap(ORG, 5_000);
+    vi.useRealTimers();
+    expect(result).toBeInstanceOf(Date);
+    expect(result!.getTime()).toBeGreaterThan(new Date('2025-01-15T14:00:00Z').getTime());
+  });
+
+  it('returns null when db returns empty array (0 calls today)', async () => {
+    mockSelect.mockReturnValue({
+      from: vi.fn(() => ({
+        where: vi.fn().mockResolvedValue([]),
+      })),
+    });
+
+    const result = await checkOrgDailyCallCap(ORG, 5_000);
+    expect(result).toBeNull();
+  });
+});
+
+// ─── Tests: checkCliHourlyCap ─────────────────────────────────────────────────
+
+describe('checkCliHourlyCap', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('exports the correct default CLI hourly cap constant (30)', () => {
+    expect(DEFAULT_CLI_HOURLY_CAP).toBe(30);
+  });
+
+  const setupTwoQueryResults = (cliCount: number, callCount: number) => {
+    let callIdx = 0;
+    mockSelect.mockImplementation(() => {
+      callIdx++;
+      if (callIdx === 1) {
+        // First call: CLI count query
+        return {
+          from: vi.fn(() => ({
+            where: vi.fn().mockResolvedValue([{ cnt: cliCount }]),
+          })),
+        };
+      }
+      // Second call: hourly call count query
+      return {
+        from: vi.fn(() => ({
+          where: vi.fn().mockResolvedValue([{ cnt: callCount }]),
+        })),
+      };
+    });
+  };
+
+  it('returns null when no active CLIs exist', async () => {
+    setupTwoQueryResults(0, 100);
+    const result = await checkCliHourlyCap(ORG);
+    expect(result).toBeNull();
+  });
+
+  it('returns null when hourly call rate is below cap', async () => {
+    // 2 CLIs, 20 calls in last hour → 10 per CLI (below cap of 30)
+    setupTwoQueryResults(2, 20);
+    const result = await checkCliHourlyCap(ORG, 30);
+    expect(result).toBeNull();
+  });
+
+  it('returns null when estimated per-CLI rate equals cap minus 1', async () => {
+    // 1 CLI, 29 calls → 29 per CLI (below 30 cap)
+    setupTwoQueryResults(1, 29);
+    const result = await checkCliHourlyCap(ORG, 30);
+    expect(result).toBeNull();
+  });
+
+  it('returns next-hour Date when estimated per-CLI rate equals cap', async () => {
+    vi.useFakeTimers({ now: new Date('2025-01-15T14:30:00Z') });
+    // 1 CLI, 30 calls → 30 per CLI (at cap)
+    setupTwoQueryResults(1, 30);
+
+    const result = await checkCliHourlyCap(ORG, 30);
+    vi.useRealTimers();
+    expect(result).toBeInstanceOf(Date);
+    // Should be 15:00 UTC (next hour from 14:30)
+    expect(result!.toISOString()).toBe('2025-01-15T15:00:00.000Z');
+  });
+
+  it('returns next-hour Date when estimated per-CLI rate exceeds cap', async () => {
+    vi.useFakeTimers({ now: new Date('2025-01-15T14:30:00Z') });
+    // 2 CLIs, 100 calls → 50 per CLI (over cap of 30)
+    setupTwoQueryResults(2, 100);
+
+    const result = await checkCliHourlyCap(ORG, 30);
+    vi.useRealTimers();
+    expect(result).toBeInstanceOf(Date);
+    expect(result!.getTime()).toBeGreaterThan(new Date('2025-01-15T14:30:00Z').getTime());
+  });
+
+  it('returns null when db returns empty arrays', async () => {
+    let callIdx = 0;
+    mockSelect.mockImplementation(() => {
+      callIdx++;
+      return {
+        from: vi.fn(() => ({
+          where: vi.fn().mockResolvedValue(callIdx === 1 ? [{ cnt: 1 }] : []),
+        })),
+      };
+    });
+
+    const result = await checkCliHourlyCap(ORG, 30);
+    expect(result).toBeNull();
+  });
+});
+
+// ─── Tests: campaignDispatchCallHandler — daily cap and CLI hourly cap ────────
+
+describe('campaignDispatchCallHandler — quota gates', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockUpdate.mockReturnValue({ set: mockSet });
+    mockSet.mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) });
+    vi.mocked(sendInngestEvent).mockResolvedValue(undefined);
+    vi.mocked(dispatchCall).mockResolvedValue(undefined);
+    vi.mocked(getBalance).mockResolvedValue({ balanceCents: 5000, remainingMinutes: 100 });
+  });
+
+  it('returns sleepUntil (midnight tomorrow) when daily org cap is reached', async () => {
+    vi.useFakeTimers({ now: new Date('2025-01-15T09:00:00Z') }); // 10:00 Rome CET
+    vi.mocked(requireRunning).mockResolvedValue(runningCampaign);
+
+    // Query call order in handler:
+    // 1st: concurrency gate (inside window check)
+    // The daily cap is checked AFTER concurrency and BEFORE it dispatches
+    // Actually: order is time-window → daily cap → concurrency gate
+    // Time window is computed via nextWindowOpen which doesn't use mockSelect
+    // 1st select: daily cap count → 5000 (at cap)
+    mockSelect.mockReturnValue({
+      from: vi.fn(() => ({
+        where: vi.fn().mockResolvedValue([{ cnt: 5_000 }]),
+      })),
+    });
+
+    const result = await campaignDispatchCallHandler(dispatchData);
+    vi.useRealTimers();
+
+    expect(result).not.toBeNull();
+    expect(result).toHaveProperty('sleepUntil');
+    expect((result as { sleepUntil: Date }).sleepUntil).toBeInstanceOf(Date);
+    expect(dispatchCall).not.toHaveBeenCalled();
+  });
+
+  it('returns sleepUntil (next hour) when CLI hourly cap is reached', async () => {
+    vi.useFakeTimers({ now: new Date('2025-01-15T09:00:00Z') }); // inside window
+    vi.mocked(requireRunning).mockResolvedValue(runningCampaign);
+
+    // Query order in handler:
+    // 1: daily cap → under cap (100 calls today)
+    // 2: concurrency gate → slot available (2 active)
+    // 3: contact eligibility → eligible
+    // 4: org cooldown → no recent cross-campaign call
+    // credit: passes (balance > 100)
+    // 5: CLI hourly cap → CLIs (1), hourly calls (30) → at cap
+    // 6: CLI hourly calls (30)
+    let callIdx = 0;
+    mockSelect.mockImplementation(() => {
+      callIdx++;
+      if (callIdx === 1) {
+        // daily cap: 100 today (under 5000)
+        return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 100 }]) })) };
+      }
+      if (callIdx === 2) {
+        // concurrency: 2 active (below limit 5)
+        return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 2 }]) })) };
+      }
+      if (callIdx === 3) {
+        // eligibility: eligible contact
+        return {
+          from: vi.fn(() => ({
+            where: vi.fn(() => ({
+              limit: vi.fn().mockResolvedValue([{ deleted_at: null, opt_out: false, rpo_status: 'clear' }]),
+            })),
+          })),
+        };
+      }
+      if (callIdx === 4) {
+        // org cooldown: no recent cross-campaign call
+        return {
+          from: vi.fn(() => ({
+            where: vi.fn(() => ({
+              orderBy: vi.fn(() => ({
+                limit: vi.fn().mockResolvedValue([]),
+              })),
+            })),
+          })),
+        };
+      }
+      if (callIdx === 5) {
+        // CLI hourly cap — CLI count query: 1 active CLI
+        return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 1 }]) })) };
+      }
+      // callIdx === 6: CLI hourly call count: 30 (at cap)
+      return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 30 }]) })) };
+    });
+
+    const result = await campaignDispatchCallHandler(dispatchData);
+    vi.useRealTimers();
+
+    expect(result).not.toBeNull();
+    expect(result).toHaveProperty('sleepUntil');
+    expect(dispatchCall).not.toHaveBeenCalled();
   });
 });

@@ -25,10 +25,14 @@ export {
   markCallProviderError,
   checkProviderDegradation,
   onDispatchFailure,
+  checkOrgDailyCallCap,
+  checkCliHourlyCap,
   ContactNotEligibleError,
   InsufficientCreditError,
   PROVIDER_DEGRADATION_WINDOW_MS,
   PROVIDER_DEGRADATION_THRESHOLD,
+  DEFAULT_ORG_DAILY_CAP,
+  DEFAULT_CLI_HOURLY_CAP,
 } from './campaigns/dispatch';
 export { CREDIT_LOW_BALANCE_EVENT } from './handlers/credit';
 export type { CreditLowBalanceData } from './handlers/credit';

@@ -1,8 +1,9 @@
+import { TZDate } from '@date-fns/tz';
 import { and, count, desc, eq, gt, inArray, ne } from 'drizzle-orm';
 
 import { recordAudit } from '@/lib/db/audit';
 import { withOrgContext } from '@/lib/db/context';
-import { calls, contacts } from '@/lib/db/schema';
+import { calls, contacts, phoneNumbers } from '@/lib/db/schema';
 import { sendInngestEvent } from '@/lib/inngest/client';
 import { CREDIT_LOW_BALANCE_EVENT } from '@/lib/inngest/handlers/credit';
 import { dispatchCall as dispatchCallToProvider } from '@/lib/services/calls';
@@ -229,6 +230,143 @@ export async function checkOrgLevelCooldown(
   return recentCall?.created_at ?? null;
 }
 
+// ─── Per-org daily call cap ───────────────────────────────────────────────────
+
+/** Default maximum calls an org can place in a single calendar day (Rome time). */
+export const DEFAULT_ORG_DAILY_CAP = 5_000;
+
+/**
+ * Checks whether the org has reached its daily call cap.
+ *
+ * The daily window is aligned to midnight in the `Europe/Rome` timezone so the
+ * cap resets at the start of the local business day.
+ *
+ * Returns `null` when under the cap (proceed with dispatch).
+ * Returns a `Date` (midnight tomorrow, Rome time) when the cap is reached or
+ * exceeded — the caller should sleep until then and retry.
+ */
+export async function checkOrgDailyCallCap(
+  orgId: string,
+  dailyCap: number = DEFAULT_ORG_DAILY_CAP,
+): Promise<Date | null> {
+  const now = new Date();
+  const tzNow = new TZDate(now, DEFAULT_TZ);
+
+  const midnightToday = new TZDate(
+    tzNow.getFullYear(),
+    tzNow.getMonth(),
+    tzNow.getDate(),
+    0,
+    0,
+    0,
+    0,
+    DEFAULT_TZ,
+  );
+
+  const [row] = await withOrgContext(orgId, (tx) =>
+    tx
+      .select({ cnt: count() })
+      .from(calls)
+      .where(
+        and(
+          eq(calls.org_id, orgId),
+          gt(calls.created_at, midnightToday),
+        ),
+      ),
+  );
+
+  const todayCount = row?.cnt ?? 0;
+  if (todayCount < dailyCap) return null;
+
+  // Cap reached — return midnight tomorrow (Rome time)
+  const midnightTomorrow = new TZDate(
+    tzNow.getFullYear(),
+    tzNow.getMonth(),
+    tzNow.getDate() + 1,
+    0,
+    0,
+    0,
+    0,
+    DEFAULT_TZ,
+  );
+  return new Date(midnightTomorrow.getTime());
+}
+
+// ─── Per-CLI hourly cap ───────────────────────────────────────────────────────
+
+/**
+ * Default maximum calls per CLI (phone number) per hour.
+ * Aligns with plan 10's per-number rate-cap to protect the org's CLI
+ * reputation and comply with Twilio/Telnyx rate limits.
+ */
+export const DEFAULT_CLI_HOURLY_CAP = 30;
+
+/**
+ * Estimates whether all active CLIs (phone numbers) for the org have reached
+ * their per-CLI hourly call cap.
+ *
+ * Because call dispatch in plan 09 does not yet record which CLI was used for
+ * each call (that FK is added in plan 10), this function uses a conservative
+ * estimate: org-level calls in the last hour ÷ active CLI count.  When the
+ * estimated per-CLI rate equals or exceeds the cap, all CLIs are treated as
+ * saturated and dispatch is deferred.
+ *
+ * Returns `null` when capacity is available (at least one CLI is under cap).
+ * Returns a `Date` (start of the next clock-hour) when all CLIs appear to be
+ * at capacity — the caller should sleep until then.
+ */
+export async function checkCliHourlyCap(
+  orgId: string,
+  hourlyCap: number = DEFAULT_CLI_HOURLY_CAP,
+): Promise<Date | null> {
+  const hourAgo = new Date(Date.now() - 60 * 60 * 1000);
+
+  // Count active CLIs for this org
+  const [cliRow] = await withOrgContext(orgId, (tx) =>
+    tx
+      .select({ cnt: count() })
+      .from(phoneNumbers)
+      .where(
+        and(
+          eq(phoneNumbers.org_id, orgId),
+          eq(phoneNumbers.status, 'active'),
+        ),
+      ),
+  );
+
+  const activeCLIs = cliRow?.cnt ?? 0;
+  if (activeCLIs === 0) {
+    // No CLIs configured; let the provider step fail naturally
+    return null;
+  }
+
+  // Count calls dispatched in the last hour for this org
+  const [callRow] = await withOrgContext(orgId, (tx) =>
+    tx
+      .select({ cnt: count() })
+      .from(calls)
+      .where(
+        and(
+          eq(calls.org_id, orgId),
+          gt(calls.created_at, hourAgo),
+        ),
+      ),
+  );
+
+  const hourlyCallCount = callRow?.cnt ?? 0;
+
+  // If estimated per-CLI rate is below cap, at least one CLI has capacity
+  const estimatedPerCLIRate = hourlyCallCount / activeCLIs;
+  if (estimatedPerCLIRate < hourlyCap) return null;
+
+  // All CLIs appear saturated — sleep until the start of the next clock-hour
+  const now = new Date();
+  const nextHour = new Date(now);
+  nextHour.setMinutes(0, 0, 0);
+  nextHour.setTime(nextHour.getTime() + 60 * 60 * 1000);
+  return nextHour;
+}
+
 // ─── Concurrency gate ─────────────────────────────────────────────────────────
 
 /** How long to defer a dispatch when the campaign's concurrency slot is full. */
@@ -407,6 +545,17 @@ export async function campaignDispatchCallHandler(
     return { sleepUntil };
   }
 
+  // 2.5. Per-org daily call cap gate
+  //
+  // Prevents the org from exceeding its configured daily call limit.  When the
+  // cap is reached the handler returns a `sleepUntil` pointing to midnight
+  // (Europe/Rome) so the Inngest step re-executes at the start of the next
+  // business day rather than immediately retrying.
+  const dailyCapSleepUntil = await checkOrgDailyCallCap(orgId);
+  if (dailyCapSleepUntil !== null) {
+    return { sleepUntil: dailyCapSleepUntil };
+  }
+
   // 3. Per-campaign concurrency gate
   //
   // Counts active calls (dialing|in_progress) against campaign.concurrency_limit.
@@ -469,6 +618,18 @@ export async function campaignDispatchCallHandler(
 
   // 6. Credit check
   await verifyCreditAvailable(orgId, callId);
+
+  // 6.5. Per-CLI hourly cap gate
+  //
+  // Protects CLI reputation and provider rate limits by estimating the per-CLI
+  // call rate over the last hour.  When all active CLIs appear saturated the
+  // handler returns a `sleepUntil` pointing to the start of the next clock-hour
+  // instead of proceeding to the provider.  CLI-specific tracking (plan 10)
+  // will replace this estimate with an exact per-number count.
+  const cliCapSleepUntil = await checkCliHourlyCap(orgId);
+  if (cliCapSleepUntil !== null) {
+    return { sleepUntil: cliCapSleepUntil };
+  }
 
   // 7. Dispatch to voice provider
   await dispatchCallToProvider(orgId, callId);
