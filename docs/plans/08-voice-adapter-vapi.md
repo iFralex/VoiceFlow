@@ -262,11 +262,11 @@ export async function fetchCallTimeline(orgId: string, callId: string): Promise<
 
 ### Task 13: Live transfer support
 
-- [ ] Configure Vapi `transferList` per-call: when `transfer_to_human_agent` tool is invoked, Vapi initiates a warm transfer to a configured number
-- [ ] Per-script setting: `transfer_target_phone` stored in `scripts.variables` (added to schemas in plan 07; if missing, transfer is disabled)
-- [ ] On transfer event update `calls.transferred_to_agent`, emit `call.transferred` Inngest event for plan 13 notification
-- [ ] Document in operator-facing docs how the dealership configures their transfer numbers
-- [ ] Mark completed
+- [x] Configure Vapi `transferList` per-call: when `transfer_to_human_agent` tool is invoked, Vapi initiates a warm transfer to a configured number
+- [x] Per-script setting: `transfer_target_phone` stored in `scripts.variables` (added to schemas in plan 07; if missing, transfer is disabled)
+- [x] On transfer event update `calls.transferred_to_agent`, emit `call.transferred` Inngest event for plan 13 notification
+- [x] Document in operator-facing docs how the dealership configures their transfer numbers
+- [x] Mark completed
 
 ### Task 14: AMD (answering machine detection)
 

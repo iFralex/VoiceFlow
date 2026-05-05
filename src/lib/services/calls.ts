@@ -241,6 +241,18 @@ export async function dispatchCall(orgId: string, callId: string): Promise<void>
   const provider = getVoiceProvider();
   const webhookUrl = `${env.NEXT_PUBLIC_APP_URL}/api/webhooks/${provider.name}`;
 
+  // Read the optional transfer destination from script variables.
+  // If present and a valid E.164 string, it is passed to the provider so it can
+  // configure the warm-transfer destination for the call. If absent, live transfer
+  // is disabled for this call (the LLM's transfer_to_human_agent tool still fires
+  // our DB side-effects but Vapi will not bridge the phone call).
+  const scriptVars = script.variables as Record<string, unknown>;
+  const transferTargetPhone =
+    typeof scriptVars['transfer_target_phone'] === 'string' &&
+    scriptVars['transfer_target_phone'].startsWith('+')
+      ? scriptVars['transfer_target_phone']
+      : undefined;
+
   const { providerCallId } = await provider.createCall({
     toNumber: contact.phone_e164,
     fromNumber: phone.e164,
@@ -259,6 +271,7 @@ export async function dispatchCall(orgId: string, callId: string): Promise<void>
     endCallFunctions: tools,
     amdEnabled: true,
     recordingEnabled: true,
+    ...(transferTargetPhone !== undefined && { transferTargetPhone }),
   });
 
   // 11. Persist provider_call_id and transition to 'dialing'

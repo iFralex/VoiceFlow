@@ -19,6 +19,8 @@ export interface CreateCallParams {
   endCallFunctions: ToolDefinition[];
   amdEnabled: boolean;
   recordingEnabled: boolean;
+  /** E.164 phone number to warm-transfer to when the AI invokes transfer_to_human_agent. */
+  transferTargetPhone?: string;
 }
 
 export type TranscriptSegment = {

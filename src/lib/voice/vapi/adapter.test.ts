@@ -99,6 +99,46 @@ describe('VapiAdapter', () => {
       ]);
     });
 
+    it('injects a native transferCall tool when transferTargetPhone is set', async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ id: TEST_CALL_ID }),
+      });
+      vi.stubGlobal('fetch', fetchMock);
+
+      await makeAdapter().createCall({
+        ...baseParams,
+        transferTargetPhone: '+390212345678',
+      });
+
+      const body = JSON.parse((fetchMock.mock.calls[0]![1] as RequestInit).body as string);
+      const tools: unknown[] = body.assistantOverrides.model.tools;
+      // Should have the original function tool + one transferCall tool
+      expect(tools).toHaveLength(2);
+      const transferTool = tools.find(
+        (t) => (t as { type: string }).type === 'transferCall',
+      ) as { type: string; destinations: { type: string; number: string }[] };
+      expect(transferTool).toBeDefined();
+      expect(transferTool.destinations[0]!.number).toBe('+390212345678');
+    });
+
+    it('does not inject a transferCall tool when transferTargetPhone is absent', async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ id: TEST_CALL_ID }),
+      });
+      vi.stubGlobal('fetch', fetchMock);
+
+      await makeAdapter().createCall(baseParams);
+
+      const body = JSON.parse((fetchMock.mock.calls[0]![1] as RequestInit).body as string);
+      const tools: unknown[] = body.assistantOverrides.model.tools;
+      const hasTransferTool = tools.some(
+        (t) => (t as { type: string }).type === 'transferCall',
+      );
+      expect(hasTransferTool).toBe(false);
+    });
+
     it('includes metadata and serverUrl in the payload', async () => {
       const fetchMock = vi.fn().mockResolvedValue({
         ok: true,

@@ -37,6 +37,25 @@ export class VapiAdapter implements VoiceProvider {
   constructor(private readonly apiKey: string) {}
 
   async createCall(params: CreateCallParams): Promise<{ providerCallId: string }> {
+    // Build the model tools list, optionally injecting a Vapi-native transferCall
+    // tool when a transfer destination is configured. The native tool causes Vapi
+    // to bridge the live call to the configured E.164 number; our custom
+    // transfer_to_human_agent function handles the DB side-effects via the webhook.
+    const modelTools = this.mapTools(params.endCallFunctions);
+    if (params.transferTargetPhone) {
+      modelTools.push({
+        type: 'transferCall',
+        destinations: [
+          {
+            type: 'number',
+            number: params.transferTargetPhone,
+            message:
+              'Sto trasferendo la chiamata a un operatore umano. Attenda un momento.',
+          },
+        ],
+      });
+    }
+
     const body = {
       phoneNumberId: params.fromNumber,
       customer: { number: params.toNumber },
@@ -47,7 +66,7 @@ export class VapiAdapter implements VoiceProvider {
           provider: 'openai',
           model: 'gpt-4o',
           systemPrompt: params.systemPrompt,
-          tools: this.mapTools(params.endCallFunctions),
+          tools: modelTools,
         },
         voice: {
           provider: '11labs',
