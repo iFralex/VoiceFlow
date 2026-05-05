@@ -7,6 +7,9 @@ import { CREDIT_LOW_BALANCE_EVENT } from '@/lib/inngest/handlers/credit';
 import { dispatchCall as dispatchCallToProvider } from '@/lib/services/calls';
 import { requireRunning } from '@/lib/services/campaigns';
 import { getBalance } from '@/lib/services/credit';
+import { nextWindowOpen } from '@/lib/utils/time-window';
+
+export { nextWindowOpen };
 
 import type { CampaignDispatchCallData } from './events';
 
@@ -106,73 +109,6 @@ export async function checkConcurrencySlot(
 }
 
 // ─── Time window ─────────────────────────────────────────────────────────────
-
-/**
- * Determines whether we are currently inside the call time window.
- *
- * Returns `null` when inside the window (OK to call now).
- * Returns a `Date` (the next window-open instant) when outside the window.
- *
- * Window strings are "HH:MM" in 24-hour format, e.g. "09:00" and "19:00".
- * Only weekdays (Mon–Fri) are considered valid call days.
- *
- * This function is a pure helper; in production Inngest functions the caller
- * uses `step.sleepUntil(nextWindowOpen(...))` when the return value is non-null.
- */
-export function nextWindowOpen(
-  now: Date,
-  windowStart: string,
-  windowEnd: string,
-  tz: string = DEFAULT_TZ,
-): Date | null {
-  // Parse "HH:MM" strings
-  const [startHStr, startMStr] = windowStart.split(':');
-  const [endHStr, endMStr] = windowEnd.split(':');
-  const startH = parseInt(startHStr ?? '9', 10);
-  const startM = parseInt(startMStr ?? '0', 10);
-  const endH = parseInt(endHStr ?? '19', 10);
-  const endM = parseInt(endMStr ?? '0', 10);
-
-  // Convert `now` to local wall-clock in the target timezone
-  const localStr = now.toLocaleString('en-US', { timeZone: tz, hour12: false });
-  const localDate = new Date(localStr);
-  const dayOfWeek = localDate.getDay(); // 0 = Sun, 6 = Sat
-  const localH = localDate.getHours();
-  const localMin = localDate.getMinutes();
-
-  const nowMinutes = localH * 60 + localMin;
-  const startMinutes = startH * 60 + startM;
-  const endMinutes = endH * 60 + endM;
-
-  const isWeekday = dayOfWeek >= 1 && dayOfWeek <= 5;
-  const insideWindow = isWeekday && nowMinutes >= startMinutes && nowMinutes < endMinutes;
-
-  if (insideWindow) return null;
-
-  // Build a mutable local-time candidate
-  const candidate = new Date(localDate);
-  candidate.setSeconds(0, 0);
-
-  if (isWeekday && nowMinutes < startMinutes) {
-    // Same weekday, before window start
-    candidate.setHours(startH, startM, 0, 0);
-  } else {
-    // After window end, or on weekend — advance to next calendar day then skip weekends
-    candidate.setDate(candidate.getDate() + 1);
-    candidate.setHours(startH, startM, 0, 0);
-    while (candidate.getDay() === 0 || candidate.getDay() === 6) {
-      candidate.setDate(candidate.getDate() + 1);
-    }
-  }
-
-  // `candidate` is expressed in local (tz-naïve) wall-clock time.
-  // We return it as a UTC Date so callers can use it with step.sleepUntil.
-  // Re-parse through toLocaleString to map back to UTC.
-  const utcMs =
-    candidate.getTime() - (localDate.getTime() - now.getTime());
-
-  return new Date(utcMs);
-}
 
 /**
  * Async wrapper around `nextWindowOpen` for easy use inside `step.run`.

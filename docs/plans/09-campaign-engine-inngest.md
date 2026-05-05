@@ -227,7 +227,7 @@ export const callCompleted = inngest.createFunction(
 
 ### Task 10: Time-window utility
 
-- [ ] Create `src/lib/utils/time-window.ts`:
+- [x] Create `src/lib/utils/time-window.ts`:
 
 ```typescript
 import { TZDate } from '@date-fns/tz';
@@ -243,11 +243,11 @@ export function nextWindowOpen(
 }
 ```
 
-- [ ] Default windowing: weekdays only, 09:00–19:00 (configurable per campaign within the legal envelope 08:00–22:00)
-- [ ] Saturday and Sunday excluded by default (configurable)
-- [ ] Italian public holidays: include a small list (Capodanno, Epifania, Liberazione, Festa del lavoro, Festa Repubblica, Ferragosto, Tutti i Santi, Immacolata, Natale, Santo Stefano) and skip them by default
-- [ ] Add unit tests covering: midnight rollover, DST transitions (October last Sunday and March last Sunday), holiday skipping
-- [ ] Mark completed
+- [x] Default windowing: weekdays only, 09:00–19:00 (configurable per campaign within the legal envelope 08:00–22:00)
+- [x] Saturday and Sunday excluded by default (configurable)
+- [x] Italian public holidays: include a small list (Capodanno, Epifania, Liberazione, Festa del lavoro, Festa Repubblica, Ferragosto, Tutti i Santi, Immacolata, Natale, Santo Stefano) and skip them by default
+- [x] Add unit tests covering: midnight rollover, DST transitions (October last Sunday and March last Sunday), holiday skipping
+- [x] Mark completed
 
 ### Task 11: Retry policy
 
