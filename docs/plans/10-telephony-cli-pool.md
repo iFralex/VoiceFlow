@@ -155,13 +155,13 @@ export async function pickCliForOrg(
 
 ### Task 12: Per-org dedicated CLI as paid upgrade
 
-- [ ] Add `phone_numbers.org_id` already exists from plan 02 (nullable); when set, the CLI is org-dedicated and excluded from the shared pool
-- [ ] Document in `docs/runbooks/dedicated-cli.md` the founder process for selling the upgrade:
+- [x] Add `phone_numbers.org_id` already exists from plan 02 (nullable); when set, the CLI is org-dedicated and excluded from the shared pool (verified: schema in `src/lib/db/schema/phone_numbers.ts` already has nullable `org_id`; picker in `src/lib/voice/cli/picker.ts` filters with `org_id = $orgId OR org_id IS NULL` so other orgs' dedicated rows are excluded — covered by `picker.integration.test.ts > does not return another org's dedicated CLI`)
+- [x] Document in `docs/runbooks/dedicated-cli.md` the founder process for selling the upgrade:
   - dealer requests dedicated number (out-of-band; sales conversation in Phase 1)
   - founder provisions a fresh DID via SBC
   - founder runs `scripts/add-cli.ts` with `--org-id <uuid>` to assign
-- [ ] Future Phase 1 enhancement: self-serve dedicated-CLI upgrade as Stripe one-time + monthly recurring; placeholder out of MVP scope
-- [ ] Mark completed
+- [x] Future Phase 1 enhancement: self-serve dedicated-CLI upgrade as Stripe one-time + monthly recurring; placeholder out of MVP scope (called out explicitly in `docs/runbooks/dedicated-cli.md` under "What this runbook intentionally does not cover")
+- [x] Mark completed
 
 ### Task 13: Twilio fallback orchestration
 
