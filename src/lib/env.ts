@@ -26,6 +26,7 @@ const Env = z.object({
   AXIOM_DATASET: z.string().optional(),
   INNGEST_EVENT_KEY: z.string().min(1),
   INNGEST_SIGNING_KEY: z.string().min(1),
+  INNGEST_BASE_URL: z.string().url().optional(),
   VOICE_PROVIDER: z.enum(['vapi', 'retell']).default('vapi'),
   VAPI_API_KEY: z.string().min(1).optional(),
   VAPI_ASSISTANT_ID: z.string().min(1).optional(),

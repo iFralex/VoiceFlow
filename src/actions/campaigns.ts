@@ -25,18 +25,30 @@ const LAUNCH_ERROR_MAP: Record<string, string> = {
 
 // ─── Create (+ optionally launch) ─────────────────────────────────────────────
 
-const createCampaignSchema = z.object({
-  name: z.string().min(1, 'Nome obbligatorio').max(200, 'Nome troppo lungo'),
-  scriptId: z.string().uuid(),
-  contactListId: z.string().uuid(),
-  /** ISO 8601 string (from datetime-local input, converted via new Date().toISOString()) */
-  scheduledStart: z.string().optional(),
-  concurrencyLimit: z.number().int().min(1).max(20).optional(),
-  timeWindowStart: z.string().regex(/^\d{2}:\d{2}$/).optional(),
-  timeWindowEnd: z.string().regex(/^\d{2}:\d{2}$/).optional(),
-  /** When true, call launchCampaign immediately after creating. */
-  launch: z.boolean().default(false),
-});
+const createCampaignSchema = z
+  .object({
+    name: z.string().min(1, 'Nome obbligatorio').max(200, 'Nome troppo lungo'),
+    scriptId: z.string().uuid(),
+    contactListId: z.string().uuid(),
+    /** ISO 8601 string (from datetime-local input, converted via new Date().toISOString()) */
+    scheduledStart: z.string().optional(),
+    concurrencyLimit: z.number().int().min(1).max(20).optional(),
+    timeWindowStart: z.string().regex(/^\d{2}:\d{2}$/).optional(),
+    timeWindowEnd: z.string().regex(/^\d{2}:\d{2}$/).optional(),
+    /** When true, call launchCampaign immediately after creating. */
+    launch: z.boolean().default(false),
+  })
+  .refine(
+    (v) => {
+      // Both omitted, or only one present (the other defaults server-side) → OK
+      if (!v.timeWindowStart || !v.timeWindowEnd) return true;
+      return v.timeWindowStart < v.timeWindowEnd;
+    },
+    {
+      message: 'time_window_invalid',
+      path: ['timeWindowEnd'],
+    },
+  );
 
 /**
  * Creates a campaign (draft or scheduled), and optionally launches it immediately.

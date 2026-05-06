@@ -39,7 +39,7 @@ export async function createPendingCallRows(
           contact_id: c.contactId,
           provider: 'vapi' as const,
           status: 'pending' as const,
-          attempt_number: 1,
+          attempt_number: c.attemptNumber,
         })),
       )
       .returning({ id: calls.id, contact_id: calls.contact_id });

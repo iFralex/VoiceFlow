@@ -19,7 +19,7 @@ export interface InngestEventPayload {
  */
 export async function sendInngestEvent(event: InngestEventPayload): Promise<void> {
   const eventKey = env.INNGEST_EVENT_KEY;
-  const baseUrl = process.env['INNGEST_BASE_URL'] ?? 'https://inn.gs';
+  const baseUrl = env.INNGEST_BASE_URL ?? 'https://inn.gs';
 
   const response = await fetch(`${baseUrl}/e/${eventKey}`, {
     method: 'POST',
@@ -40,7 +40,7 @@ export async function sendInngestEvents(events: InngestEventPayload[]): Promise<
   if (events.length === 0) return;
 
   const eventKey = env.INNGEST_EVENT_KEY;
-  const baseUrl = process.env['INNGEST_BASE_URL'] ?? 'https://inn.gs';
+  const baseUrl = env.INNGEST_BASE_URL ?? 'https://inn.gs';
 
   const response = await fetch(`${baseUrl}/e/${eventKey}`, {
     method: 'POST',

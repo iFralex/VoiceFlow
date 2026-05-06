@@ -23,7 +23,17 @@ vi.mock('@/lib/services/credit', () => ({
 }));
 
 const mockUpdate = vi.fn();
-const mockSet = vi.fn(() => ({ where: vi.fn().mockResolvedValue(undefined) }));
+// where() resolves to undefined for plain UPDATEs, but is also chainable to
+// .returning() for UPDATEs that need the affected rows back. The Promise that
+// `where()` returns also exposes `.returning()` so both call patterns work.
+const makeWhereChain = (rows: { id: string }[] = [{ id: 'updated' }]) => {
+  const promise = Promise.resolve(undefined) as Promise<undefined> & {
+    returning: () => Promise<{ id: string }[]>;
+  };
+  promise.returning = () => Promise.resolve(rows);
+  return promise;
+};
+const mockSet = vi.fn(() => ({ where: vi.fn(() => makeWhereChain()) }));
 mockUpdate.mockReturnValue({ set: mockSet });
 
 const mockSelect = vi.fn();
@@ -417,7 +427,7 @@ describe('campaignDispatchCallHandler', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockUpdate.mockReturnValue({ set: mockSet });
-    mockSet.mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) });
+    mockSet.mockReturnValue({ where: vi.fn(() => makeWhereChain()) });
     vi.mocked(sendInngestEvent).mockResolvedValue(undefined);
     vi.mocked(dispatchCall).mockResolvedValue(undefined);
     vi.mocked(getBalance).mockResolvedValue({ balanceCents: 5000, remainingMinutes: 100 });
@@ -833,7 +843,7 @@ describe('markCallProviderError', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockUpdate.mockReturnValue({ set: mockSet });
-    mockSet.mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) });
+    mockSet.mockReturnValue({ where: vi.fn(() => makeWhereChain()) });
   });
 
   it('marks the call as failed with error_code=provider_error', async () => {
@@ -857,6 +867,16 @@ describe('markCallProviderError', () => {
         metadata: { reason: 'provider_error' },
       }),
     );
+  });
+
+  it('skips audit log when no row was updated (already terminal)', async () => {
+    // returning() yields no rows → call was already in a terminal state
+    mockSet.mockReturnValueOnce({ where: vi.fn(() => makeWhereChain([])) });
+
+    await markCallProviderError(ORG, CALL);
+
+    expect(mockUpdate).toHaveBeenCalledOnce();
+    expect(recordAudit).not.toHaveBeenCalled();
   });
 });
 
@@ -972,7 +992,7 @@ describe('onDispatchFailure', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockUpdate.mockReturnValue({ set: mockSet });
-    mockSet.mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) });
+    mockSet.mockReturnValue({ where: vi.fn(() => makeWhereChain()) });
     vi.mocked(sendInngestEvent).mockResolvedValue(undefined);
   });
 
@@ -1000,7 +1020,7 @@ describe('onDispatchFailure', () => {
 
   it('does not throw when degradation check fails', async () => {
     mockUpdate.mockReturnValue({ set: mockSet });
-    mockSet.mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) });
+    mockSet.mockReturnValue({ where: vi.fn(() => makeWhereChain()) });
 
     // Make select fail on the degradation check call
     let callCount = 0;

@@ -360,20 +360,10 @@ export async function cancelCampaign(
   byUserId: string,
   campaignId: string,
 ): Promise<void> {
-  // Fetch active calls before cancelling so we can terminate them afterwards.
-  const activeCalls = await withOrgContext(orgId, async (tx) => {
-    return tx
-      .select({ provider: calls.provider, provider_call_id: calls.provider_call_id })
-      .from(calls)
-      .where(
-        and(
-          eq(calls.org_id, orgId),
-          eq(calls.campaign_id, campaignId),
-          inArray(calls.status, ['dialing', 'in_progress']),
-        ),
-      );
-  });
-
+  // Flip status first. The dispatch handler's status check (`requireRunning`)
+  // ensures no NEW calls move from `pending` → `dialing` after this point, so
+  // the snapshot we take below is a complete picture of calls that need to be
+  // terminated at the provider.
   await withOrgContext(orgId, async (tx) => {
     const [updated] = await tx
       .update(campaigns)
@@ -397,6 +387,21 @@ export async function cancelCampaign(
       subjectType: 'campaign',
       subjectId: campaignId,
     });
+  });
+
+  // Snapshot active calls AFTER the status flip so we capture any that
+  // transitioned from `pending` → `dialing` between user intent and the flip.
+  const activeCalls = await withOrgContext(orgId, async (tx) => {
+    return tx
+      .select({ provider: calls.provider, provider_call_id: calls.provider_call_id })
+      .from(calls)
+      .where(
+        and(
+          eq(calls.org_id, orgId),
+          eq(calls.campaign_id, campaignId),
+          inArray(calls.status, ['dialing', 'in_progress']),
+        ),
+      );
   });
 
   // Release reservation outside the status-update transaction so a failed

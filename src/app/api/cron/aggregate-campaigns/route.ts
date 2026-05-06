@@ -77,7 +77,7 @@ export async function aggregateOneCampaign(
         dialing_calls: sql<number>`count(case when ${calls.status} = 'dialing' then 1 end)::int`,
         in_progress_calls: sql<number>`count(case when ${calls.status} = 'in_progress' then 1 end)::int`,
         completed_calls: sql<number>`count(case when ${calls.status} = 'completed' then 1 end)::int`,
-        failed_calls: sql<number>`count(case when ${calls.status} in ('failed','no_answer','busy') then 1 end)::int`,
+        failed_calls: sql<number>`count(case when ${calls.status} in ('failed','no_answer','busy','voicemail') then 1 end)::int`,
         outcome_appointment_booked: sql<number>`count(case when ${calls.outcome} = 'appointment_booked' then 1 end)::int`,
         outcome_interested: sql<number>`count(case when ${calls.outcome} = 'interested' then 1 end)::int`,
         outcome_not_interested: sql<number>`count(case when ${calls.outcome} = 'not_interested' then 1 end)::int`,

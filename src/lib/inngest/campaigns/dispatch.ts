@@ -93,10 +93,22 @@ export const PROVIDER_DEGRADATION_THRESHOLD = 0.05; // 5%
  */
 export async function markCallProviderError(orgId: string, callId: string): Promise<void> {
   await withOrgContext(orgId, async (tx) => {
-    await tx
+    // Status filter prevents overwriting a call that already reached a terminal
+    // state (e.g. webhook delivered `completed` between dispatch failure and
+    // dead-letter). Only non-terminal rows are eligible to be marked failed.
+    const updated = await tx
       .update(calls)
       .set({ status: 'failed', error_code: 'provider_error' })
-      .where(and(eq(calls.id, callId), eq(calls.org_id, orgId)));
+      .where(
+        and(
+          eq(calls.id, callId),
+          eq(calls.org_id, orgId),
+          inArray(calls.status, ['pending', 'dialing', 'in_progress']),
+        ),
+      )
+      .returning({ id: calls.id });
+
+    if (updated.length === 0) return;
 
     await recordAudit(tx, {
       orgId,
@@ -482,7 +494,10 @@ export async function verifyCreditAvailable(orgId: string, callId: string): Prom
       .where(and(eq(calls.id, callId), eq(calls.org_id, orgId)));
   });
 
-  // Alert downstream systems
+  // Alert downstream systems. Dedupe to one alert per org per 10-minute window
+  // so a campaign with hundreds of queued dispatches against an empty wallet
+  // doesn't fan-out a fresh event for every retry attempt.
+  const lowBalanceWindowSlot = Math.floor(Date.now() / (10 * 60 * 1000));
   await sendInngestEvent({
     name: CREDIT_LOW_BALANCE_EVENT,
     data: { orgId, balanceCents, remainingMinutes } satisfies {
@@ -490,7 +505,7 @@ export async function verifyCreditAvailable(orgId: string, callId: string): Prom
       balanceCents: number;
       remainingMinutes: number;
     },
-    id: `credit-low-${orgId}-${Date.now()}`,
+    id: `credit-low-${orgId}-${lowBalanceWindowSlot}`,
   });
 
   throw new InsufficientCreditError(orgId);
