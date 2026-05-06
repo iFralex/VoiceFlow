@@ -16,7 +16,13 @@ export const phoneNumbers = pgTable(
     e164: text('e164').notNull(),
     org_id: uuid('org_id').references(() => organizations.id, { onDelete: 'set null' }),
     provider: phoneProviderEnum('provider').notNull(),
+    provider_external_id: text('provider_external_id'),
     status: phoneStatusEnum('status').notNull().default('active'),
+    region: text('region'),
+    capabilities: text('capabilities')
+      .array()
+      .notNull()
+      .default(sql`'{}'`),
     last_used_at: timestamp('last_used_at', { withTimezone: true }),
     daily_call_count: integer('daily_call_count').notNull().default(0),
     spam_score: numeric('spam_score').notNull().default('0'),
@@ -26,6 +32,9 @@ export const phoneNumbers = pgTable(
     unique('phone_numbers_e164_unique').on(t.e164),
     index('phone_numbers_org_status_active_idx')
       .on(t.org_id, t.status)
+      .where(sql`${t.status} = 'active'`),
+    index('phone_numbers_region_status_active_idx')
+      .on(t.region, t.status)
       .where(sql`${t.status} = 'active'`),
   ],
 );

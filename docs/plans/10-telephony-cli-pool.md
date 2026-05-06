@@ -43,7 +43,7 @@ Italian recipients pick up calls with familiar Italian CLIs ("0... mobile" or lo
 
 ### Task 3: phone_numbers pool population
 
-- [ ] Update `src/lib/db/seed/phone_numbers.ts` (table created in plan 02) with the 15 procured DIDs:
+- [x] Update `src/lib/db/seed/phone_numbers.ts` (table created in plan 02) with the 15 procured DIDs:
 
 ```typescript
 const POOL = [
@@ -53,10 +53,10 @@ const POOL = [
 ];
 ```
 
-- [ ] Each row inserted with `org_id=NULL` (shared pool), `status='active'`, `daily_call_count=0`, `spam_score=0`
-- [ ] Add `region` and `capabilities` columns via migration `0012_phone_numbers_metadata.sql` so the rotation algorithm can match CLI region to contact region (e.g. milanese contact gets Milano CLI when possible)
-- [ ] Add `provider_external_id` column to store the Vapi `phoneNumberId`
-- [ ] Mark completed
+- [x] Each row inserted with `org_id=NULL` (shared pool), `status='active'`, `daily_call_count=0`, `spam_score=0`
+- [x] Add `region` and `capabilities` columns via migration `0012_phone_numbers_metadata.sql` so the rotation algorithm can match CLI region to contact region (e.g. milanese contact gets Milano CLI when possible) (renumbered to `0025_phone_numbers_metadata.sql` because `0012` was already taken when this plan landed)
+- [x] Add `provider_external_id` column to store the Vapi `phoneNumberId`
+- [x] Mark completed
 
 ### Task 4: CLI rotation algorithm
 

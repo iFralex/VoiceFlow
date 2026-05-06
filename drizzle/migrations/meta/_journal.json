@@ -176,6 +176,13 @@
       "when": 1777800275508,
       "tag": "0024_campaign_stats_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1777800275509,
+      "tag": "0025_phone_numbers_metadata",
+      "breakpoints": true
     }
   ]
 }

@@ -12,7 +12,10 @@ describe('phone_numbers schema', () => {
     expect(cols).toContain('e164');
     expect(cols).toContain('org_id');
     expect(cols).toContain('provider');
+    expect(cols).toContain('provider_external_id');
     expect(cols).toContain('status');
+    expect(cols).toContain('region');
+    expect(cols).toContain('capabilities');
     expect(cols).toContain('last_used_at');
     expect(cols).toContain('daily_call_count');
     expect(cols).toContain('spam_score');
@@ -59,6 +62,21 @@ describe('phone_numbers schema', () => {
 
   it('last_used_at is nullable', () => {
     const col = (phoneNumbers as unknown as Tbl).last_used_at!;
+    expect(col.notNull).toBeFalsy();
+  });
+
+  it('region is nullable (mobile DIDs have no region)', () => {
+    const col = (phoneNumbers as unknown as Tbl).region!;
+    expect(col.notNull).toBeFalsy();
+  });
+
+  it('capabilities is not null', () => {
+    const col = (phoneNumbers as unknown as Tbl).capabilities!;
+    expect(col.notNull).toBeTruthy();
+  });
+
+  it('provider_external_id is nullable until populated from Vapi import', () => {
+    const col = (phoneNumbers as unknown as Tbl).provider_external_id!;
     expect(col.notNull).toBeFalsy();
   });
 });

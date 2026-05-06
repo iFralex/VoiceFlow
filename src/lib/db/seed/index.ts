@@ -1,6 +1,7 @@
 import { eq, max, sql } from 'drizzle-orm';
 
 import { creditPackageSeedData } from './credit_packages';
+import { phoneNumberSeedData } from './phone_numbers';
 import {
   buildScriptTemplateSeedData,
   scriptTemplateSeedData,
@@ -9,6 +10,7 @@ import {
 import { voiceCatalogueSeedData } from './voice_catalogue';
 import { withSystemContext } from '../context';
 import { creditPackages } from '../schema/credit_packages';
+import { phoneNumbers } from '../schema/phone_numbers';
 import { scriptTemplates } from '../schema/script_templates';
 import { voiceCatalogue } from '../schema/voice_catalogue';
 
@@ -117,6 +119,31 @@ export async function seedVoiceCatalogue(): Promise<void> {
   });
 }
 
+/**
+ * Seed the shared CLI pool. Upserts the placeholder DIDs from
+ * `phone_numbers.ts`, refreshing only the metadata fields the founder is
+ * expected to update post-procurement (`provider`, `provider_external_id`,
+ * `region`, `capabilities`). Live usage state (`status`, `daily_call_count`,
+ * `spam_score`, `last_used_at`) is left untouched on conflict so re-running
+ * the seed never resets a number that the watchdog has cooled down.
+ */
+export async function seedPhoneNumbers(): Promise<void> {
+  await withSystemContext(async (tx) => {
+    await tx
+      .insert(phoneNumbers)
+      .values(phoneNumberSeedData)
+      .onConflictDoUpdate({
+        target: phoneNumbers.e164,
+        set: {
+          provider: sql`excluded.provider`,
+          provider_external_id: sql`excluded.provider_external_id`,
+          region: sql`excluded.region`,
+          capabilities: sql`excluded.capabilities`,
+        },
+      });
+  });
+}
+
 export async function seed(): Promise<void> {
   console.warn('Seeding script templates...');
   await seedScriptTemplates();
@@ -129,6 +156,10 @@ export async function seed(): Promise<void> {
   console.warn('Seeding voice catalogue...');
   await seedVoiceCatalogue();
   console.warn(`  ✓ ${voiceCatalogueSeedData.length} voice catalogue entries upserted`);
+
+  console.warn('Seeding phone numbers (CLI pool)...');
+  await seedPhoneNumbers();
+  console.warn(`  ✓ ${phoneNumberSeedData.length} phone numbers upserted`);
 
   console.warn('Seed complete.');
 }

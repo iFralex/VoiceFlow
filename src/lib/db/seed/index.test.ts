@@ -16,7 +16,14 @@ vi.mock('../client', () => {
 
 import { db } from '../client';
 import { creditPackageSeedData } from './credit_packages';
-import { bumpScriptTemplate, seed, seedCreditPackages, seedScriptTemplates } from './index';
+import {
+  bumpScriptTemplate,
+  seed,
+  seedCreditPackages,
+  seedPhoneNumbers,
+  seedScriptTemplates,
+} from './index';
+import { phoneNumberSeedData } from './phone_numbers';
 import { scriptTemplateSeedData } from './script_templates';
 
 function makeInsertChain() {
@@ -114,15 +121,51 @@ describe('seed/index', () => {
     });
   });
 
+  describe('seedPhoneNumbers', () => {
+    it('inserts the full CLI pool', async () => {
+      const chain = makeInsertChain();
+      vi.mocked(db.insert).mockReturnValue(chain as never);
+
+      await seedPhoneNumbers();
+
+      expect(db.insert).toHaveBeenCalledOnce();
+      expect(chain.values).toHaveBeenCalledWith(phoneNumberSeedData);
+      expect(chain.onConflictDoUpdate).toHaveBeenCalledOnce();
+    });
+
+    it('upserts on e164 and only refreshes provisioning metadata (not usage state)', async () => {
+      const chain = makeInsertChain();
+      vi.mocked(db.insert).mockReturnValue(chain as never);
+
+      await seedPhoneNumbers();
+
+      const [conflictArg] = chain.onConflictDoUpdate.mock.calls[0] as [
+        { target: unknown; set: Record<string, unknown> },
+      ];
+      expect(conflictArg).toHaveProperty('target');
+      const updatedKeys = Object.keys(conflictArg.set);
+      expect(updatedKeys).toContain('provider');
+      expect(updatedKeys).toContain('provider_external_id');
+      expect(updatedKeys).toContain('region');
+      expect(updatedKeys).toContain('capabilities');
+      // Usage / lifecycle state must NOT be touched on re-seed.
+      expect(updatedKeys).not.toContain('status');
+      expect(updatedKeys).not.toContain('daily_call_count');
+      expect(updatedKeys).not.toContain('spam_score');
+      expect(updatedKeys).not.toContain('last_used_at');
+    });
+  });
+
   describe('seed (orchestrator)', () => {
-    it('calls seedScriptTemplates, seedCreditPackages, and seedVoiceCatalogue', async () => {
+    it('calls seedScriptTemplates, seedCreditPackages, seedVoiceCatalogue, and seedPhoneNumbers', async () => {
       const chain = makeInsertChain();
       vi.mocked(db.insert).mockReturnValue(chain as never);
 
       await seed();
 
-      // insert is called once each for script_templates, credit_packages, and voice_catalogue
-      expect(db.insert).toHaveBeenCalledTimes(3);
+      // insert is called once each for script_templates, credit_packages,
+      // voice_catalogue, and phone_numbers.
+      expect(db.insert).toHaveBeenCalledTimes(4);
     });
   });
 });
