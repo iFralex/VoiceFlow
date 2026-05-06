@@ -88,10 +88,10 @@ export async function pickCliForOrg(
 
 ### Task 5: Region inference helper
 
-- [ ] Create `src/lib/utils/phone-region.ts` mapping common Italian area codes to regions: 02→Milano, 06→Roma, 011→Torino, 081→Napoli, 051→Bologna, 049→Padova, 041→Venezia, 080→Bari, 091→Palermo, etc.
-- [ ] For mobile numbers (3xx prefix) no region is inferable — picker falls through to next priority
-- [ ] Used by `pickCliForOrg` to prefer regional CLI match where possible
-- [ ] Mark completed
+- [x] Create `src/lib/utils/phone-region.ts` mapping common Italian area codes to regions: 02→Milano, 06→Roma, 011→Torino, 081→Napoli, 051→Bologna, 049→Padova, 041→Venezia, 080→Bari, 091→Palermo, etc. (extended in Task 5 from the Task-4 starter set to cover every regional capital plus key metros: Genova, Brescia, Bergamo, Trieste, Verona, Pisa, Firenze, Cagliari, Ancona, Perugia, Sassari, Pescara, Messina, Catania, Taranto)
+- [x] For mobile numbers (3xx prefix) no region is inferable — picker falls through to next priority
+- [x] Used by `pickCliForOrg` to prefer regional CLI match where possible
+- [x] Mark completed
 
 ### Task 6: Anti-spam practices
 

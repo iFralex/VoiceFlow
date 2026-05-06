@@ -11,18 +11,39 @@
  * The slugs returned here are the same ones written into
  * `phone_numbers.region` by the seed (`src/lib/db/seed/phone_numbers.ts`).
  *
- * Plan 10 task 5 will extend this map with the full set of Italian area codes
- * (049 → Padova, 041 → Venezia, 080 → Bari, 091 → Palermo, …). Task 4 only
- * needs the metros that are present in the seed pool (Milano, Roma, Torino,
- * Napoli, Bologna) to make the picker tests meaningful.
+ * Coverage: every Italian regional capital (capoluogo di regione) plus a few
+ * additional metropolitan cities whose area codes are widely recognised. New
+ * DIDs added to the pool with one of these slugs in `phone_numbers.region`
+ * will participate in regional matching automatically.
  */
 
 const AREA_CODE_TO_REGION: Record<string, string> = {
+  // ---- 2-digit area codes (Milano, Roma) ----
   '02': 'milano',
   '06': 'roma',
+  // ---- 3-digit area codes ----
+  '010': 'genova',
   '011': 'torino',
-  '081': 'napoli',
+  '030': 'brescia',
+  '035': 'bergamo',
+  '040': 'trieste',
+  '041': 'venezia',
+  '045': 'verona',
+  '049': 'padova',
+  '050': 'pisa',
   '051': 'bologna',
+  '055': 'firenze',
+  '070': 'cagliari',
+  '071': 'ancona',
+  '075': 'perugia',
+  '079': 'sassari',
+  '080': 'bari',
+  '081': 'napoli',
+  '085': 'pescara',
+  '090': 'messina',
+  '091': 'palermo',
+  '095': 'catania',
+  '099': 'taranto',
 };
 
 /**

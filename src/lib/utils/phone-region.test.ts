@@ -23,6 +23,34 @@ describe('inferRegionFromPhone', () => {
     expect(inferRegionFromPhone('+39051123456')).toBe('bologna');
   });
 
+  it('returns padova for an E.164 starting with +39049', () => {
+    expect(inferRegionFromPhone('+39049123456')).toBe('padova');
+  });
+
+  it('returns venezia for an E.164 starting with +39041', () => {
+    expect(inferRegionFromPhone('+39041123456')).toBe('venezia');
+  });
+
+  it('returns bari for an E.164 starting with +39080', () => {
+    expect(inferRegionFromPhone('+39080123456')).toBe('bari');
+  });
+
+  it('returns palermo for an E.164 starting with +39091', () => {
+    expect(inferRegionFromPhone('+39091123456')).toBe('palermo');
+  });
+
+  it('returns genova for an E.164 starting with +39010', () => {
+    expect(inferRegionFromPhone('+39010123456')).toBe('genova');
+  });
+
+  it('returns firenze for an E.164 starting with +39055', () => {
+    expect(inferRegionFromPhone('+39055123456')).toBe('firenze');
+  });
+
+  it('returns catania for an E.164 starting with +39095', () => {
+    expect(inferRegionFromPhone('+39095123456')).toBe('catania');
+  });
+
   it('returns undefined for Italian mobile numbers (3xx)', () => {
     expect(inferRegionFromPhone('+393401234567')).toBeUndefined();
     expect(inferRegionFromPhone('+393311234567')).toBeUndefined();
