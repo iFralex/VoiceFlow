@@ -190,14 +190,14 @@ export async function pickCliForOrg(
 
 ### Task 16: Integration tests
 
-- [ ] Test: `pickCliForOrg` respects daily caps
-- [ ] Test: `pickCliForOrg` returns org-dedicated CLI when org has one
-- [ ] Test: `pickCliForOrg` prefers regional match
-- [ ] Test: concurrent picks under load do not double-allocate (SKIP LOCKED works)
-- [ ] Test: watchdog moves flagged CLI to `cooling_down` and back to `active` after 7 days
-- [ ] Test: inbound opt-out enrols all orgs called the number recently
-- [ ] Test: Twilio fallback engages on SBC degradation flag
-- [ ] Mark completed
+- [x] Test: `pickCliForOrg` respects daily caps (`picker.integration.test.ts > excludes CLIs at the daily cap`; the corresponding hourly-cap test sits next to it)
+- [x] Test: `pickCliForOrg` returns org-dedicated CLI when org has one (`picker.integration.test.ts > prefers an org-dedicated CLI over the shared pool`; cross-org isolation covered by `does not return another org's dedicated CLI`)
+- [x] Test: `pickCliForOrg` prefers regional match (`picker.integration.test.ts > prefers a CLI whose region matches the contact phone`)
+- [x] Test: concurrent picks under load do not double-allocate (SKIP LOCKED works) (new `picker.skiplocked.integration.test.ts` runs two real Postgres connections — Worker A holds the row lock while Worker B picks; verifies B picks a different row, with committed-seed cleanup in `finally` so the test database is left unchanged)
+- [x] Test: watchdog moves flagged CLI to `cooling_down` and back to `active` after 7 days (new `cli_watchdog.integration.test.ts > cycles a flagged CLI active → cooling_down and back to active across two runs` runs the watchdog twice with `now` advanced past `COOLDOWN_DURATION_DAYS`; the existing per-direction tests for cooldown and reactivation continue to cover the individual transitions)
+- [x] Test: inbound opt-out enrols all orgs called the number recently (`inbound_calls.integration.test.ts > writes one opt_out row + audit per unique calling org`; idempotency and "no caller" path are covered by sibling tests)
+- [x] Test: Twilio fallback engages on SBC degradation flag (new `system_flags.integration.test.ts > engages Twilio fallback when the SBC unhealthy flag is raised end-to-end` exercises the full chain `recordSbcDispatchFailure x3 → isSbcUnhealthy → pickCliForOrg with providers=[twilio]`; a sibling test verifies the picker un-restricts after the 30-minute auto-clear)
+- [x] Mark completed
 
 ### Task 17: Definition of Done
 

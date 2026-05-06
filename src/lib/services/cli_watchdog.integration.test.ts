@@ -501,5 +501,67 @@ describe('runWatchdog integration', () => {
       expect(Number(after[0]?.spam_score)).toBe(0);
     });
   });
+
+  it.skipIf(skipWhenNoDb)(
+    'cycles a flagged CLI active → cooling_down and back to active across two runs (plan 10 task 16)',
+    async () => {
+      await withTestDb(async (tx) => {
+        await seedScaffold(tx);
+        await tx.insert(phoneNumbers).values({
+          id: PHONE_SPAMMY,
+          e164: '+390299990099',
+          org_id: null,
+          provider: 'voiped',
+          status: 'active',
+          region: 'milano',
+          capabilities: ['landline'],
+          daily_call_count: 0,
+          spam_score: '0',
+        });
+
+        // ── Run 1: spammy traffic in the last hour, watchdog cools the CLI.
+        const day1 = new Date('2026-05-01T02:00:00Z');
+        const day1Recent = new Date(day1.getTime() - 60 * 60 * 1000);
+        await seedSpammyTraffic(tx, '+390299990099', 30, day1Recent, 99);
+
+        const r1 = await runWatchdogInTx(tx, day1);
+        const cooled = r1.transitions.find(
+          (t) => t.e164 === '+390299990099' && t.to === 'cooling_down',
+        );
+        expect(cooled).toBeDefined();
+        expect(cooled!.cooldownsInWindow).toBe(1);
+
+        const afterRun1 = await tx
+          .select({ status: phoneNumbers.status })
+          .from(phoneNumbers)
+          .where(eq(phoneNumbers.id, PHONE_SPAMMY));
+        expect(afterRun1[0]?.status).toBe('cooling_down');
+
+        // The cooldown-history row records the day1 timestamp.
+        const history = await tx
+          .select({ started_at: cliCooldownHistory.started_at })
+          .from(cliCooldownHistory)
+          .where(eq(cliCooldownHistory.phone_number_id, PHONE_SPAMMY));
+        expect(history).toHaveLength(1);
+
+        // ── Run 2: advance past the 7-day window. The same CLI should
+        //         reactivate. We do not insert any new spammy traffic, so
+        //         re-scoring should yield 0 and the CLI stays active.
+        const day2 = new Date(day1.getTime() + (COOLDOWN_DURATION_DAYS + 1) * 24 * 60 * 60 * 1000);
+        const r2 = await runWatchdogInTx(tx, day2);
+        const reactivated = r2.transitions.find(
+          (t) => t.e164 === '+390299990099' && t.to === 'active',
+        );
+        expect(reactivated).toBeDefined();
+
+        const afterRun2 = await tx
+          .select({ status: phoneNumbers.status, spam_score: phoneNumbers.spam_score })
+          .from(phoneNumbers)
+          .where(eq(phoneNumbers.id, PHONE_SPAMMY));
+        expect(afterRun2[0]?.status).toBe('active');
+        expect(Number(afterRun2[0]?.spam_score)).toBe(0);
+      });
+    },
+  );
 });
 

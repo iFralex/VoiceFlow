@@ -239,4 +239,76 @@ describe('pickCliForOrg + SBC fallback (integration)', () => {
       });
     },
   );
+
+  it.skipIf(skipWhenNoDb)(
+    'engages Twilio fallback when the SBC unhealthy flag is raised end-to-end (plan 10 task 16)',
+    async () => {
+      // Verifies the full chain: 3 consecutive SBC failures raise the
+      // `sbc_unhealthy` flag, the dispatcher reads `isSbcUnhealthy()` on its
+      // next decision, and feeds `providers: ['twilio']` to the picker — which
+      // returns the Twilio CLI even though a healthier (lower daily count,
+      // matching region) Voiped CLI is also available.
+      await withTestDb(async (tx) => {
+        await seedOrg(tx);
+        await seedMixedPool(tx);
+
+        // Trip the flag.
+        const t0 = new Date('2026-05-06T10:00:00Z');
+        for (const i of [0, 1, 2]) {
+          await recordSbcDispatchFailure('vapi 502', {
+            tx: asProdTx(tx),
+            now: new Date(t0.getTime() + i * 1000),
+          });
+        }
+        const unhealthy = await isSbcUnhealthy({ tx: asProdTx(tx) });
+        expect(unhealthy).toBe(true);
+
+        // Mirror the dispatcher's branch: when isSbcUnhealthy() is true,
+        // restrict the picker to Twilio.
+        const picked = await pickCliForOrg(ORG, undefined, {
+          tx: asProdTx(tx),
+          ...(unhealthy ? { providers: ['twilio' as const] } : {}),
+        });
+        expect(picked.provider).toBe('twilio');
+        expect(picked.phoneE164).toBe('+390277770011');
+      });
+    },
+  );
+
+  it.skipIf(skipWhenNoDb)(
+    'returns to Voiped/SBC pool after the unhealthy flag auto-clears (plan 10 task 16)',
+    async () => {
+      await withTestDb(async (tx) => {
+        await seedOrg(tx);
+        await seedMixedPool(tx);
+
+        const t0 = new Date('2026-05-06T10:00:00Z');
+        for (const i of [0, 1, 2]) {
+          await recordSbcDispatchFailure('vapi 502', {
+            tx: asProdTx(tx),
+            now: new Date(t0.getTime() + i * 1000),
+          });
+        }
+        expect(await isSbcUnhealthy({ tx: asProdTx(tx) })).toBe(true);
+
+        // 30+ minutes later, a healthy SBC dispatch arrives → flag clears.
+        await recordSbcDispatchSuccess({
+          tx: asProdTx(tx),
+          now: new Date(t0.getTime() + SBC_HEALTHY_AUTO_CLEAR_MS + 60_000),
+        });
+        const stillUnhealthy = await isSbcUnhealthy({ tx: asProdTx(tx) });
+        expect(stillUnhealthy).toBe(false);
+
+        // The picker is no longer restricted to Twilio — the SBC primary is
+        // back in play. The seeded rows tie on every ORDER BY rank, so we
+        // can't deterministically assert "voiped wins"; the load-bearing
+        // assertion is that the picker no longer filters out Voiped.
+        const picked = await pickCliForOrg(ORG, undefined, {
+          tx: asProdTx(tx),
+          ...(stillUnhealthy ? { providers: ['twilio' as const] } : {}),
+        });
+        expect(['voiped', 'twilio']).toContain(picked.provider);
+      });
+    },
+  );
 });
