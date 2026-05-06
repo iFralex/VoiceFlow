@@ -51,6 +51,8 @@ const Env = z.object({
   CREDIT_HARD_THRESHOLD_CENTS: z.coerce.number().int().nonnegative().default(0),
   CONTACTS_MAX_ROWS_PER_UPLOAD: z.coerce.number().int().positive().default(100_000),
   CONTACTS_MAX_ROWS_PER_ORG: z.coerce.number().int().positive().default(1_000_000),
+  CLI_DAILY_CAP_DEFAULT: z.coerce.number().int().positive().default(100),
+  CLI_HOURLY_CAP_DEFAULT: z.coerce.number().int().positive().default(30),
 });
 
 // Convert empty strings to undefined so optional validators don't reject blank env vars

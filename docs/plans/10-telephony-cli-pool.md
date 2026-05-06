@@ -60,7 +60,7 @@ const POOL = [
 
 ### Task 4: CLI rotation algorithm
 
-- [ ] Create `src/lib/voice/cli/picker.ts` exposing `pickCliForOrg(orgId, contactPhone?)`:
+- [x] Create `src/lib/voice/cli/picker.ts` exposing `pickCliForOrg(orgId, contactPhone?)`:
 
 ```typescript
 export async function pickCliForOrg(
@@ -80,11 +80,11 @@ export async function pickCliForOrg(
 }
 ```
 
-- [ ] Per-CLI daily cap (default 100 calls/day per number; configurable env `CLI_DAILY_CAP_DEFAULT`)
-- [ ] Per-CLI hourly cap (default 30 calls/hour) enforced via a sliding-window count from `calls.started_at`
-- [ ] If no CLI is available (all at cap), throw `NoAvailableCliError` caught by the dispatcher (plan 09) which schedules a retry in 30 minutes
-- [ ] Add unit tests for: row locking, cap enforcement, region matching, fallback ordering
-- [ ] Mark completed
+- [x] Per-CLI daily cap (default 100 calls/day per number; configurable env `CLI_DAILY_CAP_DEFAULT`)
+- [x] Per-CLI hourly cap (default 30 calls/hour) enforced via a sliding-window count from `calls.started_at` (added migration `0026_calls_from_number.sql` so the picker's correlated subquery can scope to the picked CLI; configurable via `CLI_HOURLY_CAP_DEFAULT`)
+- [x] If no CLI is available (all at cap), throw `NoAvailableCliError` caught by the dispatcher (plan 09) which schedules a retry in 30 minutes
+- [x] Add unit tests for: row locking, cap enforcement, region matching, fallback ordering (unit tests cover the locking-clause API and error path; integration tests cover region matching, ownership, daily/hourly cap filtering, status filtering, and side effects under real Postgres)
+- [x] Mark completed
 
 ### Task 5: Region inference helper
 

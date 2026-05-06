@@ -183,6 +183,13 @@
       "when": 1777800275509,
       "tag": "0025_phone_numbers_metadata",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1777800275510,
+      "tag": "0026_calls_from_number",
+      "breakpoints": true
     }
   ]
 }

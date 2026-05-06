@@ -57,6 +57,7 @@ export const calls = pgTable(
     metadata: jsonb('metadata'),
     attempt_number: integer('attempt_number').notNull().default(1),
     error_code: text('error_code'),
+    from_number: text('from_number'),
     started_at: timestamp('started_at', { withTimezone: true }),
     ended_at: timestamp('ended_at', { withTimezone: true }),
     created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
@@ -67,6 +68,9 @@ export const calls = pgTable(
     index('calls_provider_call_id_idx')
       .on(t.provider_call_id)
       .where(sql`${t.provider_call_id} IS NOT NULL`),
+    index('calls_from_number_started_at_idx')
+      .on(t.from_number, t.started_at)
+      .where(sql`${t.from_number} IS NOT NULL AND ${t.started_at} IS NOT NULL`),
   ],
 );
 
