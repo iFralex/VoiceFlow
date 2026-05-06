@@ -4,6 +4,7 @@ import { boolean, index, integer, jsonb, numeric, pgEnum, pgTable, text, timesta
 import { campaigns } from './campaigns';
 import { contacts } from './contacts';
 import { organizations } from './organizations';
+import { phoneProviderEnum } from './phone_numbers';
 
 export const callProviderEnum = pgEnum('call_provider', ['vapi', 'retell', 'proprietary']);
 
@@ -61,6 +62,7 @@ export const calls = pgTable(
     attempt_number: integer('attempt_number').notNull().default(1),
     error_code: text('error_code'),
     from_number: text('from_number'),
+    cli_provider: phoneProviderEnum('cli_provider'),
     started_at: timestamp('started_at', { withTimezone: true }),
     ended_at: timestamp('ended_at', { withTimezone: true }),
     created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),

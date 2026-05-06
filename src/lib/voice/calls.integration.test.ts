@@ -210,7 +210,7 @@ describe('dispatchCall — payload assembly', () => {
       org_id: ORG_A,
       phone_e164: '+393331234567',
     };
-    const phoneRow = { e164: '+390211111111' };
+    const phoneRow = { e164: '+390211111111', provider: 'voiped' as const };
 
     const mockTx = buildMockTx([
       [callRow],
@@ -249,6 +249,100 @@ describe('dispatchCall — payload assembly', () => {
     expect(createCallSpy).toHaveBeenCalledOnce();
     const { firstMessage } = createCallSpy.mock.calls[0]![0] as { firstMessage: string };
     expect(firstMessage.toLowerCase()).toContain('assistente vocale automatico');
+  });
+
+  it('persists from_number and cli_provider on the call row (plan 10 task 14)', async () => {
+    // Re-build a mockTx that captures `update().set()` payloads so we can
+    // verify the dispatch transition writes both the chosen CLI's E.164 and
+    // its carrier alongside the existing provider_call_id/status fields.
+    const updateCalls: Array<Record<string, unknown>> = [];
+    const callRow = {
+      id: CALL_ID,
+      org_id: ORG_A,
+      campaign_id: CAMPAIGN_ID,
+      contact_id: CONTACT_ID,
+      provider: 'vapi',
+      status: 'pending',
+      metadata: null,
+    };
+    const campaignRow = {
+      id: CAMPAIGN_ID,
+      org_id: ORG_A,
+      script_id: SCRIPT_ID,
+      contact_list_id: LIST_ID,
+    };
+    const scriptRow = {
+      id: SCRIPT_ID,
+      org_id: ORG_A,
+      template_id: TEMPLATE_ID,
+      name: 'Test Script',
+      variables: {
+        dealership_name: 'AutoRoma',
+        brand: 'Volkswagen',
+        salesperson_first_name: 'Marco',
+        available_slots: ['15/06 10:00'],
+        lead_origin_context: 'Interesse Golf GTI online',
+      },
+      voice_id: null,
+    };
+    const templateRow = {
+      id: TEMPLATE_ID,
+      slug: 'lead-reactivation',
+      name: 'Riattivazione Lead',
+      version: 1,
+      system_prompt: 'body',
+      variable_schema: { properties: {} },
+      default_voice_id: 'eleven-default-voice',
+    };
+    const contactRow = {
+      id: CONTACT_ID,
+      org_id: ORG_A,
+      phone_e164: '+393331234567',
+    };
+    const phoneRow = { e164: '+390211111111', provider: 'voiped' as const };
+
+    const selectQueue: unknown[][] = [
+      [callRow],
+      [campaignRow],
+      [scriptRow],
+      [templateRow],
+      [contactRow],
+      [], // sbc_unhealthy flag check (healthy)
+      [phoneRow],
+    ];
+    let selectIdx = 0;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const captureMockTx: any = {
+      select: vi.fn(() => {
+        const result = selectQueue[selectIdx++] ?? [];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const chain: any = {};
+        chain.from = vi.fn(() => chain);
+        chain.where = vi.fn(() => chain);
+        chain.limit = vi.fn(() => Promise.resolve(result));
+        return chain;
+      }),
+      update: vi.fn(() => ({
+        set: vi.fn((payload: Record<string, unknown>) => {
+          updateCalls.push(payload);
+          return { where: vi.fn(() => Promise.resolve([])) };
+        }),
+      })),
+      insert: vi.fn(() => ({
+        values: vi.fn(() => Promise.resolve([{ id: 'mock-audit-id' }])),
+      })),
+      execute: vi.fn(() => Promise.resolve([])),
+    };
+
+    vi.mocked(withOrgContext).mockImplementation((_orgId, fn) => fn(captureMockTx));
+    vi.mocked(withSystemContext).mockImplementation((fn) => fn(captureMockTx));
+
+    await dispatchCall(ORG_A, CALL_ID);
+
+    const dialingPayload = updateCalls.find((p) => p['status'] === 'dialing');
+    expect(dialingPayload).toBeDefined();
+    expect(dialingPayload!['from_number']).toBe('+390211111111');
+    expect(dialingPayload!['cli_provider']).toBe('voiped');
   });
 });
 

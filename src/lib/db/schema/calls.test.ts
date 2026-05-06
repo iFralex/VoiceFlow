@@ -39,3 +39,14 @@ describe('calls schema — direction (plan 10 task 9)', () => {
     expect(col.notNull).toBeFalsy();
   });
 });
+
+describe('calls schema — cli_provider (plan 10 task 14)', () => {
+  it('has a cli_provider column', () => {
+    expect(Object.keys(calls)).toContain('cli_provider');
+  });
+
+  it('cli_provider is nullable (pre-existing rows + inbound rows have none)', () => {
+    const col = (calls as unknown as Tbl).cli_provider!;
+    expect(col.notNull).toBeFalsy();
+  });
+});

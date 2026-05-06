@@ -173,10 +173,10 @@ export async function pickCliForOrg(
 
 ### Task 14: Per-call CLI selection observability
 
-- [ ] Persist the chosen CLI per call in `calls.from_number` (already in schema) and `calls.cli_provider` (new column via migration `0015_calls_cli_provider.sql`)
-- [ ] Add a column on the call detail page (built in plan 12) "CLI utilizzato" with provider tag
-- [ ] Per-CLI calls visible to founder via `/admin/cli-pool` admin view
-- [ ] Mark completed
+- [x] Persist the chosen CLI per call in `calls.from_number` (already in schema) and `calls.cli_provider` (new column via migration `0015_calls_cli_provider.sql`) (renumbered to `0031_calls_cli_provider.sql` because earlier slots were taken; `dispatchCall` in `src/lib/services/calls.ts` now writes both columns on the `pending → dialing` transition so the picker's hourly cap, the watchdog's per-CLI metrics, and the founder dashboard all see the chosen CLI)
+- [x] Add a column on the call detail page (built in plan 12) "CLI utilizzato" with provider tag (page itself lands in plan 12 task 7; this task ships the data plumbing — `cli_provider`/`from_number` are now exposed on `GET /api/internal/calls/:id` and selected by `fetchCallTimeline` so plan 12 can render the column without further schema work)
+- [x] Per-CLI calls visible to founder via `/admin/cli-pool` admin view (added `provider` to `CliMetricsRow` and a Provider column on `/admin/cli-pool` so the founder can see at a glance whether dispatched volume is balanced across the SBC primary and the Twilio fallback; per-CLI dialed/pickup/voicemail/complaint counts were already on the dashboard)
+- [x] Mark completed
 
 ### Task 15: SBC connection smoke test
 

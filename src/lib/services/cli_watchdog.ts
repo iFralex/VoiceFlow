@@ -69,6 +69,12 @@ const PICKUP_MIN_SECONDS = 10;
 export interface CliMetricsRow {
   phoneNumberId: string;
   e164: string;
+  /**
+   * Carrier supplying this CLI. Surfaced on `/admin/cli-pool` (plan 10 task 14)
+   * so the founder can see at a glance whether dispatched volume is balanced
+   * across the SBC primary (`voiped`/`telnyx`) and the Twilio fallback.
+   */
+  provider: 'voiped' | 'twilio' | 'telnyx';
   status: 'active' | 'cooling_down' | 'retired';
   dialed: number;
   pickups: number;
@@ -167,6 +173,7 @@ async function collectCliMetricsInner(
     .select({
       id: phoneNumbers.id,
       e164: phoneNumbers.e164,
+      provider: phoneNumbers.provider,
       status: phoneNumbers.status,
     })
     .from(phoneNumbers);
@@ -243,6 +250,7 @@ async function collectCliMetricsInner(
     out.push({
       phoneNumberId: cli.id,
       e164: cli.e164,
+      provider: cli.provider,
       status: cli.status,
       dialed,
       pickups,

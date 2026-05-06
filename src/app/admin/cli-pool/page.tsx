@@ -68,6 +68,7 @@ export default async function CliPoolAdminPage({ searchParams }: PageProps) {
         <thead>
           <tr style={{ borderBottom: '2px solid #333', textAlign: 'left' }}>
             <th style={{ padding: '0.5rem' }}>E.164</th>
+            <th style={{ padding: '0.5rem' }}>Provider</th>
             <th style={{ padding: '0.5rem' }}>Status</th>
             <th style={{ padding: '0.5rem' }}>Dialed</th>
             <th style={{ padding: '0.5rem' }}>Pickup</th>
@@ -80,6 +81,7 @@ export default async function CliPoolAdminPage({ searchParams }: PageProps) {
           {rows.map((r) => (
             <tr key={r.phoneNumberId} style={{ borderBottom: '1px solid #ddd' }}>
               <td style={{ padding: '0.5rem' }}>{r.e164}</td>
+              <td style={{ padding: '0.5rem' }}>{r.provider}</td>
               <td style={{ padding: '0.5rem' }}>
                 <span
                   style={{

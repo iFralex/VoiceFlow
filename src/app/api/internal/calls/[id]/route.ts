@@ -44,6 +44,11 @@ export async function GET(
         transcript_path: calls.transcript_path,
         transferred_to_agent: calls.transferred_to_agent,
         error_code: calls.error_code,
+        // Plan 10 task 14: surface the CLI used for this dispatch so the
+        // future call detail page (plan 12 task 7) can render a "CLI
+        // utilizzato" column with the carrier tag.
+        from_number: calls.from_number,
+        cli_provider: calls.cli_provider,
         started_at: calls.started_at,
         ended_at: calls.ended_at,
       })

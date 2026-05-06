@@ -359,6 +359,9 @@ export async function dispatchCall(orgId: string, callId: string): Promise<void>
   //     Merge leave_voicemail_message into existing metadata (which may already
   //     contain test_call, initiated_by, and voice_id_override keys set by the
   //     test-call endpoint) so that none of those keys are lost.
+  //     Also persist the chosen CLI (`from_number`) and its carrier
+  //     (`cli_provider`) per plan 10 task 14 — the picker's hourly cap and the
+  //     `/admin/cli-pool` per-CLI metrics both rely on these being on the row.
   await withOrgContext(orgId, async (tx) => {
     await tx
       .update(calls)
@@ -366,6 +369,8 @@ export async function dispatchCall(orgId: string, callId: string): Promise<void>
         provider_call_id: providerCallId,
         status: 'dialing',
         provider: provider.name as Call['provider'],
+        from_number: phone.e164,
+        cli_provider: phone.provider,
         metadata: sql`COALESCE(${calls.metadata}, '{}'::jsonb) || ${JSON.stringify({ leave_voicemail_message: leaveVoicemailMessage })}::jsonb`,
       })
       .where(and(eq(calls.id, callId), eq(calls.org_id, orgId)));
