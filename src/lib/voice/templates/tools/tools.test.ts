@@ -10,6 +10,8 @@ import {
   confirmAppointmentJsonSchema,
   rescheduleAppointmentJsonSchema,
   submitSurveyResponseJsonSchema,
+  registerInboundOptoutJsonSchema,
+  transferToBusinessOwnerJsonSchema,
   TEMPLATE_TOOLS,
 } from './index';
 
@@ -150,6 +152,31 @@ describe('submitSurveyResponseJsonSchema', () => {
 // Per-template tool selection
 // ---------------------------------------------------------------------------
 
+describe('registerInboundOptoutJsonSchema', () => {
+  it('has the correct name', () => {
+    expect(registerInboundOptoutJsonSchema.name).toBe('register_inbound_optout');
+  });
+
+  it('requires callerNumber', () => {
+    expect(registerInboundOptoutJsonSchema.parameters.required).toContain('callerNumber');
+  });
+
+  it('callerNumber pattern enforces E.164', () => {
+    const prop = registerInboundOptoutJsonSchema.parameters.properties.callerNumber;
+    expect(prop.pattern).toBe('^\\+[1-9]\\d{7,14}$');
+  });
+});
+
+describe('transferToBusinessOwnerJsonSchema', () => {
+  it('has the correct name', () => {
+    expect(transferToBusinessOwnerJsonSchema.name).toBe('transfer_to_business_owner');
+  });
+
+  it('requires callerNumber', () => {
+    expect(transferToBusinessOwnerJsonSchema.parameters.required).toContain('callerNumber');
+  });
+});
+
 describe('TEMPLATE_TOOLS', () => {
   const allTemplateSlugs = [
     'lead-reactivation',
@@ -163,6 +190,21 @@ describe('TEMPLATE_TOOLS', () => {
     for (const slug of allTemplateSlugs) {
       expect(TEMPLATE_TOOLS).toHaveProperty(slug);
     }
+  });
+
+  it('has an entry for the inbound-ivr assistant', () => {
+    expect(TEMPLATE_TOOLS).toHaveProperty('inbound-ivr');
+  });
+
+  it('inbound-ivr exposes only opt-out and operator-transfer tools', () => {
+    const names = TEMPLATE_TOOLS['inbound-ivr'].map((t) => t.name);
+    expect(names).toEqual(
+      expect.arrayContaining(['register_inbound_optout', 'transfer_to_business_owner']),
+    );
+    // No campaign tooling on the inbound assistant
+    expect(names).not.toContain('book_appointment');
+    expect(names).not.toContain('confirm_appointment');
+    expect(names).not.toContain('submit_survey_response');
   });
 
   it('lead-reactivation includes all six base tools', () => {

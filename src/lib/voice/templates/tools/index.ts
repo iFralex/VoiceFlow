@@ -52,6 +52,19 @@ export {
   type SubmitSurveyResponseArgs,
 } from './submit_survey_response';
 
+export {
+  registerInboundOptoutJsonSchema,
+  handleRegisterInboundOptout,
+  type RegisterInboundOptoutArgs,
+} from './register_inbound_optout';
+
+export {
+  transferToBusinessOwnerJsonSchema,
+  handleTransferToBusinessOwner,
+  type TransferToBusinessOwnerArgs,
+  type TransferToBusinessOwnerResult,
+} from './transfer_to_business_owner';
+
 // ---------------------------------------------------------------------------
 // Per-template tool selection
 // ---------------------------------------------------------------------------
@@ -60,10 +73,12 @@ import { bookAppointmentJsonSchema } from './book_appointment';
 import { confirmAppointmentJsonSchema } from './confirm_appointment';
 import { markNotInterestedJsonSchema } from './mark_not_interested';
 import { markWrongNumberJsonSchema } from './mark_wrong_number';
+import { registerInboundOptoutJsonSchema } from './register_inbound_optout';
 import { registerOptOutJsonSchema } from './register_opt_out';
 import { requestCallbackJsonSchema } from './request_callback';
 import { rescheduleAppointmentJsonSchema } from './reschedule_appointment';
 import { submitSurveyResponseJsonSchema } from './submit_survey_response';
+import { transferToBusinessOwnerJsonSchema } from './transfer_to_business_owner';
 import { transferToHumanAgentJsonSchema } from './transfer_to_human_agent';
 
 /** JSON Schema tool definitions for the LLM, keyed by template slug. */
@@ -130,6 +145,14 @@ export const TEMPLATE_TOOLS = {
     transferToHumanAgentJsonSchema,
     registerOptOutJsonSchema,
   ],
+
+  /**
+   * inbound-ivr: receives calls placed by recipients to a pool DID. Pure
+   * DTMF menu — only opt-out and operator transfer; no campaign tooling. The
+   * `capture_dtmf` tool is provided by Vapi natively, so it is not listed
+   * here (Vapi enables it via the assistant's tooling configuration).
+   */
+  'inbound-ivr': [registerInboundOptoutJsonSchema, transferToBusinessOwnerJsonSchema],
 } as const;
 
 export type TemplateToolSlug = keyof typeof TEMPLATE_TOOLS;

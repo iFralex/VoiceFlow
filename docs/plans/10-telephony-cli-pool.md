@@ -117,25 +117,25 @@ export async function pickCliForOrg(
 
 ### Task 8: CLI top-up workflow (operational)
 
-- [ ] Document in `docs/runbooks/cli-pool-management.md` the founder process:
+- [x] Document in `docs/runbooks/cli-pool-management.md` the founder process:
   - when to procure new DIDs (when ≥30% of pool is in cooling-down)
   - which providers to use first
   - how to register new DIDs in Vapi
   - how to insert into the pool table (a small admin script `scripts/add-cli.ts`)
-- [ ] Add admin script `scripts/add-cli.ts` taking `--e164`, `--provider`, `--vapi-id`, `--region`, `--capabilities` and inserting one row
-- [ ] Mark completed
+- [x] Add admin script `scripts/add-cli.ts` taking `--e164`, `--provider`, `--vapi-id`, `--region`, `--capabilities` and inserting one row (also accepts `--org-id <uuid>` for the org-dedicated assignment flow in Task 12; argv parsing + validation live in `src/lib/voice/cli/add-cli.ts` with unit tests, and the script is a thin entrypoint wrapped around `withSystemContext`)
+- [x] Mark completed
 
 ### Task 9: Inbound IVR for opt-out
 
-- [ ] Configure each pool DID's inbound route in Vapi to point to an inbound assistant
-- [ ] Inbound assistant Italian system prompt (file `src/lib/voice/templates/prompts/inbound-ivr.txt`):
+- [x] Configure each pool DID's inbound route in Vapi to point to an inbound assistant (skipped - manual Vapi-dashboard action; full procedure documented in `docs/runbooks/cli-pool-management.md` under "Inbound IVR assistant configuration")
+- [x] Inbound assistant Italian system prompt (file `src/lib/voice/templates/prompts/inbound-ivr.txt`):
   - greets caller: "Buongiorno, hai ricevuto una chiamata da questo numero. Premi 1 per non essere più contattato. Premi 2 per parlare con un operatore. Premi 9 per riascoltare."
   - DTMF-driven (Vapi tool `capture_dtmf`)
   - on `1`: tool `register_inbound_optout(callerNumber)` — adds entry to `opt_out_registry` for ALL orgs that have called this number (resolve via recent `calls` rows in last 30 days), records source `inbound_ivr`
   - on `2`: tool `transfer_to_business_owner` — looks up the most recent calling org and transfers to that org's `transfer_target_phone` if configured, else plays "Nessun operatore disponibile, riproveremo a chiamarti"
   - on no input within 8s: repeat once, then end call politely
-- [ ] Persist inbound calls in `calls` table with `direction='inbound'` (add column via migration `0013_calls_direction.sql`, default `'outbound'`)
-- [ ] Mark completed
+- [x] Persist inbound calls in `calls` table with `direction='inbound'` (column added via migration `0028_calls_direction.sql` with default `'outbound'`; renumbered from `0013` because earlier slots were taken. Relaxing the NOT NULL on `campaign_id`/`contact_id` and the actual insert path live in plan 10 task 11, the inbound webhook handler — see migration header for the explicit handoff)
+- [x] Mark completed
 
 ### Task 10: Inbound caller normalisation and lookup
 

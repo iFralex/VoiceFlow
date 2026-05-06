@@ -29,6 +29,8 @@ export const callOutcomeEnum = pgEnum('call_outcome', [
   'do_not_call',
 ]);
 
+export const callDirectionEnum = pgEnum('call_direction', ['outbound', 'inbound']);
+
 export const calls = pgTable(
   'calls',
   {
@@ -44,6 +46,7 @@ export const calls = pgTable(
     contact_id: uuid('contact_id')
       .notNull()
       .references(() => contacts.id, { onDelete: 'cascade' }),
+    direction: callDirectionEnum('direction').notNull().default('outbound'),
     provider: callProviderEnum('provider').notNull(),
     provider_call_id: text('provider_call_id'),
     status: callStatusEnum('status').notNull().default('pending'),
@@ -71,6 +74,9 @@ export const calls = pgTable(
     index('calls_from_number_started_at_idx')
       .on(t.from_number, t.started_at)
       .where(sql`${t.from_number} IS NOT NULL AND ${t.started_at} IS NOT NULL`),
+    index('calls_direction_from_number_idx')
+      .on(t.direction, t.from_number)
+      .where(sql`${t.from_number} IS NOT NULL`),
   ],
 );
 
