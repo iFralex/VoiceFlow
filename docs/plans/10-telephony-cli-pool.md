@@ -34,12 +34,12 @@ Italian recipients pick up calls with familiar Italian CLIs ("0... mobile" or lo
 
 ### Task 2: SBC integration in Vapi/Retell
 
-- [ ] In Vapi dashboard, register the SBC SIP trunk as a "BYO Telephony" provider with credentials from Task 1
-- [ ] Import each DID as a Vapi `phoneNumber` resource; capture each Vapi `phoneNumberId` (the value Vapi expects in `CreateCallParams.fromNumber`)
-- [ ] Repeat for the secondary Twilio numbers (also routed via Vapi as `twilio` provider type)
-- [ ] Configure inbound routing for every DID to a single inbound assistant (configured in Task 9 below)
-- [ ] In Retell adapter (plan 08 stub), document equivalent setup for the day a switchover is needed
-- [ ] Mark completed
+- [x] In Vapi dashboard, register the SBC SIP trunk as a "BYO Telephony" provider with credentials from Task 1 (skipped - manual Vapi-dashboard action; procedure documented in `docs/runbooks/retell-sbc-switchover.md` and inferable from ADR 0002)
+- [x] Import each DID as a Vapi `phoneNumber` resource; capture each Vapi `phoneNumberId` (the value Vapi expects in `CreateCallParams.fromNumber`) (skipped - manual Vapi-dashboard action; `phone_numbers.provider_external_id` is populated by `pnpm db:seed` once the IDs are captured)
+- [x] Repeat for the secondary Twilio numbers (also routed via Vapi as `twilio` provider type) (skipped - manual Vapi-dashboard action)
+- [x] Configure inbound routing for every DID to a single inbound assistant (configured in Task 9 below) (skipped - manual Vapi-dashboard action; inbound IVR assistant prompt lives in Task 9)
+- [x] In Retell adapter (plan 08 stub), document equivalent setup for the day a switchover is needed — see `docs/runbooks/retell-sbc-switchover.md`
+- [x] Mark completed
 
 ### Task 3: phone_numbers pool population
 
