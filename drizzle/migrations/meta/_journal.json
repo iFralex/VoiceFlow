@@ -190,6 +190,13 @@
       "when": 1777800275510,
       "tag": "0026_calls_from_number",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1777800275511,
+      "tag": "0027_cli_cooldown_history",
+      "breakpoints": true
     }
   ]
 }

@@ -21,6 +21,7 @@ function isPublicPath(pathname: string): boolean {
     pathname.startsWith('/api/webhooks/') ||
     pathname.startsWith('/api/cron/') ||
     pathname.startsWith('/api/admin/') ||
+    pathname.startsWith('/admin/') ||
     pathname.startsWith('/_kitchen-sink')
   );
 }

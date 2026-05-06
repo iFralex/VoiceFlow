@@ -40,6 +40,8 @@ export {
 } from './campaigns/dispatch';
 export { CREDIT_LOW_BALANCE_EVENT } from './handlers/credit';
 export type { CreditLowBalanceData } from './handlers/credit';
+export { CLI_COOLING_DOWN_EVENT, CLI_RETIRED_EVENT } from './handlers/cli';
+export type { CliCoolingDownData, CliRetiredData } from './handlers/cli';
 export {
   CONTACTS_IMPORT_REQUESTED,
   CONTACTS_IMPORT_COMPLETED,

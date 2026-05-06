@@ -102,17 +102,18 @@ export async function pickCliForOrg(
 
 ### Task 7: Spam-score watchdog cron
 
-- [ ] Create `src/app/api/cron/cli-watchdog/route.ts` running daily at 02:00 Europe/Rome (path already in `vercel.json` from plan 01):
+- [x] Create `src/app/api/cron/cli-watchdog/route.ts` running daily at 02:00 Europe/Rome (path already in `vercel.json` from plan 01):
   - For each active CLI compute a heuristic spam score from the last 24h:
     - `pickup_rate = (calls with status='completed' AND duration > 10s) / (calls dialed)`
     - `voicemail_rate = voicemail / dialed`
     - `complaint_rate = opt_out_via_inbound / dialed`
-    - score = weighted combination
+    - score = weighted combination (40·(1−pickup) + 25·voicemail + 35·complaint), bounded [0,100]; small samples (<10 dialed) score 0 to avoid false-positive cooldowns
   - If `spam_score > threshold` (configurable; start at 70/100), set `status='cooling_down'` and exclude from picker for 7 days
-  - If a CLI cools down >2 times in 30 days, set `status='retired'` (manual reactivation only)
-  - Emit `cli/cooling-down` and `cli/retired` Inngest events for plan 13's notification handler
-- [ ] Surface the metrics on a hidden `/admin/cli-pool` dashboard (founder only) showing per-CLI 7-day stats
-- [ ] Mark completed
+  - If a CLI cools down >2 times in 30 days, set `status='retired'` (manual reactivation only) (cooldown events tracked in new `cli_cooldown_history` table via migration `0027_cli_cooldown_history.sql`)
+  - Emit `cli/cooling-down` and `cli/retired` Inngest events for plan 13's notification handler (event names + payload types live in `src/lib/inngest/handlers/cli.ts`; published from `runWatchdog` after the DB transaction commits so a failed event publish doesn't roll back the bookkeeping)
+  - On every run also reactivates any `cooling_down` CLI whose 7-day window has elapsed (skipped for `retired`)
+- [x] Surface the metrics on a hidden `/admin/cli-pool` dashboard (founder only) showing per-CLI 7-day stats (`src/app/admin/cli-pool/page.tsx`; `?token=` query-param auth via `INTERNAL_ADMIN_TOKEN` with `timingSafeEqual`, returns 404 on bad token; middleware bypasses `/admin/` so the page handles its own auth)
+- [x] Mark completed
 
 ### Task 8: CLI top-up workflow (operational)
 
