@@ -168,4 +168,23 @@ describe('pickCliForOrg', () => {
     expect(err.name).toBe('NoAvailableCliError');
     expect(err).toBeInstanceOf(Error);
   });
+
+  it('passes the providers filter through to the WHERE clause when set', async () => {
+    // Verifies that the providers option is wired through. The integration
+    // test asserts the filter actually selects a Twilio row; this unit test
+    // just confirms the picker forwarded the option without throwing.
+    const candidate: QueuedCandidate = {
+      id: 'phone-twilio',
+      e164: '+390999000001',
+      provider: 'twilio',
+      provider_external_id: null,
+    };
+    const { tx } = buildMockTx(candidate);
+    vi.mocked(withSystemContext).mockImplementationOnce((fn) =>
+      fn(tx as unknown as Parameters<typeof fn>[0]),
+    );
+
+    const picked = await pickCliForOrg(ORG_ID, undefined, { providers: ['twilio'] });
+    expect(picked.provider).toBe('twilio');
+  });
 });

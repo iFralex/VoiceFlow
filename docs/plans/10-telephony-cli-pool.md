@@ -165,11 +165,11 @@ export async function pickCliForOrg(
 
 ### Task 13: Twilio fallback orchestration
 
-- [ ] If Vapi reports SBC trunk unhealthy (3 consecutive failed dispatches in <5 min), the dispatcher (plan 09) flips to Twilio-pool CLIs
-- [ ] State stored in a small `system_flags` table (key/value) toggled by the watchdog or manually
-- [ ] Flag auto-clears after 30 minutes of healthy SBC operation
-- [ ] Add migration `0014_system_flags.sql` and `src/lib/services/system_flags.ts`
-- [ ] Mark completed
+- [x] If Vapi reports SBC trunk unhealthy (3 consecutive failed dispatches in <5 min), the dispatcher (plan 09) flips to Twilio-pool CLIs (failure/success tracking lives in `dispatchCall`/`src/lib/services/calls.ts` around `provider.createCall`; `pickCliForOrg` accepts a `providers` filter and the dispatcher's phone-number SELECT restricts to `provider='twilio'` when the flag is raised)
+- [x] State stored in a small `system_flags` table (key/value) toggled by the watchdog or manually (`getFlag`/`setFlag`/`clearFlag` in `src/lib/services/system_flags.ts`; `clearStaleSbcUnhealthyFlag` is the manual/cron-callable knob)
+- [x] Flag auto-clears after 30 minutes of healthy SBC operation (`SBC_HEALTHY_AUTO_CLEAR_MS` enforced inside `recordSbcDispatchSuccess`; the cron-callable `clearStaleSbcUnhealthyFlag` GCs flags whose last failure aged out without a follow-up dispatch)
+- [x] Add migration `0014_system_flags.sql` and `src/lib/services/system_flags.ts` (renumbered to `0030_system_flags.sql` because slots `0014`+ were already taken when this plan landed)
+- [x] Mark completed
 
 ### Task 14: Per-call CLI selection observability
 

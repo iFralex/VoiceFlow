@@ -42,6 +42,15 @@ vi.mock('@/lib/voice/cli/jitter', () => ({
   applyDispatchJitter: (...args: unknown[]) => mockApplyDispatchJitter(...args),
 }));
 
+const mockIsSbcUnhealthy = vi.fn().mockResolvedValue(false);
+const mockRecordSbcDispatchFailure = vi.fn().mockResolvedValue(undefined);
+const mockRecordSbcDispatchSuccess = vi.fn().mockResolvedValue(undefined);
+vi.mock('@/lib/services/system_flags', () => ({
+  isSbcUnhealthy: (...args: unknown[]) => mockIsSbcUnhealthy(...args),
+  recordSbcDispatchFailure: (...args: unknown[]) => mockRecordSbcDispatchFailure(...args),
+  recordSbcDispatchSuccess: (...args: unknown[]) => mockRecordSbcDispatchSuccess(...args),
+}));
+
 vi.mock('node:fs', () => ({
   readFileSync: vi.fn().mockReturnValue(
     'Buongiorno, sono {{salesperson_first_name}}, un assistente vocale automatico per {{dealership_name}}, concessionario {{brand}}.',
@@ -199,7 +208,7 @@ const fakeContact = {
   deleted_at: null,
 };
 
-const fakePhone = { e164: '+390212345678' };
+const fakePhone = { e164: '+390212345678', provider: 'voiped' as const };
 
 beforeEach(() => {
   selectResultQueue.length = 0;
@@ -214,6 +223,9 @@ beforeEach(() => {
   mockComputeCallCost.mockReturnValue({ billableSeconds: 60, costCents: 200 });
   mockSendInngestEvent.mockResolvedValue(undefined);
   mockApplyDispatchJitter.mockResolvedValue(0);
+  mockIsSbcUnhealthy.mockResolvedValue(false);
+  mockRecordSbcDispatchFailure.mockResolvedValue(undefined);
+  mockRecordSbcDispatchSuccess.mockResolvedValue(undefined);
 });
 
 // ─── createPendingCall ────────────────────────────────────────────────────────
@@ -377,6 +389,67 @@ describe('dispatchCall', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const callArgs = (mockCreateCall.mock.calls[0] as any[])[0] as Record<string, unknown>;
     expect(callArgs).not.toHaveProperty('voicemailMessage');
+  });
+
+  it('records an SBC dispatch failure on createCall error from a voiped CLI', async () => {
+    queueDispatchSelectResults();
+    const sentinel = new Error('vapi 502: trunk down');
+    mockCreateCall.mockRejectedValueOnce(sentinel);
+
+    const { dispatchCall } = await import('./calls');
+    await expect(dispatchCall(ORG_ID, CALL_ID)).rejects.toThrow(sentinel);
+
+    expect(mockRecordSbcDispatchFailure).toHaveBeenCalledWith(
+      'vapi 502: trunk down',
+    );
+  });
+
+  it('records an SBC dispatch success when createCall succeeds from a voiped CLI', async () => {
+    queueDispatchSelectResults();
+
+    const { dispatchCall } = await import('./calls');
+    await dispatchCall(ORG_ID, CALL_ID);
+
+    expect(mockRecordSbcDispatchSuccess).toHaveBeenCalled();
+  });
+
+  it('does not record SBC tracking for a Twilio CLI', async () => {
+    selectResultQueue.push(
+      [fakeCall],
+      [fakeCampaign],
+      [fakeScript],
+      [fakeTemplate],
+      [fakeContact],
+      [{ e164: '+390277770011', provider: 'twilio' as const }],
+    );
+
+    const { dispatchCall } = await import('./calls');
+    await dispatchCall(ORG_ID, CALL_ID);
+
+    expect(mockRecordSbcDispatchFailure).not.toHaveBeenCalled();
+    expect(mockRecordSbcDispatchSuccess).not.toHaveBeenCalled();
+  });
+
+  it('restricts the phone-number SELECT to twilio when sbc_unhealthy is true', async () => {
+    mockIsSbcUnhealthy.mockResolvedValueOnce(true);
+    selectResultQueue.push(
+      [fakeCall],
+      [fakeCampaign],
+      [fakeScript],
+      [fakeTemplate],
+      [fakeContact],
+      [{ e164: '+390277770011', provider: 'twilio' as const }],
+    );
+
+    const { dispatchCall } = await import('./calls');
+    await dispatchCall(ORG_ID, CALL_ID);
+
+    // The selected fromNumber is the Twilio CLI, not the seeded Voiped one.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const callArgs = (mockCreateCall.mock.calls[0] as any[])[0] as Record<string, unknown>;
+    expect(callArgs.fromNumber).toBe('+390277770011');
+    // SBC tracking is skipped because the picked CLI is Twilio.
+    expect(mockRecordSbcDispatchSuccess).not.toHaveBeenCalled();
   });
 
   it('passes voicemailMessage when leave_voicemail_message=true in script variables', async () => {

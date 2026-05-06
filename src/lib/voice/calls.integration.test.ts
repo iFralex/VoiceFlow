@@ -218,6 +218,7 @@ describe('dispatchCall — payload assembly', () => {
       [scriptRow],
       [templateRow],
       [contactRow],
+      [], // sbc_unhealthy flag check (healthy by default)
       [phoneRow],
     ]);
 

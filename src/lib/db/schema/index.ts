@@ -23,3 +23,4 @@ export * from './personal_access_tokens';
 export * from './auth_signins';
 export * from './voice_catalogue';
 export * from './campaign_stats';
+export * from './system_flags';

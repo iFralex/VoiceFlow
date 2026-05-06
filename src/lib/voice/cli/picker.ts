@@ -1,4 +1,4 @@
-import { and, asc, eq, isNull, lt, or, sql } from 'drizzle-orm';
+import { and, asc, eq, inArray, isNull, lt, or, sql } from 'drizzle-orm';
 
 import { type DbTx, withSystemContext } from '@/lib/db/context';
 import type { phoneProviderEnum } from '@/lib/db/schema';
@@ -31,6 +31,12 @@ export interface PickCliOptions {
   dailyCap?: number;
   /** Override the per-CLI hourly cap (defaults to env.CLI_HOURLY_CAP_DEFAULT). */
   hourlyCap?: number;
+  /**
+   * Restrict candidates to one or more providers. Plan 10 task 13 uses this
+   * to route around a degraded SBC trunk by passing `['twilio']` whenever the
+   * `sbc_unhealthy` system flag is raised.
+   */
+  providers?: ReadonlyArray<(typeof phoneProviderEnum)['enumValues'][number]>;
   /**
    * Run inside an existing transaction instead of opening a new
    * `withSystemContext`. Used by the dispatcher (and tests) to share a
@@ -77,9 +83,11 @@ export async function pickCliForOrg(
   const hourlyCap = options.hourlyCap ?? env.CLI_HOURLY_CAP_DEFAULT;
 
   if (options.tx) {
-    return doPick(options.tx, orgId, contactPhone, dailyCap, hourlyCap);
+    return doPick(options.tx, orgId, contactPhone, dailyCap, hourlyCap, options.providers);
   }
-  return withSystemContext((tx) => doPick(tx, orgId, contactPhone, dailyCap, hourlyCap));
+  return withSystemContext((tx) =>
+    doPick(tx, orgId, contactPhone, dailyCap, hourlyCap, options.providers),
+  );
 }
 
 async function doPick(
@@ -88,6 +96,7 @@ async function doPick(
   contactPhone: string | undefined,
   dailyCap: number,
   hourlyCap: number,
+  providers: ReadonlyArray<(typeof phoneProviderEnum)['enumValues'][number]> | undefined,
 ): Promise<PickedCli> {
   const region = inferRegionFromPhone(contactPhone);
 
@@ -137,6 +146,9 @@ async function doPick(
         or(eq(phoneNumbers.org_id, orgId), isNull(phoneNumbers.org_id)),
         lt(phoneNumbers.daily_call_count, dailyCap),
         sql`${hourlyCount} < ${hourlyCap}`,
+        ...(providers && providers.length > 0
+          ? [inArray(phoneNumbers.provider, [...providers])]
+          : []),
       ),
     )
     .orderBy(

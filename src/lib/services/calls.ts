@@ -21,6 +21,11 @@ import { sendInngestEvent } from '@/lib/inngest/client';
 import { CALL_CLASSIFY_EVENT, CALL_COMPLETED_EVENT } from '@/lib/inngest/voice/events';
 import { computeCallCost, computePerMinuteCents } from '@/lib/services/billing-rules';
 import { chargeForCall } from '@/lib/services/credit';
+import {
+  isSbcUnhealthy,
+  recordSbcDispatchFailure,
+  recordSbcDispatchSuccess,
+} from '@/lib/services/system_flags';
 import { applyDispatchJitter } from '@/lib/voice/cli/jitter';
 import { getVoiceProvider } from '@/lib/voice/factory';
 import { assembleSystemPrompt, interpolate } from '@/lib/voice/prompt/preamble';
@@ -239,12 +244,24 @@ export async function dispatchCall(orgId: string, callId: string): Promise<void>
 
   // 8. Pick a caller number from the phone pool
   //    Plan 10 extends this with Vapi-specific number IDs and rotation logic.
+  //
+  //    SBC fallback (plan 10 task 13): when the `sbc_unhealthy` system flag is
+  //    raised — three consecutive Vapi createCall failures from a Voiped/Telnyx
+  //    SBC trunk in <5 min — restrict the candidate set to Twilio so the
+  //    dispatcher routes around the degraded trunk. The flag auto-clears after
+  //    30 minutes of healthy operation, at which point the broader pool is
+  //    eligible again.
+  const sbcUnhealthy = await isSbcUnhealthy();
   const [phone] = await withOrgContext(orgId, (tx) =>
     tx
-      .select({ e164: phoneNumbers.e164 })
+      .select({ e164: phoneNumbers.e164, provider: phoneNumbers.provider })
       .from(phoneNumbers)
       .where(
-        and(eq(phoneNumbers.status, 'active'), eq(phoneNumbers.org_id, orgId)),
+        and(
+          eq(phoneNumbers.status, 'active'),
+          eq(phoneNumbers.org_id, orgId),
+          ...(sbcUnhealthy ? [eq(phoneNumbers.provider, 'twilio')] : []),
+        ),
       )
       .limit(1),
   );
@@ -285,27 +302,58 @@ export async function dispatchCall(orgId: string, callId: string): Promise<void>
     voicemailMessage = interpolate(readVoicemailMessageTemplate(), stringVars);
   }
 
-  const { providerCallId } = await provider.createCall({
-    toNumber: contact.phone_e164,
-    fromNumber: phone.e164,
-    systemPrompt,
-    firstMessage,
-    voiceId,
-    language: 'it-IT',
-    maxDurationSeconds: MAX_CALL_DURATION_SECONDS,
-    webhookUrl,
-    metadata: {
-      orgId,
-      campaignId,
-      callId: call.id,
-      contactId,
-    },
-    endCallFunctions: tools,
-    amdEnabled: true,
-    recordingEnabled: true,
-    ...(transferTargetPhone !== undefined && { transferTargetPhone }),
-    ...(voicemailMessage !== undefined && { voicemailMessage }),
-  });
+  // SBC-trunk providers tracked by the system-flags watchdog. `voiped` is the
+  // primary Italian SBC; `telnyx` is the tertiary SBC fallback. Both share the
+  // same BYO trunk health story, so we treat them as one bucket for the SBC
+  // failover tracker (plan 10 task 13).
+  const isSbcProvider = phone.provider === 'voiped' || phone.provider === 'telnyx';
+
+  let providerCallId: string;
+  try {
+    ({ providerCallId } = await provider.createCall({
+      toNumber: contact.phone_e164,
+      fromNumber: phone.e164,
+      systemPrompt,
+      firstMessage,
+      voiceId,
+      language: 'it-IT',
+      maxDurationSeconds: MAX_CALL_DURATION_SECONDS,
+      webhookUrl,
+      metadata: {
+        orgId,
+        campaignId,
+        callId: call.id,
+        contactId,
+      },
+      endCallFunctions: tools,
+      amdEnabled: true,
+      recordingEnabled: true,
+      ...(transferTargetPhone !== undefined && { transferTargetPhone }),
+      ...(voicemailMessage !== undefined && { voicemailMessage }),
+    }));
+  } catch (err) {
+    if (isSbcProvider) {
+      // Best-effort tracking: a failure to record the failure must not mask the
+      // original provider error.
+      try {
+        const reason = err instanceof Error ? err.message : 'createCall_failed';
+        await recordSbcDispatchFailure(reason);
+      } catch (trackErr) {
+        console.error('[dispatch] Failed to record SBC dispatch failure', trackErr);
+      }
+    }
+    throw err;
+  }
+
+  // Healthy SBC dispatch: reset the consecutive-failure streak and (if the
+  // 30-minute window has elapsed) clear the `sbc_unhealthy` flag.
+  if (isSbcProvider) {
+    try {
+      await recordSbcDispatchSuccess();
+    } catch (trackErr) {
+      console.error('[dispatch] Failed to record SBC dispatch success', trackErr);
+    }
+  }
 
   // 11. Persist provider_call_id and transition to 'dialing'.
   //     Merge leave_voicemail_message into existing metadata (which may already
