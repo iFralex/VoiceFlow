@@ -139,10 +139,10 @@ export async function pickCliForOrg(
 
 ### Task 10: Inbound caller normalisation and lookup
 
-- [ ] Create `src/lib/voice/inbound/lookup.ts` with `findRecentOutboundCallsToNumber(phoneE164, withinDays=30)`:
+- [x] Create `src/lib/voice/inbound/lookup.ts` with `findRecentOutboundCallsToNumber(phoneE164, withinDays=30)`:
   - returns list of `{ orgId, callId, dialedAt, contactId }` ordered by most recent
-- [ ] Used by inbound IVR opt-out tool to enrol the inbound caller in the right orgs' opt-out registries
-- [ ] Mark completed
+- [x] Used by inbound IVR opt-out tool to enrol the inbound caller in the right orgs' opt-out registries (consumer wired up in plan 10 task 11; this task ships the helper plus unit and integration tests covering cross-org results, lookback window, direction filter, and ordering)
+- [x] Mark completed
 
 ### Task 11: Inbound webhook handler extension
 
