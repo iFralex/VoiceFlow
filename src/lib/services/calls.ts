@@ -11,7 +11,6 @@ import {
   calls,
   campaigns,
   contacts,
-  phoneNumbers,
   scriptTemplates,
   scripts,
 } from '@/lib/db/schema';
@@ -27,6 +26,7 @@ import {
   recordSbcDispatchSuccess,
 } from '@/lib/services/system_flags';
 import { applyDispatchJitter } from '@/lib/voice/cli/jitter';
+import { NoAvailableCliError, pickCliForOrg } from '@/lib/voice/cli/picker';
 import { getVoiceProvider } from '@/lib/voice/factory';
 import { assembleSystemPrompt, interpolate } from '@/lib/voice/prompt/preamble';
 import { TEMPLATE_TOOLS } from '@/lib/voice/templates/tools';
@@ -242,8 +242,10 @@ export async function dispatchCall(orgId: string, callId: string): Promise<void>
   const callMetaVoiceOverride = (call.metadata as Record<string, unknown> | null)?.['voice_id_override'] as string | null | undefined;
   const voiceId = (callMetaVoiceOverride || undefined) ?? script.voice_id ?? template.default_voice_id ?? 'it-IT-placeholder';
 
-  // 8. Pick a caller number from the phone pool
-  //    Plan 10 extends this with Vapi-specific number IDs and rotation logic.
+  // 8. Pick a caller number from the phone pool via the rotation picker
+  //    (plan 10 task 4). The picker enforces daily/hourly caps, prefers regional
+  //    matches and idle CLIs, and uses `FOR UPDATE SKIP LOCKED` so concurrent
+  //    dispatchers never double-allocate the same row.
   //
   //    SBC fallback (plan 10 task 13): when the `sbc_unhealthy` system flag is
   //    raised — three consecutive Vapi createCall failures from a Voiped/Telnyx
@@ -252,20 +254,34 @@ export async function dispatchCall(orgId: string, callId: string): Promise<void>
   //    30 minutes of healthy operation, at which point the broader pool is
   //    eligible again.
   const sbcUnhealthy = await isSbcUnhealthy();
-  const [phone] = await withOrgContext(orgId, (tx) =>
-    tx
-      .select({ e164: phoneNumbers.e164, provider: phoneNumbers.provider })
-      .from(phoneNumbers)
-      .where(
-        and(
-          eq(phoneNumbers.status, 'active'),
-          eq(phoneNumbers.org_id, orgId),
-          ...(sbcUnhealthy ? [eq(phoneNumbers.provider, 'twilio')] : []),
-        ),
-      )
-      .limit(1),
-  );
-  if (!phone) throw new NoPhoneNumberAvailableError(orgId);
+  let picked;
+  try {
+    picked = await pickCliForOrg(
+      orgId,
+      contact.phone_e164,
+      sbcUnhealthy ? { providers: ['twilio'] } : {},
+    );
+  } catch (err) {
+    if (err instanceof NoAvailableCliError) {
+      throw new NoPhoneNumberAvailableError(orgId);
+    }
+    throw err;
+  }
+  // Vapi requires the Vapi-side `phoneNumberId` (captured in
+  // `phone_numbers.provider_external_id` when the founder registers each DID
+  // in the Vapi dashboard — see docs/runbooks/cli-pool-management.md). Without
+  // it the createCall will be rejected.
+  if (!picked.providerExternalId) {
+    throw new Error(
+      `phone ${picked.phoneE164} (${picked.provider}) has no provider_external_id; ` +
+        `register it in Vapi and update phone_numbers.provider_external_id`,
+    );
+  }
+  const phone = {
+    e164: picked.phoneE164,
+    provider: picked.provider,
+    providerExternalId: picked.providerExternalId,
+  };
 
   // 9. Resolve per-template tools
   const tools = (
@@ -312,7 +328,7 @@ export async function dispatchCall(orgId: string, callId: string): Promise<void>
   try {
     ({ providerCallId } = await provider.createCall({
       toNumber: contact.phone_e164,
-      fromNumber: phone.e164,
+      fromNumber: phone.providerExternalId,
       systemPrompt,
       firstMessage,
       voiceId,

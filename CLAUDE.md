@@ -11,7 +11,7 @@
 - `pnpm test:e2e` — Playwright end-to-end tests (requires running app on port 3000)
 - `pnpm db:generate` — generate Drizzle migration from schema changes
 - `pnpm db:migrate` — apply all migrations via `DATABASE_DIRECT_URL` (not pooler)
-- `pnpm db:seed` — upsert seed data (script templates + voice catalogue + credit packages)
+- `pnpm db:seed` — upsert seed data (script templates + voice catalogue + credit packages + phone-number CLI pool)
 - `pnpm db:seed --bump <slug>` — publish a new version of one template without overwriting existing scripts
 
 ## Database Access Pattern (CRITICAL)
@@ -90,6 +90,11 @@ Contact import limits (optional, validated in `env.ts`):
 
 Voice preview (optional, validated in `env.ts`):
 - `ELEVENLABS_API_KEY` — ElevenLabs API key. When absent, `previewVoiceSampleAction` returns `{ ok: false, status: 'not_configured' }` and the UI hides the "Ascolta un esempio" button.
+
+CLI rotation (optional, validated in `env.ts`):
+- `CLI_DAILY_CAP_DEFAULT` — per-CLI daily dial cap enforced by `pickCliForOrg` (default: 100)
+- `CLI_HOURLY_CAP_DEFAULT` — per-CLI hourly sliding-window cap (default: 30)
+- `SBC_SMOKE_TEST_NUMBER` — destination E.164 for the weekly SBC smoke-test cron `/api/cron/sbc-smoke-test`. When absent the cron emits `sbc/smoke-test-failed` with reason `no_test_number_configured`.
 
 ## Migration Naming
 

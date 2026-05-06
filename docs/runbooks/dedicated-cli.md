@@ -104,10 +104,8 @@ UUID before running — the script is insert-only and the unique constraint on
 
 ### 4. Verify the picker sees the new row
 
-```bash
-pnpm exec tsx scripts/check-cli-status.ts
-```
-
+Open `/admin/cli-pool?token=$INTERNAL_ADMIN_TOKEN` (or query
+`SELECT id, e164, org_id, status FROM phone_numbers WHERE e164 = $E164`).
 The new row should appear with `org_id` populated and `status='active'`.
 Trigger a low-volume test campaign for that org (one contact, voicemail
 message); confirm `calls.from_number` matches the dedicated DID.

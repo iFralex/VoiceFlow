@@ -47,6 +47,27 @@ vi.mock('@/lib/services/credit', () => ({
   chargeForCall: vi.fn().mockResolvedValue(undefined),
 }));
 
+vi.mock('@/lib/services/system_flags', () => ({
+  isSbcUnhealthy: vi.fn().mockResolvedValue(false),
+  recordSbcDispatchFailure: vi.fn().mockResolvedValue(undefined),
+  recordSbcDispatchSuccess: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock('@/lib/voice/cli/picker', () => ({
+  pickCliForOrg: vi.fn().mockResolvedValue({
+    phoneNumberId: 'phone-row-id',
+    phoneE164: '+390211111111',
+    providerExternalId: 'vapi-phone-id-xyz',
+    provider: 'voiped' as const,
+  }),
+  NoAvailableCliError: class NoAvailableCliError extends Error {
+    constructor(public readonly orgId: string) {
+      super(`No CLI available for org ${orgId}`);
+      this.name = 'NoAvailableCliError';
+    }
+  },
+}));
+
 // ── Imports ──────────────────────────────────────────────────────────────────
 
 import { and, eq, isNull, sql } from 'drizzle-orm';
@@ -152,7 +173,7 @@ describe('dispatchCall — payload assembly', () => {
     //   3. script
     //   4. script_template  (loaded via withSystemContext)
     //   5. contact
-    //   6. phone number     (loaded via withSystemContext)
+    // CLI selection is delegated to the mocked pickCliForOrg above.
 
     const callRow = {
       id: CALL_ID,
@@ -210,7 +231,6 @@ describe('dispatchCall — payload assembly', () => {
       org_id: ORG_A,
       phone_e164: '+393331234567',
     };
-    const phoneRow = { e164: '+390211111111', provider: 'voiped' as const };
 
     const mockTx = buildMockTx([
       [callRow],
@@ -218,8 +238,6 @@ describe('dispatchCall — payload assembly', () => {
       [scriptRow],
       [templateRow],
       [contactRow],
-      [], // sbc_unhealthy flag check (healthy by default)
-      [phoneRow],
     ]);
 
     // Both context helpers call their callback with the shared mockTx.
@@ -299,7 +317,6 @@ describe('dispatchCall — payload assembly', () => {
       org_id: ORG_A,
       phone_e164: '+393331234567',
     };
-    const phoneRow = { e164: '+390211111111', provider: 'voiped' as const };
 
     const selectQueue: unknown[][] = [
       [callRow],
@@ -307,8 +324,6 @@ describe('dispatchCall — payload assembly', () => {
       [scriptRow],
       [templateRow],
       [contactRow],
-      [], // sbc_unhealthy flag check (healthy)
-      [phoneRow],
     ];
     let selectIdx = 0;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

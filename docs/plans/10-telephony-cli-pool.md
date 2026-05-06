@@ -19,7 +19,7 @@ Italian recipients pick up calls with familiar Italian CLIs ("0... mobile" or lo
 - `pnpm test src/lib/voice/cli src/lib/services/phone_numbers`
 - `pnpm test:integration src/lib/voice/cli`
 - `pnpm exec tsx scripts/test-sbc-trunk.ts` (manual: places a real test call via the SBC trunk)
-- `pnpm exec tsx scripts/check-cli-status.ts` (operational: dumps current CLI pool health)
+- Visit `/admin/cli-pool?token=$INTERNAL_ADMIN_TOKEN` (operational: founder-only dashboard with current CLI pool health and SBC flag state)
 
 ### Task 1: Italian SBC carrier procurement
 

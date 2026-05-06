@@ -16,6 +16,7 @@ import { NextResponse } from 'next/server';
 
 import { env } from '@/lib/env';
 import { runWatchdog } from '@/lib/services/cli_watchdog';
+import { clearStaleSbcUnhealthyFlag } from '@/lib/services/system_flags';
 
 function authorize(request: Request): boolean {
   const secret = env.CRON_SECRET;
@@ -31,7 +32,18 @@ export async function GET(request: Request): Promise<Response> {
   }
 
   const result = await runWatchdog();
-  return NextResponse.json({ ok: true, ...result });
+
+  // Garbage-collect a stale `sbc_unhealthy` flag whose 30-minute auto-clear
+  // window elapsed without a successful SBC dispatch (e.g. all dispatches
+  // routed via Twilio fallback). Plan 10 task 13.
+  let sbcFlagCleared = false;
+  try {
+    sbcFlagCleared = await clearStaleSbcUnhealthyFlag();
+  } catch (err) {
+    console.error('[cli-watchdog] Failed to clear stale SBC flag', err);
+  }
+
+  return NextResponse.json({ ok: true, sbcFlagCleared, ...result });
 }
 
 export const dynamic = 'force-dynamic';

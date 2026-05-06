@@ -38,13 +38,10 @@ Top up the pool when any of the following is true:
 
 ### Quick health check
 
-```bash
-pnpm exec tsx scripts/check-cli-status.ts
-```
-
-(Or open `/admin/cli-pool?token=$INTERNAL_ADMIN_TOKEN` for the same data with
-7-day metrics — see plan 10 task 7.) The dashboard sorts by spam score worst
-first; cooldown counts are visible as the row's status.
+Open `/admin/cli-pool?token=$INTERNAL_ADMIN_TOKEN` for per-CLI 7-day metrics
+(plan 10 task 7). The dashboard sorts by spam score worst first; cooldown
+counts are visible as the row's status, and the SBC unhealthy flag and trip
+window are surfaced at the top of the page.
 
 ## Provider preference order
 

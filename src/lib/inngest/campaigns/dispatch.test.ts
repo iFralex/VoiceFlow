@@ -393,19 +393,19 @@ describe('verifyCreditAvailable', () => {
 
   it('resolves when balance is above minimum', async () => {
     vi.mocked(getBalance).mockResolvedValue({ balanceCents: 500, remainingMinutes: 10 });
-    await expect(verifyCreditAvailable(ORG, CALL)).resolves.toBeUndefined();
+    await expect(verifyCreditAvailable(ORG, CALL, CAMPAIGN)).resolves.toBeUndefined();
     expect(mockUpdate).not.toHaveBeenCalled();
   });
 
   it('marks call failed and throws when balance is zero', async () => {
     vi.mocked(getBalance).mockResolvedValue({ balanceCents: 0, remainingMinutes: 0 });
-    await expect(verifyCreditAvailable(ORG, CALL)).rejects.toThrow(InsufficientCreditError);
+    await expect(verifyCreditAvailable(ORG, CALL, CAMPAIGN)).rejects.toThrow(InsufficientCreditError);
     expect(mockUpdate).toHaveBeenCalledOnce();
   });
 
   it('emits credit/low-balance event when balance is zero', async () => {
     vi.mocked(getBalance).mockResolvedValue({ balanceCents: 0, remainingMinutes: 0 });
-    await verifyCreditAvailable(ORG, CALL).catch(() => {});
+    await verifyCreditAvailable(ORG, CALL, CAMPAIGN).catch(() => {});
     expect(sendInngestEvent).toHaveBeenCalledWith(
       expect.objectContaining({
         name: 'credit/low-balance',
@@ -416,7 +416,7 @@ describe('verifyCreditAvailable', () => {
 
   it('marks call failed when balance is at minimum threshold (100 cents)', async () => {
     vi.mocked(getBalance).mockResolvedValue({ balanceCents: 100, remainingMinutes: 1 });
-    await expect(verifyCreditAvailable(ORG, CALL)).rejects.toThrow(InsufficientCreditError);
+    await expect(verifyCreditAvailable(ORG, CALL, CAMPAIGN)).rejects.toThrow(InsufficientCreditError);
     expect(mockUpdate).toHaveBeenCalledOnce();
   });
 });

@@ -1,13 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { mockRunWatchdog, mockEnv } = vi.hoisted(() => {
+const { mockRunWatchdog, mockClearStaleSbcUnhealthyFlag, mockEnv } = vi.hoisted(() => {
   const mockRunWatchdog = vi.fn();
+  const mockClearStaleSbcUnhealthyFlag = vi.fn();
   const mockEnv = { CRON_SECRET: 'test-cron-secret-16chars' };
-  return { mockRunWatchdog, mockEnv };
+  return { mockRunWatchdog, mockClearStaleSbcUnhealthyFlag, mockEnv };
 });
 
 vi.mock('@/lib/services/cli_watchdog', () => ({
   runWatchdog: mockRunWatchdog,
+}));
+
+vi.mock('@/lib/services/system_flags', () => ({
+  clearStaleSbcUnhealthyFlag: mockClearStaleSbcUnhealthyFlag,
 }));
 
 vi.mock('@/lib/env', () => ({ env: mockEnv }));
@@ -28,6 +33,7 @@ describe('GET /api/cron/cli-watchdog', () => {
     vi.resetAllMocks();
     mockEnv.CRON_SECRET = CRON_SECRET;
     mockRunWatchdog.mockResolvedValue({ evaluated: 5, transitions: [] });
+    mockClearStaleSbcUnhealthyFlag.mockResolvedValue(false);
   });
 
   it('returns 401 when Authorization header is missing', async () => {
@@ -37,7 +43,9 @@ describe('GET /api/cron/cli-watchdog', () => {
   });
 
   it('returns 401 when bearer token does not match CRON_SECRET', async () => {
-    const res = await GET(makeRequest('wrong-secret-16chars-xx'));
+    // Same length as CRON_SECRET ("test-cron-secret-16chars" → 24 chars)
+    // so the timing-safe compare runs (length-mismatch short-circuit avoided).
+    const res = await GET(makeRequest('wrong-cron-secret-16chrs'));
     expect(res.status).toBe(401);
     expect(mockRunWatchdog).not.toHaveBeenCalled();
   });
@@ -63,10 +71,31 @@ describe('GET /api/cron/cli-watchdog', () => {
       ok: boolean;
       evaluated: number;
       transitions: Array<{ to: string }>;
+      sbcFlagCleared: boolean;
     };
     expect(json.ok).toBe(true);
     expect(json.evaluated).toBe(12);
     expect(json.transitions).toHaveLength(1);
     expect(json.transitions[0]?.to).toBe('cooling_down');
+    expect(json.sbcFlagCleared).toBe(false);
+  });
+
+  it('garbage-collects a stale SBC unhealthy flag and surfaces the result', async () => {
+    mockClearStaleSbcUnhealthyFlag.mockResolvedValueOnce(true);
+
+    const res = await GET(makeRequest(CRON_SECRET));
+    expect(res.status).toBe(200);
+    expect(mockClearStaleSbcUnhealthyFlag).toHaveBeenCalledOnce();
+    const json = (await res.json()) as { sbcFlagCleared: boolean };
+    expect(json.sbcFlagCleared).toBe(true);
+  });
+
+  it('still returns 200 if clearStaleSbcUnhealthyFlag throws', async () => {
+    mockClearStaleSbcUnhealthyFlag.mockRejectedValueOnce(new Error('db down'));
+
+    const res = await GET(makeRequest(CRON_SECRET));
+    expect(res.status).toBe(200);
+    const json = (await res.json()) as { sbcFlagCleared: boolean };
+    expect(json.sbcFlagCleared).toBe(false);
   });
 });

@@ -51,6 +51,18 @@ vi.mock('@/lib/services/system_flags', () => ({
   recordSbcDispatchSuccess: (...args: unknown[]) => mockRecordSbcDispatchSuccess(...args),
 }));
 
+const mockPickCliForOrg = vi.fn();
+class FakeNoAvailableCliError extends Error {
+  constructor(public readonly orgId: string) {
+    super(`No CLI available for org ${orgId}`);
+    this.name = 'NoAvailableCliError';
+  }
+}
+vi.mock('@/lib/voice/cli/picker', () => ({
+  pickCliForOrg: (...args: unknown[]) => mockPickCliForOrg(...args),
+  NoAvailableCliError: FakeNoAvailableCliError,
+}));
+
 vi.mock('node:fs', () => ({
   readFileSync: vi.fn().mockReturnValue(
     'Buongiorno, sono {{salesperson_first_name}}, un assistente vocale automatico per {{dealership_name}}, concessionario {{brand}}.',
@@ -105,7 +117,7 @@ const mockTx: any = {
   execute: vi.fn().mockResolvedValue(undefined),
 };
 
-const { withOrgContext, withSystemContext } = await import('@/lib/db/context');
+const { withOrgContext } = await import('@/lib/db/context');
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -208,7 +220,12 @@ const fakeContact = {
   deleted_at: null,
 };
 
-const fakePhone = { e164: '+390212345678', provider: 'voiped' as const };
+const fakePicked = {
+  phoneNumberId: 'phone-row-id',
+  phoneE164: '+390212345678',
+  providerExternalId: 'vapi-phone-id-xyz',
+  provider: 'voiped' as const,
+};
 
 beforeEach(() => {
   selectResultQueue.length = 0;
@@ -226,6 +243,7 @@ beforeEach(() => {
   mockIsSbcUnhealthy.mockResolvedValue(false);
   mockRecordSbcDispatchFailure.mockResolvedValue(undefined);
   mockRecordSbcDispatchSuccess.mockResolvedValue(undefined);
+  mockPickCliForOrg.mockResolvedValue(fakePicked);
 });
 
 // ─── createPendingCall ────────────────────────────────────────────────────────
@@ -263,7 +281,8 @@ describe('dispatchCall', () => {
       [fakeScript],    // script
       [fakeTemplate],  // template
       [fakeContact],   // contact
-      [fakePhone],     // phone number
+      // CLI selection is delegated to pickCliForOrg (mocked above), so no
+      // phone-number SELECT is queued here.
     );
   }
 
@@ -292,12 +311,19 @@ describe('dispatchCall', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const callArgs = (mockCreateCall.mock.calls[0] as any[])[0] as Record<string, unknown>;
     expect(callArgs.toNumber).toBe('+393331234567');
-    expect(callArgs.fromNumber).toBe('+390212345678');
+    // Vapi expects the Vapi-side phoneNumberId, not the E.164 string.
+    expect(callArgs.fromNumber).toBe('vapi-phone-id-xyz');
     expect(callArgs.language).toBe('it-IT');
     expect(callArgs.amdEnabled).toBe(true);
     expect(callArgs.recordingEnabled).toBe(true);
     expect((callArgs.endCallFunctions as unknown[]).length).toBeGreaterThan(0);
     expect(callArgs.metadata).toMatchObject({ orgId: ORG_ID, callId: CALL_ID });
+
+    expect(mockPickCliForOrg).toHaveBeenCalledWith(
+      ORG_ID,
+      '+393331234567',
+      expect.any(Object),
+    );
 
     expect(mockRecordAudit).toHaveBeenCalledWith(
       mockTx,
@@ -324,7 +350,6 @@ describe('dispatchCall', () => {
       [scriptWithVoice],
       [fakeTemplate],
       [fakeContact],
-      [fakePhone],
     );
 
     const { dispatchCall } = await import('./calls');
@@ -346,18 +371,20 @@ describe('dispatchCall', () => {
     expect(callArgs.webhookUrl).toBe('https://app.example.com/api/webhooks/vapi');
   });
 
-  it('throws NoPhoneNumberAvailableError when no phone found', async () => {
-    selectResultQueue.push(
-      [fakeCall],
-      [fakeCampaign],
-      [fakeScript],
-      [fakeTemplate],
-      [fakeContact],
-      [], // no phone number
-    );
+  it('throws NoPhoneNumberAvailableError when picker reports no available CLI', async () => {
+    queueDispatchSelectResults();
+    mockPickCliForOrg.mockRejectedValueOnce(new FakeNoAvailableCliError(ORG_ID));
 
     const { dispatchCall, NoPhoneNumberAvailableError } = await import('./calls');
     await expect(dispatchCall(ORG_ID, CALL_ID)).rejects.toThrow(NoPhoneNumberAvailableError);
+  });
+
+  it('throws when the picked CLI has no provider_external_id', async () => {
+    queueDispatchSelectResults();
+    mockPickCliForOrg.mockResolvedValueOnce({ ...fakePicked, providerExternalId: null });
+
+    const { dispatchCall } = await import('./calls');
+    await expect(dispatchCall(ORG_ID, CALL_ID)).rejects.toThrow(/provider_external_id/);
   });
 
   it('throws if call not found', async () => {
@@ -414,14 +441,13 @@ describe('dispatchCall', () => {
   });
 
   it('does not record SBC tracking for a Twilio CLI', async () => {
-    selectResultQueue.push(
-      [fakeCall],
-      [fakeCampaign],
-      [fakeScript],
-      [fakeTemplate],
-      [fakeContact],
-      [{ e164: '+390277770011', provider: 'twilio' as const }],
-    );
+    queueDispatchSelectResults();
+    mockPickCliForOrg.mockResolvedValueOnce({
+      phoneNumberId: 'phone-row-2',
+      phoneE164: '+390277770011',
+      providerExternalId: 'vapi-twilio-id',
+      provider: 'twilio',
+    });
 
     const { dispatchCall } = await import('./calls');
     await dispatchCall(ORG_ID, CALL_ID);
@@ -430,24 +456,28 @@ describe('dispatchCall', () => {
     expect(mockRecordSbcDispatchSuccess).not.toHaveBeenCalled();
   });
 
-  it('restricts the phone-number SELECT to twilio when sbc_unhealthy is true', async () => {
+  it('restricts the picker to twilio when sbc_unhealthy is true', async () => {
     mockIsSbcUnhealthy.mockResolvedValueOnce(true);
-    selectResultQueue.push(
-      [fakeCall],
-      [fakeCampaign],
-      [fakeScript],
-      [fakeTemplate],
-      [fakeContact],
-      [{ e164: '+390277770011', provider: 'twilio' as const }],
-    );
+    queueDispatchSelectResults();
+    mockPickCliForOrg.mockResolvedValueOnce({
+      phoneNumberId: 'phone-row-2',
+      phoneE164: '+390277770011',
+      providerExternalId: 'vapi-twilio-id',
+      provider: 'twilio',
+    });
 
     const { dispatchCall } = await import('./calls');
     await dispatchCall(ORG_ID, CALL_ID);
 
-    // The selected fromNumber is the Twilio CLI, not the seeded Voiped one.
+    expect(mockPickCliForOrg).toHaveBeenCalledWith(
+      ORG_ID,
+      '+393331234567',
+      { providers: ['twilio'] },
+    );
+    // The selected fromNumber is the Twilio CLI's Vapi phoneNumberId.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const callArgs = (mockCreateCall.mock.calls[0] as any[])[0] as Record<string, unknown>;
-    expect(callArgs.fromNumber).toBe('+390277770011');
+    expect(callArgs.fromNumber).toBe('vapi-twilio-id');
     // SBC tracking is skipped because the picked CLI is Twilio.
     expect(mockRecordSbcDispatchSuccess).not.toHaveBeenCalled();
   });
@@ -463,7 +493,6 @@ describe('dispatchCall', () => {
       [scriptWithVoicemail],
       [fakeTemplate],
       [fakeContact],
-      [fakePhone],
     );
 
     const { dispatchCall } = await import('./calls');
