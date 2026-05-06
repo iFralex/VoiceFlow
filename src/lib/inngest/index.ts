@@ -13,7 +13,11 @@ export type {
   VoiceProviderDegradedData,
 } from './campaigns/events';
 export { campaignLaunchedHandler, createPendingCallRows } from './campaigns/launched';
-export { campaignCompletedHandler, countActiveCalls } from './campaigns/completed';
+export {
+  campaignCompletedHandler,
+  checkAndFinaliseCampaignCompletion,
+  countActiveCalls,
+} from './campaigns/completed';
 export {
   campaignDispatchCallHandler,
   nextWindowOpen,

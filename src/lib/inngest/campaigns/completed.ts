@@ -49,26 +49,49 @@ export async function countActiveCalls(campaignId: string, orgId: string): Promi
   return row?.total ?? 0;
 }
 
+/**
+ * Finalises a campaign when no active calls remain.
+ *
+ * Algorithm:
+ * 1. Count remaining active (non-terminal) calls in the campaign.
+ * 2. If none remain, finalise the campaign:
+ *    a. Transition status to `completed` (idempotent — no-op if already done).
+ *    b. Release the unused credit reservation (done inside markCampaignCompleted).
+ *    c. Emit `campaign/completed` event for plan 12 (final report email).
+ *
+ * This helper is invoked from every code path that reaches a per-call terminal
+ * state — both the webhook-driven `call/completed` path and the non-webhook
+ * paths (provider error dead-letter, insufficient credit, eligibility/cooldown
+ * skips, max-attempts exhaustion). Without this fan-in, campaigns whose calls
+ * all terminated via non-webhook paths would remain `running` forever.
+ */
+export async function checkAndFinaliseCampaignCompletion(
+  orgId: string,
+  campaignId: string,
+): Promise<void> {
+  const activeCount = await countActiveCalls(campaignId, orgId);
+  if (activeCount > 0) return;
+
+  await markCampaignCompleted(orgId, campaignId);
+
+  await sendInngestEvent({
+    name: CAMPAIGN_COMPLETED_EVENT,
+    data: { campaignId, orgId },
+    id: `campaign-completed-${campaignId}`,
+  });
+}
+
 // ─── Handler ──────────────────────────────────────────────────────────────────
 
 /**
  * Handles the `call/completed` event for campaign-level finalisation.
  *
- * Algorithm:
- * 1. Resolve the campaign and org for the completed call.
- * 2. Count remaining active (non-terminal) calls in that campaign.
- * 3. If none remain, finalise the campaign:
- *    a. Transition status to `completed` (idempotent — no-op if already done).
- *    b. Release the unused credit reservation (done inside markCampaignCompleted).
- *    c. Emit `campaign/completed` event for plan 12 (final report email).
- *
- * This function is designed to be called as a `step.run(...)` block when the
- * Inngest SDK is fully wired up; for now it runs sequentially for testability.
+ * Resolves the campaign for the completed call and delegates to
+ * `checkAndFinaliseCampaignCompletion`.
  */
 export async function campaignCompletedHandler(data: CallCompletedData): Promise<void> {
   const { callId } = data;
 
-  // Step 1: resolve campaign for this call
   const [callRow] = await withSystemContext((tx) =>
     tx
       .select({ campaign_id: calls.campaign_id, org_id: calls.org_id })
@@ -77,22 +100,7 @@ export async function campaignCompletedHandler(data: CallCompletedData): Promise
       .limit(1),
   );
 
-  // Call not found or not part of a campaign — nothing to finalise
   if (!callRow?.campaign_id) return;
 
-  const { campaign_id: campaignId, org_id: orgId } = callRow;
-
-  // Step 2: check if any active calls remain
-  const activeCount = await countActiveCalls(campaignId, orgId);
-  if (activeCount > 0) return;
-
-  // Step 3a+3b: transition to completed and release unused credit (idempotent)
-  await markCampaignCompleted(orgId, campaignId);
-
-  // Step 3c: emit campaign/completed for downstream consumers (plan 12)
-  await sendInngestEvent({
-    name: CAMPAIGN_COMPLETED_EVENT,
-    data: { campaignId, orgId },
-    id: `campaign-completed-${campaignId}`,
-  });
+  await checkAndFinaliseCampaignCompletion(callRow.org_id, callRow.campaign_id);
 }

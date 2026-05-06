@@ -13,6 +13,7 @@ import { sendInngestEvent } from '@/lib/inngest/client';
 import { getVoiceProviderByName } from '@/lib/voice/factory';
 
 import { computePerMinuteCents } from './billing-rules';
+import { aggregateOneCampaign } from './campaign-aggregation';
 import { estimateCampaignCost } from './campaign-cost-estimator';
 import { releaseReservation, reserveForCampaign } from './credit';
 
@@ -351,9 +352,10 @@ export async function resumeCampaign(
 }
 
 /**
- * Cancels a campaign. Sets status to `cancelled`, releases the unused
- * credit reservation back to the org's balance, and signals the voice
- * provider to terminate any currently dialing or in-progress calls.
+ * Cancels a campaign. Sets status to `cancelled`, terminates any currently
+ * dialing or in-progress provider calls, releases the unused credit reservation
+ * back to the org's balance, and writes a final stats snapshot so the dashboard
+ * reflects post-cancel KPIs without waiting for the next aggregation cron.
  */
 export async function cancelCampaign(
   orgId: string,
@@ -404,12 +406,9 @@ export async function cancelCampaign(
       );
   });
 
-  // Release reservation outside the status-update transaction so a failed
-  // release doesn't block the cancellation write.
-  await releaseReservation(orgId, campaignId);
-
-  // Terminate in-progress calls best-effort — don't fail the cancellation if
-  // the provider returns an error (the call may have already ended).
+  // Terminate in-progress calls FIRST (best-effort). Doing this before
+  // `releaseReservation` ensures we don't return reserved credit to the org's
+  // balance while provider calls may still be billing against it.
   for (const call of activeCalls) {
     if (!call.provider_call_id) continue;
     try {
@@ -420,6 +419,31 @@ export async function cancelCampaign(
         err,
       );
     }
+  }
+
+  // Release reservation outside any transaction. Wrap in try/catch so a
+  // transient release failure doesn't surface as a cancel failure: the
+  // campaign is already cancelled and provider calls are terminated; the
+  // reservation can be reconciled by the periodic credit-sweep cron.
+  try {
+    await releaseReservation(orgId, campaignId);
+  } catch (err) {
+    console.error(
+      `[cancelCampaign] Failed to release reservation for campaign ${campaignId}:`,
+      err,
+    );
+  }
+
+  // Write final stats snapshot so the detail page shows post-cancel KPIs
+  // immediately. The aggregation cron skips terminal-state campaigns, so
+  // without this the page would show stale numbers until activity stops.
+  try {
+    await aggregateOneCampaign(campaignId, orgId);
+  } catch (err) {
+    console.error(
+      `[cancelCampaign] Failed to aggregate final stats for campaign ${campaignId}:`,
+      err,
+    );
   }
 }
 

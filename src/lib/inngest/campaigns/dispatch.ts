@@ -11,6 +11,8 @@ import { requireRunning } from '@/lib/services/campaigns';
 import { getBalance } from '@/lib/services/credit';
 import { nextWindowOpen } from '@/lib/utils/time-window';
 
+import { checkAndFinaliseCampaignCompletion } from './completed';
+
 export { nextWindowOpen };
 
 import type { CampaignDispatchCallData, VoiceProviderDegradedData } from './events';
@@ -92,10 +94,10 @@ export const PROVIDER_DEGRADATION_THRESHOLD = 0.05; // 5%
  * automatically included in the unused portion returned at campaign close.
  */
 export async function markCallProviderError(orgId: string, callId: string): Promise<void> {
-  await withOrgContext(orgId, async (tx) => {
-    // Status filter prevents overwriting a call that already reached a terminal
-    // state (e.g. webhook delivered `completed` between dispatch failure and
-    // dead-letter). Only non-terminal rows are eligible to be marked failed.
+  // Status filter prevents overwriting a call that already reached a terminal
+  // state (e.g. webhook delivered `completed` between dispatch failure and
+  // dead-letter). Only non-terminal rows are eligible to be marked failed.
+  const flipped = await withOrgContext(orgId, async (tx) => {
     const updated = await tx
       .update(calls)
       .set({ status: 'failed', error_code: 'provider_error' })
@@ -106,9 +108,9 @@ export async function markCallProviderError(orgId: string, callId: string): Prom
           inArray(calls.status, ['pending', 'dialing', 'in_progress']),
         ),
       )
-      .returning({ id: calls.id });
+      .returning({ id: calls.id, campaign_id: calls.campaign_id });
 
-    if (updated.length === 0) return;
+    if (updated.length === 0) return null;
 
     await recordAudit(tx, {
       orgId,
@@ -118,7 +120,17 @@ export async function markCallProviderError(orgId: string, callId: string): Prom
       subjectId: callId,
       metadata: { reason: 'provider_error' },
     });
+
+    return updated[0]!;
   });
+
+  // If we just flipped the call to a terminal state, check whether the campaign
+  // can now be finalised. Without this, a campaign whose remaining calls all
+  // dead-letter will stay `running` forever (no `call/completed` is emitted
+  // for non-webhook terminal paths).
+  if (flipped?.campaign_id) {
+    await checkAndFinaliseCampaignCompletion(orgId, flipped.campaign_id);
+  }
 }
 
 /**
@@ -477,20 +489,32 @@ export async function verifyContactStillEligible(
 /**
  * Verifies there is sufficient credit to attempt a call.
  *
- * If the balance is at or below the minimum threshold:
+ * Returns `true` when credit is available (caller proceeds with dispatch).
+ *
+ * Returns `false` when the balance is at or below the minimum threshold:
  *   1. Marks the call as failed with error_code='insufficient_credit'.
  *   2. Emits a `credit/low-balance` event for downstream alerting.
- *   3. Throws `InsufficientCreditError`.
+ *   3. Triggers a campaign-completion check (so a campaign whose calls all hit
+ *      this path is finalised rather than stuck in `running`).
+ *
+ * The graceful return shape avoids forcing Inngest to retry the dispatch step
+ * three times before its dead-letter handler no-ops on the already-failed row.
  */
-export async function verifyCreditAvailable(orgId: string, callId: string): Promise<void> {
+export async function verifyCreditAvailable(
+  orgId: string,
+  callId: string,
+  campaignId: string,
+): Promise<boolean> {
   const { balanceCents, remainingMinutes } = await getBalance(orgId);
-  if (balanceCents > MIN_BALANCE_CENTS) return;
+  if (balanceCents > MIN_BALANCE_CENTS) return true;
 
   // Mark the pre-created call row as failed. Status filter prevents overwriting
   // a call that already reached a terminal state (e.g. webhook delivered
-  // `completed` between the dispatch event firing and this credit check).
-  await withOrgContext(orgId, async (tx) => {
-    await tx
+  // `completed` between the dispatch event firing and this credit check). Only
+  // emit the alert + finalisation when this invocation actually flipped status
+  // — otherwise duplicate deliveries would spam the credit alert and audit log.
+  const flipped = await withOrgContext(orgId, async (tx) => {
+    const updated = await tx
       .update(calls)
       .set({ status: 'failed', error_code: 'insufficient_credit' })
       .where(
@@ -499,8 +523,12 @@ export async function verifyCreditAvailable(orgId: string, callId: string): Prom
           eq(calls.org_id, orgId),
           inArray(calls.status, ['pending', 'dialing', 'in_progress']),
         ),
-      );
+      )
+      .returning({ id: calls.id });
+    return updated.length > 0;
   });
+
+  if (!flipped) return false;
 
   // Alert downstream systems. Dedupe to one alert per org per 10-minute window
   // so a campaign with hundreds of queued dispatches against an empty wallet
@@ -516,7 +544,9 @@ export async function verifyCreditAvailable(orgId: string, callId: string): Prom
     id: `credit-low-${orgId}-${lowBalanceWindowSlot}`,
   });
 
-  throw new InsufficientCreditError(orgId);
+  await checkAndFinaliseCampaignCompletion(orgId, campaignId);
+
+  return false;
 }
 
 // ─── Main handler ─────────────────────────────────────────────────────────────
@@ -599,8 +629,8 @@ export async function campaignDispatchCallHandler(
       // Mark call as failed with the specific reason as error_code. Status
       // filter avoids overwriting a row that has already reached a terminal
       // state since dispatch was queued.
-      await withOrgContext(orgId, async (tx) => {
-        await tx
+      const flipped = await withOrgContext(orgId, async (tx) => {
+        const updated = await tx
           .update(calls)
           .set({ status: 'failed', error_code: err.reason })
           .where(
@@ -609,8 +639,13 @@ export async function campaignDispatchCallHandler(
               eq(calls.org_id, orgId),
               inArray(calls.status, ['pending', 'dialing', 'in_progress']),
             ),
-          );
+          )
+          .returning({ id: calls.id });
+        return updated.length > 0;
       });
+      if (flipped) {
+        await checkAndFinaliseCampaignCompletion(orgId, campaignId);
+      }
       return null;
     }
     throw err;
@@ -625,8 +660,8 @@ export async function campaignDispatchCallHandler(
   // returns null (graceful skip — not an error from Inngest's perspective).
   const recentCrossCall = await checkOrgLevelCooldown(orgId, campaignId, contactId);
   if (recentCrossCall !== null) {
-    await withOrgContext(orgId, async (tx) => {
-      await tx
+    const flipped = await withOrgContext(orgId, async (tx) => {
+      const updated = await tx
         .update(calls)
         .set({ status: 'failed', error_code: 'cooldown_org_level' })
         .where(
@@ -635,7 +670,11 @@ export async function campaignDispatchCallHandler(
             eq(calls.org_id, orgId),
             inArray(calls.status, ['pending', 'dialing', 'in_progress']),
           ),
-        );
+        )
+        .returning({ id: calls.id });
+
+      if (updated.length === 0) return false;
+
       await recordAudit(tx, {
         orgId,
         actorType: 'system',
@@ -649,12 +688,17 @@ export async function campaignDispatchCallHandler(
           recentCallAt: recentCrossCall.toISOString(),
         },
       });
+      return true;
     });
+    if (flipped) {
+      await checkAndFinaliseCampaignCompletion(orgId, campaignId);
+    }
     return null;
   }
 
-  // 6. Credit check
-  await verifyCreditAvailable(orgId, callId);
+  // 6. Credit check — gracefully skip if balance below threshold (returns false)
+  const hasCredit = await verifyCreditAvailable(orgId, callId, campaignId);
+  if (!hasCredit) return null;
 
   // 6.5. Per-CLI hourly cap gate
   //

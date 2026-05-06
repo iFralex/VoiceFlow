@@ -15,13 +15,27 @@ import type { ActionResult } from '@/lib/utils/action-toast';
 
 // ─── Error message mapping ─────────────────────────────────────────────────────
 
-const LAUNCH_ERROR_MAP: Record<string, string> = {
+/**
+ * Maps service-layer error codes to i18n keys under the `campaigns` namespace.
+ * The client uses these keys with `t()` to display localised toast messages.
+ */
+const ERROR_MAP: Record<string, string> = {
   no_eligible_contacts: 'error_no_eligible',
   insufficient_credit: 'error_no_credit',
   no_billing_rate: 'error_no_billing_rate',
-  campaign_not_found: 'campaign_not_found',
-  campaign_not_launchable: 'campaign_not_launchable',
+  campaign_not_found: 'error_not_found',
+  campaign_not_launchable: 'error_not_launchable',
+  campaign_not_running: 'error_not_running',
+  campaign_not_paused: 'error_not_paused',
+  campaign_already_terminal: 'error_already_terminal',
 };
+
+function mapErrorMessage(e: unknown): string {
+  if (e instanceof Error) {
+    return ERROR_MAP[e.message] ?? e.message;
+  }
+  return 'error';
+}
 
 // ─── Create (+ optionally launch) ─────────────────────────────────────────────
 
@@ -97,10 +111,7 @@ export async function createCampaignAction(
 
     return { ok: true, campaignId: campaign.id };
   } catch (e) {
-    if (e instanceof Error) {
-      return { ok: false, message: LAUNCH_ERROR_MAP[e.message] ?? e.message };
-    }
-    return { ok: false, message: 'error' };
+    return { ok: false, message: mapErrorMessage(e) };
   }
 }
 
@@ -121,7 +132,7 @@ export async function pauseCampaignAction(
     await pauseCampaignService(orgId, userId, parsed.data.campaignId);
     return { ok: true };
   } catch (e) {
-    return { ok: false, message: e instanceof Error ? e.message : 'error' };
+    return { ok: false, message: mapErrorMessage(e) };
   }
 }
 
@@ -140,7 +151,7 @@ export async function resumeCampaignAction(
     await resumeCampaignService(orgId, userId, parsed.data.campaignId);
     return { ok: true };
   } catch (e) {
-    return { ok: false, message: e instanceof Error ? e.message : 'error' };
+    return { ok: false, message: mapErrorMessage(e) };
   }
 }
 
@@ -159,7 +170,7 @@ export async function cancelCampaignAction(
     await cancelCampaignService(orgId, userId, parsed.data.campaignId);
     return { ok: true };
   } catch (e) {
-    return { ok: false, message: e instanceof Error ? e.message : 'error' };
+    return { ok: false, message: mapErrorMessage(e) };
   }
 }
 
@@ -178,6 +189,6 @@ export async function duplicateCampaignAction(
     const copy = await duplicateCampaignService(orgId, userId, parsed.data.campaignId);
     return { ok: true, campaignId: copy.id };
   } catch (e) {
-    return { ok: false, message: e instanceof Error ? e.message : 'error' };
+    return { ok: false, message: mapErrorMessage(e) };
   }
 }

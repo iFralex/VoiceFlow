@@ -22,6 +22,7 @@ import { and, eq, sql } from 'drizzle-orm';
 
 import { withOrgContext, withSystemContext } from '@/lib/db/context';
 import { calls, campaigns } from '@/lib/db/schema';
+import { checkAndFinaliseCampaignCompletion } from '@/lib/inngest/campaigns/completed';
 import { CAMPAIGN_DISPATCH_CALL_EVENT } from '@/lib/inngest/campaigns/events';
 import { sendInngestEvent } from '@/lib/inngest/client';
 import { APPOINTMENT_BOOKED_EVENT } from '@/lib/inngest/voice/events';
@@ -225,6 +226,13 @@ export async function scheduleRetryIfNeeded(callId: string): Promise<void> {
         .set({ status: 'failed', error_code: 'max_attempts_reached' })
         .where(and(eq(calls.id, callId), eq(calls.org_id, call.org_id)));
     });
+    // The original `call/completed` that triggered this handler reaches
+    // `campaignCompletedHandler` in parallel; that path saw the source row
+    // still in `no_answer`/`busy` (a terminal state), so it considered this
+    // call already finished. But once we flip to `failed/max_attempts_reached`
+    // we still need to finalise here in case our flip happened after the
+    // parallel handler ran (or replaces a non-terminal status).
+    await checkAndFinaliseCampaignCompletion(call.org_id, call.campaign_id);
     return;
   }
 

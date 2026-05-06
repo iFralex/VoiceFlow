@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { EmptyState } from '@/components/ui/empty-state';
 import { StatusBadge } from '@/components/ui/status-badge';
+import type { ActionResult } from '@/lib/utils/action-toast';
 import { toastResult } from '@/lib/utils/action-toast';
 
 // ---------------------------------------------------------------------------
@@ -83,10 +84,17 @@ function CampaignRowActions({ campaign }: { campaign: SerializedCampaign }) {
   const canResume = campaign.status === 'paused';
   const canCancel = campaign.status === 'running' || campaign.status === 'paused' || campaign.status === 'scheduled';
 
+  function translateResult(result: ActionResult): ActionResult {
+    if (result.ok) return result;
+    const key = result.message as Parameters<typeof t>[0];
+    const translated = t(key);
+    return { ok: false, message: translated !== key ? translated : result.message };
+  }
+
   async function handlePause() {
     setPending(true);
     const result = await pauseCampaignAction({ campaignId: campaign.id });
-    toastResult(result, t('pause_success'));
+    toastResult(translateResult(result), t('pause_success'));
     setPending(false);
     if (result.ok) router.refresh();
   }
@@ -94,7 +102,7 @@ function CampaignRowActions({ campaign }: { campaign: SerializedCampaign }) {
   async function handleResume() {
     setPending(true);
     const result = await resumeCampaignAction({ campaignId: campaign.id });
-    toastResult(result, t('resume_success'));
+    toastResult(translateResult(result), t('resume_success'));
     setPending(false);
     if (result.ok) router.refresh();
   }
@@ -102,7 +110,7 @@ function CampaignRowActions({ campaign }: { campaign: SerializedCampaign }) {
   async function handleCancel() {
     setPending(true);
     const result = await cancelCampaignAction({ campaignId: campaign.id });
-    toastResult(result, t('cancel_success'));
+    toastResult(translateResult(result), t('cancel_success'));
     setPending(false);
     if (result.ok) router.refresh();
   }
@@ -110,7 +118,7 @@ function CampaignRowActions({ campaign }: { campaign: SerializedCampaign }) {
   async function handleDuplicate() {
     setPending(true);
     const result = await duplicateCampaignAction({ campaignId: campaign.id });
-    toastResult(result, t('duplicate_success'));
+    toastResult(translateResult(result), t('duplicate_success'));
     setPending(false);
     if (result.ok) router.refresh();
   }
