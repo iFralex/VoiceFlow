@@ -53,6 +53,7 @@ const Env = z.object({
   CONTACTS_MAX_ROWS_PER_ORG: z.coerce.number().int().positive().default(1_000_000),
   CLI_DAILY_CAP_DEFAULT: z.coerce.number().int().positive().default(100),
   CLI_HOURLY_CAP_DEFAULT: z.coerce.number().int().positive().default(30),
+  SBC_SMOKE_TEST_NUMBER: z.string().regex(/^\+\d{8,15}$/).optional(),
 });
 
 // Convert empty strings to undefined so optional validators don't reject blank env vars

@@ -180,13 +180,13 @@ export async function pickCliForOrg(
 
 ### Task 15: SBC connection smoke test
 
-- [ ] Create `scripts/test-sbc-trunk.ts` that:
+- [x] Create `scripts/test-sbc-trunk.ts` that:
   - picks a non-org-dedicated CLI from the pool
   - dispatches a test call via Vapi to a configurable test number (env `SBC_SMOKE_TEST_NUMBER`)
-  - waits for call.ended webhook
+  - waits for call.ended webhook (implemented as a direct `GET /call/:id` poll against Vapi rather than waiting for the webhook — the smoke test deliberately does not insert a `calls` row, so the webhook handler has no row to update; polling Vapi for the same `endedReason`/duration end-state is equivalent for the assertion)
   - asserts duration > 2s and `endedReason in ['hangup', 'silence-timeout']`
-- [ ] Run weekly via a Vercel cron `/api/cron/sbc-smoke-test` (Sundays 03:00 Europe/Rome) — alerts on failure
-- [ ] Mark completed
+- [x] Run weekly via a Vercel cron `/api/cron/sbc-smoke-test` (Sundays 03:00 Europe/Rome) — alerts on failure (cron entry uses `0 3 * * 0` matching the project's wall-clock-as-UTC convention; alert path emits `sbc/smoke-test-failed` Inngest event for plan 13's notification handler)
+- [x] Mark completed
 
 ### Task 16: Integration tests
 

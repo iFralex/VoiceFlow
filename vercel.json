@@ -6,6 +6,7 @@
     { "path": "/api/cron/retention-purge", "schedule": "0 3 * * *" },
     { "path": "/api/cron/cli-watchdog", "schedule": "0 2 * * *" },
     { "path": "/api/cron/cli-daily-reset", "schedule": "5 0 * * *" },
+    { "path": "/api/cron/sbc-smoke-test", "schedule": "0 3 * * 0" },
     { "path": "/api/cron/aggregate-campaigns", "schedule": "*/5 * * * *" },
     { "path": "/api/cron/credit-reconciliation", "schedule": "0 3 * * *" }
   ]
