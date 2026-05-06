@@ -65,7 +65,11 @@ export async function findEligibleContactsForCampaign(
         ),
       );
 
-    const recentContactIds = recentCallRows.map((r) => r.contact_id);
+    // contact_id is nullable on inbound rows; outbound rows scoped to a
+    // campaign always carry it. Filter to be type-safe.
+    const recentContactIds = recentCallRows
+      .map((r) => r.contact_id)
+      .filter((id): id is string => id !== null);
 
     // Step 3: Select eligible contacts, oldest first
     const baseConditions = and(
@@ -109,6 +113,7 @@ export async function findEligibleContactsForCampaign(
 
     const callCountMap = new Map<string, number>();
     for (const row of callCountRows) {
+      if (row.contact_id === null) continue;
       callCountMap.set(row.contact_id, row.cnt);
     }
 

@@ -65,6 +65,9 @@ export async function createPendingCallRows(
         .returning({ id: calls.id, contact_id: calls.contact_id });
 
       for (const row of inserted) {
+        // contact_id is always populated for outbound campaign-dispatch rows;
+        // skip defensively for type safety since the column is now nullable.
+        if (row.contact_id === null) continue;
         callIdByContactId.set(row.contact_id, row.id);
       }
     }

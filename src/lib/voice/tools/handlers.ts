@@ -40,15 +40,20 @@ async function loadCallContact(
     .where(and(eq(calls.id, callId), eq(calls.org_id, orgId)))
     .limit(1);
   if (!callRow) return null;
+  // Outbound campaign calls always have a contact_id; inbound rows do not.
+  // Tool side-effects only fire on outbound calls, but guard explicitly so
+  // the type narrows from `string | null` to `string`.
+  if (callRow.contactId === null) return null;
+  const contactId = callRow.contactId;
 
   const [contactRow] = await tx
     .select({ phoneE164: contacts.phone_e164 })
     .from(contacts)
-    .where(and(eq(contacts.id, callRow.contactId), eq(contacts.org_id, orgId)))
+    .where(and(eq(contacts.id, contactId), eq(contacts.org_id, orgId)))
     .limit(1);
   if (!contactRow) return null;
 
-  return { contactId: callRow.contactId, phoneE164: contactRow.phoneE164 };
+  return { contactId, phoneE164: contactRow.phoneE164 };
 }
 
 /**
@@ -166,7 +171,7 @@ async function runMarkWrongNumber(
     .where(and(eq(calls.id, callId), eq(calls.org_id, orgId)))
     .limit(1);
 
-  if (callRow) {
+  if (callRow && callRow.contactId !== null) {
     await tx
       .update(contacts)
       .set({

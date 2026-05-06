@@ -29,7 +29,13 @@ describe('calls schema — direction (plan 10 task 9)', () => {
     expect(col.notNull).toBeTruthy();
   });
 
-  // campaign_id / contact_id stay NOT NULL until plan 10 task 11 relaxes them
-  // for the inbound webhook handler. See 0028_calls_direction.sql for the
-  // explicit handoff.
+  it('campaign_id is nullable (relaxed for inbound IVR rows in plan 10 task 11)', () => {
+    const col = (calls as unknown as Tbl).campaign_id!;
+    expect(col.notNull).toBeFalsy();
+  });
+
+  it('contact_id is nullable (relaxed for inbound IVR rows in plan 10 task 11)', () => {
+    const col = (calls as unknown as Tbl).contact_id!;
+    expect(col.notNull).toBeFalsy();
+  });
 });

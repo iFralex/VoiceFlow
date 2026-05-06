@@ -109,6 +109,8 @@ export async function incrementCampaignCounters(callId: string): Promise<void> {
   );
 
   if (!row) return;
+  // Inbound IVR rows have no campaign — there is nothing to recompute.
+  if (row.campaign_id === null) return;
 
   const { org_id: orgId, campaign_id: campaignId } = row;
 
@@ -218,6 +220,13 @@ export async function scheduleRetryIfNeeded(callId: string): Promise<void> {
   // Only retry on retryable statuses
   if (call.status !== 'no_answer' && call.status !== 'busy') return;
 
+  // Inbound IVR rows (direction='inbound') have no campaign_id/contact_id and
+  // cannot be retried as outbound campaign attempts. Skip them defensively —
+  // their statuses should never reach the retryable set in practice.
+  if (call.campaign_id === null || call.contact_id === null) return;
+  const campaignId = call.campaign_id;
+  const contactId = call.contact_id;
+
   if (call.attempt_number >= MAX_RETRY_ATTEMPTS) {
     // Max attempts exhausted — mark the call as definitively failed
     await withOrgContext(call.org_id, async (tx) => {
@@ -232,7 +241,7 @@ export async function scheduleRetryIfNeeded(callId: string): Promise<void> {
     // call already finished. But once we flip to `failed/max_attempts_reached`
     // we still need to finalise here in case our flip happened after the
     // parallel handler ran (or replaces a non-terminal status).
-    await checkAndFinaliseCampaignCompletion(call.org_id, call.campaign_id);
+    await checkAndFinaliseCampaignCompletion(call.org_id, campaignId);
     return;
   }
 
@@ -257,8 +266,8 @@ export async function scheduleRetryIfNeeded(callId: string): Promise<void> {
       .insert(calls)
       .values({
         org_id: call.org_id,
-        campaign_id: call.campaign_id,
-        contact_id: call.contact_id,
+        campaign_id: campaignId,
+        contact_id: contactId,
         provider: 'vapi',
         status: 'pending',
         attempt_number: nextAttempt,
@@ -272,9 +281,9 @@ export async function scheduleRetryIfNeeded(callId: string): Promise<void> {
   await sendInngestEvent({
     name: CAMPAIGN_DISPATCH_CALL_EVENT,
     data: {
-      campaignId: call.campaign_id,
+      campaignId,
       orgId: call.org_id,
-      contactId: call.contact_id,
+      contactId,
       callId: newCall.id,
       attempt: nextAttempt,
       scheduledFor,

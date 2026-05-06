@@ -40,12 +40,12 @@ export const calls = pgTable(
     org_id: uuid('org_id')
       .notNull()
       .references(() => organizations.id, { onDelete: 'cascade' }),
-    campaign_id: uuid('campaign_id')
-      .notNull()
-      .references(() => campaigns.id, { onDelete: 'cascade' }),
-    contact_id: uuid('contact_id')
-      .notNull()
-      .references(() => contacts.id, { onDelete: 'cascade' }),
+    // Nullable since plan 10 task 11: inbound IVR rows have no originating
+    // campaign nor a stored contact. Outbound campaign rows always populate
+    // both, so reporting queries that filter on direction='outbound' can still
+    // assume both columns are present.
+    campaign_id: uuid('campaign_id').references(() => campaigns.id, { onDelete: 'cascade' }),
+    contact_id: uuid('contact_id').references(() => contacts.id, { onDelete: 'cascade' }),
     direction: callDirectionEnum('direction').notNull().default('outbound'),
     provider: callProviderEnum('provider').notNull(),
     provider_call_id: text('provider_call_id'),

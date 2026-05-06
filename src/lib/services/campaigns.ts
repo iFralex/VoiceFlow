@@ -71,7 +71,11 @@ async function countEligibleContacts(
         ),
       );
 
-    const recentContactIds = recentCallRows.map((r) => r.contact_id);
+    // contact_id is nullable in the schema (inbound rows have none) but is
+    // always populated for outbound calls scoped to a campaign.
+    const recentContactIds = recentCallRows
+      .map((r) => r.contact_id)
+      .filter((id): id is string => id !== null);
 
     // Step 2: count eligible contacts excluding recently called ones
     const baseConditions = and(
@@ -122,9 +126,12 @@ async function attachStats(
       .groupBy(calls.campaign_id, calls.status);
   });
 
-  // Build a map: campaignId -> status -> count
+  // Build a map: campaignId -> status -> count.
+  // Skip stat rows with no campaign_id (inbound IVR rows do not belong to a
+  // campaign, so they should not contribute to per-campaign totals).
   const statsMap = new Map<string, Record<string, number>>();
   for (const row of statRows) {
+    if (row.campaign_id === null) continue;
     if (!statsMap.has(row.campaign_id)) statsMap.set(row.campaign_id, {});
     statsMap.get(row.campaign_id)![row.status] = row.cnt;
   }

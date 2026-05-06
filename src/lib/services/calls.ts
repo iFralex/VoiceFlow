@@ -172,13 +172,22 @@ export async function dispatchCall(orgId: string, callId: string): Promise<void>
       .limit(1),
   );
   if (!call) throw new Error('call_not_found');
+  // dispatchCall is the outbound campaign path; campaign_id and contact_id are
+  // populated at row creation. Inbound rows (direction='inbound') are never
+  // dispatched through here. Narrow once so the rest of the function can treat
+  // them as strings.
+  if (call.campaign_id === null || call.contact_id === null) {
+    throw new Error('call_not_dispatchable');
+  }
+  const campaignId = call.campaign_id;
+  const contactId = call.contact_id;
 
   // 2. Load campaign
   const [campaign] = await withOrgContext(orgId, (tx) =>
     tx
       .select()
       .from(campaigns)
-      .where(and(eq(campaigns.id, call.campaign_id), eq(campaigns.org_id, orgId)))
+      .where(and(eq(campaigns.id, campaignId), eq(campaigns.org_id, orgId)))
       .limit(1),
   );
   if (!campaign) throw new Error('campaign_not_found');
@@ -208,7 +217,7 @@ export async function dispatchCall(orgId: string, callId: string): Promise<void>
     tx
       .select()
       .from(contacts)
-      .where(and(eq(contacts.id, call.contact_id), eq(contacts.org_id, orgId)))
+      .where(and(eq(contacts.id, contactId), eq(contacts.org_id, orgId)))
       .limit(1),
   );
   if (!contact) throw new Error('contact_not_found');
@@ -287,9 +296,9 @@ export async function dispatchCall(orgId: string, callId: string): Promise<void>
     webhookUrl,
     metadata: {
       orgId,
-      campaignId: call.campaign_id,
+      campaignId,
       callId: call.id,
-      contactId: call.contact_id,
+      contactId,
     },
     endCallFunctions: tools,
     amdEnabled: true,

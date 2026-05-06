@@ -13,6 +13,9 @@ const {
   mockRecordCallStarted,
   mockRecordCallEnded,
   mockRecordToolInvocation,
+  mockRecordInboundCallStarted,
+  mockRecordInboundCallEnded,
+  mockRecordInboundOptout,
 } = vi.hoisted(() => {
   const mockInsert: ReturnType<typeof vi.fn> = vi.fn();
   const mockUpdate: ReturnType<typeof vi.fn> = vi.fn();
@@ -28,6 +31,9 @@ const {
   const mockRecordCallStarted = vi.fn().mockResolvedValue(undefined);
   const mockRecordCallEnded = vi.fn().mockResolvedValue(undefined);
   const mockRecordToolInvocation = vi.fn().mockResolvedValue(undefined);
+  const mockRecordInboundCallStarted = vi.fn().mockResolvedValue(undefined);
+  const mockRecordInboundCallEnded = vi.fn().mockResolvedValue(undefined);
+  const mockRecordInboundOptout = vi.fn().mockResolvedValue({ enroledOrgIds: [] });
 
   return {
     mockWithSystemContext,
@@ -38,6 +44,9 @@ const {
     mockRecordCallStarted,
     mockRecordCallEnded,
     mockRecordToolInvocation,
+    mockRecordInboundCallStarted,
+    mockRecordInboundCallEnded,
+    mockRecordInboundOptout,
   };
 });
 
@@ -77,6 +86,12 @@ vi.mock('@/lib/services/calls', () => ({
   recordCallStarted: mockRecordCallStarted,
   recordCallEnded: mockRecordCallEnded,
   recordToolInvocation: mockRecordToolInvocation,
+}));
+
+vi.mock('@/lib/services/inbound_calls', () => ({
+  recordInboundCallStarted: mockRecordInboundCallStarted,
+  recordInboundCallEnded: mockRecordInboundCallEnded,
+  recordInboundOptout: mockRecordInboundOptout,
 }));
 
 // ---------------------------------------------------------------------------
@@ -176,6 +191,9 @@ describe('POST /api/webhooks/vapi', () => {
     mockRecordCallStarted.mockResolvedValue(undefined);
     mockRecordCallEnded.mockResolvedValue(undefined);
     mockRecordToolInvocation.mockResolvedValue(undefined);
+    mockRecordInboundCallStarted.mockResolvedValue(undefined);
+    mockRecordInboundCallEnded.mockResolvedValue(undefined);
+    mockRecordInboundOptout.mockResolvedValue({ enroledOrgIds: [] });
   });
 
   // ── Secret verification ───────────────────────────────────────────────────
@@ -424,6 +442,152 @@ describe('POST /api/webhooks/vapi', () => {
       };
       await POST(makeRequest(payload));
       expect(mockRecordCallStarted).not.toHaveBeenCalled();
+    });
+  });
+
+  // ── Inbound IVR events (plan 10 task 11) ──────────────────────────────────
+
+  describe('inbound IVR events', () => {
+    it('routes call-start with no metadata.callId and a customer number to the inbound handler', async () => {
+      setupNewEvent();
+      setupUpdate();
+      const payload = {
+        message: {
+          type: 'call-start',
+          call: {
+            id: PROVIDER_CALL_ID,
+            type: 'inboundPhoneCall',
+            metadata: {},
+            customer: { number: '+393401234567' },
+            phoneNumber: { number: '+390212345678' },
+          },
+        },
+      };
+      const res = await POST(makeRequest(payload));
+      expect(res.status).toBe(200);
+      expect(mockRecordCallStarted).not.toHaveBeenCalled();
+      expect(mockRecordInboundCallStarted).toHaveBeenCalledWith({
+        providerCallId: PROVIDER_CALL_ID,
+        callerNumber: '+393401234567',
+        toNumber: '+390212345678',
+      });
+    });
+
+    it('routes call-end with no metadata.callId to the inbound end handler', async () => {
+      setupNewEvent();
+      setupUpdate();
+      const payload = {
+        message: {
+          type: 'call-end',
+          call: {
+            id: PROVIDER_CALL_ID,
+            type: 'inboundPhoneCall',
+            metadata: {},
+            customer: { number: '+393401234567' },
+            phoneNumber: { number: '+390212345678' },
+            duration: 12,
+            endedReason: 'hangup',
+            artifact: { recordingUrl: 'https://cdn/r.mp3' },
+          },
+        },
+      };
+      const res = await POST(makeRequest(payload));
+      expect(res.status).toBe(200);
+      expect(mockRecordCallEnded).not.toHaveBeenCalled();
+      expect(mockRecordInboundCallEnded).toHaveBeenCalledWith({
+        providerCallId: PROVIDER_CALL_ID,
+        durationSeconds: 12,
+        endedReason: 'hangup',
+        recordingUrl: 'https://cdn/r.mp3',
+      });
+    });
+
+    it('dispatches register_inbound_optout function-call to the inbound opt-out handler', async () => {
+      setupNewEvent();
+      setupUpdate();
+      const payload = {
+        message: {
+          type: 'function-call',
+          call: {
+            id: PROVIDER_CALL_ID,
+            type: 'inboundPhoneCall',
+            metadata: {},
+            customer: { number: '+393401234567' },
+            phoneNumber: { number: '+390212345678' },
+          },
+          functionCall: {
+            name: 'register_inbound_optout',
+            parameters: { callerNumber: '+393401234567' },
+          },
+        },
+      };
+      const res = await POST(makeRequest(payload));
+      expect(res.status).toBe(200);
+      expect(mockRecordToolInvocation).not.toHaveBeenCalled();
+      expect(mockRecordInboundOptout).toHaveBeenCalledWith({
+        providerCallId: PROVIDER_CALL_ID,
+        callerNumber: '+393401234567',
+      });
+    });
+
+    it('falls back to call.customer.number when LLM omits callerNumber argument', async () => {
+      setupNewEvent();
+      setupUpdate();
+      const payload = {
+        message: {
+          type: 'function-call',
+          call: {
+            id: PROVIDER_CALL_ID,
+            type: 'inboundPhoneCall',
+            metadata: {},
+            customer: { number: '+393402222222' },
+            phoneNumber: { number: '+390212345678' },
+          },
+          functionCall: {
+            name: 'register_inbound_optout',
+            parameters: {},
+          },
+        },
+      };
+      await POST(makeRequest(payload));
+      expect(mockRecordInboundOptout).toHaveBeenCalledWith({
+        providerCallId: PROVIDER_CALL_ID,
+        callerNumber: '+393402222222',
+      });
+    });
+
+    it('skips inbound dispatch when both metadata.callId and customer.number are absent', async () => {
+      setupNewEvent();
+      setupUpdate();
+      const payload = {
+        message: {
+          type: 'call-start',
+          call: { id: PROVIDER_CALL_ID, metadata: {} },
+        },
+      };
+      await POST(makeRequest(payload));
+      expect(mockRecordCallStarted).not.toHaveBeenCalled();
+      expect(mockRecordInboundCallStarted).not.toHaveBeenCalled();
+    });
+
+    it('does not dispatch unknown function names on inbound calls', async () => {
+      setupNewEvent();
+      setupUpdate();
+      const payload = {
+        message: {
+          type: 'function-call',
+          call: {
+            id: PROVIDER_CALL_ID,
+            type: 'inboundPhoneCall',
+            metadata: {},
+            customer: { number: '+393401234567' },
+            phoneNumber: { number: '+390212345678' },
+          },
+          functionCall: { name: 'something_else', parameters: {} },
+        },
+      };
+      await POST(makeRequest(payload));
+      expect(mockRecordInboundOptout).not.toHaveBeenCalled();
     });
   });
 

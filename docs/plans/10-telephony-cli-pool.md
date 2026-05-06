@@ -146,12 +146,12 @@ export async function pickCliForOrg(
 
 ### Task 11: Inbound webhook handler extension
 
-- [ ] Extend `/api/webhooks/vapi` (plan 08) to recognise inbound assistant events: persist as inbound `calls` rows with no `campaign_id`
-- [ ] On inbound IVR `register_inbound_optout` tool invocation:
+- [x] Extend `/api/webhooks/vapi` (plan 08) to recognise inbound assistant events: persist as inbound `calls` rows with no `campaign_id` (migration `0029_calls_inbound_nullable.sql` relaxes the NOT NULL on `campaign_id`/`contact_id` per the handoff comment in `0028_calls_direction.sql`; the inbound row's `org_id` is resolved to the most recent calling org via `findRecentOutboundCallsToNumber` and matched on subsequent events by `provider_call_id`)
+- [x] On inbound IVR `register_inbound_optout` tool invocation:
   - call `findRecentOutboundCallsToNumber`
-  - for each org: `markOptOut(orgId, phoneE164, 'inbound_ivr')`
-  - audit log per-org
-- [ ] Mark completed
+  - for each org: insert into `opt_out_registry` with source `inbound_ivr` (idempotent on the unique constraint)
+  - audit log per-org (action `opt_out.recorded`)
+- [x] Mark completed
 
 ### Task 12: Per-org dedicated CLI as paid upgrade
 

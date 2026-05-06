@@ -7,6 +7,11 @@ import { withOrgContext, withSystemContext } from '@/lib/db/context';
 import { calls, webhookEvents } from '@/lib/db/schema';
 import { env } from '@/lib/env';
 import { recordCallEnded, recordCallStarted, recordToolInvocation } from '@/lib/services/calls';
+import {
+  recordInboundCallEnded,
+  recordInboundCallStarted,
+  recordInboundOptout,
+} from '@/lib/services/inbound_calls';
 
 // ---------------------------------------------------------------------------
 // Vapi payload types (minimal — only fields we consume)
@@ -14,11 +19,24 @@ import { recordCallEnded, recordCallStarted, recordToolInvocation } from '@/lib/
 
 interface VapiCallObject {
   id: string;
+  /**
+   * Vapi populates `type` for inbound vs outbound calls. We use it (alongside
+   * the absence of our metadata.callId) to dispatch to the inbound code path.
+   */
+  type?: 'inboundPhoneCall' | 'outboundPhoneCall' | string;
   metadata?: {
     callId?: string;
     orgId?: string;
     campaignId?: string;
     contactId?: string;
+  };
+  /** The customer/caller phone number (E.164). Present on inbound calls. */
+  customer?: {
+    number?: string;
+  };
+  /** The DID the customer dialed (E.164). Present on inbound calls. */
+  phoneNumber?: {
+    number?: string;
   };
   endedReason?: string;
   /** Call duration in seconds, provided on call-end events */
@@ -120,6 +138,15 @@ export async function POST(request: Request): Promise<Response> {
   const providerCallId = msg.call?.id ?? 'unknown';
   const callId = msg.call?.metadata?.callId ?? null;
 
+  // An inbound IVR call is one we did not originate ourselves: there is no
+  // metadata.callId we set, and Vapi reports the call type as inbound or
+  // populates the customer number. The inbound handler creates the calls row
+  // on first event and resolves it back via provider_call_id thereafter.
+  const isInbound =
+    !callId &&
+    (msg.call?.type === 'inboundPhoneCall' ||
+      typeof msg.call?.customer?.number === 'string');
+
   const providerEventId = buildProviderEventId(
     providerCallId,
     eventType,
@@ -155,6 +182,12 @@ export async function POST(request: Request): Promise<Response> {
       case 'call.started':
         if (callId) {
           await recordCallStarted(callId, providerCallId);
+        } else if (isInbound && msg.call?.customer?.number && msg.call?.phoneNumber?.number) {
+          await recordInboundCallStarted({
+            providerCallId,
+            callerNumber: msg.call.customer.number,
+            toNumber: msg.call.phoneNumber.number,
+          });
         }
         break;
 
@@ -169,6 +202,15 @@ export async function POST(request: Request): Promise<Response> {
             endedReason: callObj.endedReason ?? 'completed',
             ...(recordingUrl !== undefined && { recordingUrl }),
           });
+        } else if (isInbound && msg.call) {
+          const callObj = msg.call;
+          const recordingUrl = callObj.artifact?.recordingUrl ?? callObj.recordingUrl;
+          await recordInboundCallEnded({
+            providerCallId,
+            durationSeconds: callObj.duration ?? 0,
+            endedReason: callObj.endedReason ?? 'completed',
+            ...(recordingUrl !== undefined && { recordingUrl }),
+          });
         }
         break;
       }
@@ -177,6 +219,15 @@ export async function POST(request: Request): Promise<Response> {
       case 'function-call': {
         if (callId && msg.functionCall) {
           await recordToolInvocation(callId, msg.functionCall.name, msg.functionCall.parameters ?? null);
+        } else if (isInbound && msg.functionCall?.name === 'register_inbound_optout') {
+          const params = (msg.functionCall.parameters ?? {}) as { callerNumber?: unknown };
+          const callerNumber =
+            typeof params.callerNumber === 'string'
+              ? params.callerNumber
+              : (msg.call?.customer?.number ?? null);
+          if (callerNumber) {
+            await recordInboundOptout({ providerCallId, callerNumber });
+          }
         }
         break;
       }
