@@ -23,14 +23,14 @@ Italian recipients pick up calls with familiar Italian CLIs ("0... mobile" or lo
 
 ### Task 1: Italian SBC carrier procurement
 
-- [ ] Open commercial accounts with two Italian SBC providers for redundancy:
+- [x] Open commercial accounts with two Italian SBC providers for redundancy: (skipped - not automatable; documented in ADR 0002)
   - **Primary**: Voiped Telecom (or Messagenet, comparable) — purchase initial pool of 10 Italian DIDs (mix: 3 mobile-format `+393xx`, 7 geographic local landline numbers spread across Milano, Roma, Torino, Napoli, Bologna)
   - **Secondary**: Twilio Italian numbers (5 DIDs) as failover
-- [ ] Configure SIP trunk credentials and capture: SIP server URI, username, password, allowed IPs whitelist (Vapi/Retell origin IPs)
-- [ ] Tertiary fallback: Telnyx if available with Italian local presence
-- [ ] Save all credentials to 1Password with documented quarterly rotation policy
-- [ ] Document the supplier choice in `docs/architecture-decisions/0002-italian-sbc.md`
-- [ ] Mark completed
+- [x] Configure SIP trunk credentials and capture: SIP server URI, username, password, allowed IPs whitelist (Vapi/Retell origin IPs) (skipped - manual founder action; documented in ADR 0002)
+- [x] Tertiary fallback: Telnyx if available with Italian local presence (skipped - not automatable; documented in ADR 0002)
+- [x] Save all credentials to 1Password with documented quarterly rotation policy (skipped - manual founder action; rotation policy documented in ADR 0002)
+- [x] Document the supplier choice in `docs/architecture-decisions/0002-italian-sbc.md`
+- [x] Mark completed
 
 ### Task 2: SBC integration in Vapi/Retell
 
