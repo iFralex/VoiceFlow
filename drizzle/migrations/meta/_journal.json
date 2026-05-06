@@ -169,6 +169,13 @@
       "when": 1777800275507,
       "tag": "0023_call_attempt",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1777800275508,
+      "tag": "0024_campaign_stats_rls",
+      "breakpoints": true
     }
   ]
 }

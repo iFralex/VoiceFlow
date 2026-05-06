@@ -486,12 +486,20 @@ export async function verifyCreditAvailable(orgId: string, callId: string): Prom
   const { balanceCents, remainingMinutes } = await getBalance(orgId);
   if (balanceCents > MIN_BALANCE_CENTS) return;
 
-  // Mark the pre-created call row as failed
+  // Mark the pre-created call row as failed. Status filter prevents overwriting
+  // a call that already reached a terminal state (e.g. webhook delivered
+  // `completed` between the dispatch event firing and this credit check).
   await withOrgContext(orgId, async (tx) => {
     await tx
       .update(calls)
       .set({ status: 'failed', error_code: 'insufficient_credit' })
-      .where(and(eq(calls.id, callId), eq(calls.org_id, orgId)));
+      .where(
+        and(
+          eq(calls.id, callId),
+          eq(calls.org_id, orgId),
+          inArray(calls.status, ['pending', 'dialing', 'in_progress']),
+        ),
+      );
   });
 
   // Alert downstream systems. Dedupe to one alert per org per 10-minute window
@@ -588,12 +596,20 @@ export async function campaignDispatchCallHandler(
     await verifyContactStillEligible(orgId, contactId);
   } catch (err) {
     if (err instanceof ContactNotEligibleError) {
-      // Mark call as failed with the specific reason as error_code
+      // Mark call as failed with the specific reason as error_code. Status
+      // filter avoids overwriting a row that has already reached a terminal
+      // state since dispatch was queued.
       await withOrgContext(orgId, async (tx) => {
         await tx
           .update(calls)
           .set({ status: 'failed', error_code: err.reason })
-          .where(and(eq(calls.id, callId), eq(calls.org_id, orgId)));
+          .where(
+            and(
+              eq(calls.id, callId),
+              eq(calls.org_id, orgId),
+              inArray(calls.status, ['pending', 'dialing', 'in_progress']),
+            ),
+          );
       });
       return null;
     }
@@ -613,7 +629,13 @@ export async function campaignDispatchCallHandler(
       await tx
         .update(calls)
         .set({ status: 'failed', error_code: 'cooldown_org_level' })
-        .where(and(eq(calls.id, callId), eq(calls.org_id, orgId)));
+        .where(
+          and(
+            eq(calls.id, callId),
+            eq(calls.org_id, orgId),
+            inArray(calls.status, ['pending', 'dialing', 'in_progress']),
+          ),
+        );
       await recordAudit(tx, {
         orgId,
         actorType: 'system',

@@ -151,6 +151,26 @@ describe('findEligibleContactsForCampaign', () => {
     expect(result[1]!.attemptNumber).toBe(1);
   });
 
+  it('excludes contacts that have already used all 3 attempts (spec §10.2)', async () => {
+    const contact2 = { id: 'contact-2', phone_e164: '+39099999999' };
+    selectResults = [
+      [{ contact_list_id: LIST_ID }],
+      [],
+      [CONTACT, contact2],
+      [
+        { contact_id: 'contact-1', cnt: 3 }, // already at MAX_RETRY_ATTEMPTS
+        { contact_id: 'contact-2', cnt: 0 }, // first attempt
+      ],
+    ];
+
+    const { findEligibleContactsForCampaign } = await import('./eligibility');
+    const result = await findEligibleContactsForCampaign(ORG_ID, CAMPAIGN_ID);
+
+    expect(result).toHaveLength(1);
+    expect(result[0]!.contactId).toBe('contact-2');
+    expect(result[0]!.attemptNumber).toBe(1);
+  });
+
   it('assigns different attempt numbers per contact based on existing call counts', async () => {
     const contact2 = { id: 'contact-2', phone_e164: '+39099999999' };
     selectResults = [

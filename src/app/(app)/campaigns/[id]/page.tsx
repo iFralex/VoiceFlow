@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
 
 import { dbForRequest } from '@/lib/db/client';
@@ -27,12 +27,14 @@ export default async function CampaignDetailPage({ params }: Props) {
 
   if (!campaign) notFound();
 
-  // Fetch aggregated campaign stats (row may not exist before first cron run)
+  // Fetch aggregated campaign stats (row may not exist before first cron run).
+  // RLS already scopes the query to the current org, but include org_id in the
+  // predicate as defense in depth.
   const stats = await withOrgContext(async (tx) => {
     const rows = await tx
       .select()
       .from(campaignStats)
-      .where(eq(campaignStats.campaign_id, id));
+      .where(and(eq(campaignStats.campaign_id, id), eq(campaignStats.org_id, orgId)));
     return rows[0] ?? null;
   });
 

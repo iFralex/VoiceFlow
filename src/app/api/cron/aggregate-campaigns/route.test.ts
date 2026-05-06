@@ -299,6 +299,7 @@ describe('aggregateOneCampaign', () => {
     expect(mockValuesFn).toHaveBeenCalledWith(
       expect.objectContaining({
         campaign_id: CAMPAIGN_ID,
+        org_id: ORG_ID,
         total_calls: 10,
         pending_calls: 2,
         completed_calls: 5,

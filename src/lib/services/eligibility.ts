@@ -3,6 +3,12 @@ import { and, asc, count, eq, gt, inArray, isNull, ne, not, sql } from 'drizzle-
 import { withOrgContext } from '@/lib/db/context';
 import { calls, campaigns, contacts } from '@/lib/db/schema';
 
+/**
+ * Maximum attempts per contact per campaign (spec §10.2).
+ * Mirrored in `src/lib/inngest/calls/completed.ts` for the retry path.
+ */
+const MAX_RETRY_ATTEMPTS = 3;
+
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
 export interface EligibleContact {
@@ -25,6 +31,8 @@ export interface EligibleContact {
  * - phone is present and E.164-valid (starts with '+', ≥ 7 chars total)
  * - no terminal call (completed / no_answer / busy / voicemail) for this campaign
  *   in the last 48 hours
+ * - existing attempt count for this campaign is below `MAX_RETRY_ATTEMPTS`
+ *   (spec §10.2 — at most 3 calls per contact per campaign)
  *
  * The `attemptNumber` field is computed as the count of any existing call rows
  * for that contact in this campaign + 1 (so 1 on first launch, 2 on first retry, …).
@@ -104,10 +112,16 @@ export async function findEligibleContactsForCampaign(
       callCountMap.set(row.contact_id, row.cnt);
     }
 
-    return eligibleRows.map((c) => ({
-      contactId: c.id,
-      phoneE164: c.phone_e164,
-      attemptNumber: (callCountMap.get(c.id) ?? 0) + 1,
-    }));
+    // Filter out contacts that already used all their attempts (spec §10.2 cap).
+    // The retry path enforces this in `scheduleRetryIfNeeded`, but a relaunch
+    // (or any new launch over an old contact list) must enforce it too so a
+    // 4th call cannot be enqueued at planning time.
+    return eligibleRows
+      .map((c) => ({
+        contactId: c.id,
+        phoneE164: c.phone_e164,
+        attemptNumber: (callCountMap.get(c.id) ?? 0) + 1,
+      }))
+      .filter((c) => c.attemptNumber <= MAX_RETRY_ATTEMPTS);
   });
 }

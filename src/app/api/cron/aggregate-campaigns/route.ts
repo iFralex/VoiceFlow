@@ -65,7 +65,7 @@ export async function aggregateCampaignStats(): Promise<AggregationResult> {
  */
 export async function aggregateOneCampaign(
   campaignId: string,
-  _orgId: string,
+  orgId: string,
 ): Promise<void> {
   const now = new Date();
 
@@ -96,6 +96,7 @@ export async function aggregateOneCampaign(
 
   const values = {
     campaign_id: campaignId,
+    org_id: orgId,
     total_calls: stats.total_calls,
     pending_calls: stats.pending_calls,
     dialing_calls: stats.dialing_calls,
