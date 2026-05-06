@@ -370,6 +370,94 @@ describe('pickCliForOrg integration', () => {
   });
 
   it.skipIf(skipWhenNoDb)(
+    'prefers a CLI idle ≥30 minutes over one used recently (anti-spam)',
+    async () => {
+      await withTestDb(async (tx) => {
+        await seedBaseOrgs(tx);
+        // Two shared CLIs with identical region/daily_count/spam_score so the
+        // only differentiator is the idle-30m anti-spam rank.
+        const recent = new Date(Date.now() - 5 * 60 * 1000); // 5 min ago — recent
+        const idle = new Date(Date.now() - 45 * 60 * 1000); // 45 min ago — idle
+        await tx.insert(phoneNumbers).values([
+          {
+            id: PHONE_SHARED_MILANO,
+            e164: '+390299990001',
+            org_id: null,
+            provider: 'voiped',
+            status: 'active',
+            region: 'milano',
+            capabilities: ['landline'],
+            daily_call_count: 0,
+            spam_score: '0',
+            last_used_at: recent,
+          },
+          {
+            id: PHONE_SHARED_ROMA,
+            e164: '+390299990002',
+            org_id: null,
+            provider: 'voiped',
+            status: 'active',
+            region: 'milano',
+            capabilities: ['landline'],
+            daily_call_count: 0,
+            spam_score: '0',
+            last_used_at: idle,
+          },
+        ]);
+
+        const picked = await pickCliForOrg(ORG_A, '+390212340000', {
+          tx: asProdTx(tx),
+        });
+        expect(picked.phoneE164).toBe('+390299990002');
+      });
+    },
+  );
+
+  it.skipIf(skipWhenNoDb)(
+    'falls back to the oldest CLI when every candidate was used in the last 30 minutes',
+    async () => {
+      await withTestDb(async (tx) => {
+        await seedBaseOrgs(tx);
+        const recent10 = new Date(Date.now() - 10 * 60 * 1000);
+        const recent20 = new Date(Date.now() - 20 * 60 * 1000); // oldest of the recent group
+        await tx.insert(phoneNumbers).values([
+          {
+            id: PHONE_SHARED_MILANO,
+            e164: '+390299990001',
+            org_id: null,
+            provider: 'voiped',
+            status: 'active',
+            region: 'milano',
+            capabilities: ['landline'],
+            daily_call_count: 0,
+            spam_score: '0',
+            last_used_at: recent10,
+          },
+          {
+            id: PHONE_SHARED_ROMA,
+            e164: '+390299990002',
+            org_id: null,
+            provider: 'voiped',
+            status: 'active',
+            region: 'milano',
+            capabilities: ['landline'],
+            daily_call_count: 0,
+            spam_score: '0',
+            last_used_at: recent20,
+          },
+        ]);
+
+        const picked = await pickCliForOrg(ORG_A, '+390212340000', {
+          tx: asProdTx(tx),
+        });
+        // Both rows share idleRank=1; final last_used_at ASC tiebreaker picks
+        // the oldest of the two (used 20 minutes ago).
+        expect(picked.phoneE164).toBe('+390299990002');
+      });
+    },
+  );
+
+  it.skipIf(skipWhenNoDb)(
     'increments daily_call_count and stamps last_used_at on the picked row',
     async () => {
       await withTestDb(async (tx) => {

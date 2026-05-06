@@ -95,10 +95,10 @@ export async function pickCliForOrg(
 
 ### Task 6: Anti-spam practices
 
-- [ ] In `dispatchCallViaProvider` (plan 09 hook), add jitter: insert a random `0–500ms` delay before calling Vapi to avoid burst patterns the carrier could flag
-- [ ] In `pickCliForOrg`, prefer numbers idle ≥30 minutes; if all are recent, accept oldest
-- [ ] Daily reset cron at 00:05 Europe/Rome resets `daily_call_count` for all numbers (path `/api/cron/cli-daily-reset`, add to `vercel.json`)
-- [ ] Mark completed
+- [x] In `dispatchCallViaProvider` (plan 09 hook), add jitter: insert a random `0–500ms` delay before calling Vapi to avoid burst patterns the carrier could flag (implemented in `src/lib/voice/cli/jitter.ts`; consumed from `dispatchCall` in `src/lib/services/calls.ts` immediately before `provider.createCall`)
+- [x] In `pickCliForOrg`, prefer numbers idle ≥30 minutes; if all are recent, accept oldest (added an `idleRank` CASE clause between region match and daily-count tiebreakers; the existing `last_used_at ASC NULLS FIRST` final tiebreaker covers the "all recent → oldest" fallback)
+- [x] Daily reset cron at 00:05 Europe/Rome resets `daily_call_count` for all numbers (path `/api/cron/cli-daily-reset`, add to `vercel.json`) (route in `src/app/api/cron/cli-daily-reset/route.ts`; vercel.json entry uses `5 0 * * *` matching the project's wall-clock-as-UTC cron convention)
+- [x] Mark completed
 
 ### Task 7: Spam-score watchdog cron
 

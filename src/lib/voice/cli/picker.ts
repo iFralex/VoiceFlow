@@ -46,9 +46,10 @@ export interface PickCliOptions {
  *   1. Org-dedicated CLIs first (rows where `org_id = orgId`).
  *   2. Shared-pool CLIs (`org_id IS NULL`).
  *   3. Within each tier: regional match preferred (when `contactPhone` resolves
- *      to one of the seeded Italian metros), then lowest `daily_call_count`,
- *      then lowest `spam_score`, then idle longest (`last_used_at` ascending,
- *      nulls first).
+ *      to one of the seeded Italian metros), then anti-spam idle preference
+ *      (numbers idle ≥30 min — including never-used — sort before recently-used
+ *      ones), then lowest `daily_call_count`, then lowest `spam_score`, then
+ *      idle longest (`last_used_at` ascending, nulls first).
  *
  * Concurrency: the candidate row is selected with `FOR UPDATE SKIP LOCKED` and
  * limit 1, so simultaneous pickers never double-allocate the same CLI. Rows
@@ -112,6 +113,16 @@ async function doPick(
     ? sql<number>`CASE WHEN ${phoneNumbers.region} = ${region} THEN 0 ELSE 1 END`
     : sql<number>`1`;
 
+  // Anti-spam idle preference (plan 10 task 6): rows whose `last_used_at` is
+  // older than 30 minutes (or NULL — never used) sort before rows used within
+  // the last 30 minutes. When every candidate is "recent" they all share rank
+  // 1 and the final `last_used_at ASC NULLS FIRST` tiebreaker still picks the
+  // oldest, satisfying the "if all are recent, accept oldest" requirement.
+  const idleRank = sql<number>`CASE
+      WHEN ${phoneNumbers.last_used_at} IS NULL
+        OR ${phoneNumbers.last_used_at} <= NOW() - INTERVAL '30 minutes'
+      THEN 0 ELSE 1 END`;
+
   const [candidate] = await tx
     .select({
       id: phoneNumbers.id,
@@ -131,6 +142,7 @@ async function doPick(
     .orderBy(
       ownershipRank,
       regionRank,
+      idleRank,
       asc(phoneNumbers.daily_call_count),
       asc(phoneNumbers.spam_score),
       sql`${phoneNumbers.last_used_at} ASC NULLS FIRST`,

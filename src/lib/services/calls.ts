@@ -21,6 +21,7 @@ import { sendInngestEvent } from '@/lib/inngest/client';
 import { CALL_CLASSIFY_EVENT, CALL_COMPLETED_EVENT } from '@/lib/inngest/voice/events';
 import { computeCallCost, computePerMinuteCents } from '@/lib/services/billing-rules';
 import { chargeForCall } from '@/lib/services/credit';
+import { applyDispatchJitter } from '@/lib/voice/cli/jitter';
 import { getVoiceProvider } from '@/lib/voice/factory';
 import { assembleSystemPrompt, interpolate } from '@/lib/voice/prompt/preamble';
 import { TEMPLATE_TOOLS } from '@/lib/voice/templates/tools';
@@ -245,7 +246,11 @@ export async function dispatchCall(orgId: string, callId: string): Promise<void>
     TEMPLATE_TOOLS[template.slug as keyof typeof TEMPLATE_TOOLS] ?? []
   ) as unknown as ToolDefinition[];
 
-  // 10. Dispatch to voice provider
+  // 10. Dispatch to voice provider.
+  //     Anti-spam jitter (plan 10 task 6): a small random 0–500ms delay before
+  //     the provider call breaks up burst patterns the carrier could flag.
+  await applyDispatchJitter();
+
   const provider = getVoiceProvider();
   const webhookUrl = `${env.NEXT_PUBLIC_APP_URL}/api/webhooks/${provider.name}`;
 

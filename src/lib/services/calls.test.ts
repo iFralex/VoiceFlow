@@ -37,6 +37,11 @@ vi.mock('@/lib/inngest/client', () => ({
   sendInngestEvent: (...args: unknown[]) => mockSendInngestEvent(...args),
 }));
 
+const mockApplyDispatchJitter = vi.fn().mockResolvedValue(0);
+vi.mock('@/lib/voice/cli/jitter', () => ({
+  applyDispatchJitter: (...args: unknown[]) => mockApplyDispatchJitter(...args),
+}));
+
 vi.mock('node:fs', () => ({
   readFileSync: vi.fn().mockReturnValue(
     'Buongiorno, sono {{salesperson_first_name}}, un assistente vocale automatico per {{dealership_name}}, concessionario {{brand}}.',
@@ -208,6 +213,7 @@ beforeEach(() => {
   mockComputePerMinuteCents.mockResolvedValue(100);
   mockComputeCallCost.mockReturnValue({ billableSeconds: 60, costCents: 200 });
   mockSendInngestEvent.mockResolvedValue(undefined);
+  mockApplyDispatchJitter.mockResolvedValue(0);
 });
 
 // ─── createPendingCall ────────────────────────────────────────────────────────
@@ -248,6 +254,21 @@ describe('dispatchCall', () => {
       [fakePhone],     // phone number
     );
   }
+
+  it('applies anti-spam jitter before invoking the provider createCall', async () => {
+    queueDispatchSelectResults();
+    let jitterFiredBeforeCreateCall = false;
+    mockApplyDispatchJitter.mockImplementationOnce(async () => {
+      jitterFiredBeforeCreateCall = mockCreateCall.mock.calls.length === 0;
+      return 0;
+    });
+
+    const { dispatchCall } = await import('./calls');
+    await dispatchCall(ORG_ID, CALL_ID);
+
+    expect(mockApplyDispatchJitter).toHaveBeenCalledOnce();
+    expect(jitterFiredBeforeCreateCall).toBe(true);
+  });
 
   it('dispatches call and transitions to dialing', async () => {
     queueDispatchSelectResults();
