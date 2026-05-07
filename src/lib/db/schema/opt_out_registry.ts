@@ -8,6 +8,7 @@ export const optOutSourceEnum = pgEnum('opt_out_source', [
   'dealer_input',
   'gdpr_request',
   'inbound_ivr',
+  'rpo_block',
 ]);
 
 export const optOutRegistry = pgTable(

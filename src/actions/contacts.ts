@@ -140,7 +140,9 @@ export async function markContactOptOut(
   try {
     const { orgId } = await getAuthContext();
     await requireCapability('contacts.upload');
-    await markOptOut(orgId, parsed.data.phoneE164, 'dealer_input', parsed.data.reason);
+    await markOptOut(orgId, parsed.data.phoneE164, 'dealer_input', {
+      ...(parsed.data.reason !== undefined ? { reason: parsed.data.reason } : {}),
+    });
     return { ok: true };
   } catch (e) {
     return { ok: false, message: e instanceof Error ? e.message : 'error' };

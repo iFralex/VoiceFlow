@@ -16,12 +16,16 @@ const {
   mockWithSystemContext,
   mockFindRecent,
   mockRecordAudit,
+  mockMarkOptOutInTx,
+  mockSendInngestEvents,
 } = vi.hoisted(() => {
   return {
     mockWithOrgContext: vi.fn(),
     mockWithSystemContext: vi.fn(),
     mockFindRecent: vi.fn(),
     mockRecordAudit: vi.fn().mockResolvedValue(undefined),
+    mockMarkOptOutInTx: vi.fn().mockResolvedValue([]),
+    mockSendInngestEvents: vi.fn().mockResolvedValue(undefined),
   };
 });
 
@@ -34,13 +38,20 @@ vi.mock('@/lib/db/audit', () => ({
   recordAudit: mockRecordAudit,
 }));
 
+vi.mock('@/lib/inngest/client', () => ({
+  sendInngestEvents: mockSendInngestEvents,
+}));
+
+vi.mock('@/lib/services/optout', () => ({
+  markOptOutInTx: mockMarkOptOutInTx,
+}));
+
 vi.mock('@/lib/voice/inbound/lookup', () => ({
   findRecentOutboundCallsToNumber: mockFindRecent,
 }));
 
 vi.mock('@/lib/db/schema', () => ({
   calls: { id: 'c_id', org_id: 'c_org_id', direction: 'c_direction', provider_call_id: 'c_pcid', created_at: 'c_created_at' },
-  optOutRegistry: {},
 }));
 
 vi.mock('drizzle-orm', () => ({
@@ -246,7 +257,9 @@ describe('recordInboundOptout', () => {
   it('returns an empty enroled-orgs list when no recent caller exists', async () => {
     mockFindRecent.mockResolvedValueOnce([]);
     const sysTx = makeTx({ selectRows: [[]] });
-    mockWithSystemContext.mockImplementationOnce((fn) => fn(sysTx));
+    mockWithSystemContext.mockImplementationOnce((fn: (tx: unknown) => Promise<unknown>) =>
+      fn(sysTx),
+    );
 
     const result = await recordInboundOptout({
       providerCallId: 'vapi-no-history',
@@ -255,11 +268,12 @@ describe('recordInboundOptout', () => {
 
     expect(result.enroledOrgIds).toEqual([]);
     expect(mockWithOrgContext).not.toHaveBeenCalled();
+    expect(mockSendInngestEvents).not.toHaveBeenCalled();
   });
 
-  it('dedupes by org and writes one opt_out + one audit per unique org', async () => {
+  it('dedupes by org and routes one opt-out per unique org through markOptOutInTx', async () => {
     // ORG_A appears twice (two recent campaigns to the same number) — should only
-    // produce a single insert + audit pair.
+    // produce a single markOptOutInTx call per unique org.
     mockFindRecent.mockResolvedValueOnce([
       { orgId: 'org-A', callId: 'c1', contactId: 'k1', dialedAt: new Date() },
       { orgId: 'org-A', callId: 'c2', contactId: 'k2', dialedAt: new Date(0) },
@@ -267,18 +281,26 @@ describe('recordInboundOptout', () => {
     ]);
 
     const orgTxs: MockTx[] = [];
-    mockWithOrgContext.mockImplementation((orgId, fn) => {
+    mockWithOrgContext.mockImplementation((_orgId: string, fn) => {
       const tx = makeTx({});
       orgTxs.push(tx);
-      // Tag tx with orgId for assertions
-      (tx as unknown as Record<string, unknown>)['__orgId'] = orgId;
       return fn(tx);
     });
 
-    // After per-org writes, the service looks up the inbound row to mark its
-    // outcome. Return none so the trailing update path is skipped.
+    // The service looks up the inbound row at the end to mark its outcome.
     const sysTx = makeTx({ selectRows: [[]] });
-    mockWithSystemContext.mockImplementationOnce((fn) => fn(sysTx));
+    mockWithSystemContext.mockImplementationOnce((fn: (tx: unknown) => Promise<unknown>) =>
+      fn(sysTx),
+    );
+
+    // Each markOptOutInTx call returns one opt-out-registered event for its org.
+    mockMarkOptOutInTx.mockImplementation(async (_tx: unknown, params: { orgId: string }) => [
+      {
+        name: 'compliance/opt-out-registered',
+        data: { orgId: params.orgId },
+        id: `opt-out-${params.orgId}`,
+      },
+    ]);
 
     const result = await recordInboundOptout({
       providerCallId: 'vapi-optout',
@@ -287,26 +309,30 @@ describe('recordInboundOptout', () => {
 
     expect(result.enroledOrgIds.sort()).toEqual(['org-A', 'org-B']);
     expect(mockWithOrgContext).toHaveBeenCalledTimes(2);
+    expect(mockMarkOptOutInTx).toHaveBeenCalledTimes(2);
 
-    const insertCalls = orgTxs.flatMap((t) => t.insert.mock.calls);
-    expect(insertCalls.length).toBe(2);
-
-    expect(mockRecordAudit).toHaveBeenCalledTimes(2);
-    const orgIds = mockRecordAudit.mock.calls.map(
+    // Each markOptOutInTx call should target a unique org with the inbound IVR source
+    const orgIds = mockMarkOptOutInTx.mock.calls.map(
       (c) => (c[1] as { orgId: string }).orgId,
     );
     expect(orgIds.sort()).toEqual(['org-A', 'org-B']);
-
-    // Each audit row should carry source: 'inbound_ivr'
-    for (const call of mockRecordAudit.mock.calls) {
+    for (const call of mockMarkOptOutInTx.mock.calls) {
       expect(call[1]).toEqual(
         expect.objectContaining({
-          action: 'opt_out.recorded',
+          phoneE164: '+393401234567',
+          source: 'inbound_ivr',
           actorType: 'webhook',
-          metadata: expect.objectContaining({ source: 'inbound_ivr' }),
+          metadata: expect.objectContaining({ providerCallId: 'vapi-optout' }),
         }),
       );
     }
+
+    // Events from both per-org markOptOutInTx calls are dispatched in one batch
+    expect(mockSendInngestEvents).toHaveBeenCalledOnce();
+    const sentEvents = mockSendInngestEvents.mock.calls[0]?.[0] as Array<{
+      data: { orgId: string };
+    }>;
+    expect(sentEvents.map((e) => e.data.orgId).sort()).toEqual(['org-A', 'org-B']);
   });
 
   it('marks the inbound row outcome to do_not_call when it can be located', async () => {

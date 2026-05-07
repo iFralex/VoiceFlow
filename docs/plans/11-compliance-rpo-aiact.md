@@ -84,16 +84,16 @@ export class RpoIntermediaryClient implements RpoClient {
 
 ### Task 5: Opt-out registry — full wiring
 
-- [ ] All five opt-out sources route through a single service `src/lib/services/optout.ts`:
+- [x] All five opt-out sources route through a single service `src/lib/services/optout.ts`:
   - `markOptOut(orgId, phoneE164, source, reason?)` (public API)
   - sources: `call_outcome` (LLM tool), `dealer_input` (manual upload or row action), `gdpr_request` (Article 17), `inbound_ivr` (plan 10), `rpo_block` (RPO sync)
-- [ ] `markOptOut` runs in a transaction:
+- [x] `markOptOut` runs in a transaction:
   1. UPSERT into `opt_out_registry` (`(org_id, phone_e164)` unique)
   2. UPDATE `contacts SET opt_out=true, opt_out_reason=source` for all matching org+phone
   3. INSERT audit_log entry with full context
   4. emit Inngest event `compliance/opt-out-registered` consumed by plan 13 notifier
-- [ ] Idempotent: re-marking is a no-op (audit log still records the duplicate attempt for traceability)
-- [ ] Mark completed
+- [x] Idempotent: re-marking is a no-op (audit log still records the duplicate attempt for traceability)
+- [x] Mark completed
 
 ### Task 6: Opt-out propagation across campaigns
 

@@ -25,7 +25,10 @@ import { and, desc, eq } from 'drizzle-orm';
 
 import { recordAudit } from '@/lib/db/audit';
 import { withOrgContext, withSystemContext } from '@/lib/db/context';
-import { calls, optOutRegistry, type Call } from '@/lib/db/schema';
+import { calls, type Call } from '@/lib/db/schema';
+import { sendInngestEvents } from '@/lib/inngest/client';
+import type { InngestEventPayload } from '@/lib/inngest/client';
+import { markOptOutInTx } from '@/lib/services/optout';
 import { findRecentOutboundCallsToNumber } from '@/lib/voice/inbound/lookup';
 
 interface RecordInboundCallStartedParams {
@@ -187,32 +190,22 @@ export async function recordInboundOptout(
   // Dedupe by orgId — the lookup may return multiple calls per org.
   const orgIds = Array.from(new Set(recent.map((r) => r.orgId)));
 
+  // Routes through the unified opt-out service (plan 11 task 5) so every
+  // inbound IVR opt-out also flips matching contact rows, writes the audit
+  // entry, and emits `compliance/opt-out-registered` consistently with the
+  // other four sources.
+  const events: InngestEventPayload[] = [];
   for (const orgId of orgIds) {
-    await withOrgContext(orgId, async (tx) => {
-      await tx
-        .insert(optOutRegistry)
-        .values({
-          org_id: orgId,
-          phone_e164: params.callerNumber,
-          source: 'inbound_ivr',
-        })
-        .onConflictDoNothing();
-
-      // The contact-level opt_out flag is intentionally not flipped here. The
-      // inbound caller may match multiple contact rows per org (e.g. a number
-      // appears in two lists); the registry entry is the source of truth and
-      // the dispatcher checks it on every send. Plan 11 will reconcile contact
-      // rows from the registry as part of the bulk RPO sweep.
-
-      await recordAudit(tx, {
+    const orgEvents = await withOrgContext(orgId, (tx) =>
+      markOptOutInTx(tx, {
         orgId,
+        phoneE164: params.callerNumber,
+        source: 'inbound_ivr',
         actorType: 'webhook',
-        action: 'opt_out.recorded',
-        subjectType: 'phone_number',
-        subjectId: params.callerNumber,
-        metadata: { source: 'inbound_ivr', providerCallId: params.providerCallId },
-      });
-    });
+        metadata: { providerCallId: params.providerCallId },
+      }),
+    );
+    events.push(...orgEvents);
   }
 
   // Mark the inbound calls row's outcome so it reads "do_not_call" in the
@@ -238,6 +231,10 @@ export async function recordInboundOptout(
         .set({ outcome: 'do_not_call' })
         .where(eq(calls.id, inboundRow.id));
     });
+  }
+
+  if (events.length > 0) {
+    await sendInngestEvents(events);
   }
 
   return { enroledOrgIds: orgIds };

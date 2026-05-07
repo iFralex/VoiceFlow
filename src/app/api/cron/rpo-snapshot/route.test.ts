@@ -60,6 +60,11 @@ vi.mock('@/lib/db/schema', () => ({
     opt_out_reason: 'c_opt_out_reason',
     deleted_at: 'c_deleted_at',
   },
+  optOutRegistry: {
+    org_id: 'o_org_id',
+    phone_e164: 'o_phone_e164',
+    source: 'o_source',
+  },
   rpoSnapshots: {
     phone_e164: 's_phone_e164',
     is_blocked: 's_is_blocked',
@@ -157,6 +162,7 @@ function buildTx(plan: ChunkPlan, captured: { inserts: InsertRecorder[]; updates
               recorder.conflict = cfg;
               return Promise.resolve(undefined);
             },
+            onConflictDoNothing: () => Promise.resolve(undefined),
           };
         },
       };
@@ -370,17 +376,64 @@ describe('runRpoSnapshot', () => {
       opt_out_reason: 'rpo_block',
     });
 
+    // Plan 11 task 5: emitRpoBlockEvents now also writes the registry entry
+    // for each affected (org, phone) tuple so the unified opt-out service
+    // remains the source of truth across all five sources.
+    const registryInsert = captured.inserts.find((ins) =>
+      Array.isArray(ins.values)
+        ? (ins.values as Array<{ source?: string }>).every((v) => v.source === 'rpo_block')
+        : false,
+    );
+    expect(registryInsert).toBeDefined();
+    expect(registryInsert?.values).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ org_id: ORG_ID_A, phone_e164: PHONE_BLOCKED, source: 'rpo_block' }),
+        expect.objectContaining({ org_id: ORG_ID_B, phone_e164: PHONE_BLOCKED, source: 'rpo_block' }),
+      ]),
+    );
+
+    // Per-tuple audit entries (`opt_out.recorded`) plus the aggregate
+    // `compliance.rpo_snapshot_completed` close-out audit at the end.
+    const optOutAudits = mockRecordAudit.mock.calls.filter(
+      (c) => (c[1] as { action?: string }).action === 'opt_out.recorded',
+    );
+    expect(optOutAudits).toHaveLength(2);
+    expect(optOutAudits.map((c) => (c[1] as { orgId: string }).orgId).sort()).toEqual(
+      [ORG_ID_A, ORG_ID_B].sort(),
+    );
+
+    // Single batched sendInngestEvents call carrying both event types: the
+    // RPO-specific dealer notifier and the unified opt-out registered event.
     expect(mockSendInngestEvents).toHaveBeenCalledOnce();
     const events = mockSendInngestEvents.mock.calls[0]?.[0] as Array<{
       name: string;
-      data: { orgId: string; contactId: string; phoneE164: string };
+      data: { orgId: string; contactId?: string; phoneE164: string; source?: string };
       id?: string;
     }>;
-    expect(events).toHaveLength(2);
-    expect(events[0]?.name).toBe(RPO_BLOCK_DETECTED_EVENT);
-    expect(events.map((e) => e.data.orgId).sort()).toEqual([ORG_ID_A, ORG_ID_B].sort());
-    expect(events.every((e) => e.data.phoneE164 === PHONE_BLOCKED)).toBe(true);
-    expect(events.every((e) => typeof e.id === 'string' && e.id!.startsWith('rpo-block-'))).toBe(true);
+    expect(events).toHaveLength(4);
+
+    const rpoBlockEvents = events.filter((e) => e.name === RPO_BLOCK_DETECTED_EVENT);
+    expect(rpoBlockEvents).toHaveLength(2);
+    expect(rpoBlockEvents.map((e) => e.data.orgId).sort()).toEqual(
+      [ORG_ID_A, ORG_ID_B].sort(),
+    );
+    expect(rpoBlockEvents.every((e) => e.data.phoneE164 === PHONE_BLOCKED)).toBe(true);
+    expect(
+      rpoBlockEvents.every((e) => typeof e.id === 'string' && e.id!.startsWith('rpo-block-')),
+    ).toBe(true);
+
+    const optOutEvents = events.filter((e) => e.name === 'compliance/opt-out-registered');
+    expect(optOutEvents).toHaveLength(2);
+    expect(optOutEvents.every((e) => e.data.source === 'rpo_block')).toBe(true);
+    expect(optOutEvents.map((e) => e.data.orgId).sort()).toEqual(
+      [ORG_ID_A, ORG_ID_B].sort(),
+    );
+    expect(optOutEvents.every((e) => e.data.phoneE164 === PHONE_BLOCKED)).toBe(true);
+    expect(
+      optOutEvents.every(
+        (e) => typeof e.id === 'string' && e.id!.startsWith('opt-out-'),
+      ),
+    ).toBe(true);
   });
 
   it('does NOT emit a transition event when the prior snapshot is already blocked', async () => {

@@ -8,6 +8,11 @@ vi.mock('@/lib/db/audit', () => ({
 
 vi.mock('@/lib/inngest/client', () => ({
   sendInngestEvent: vi.fn(),
+  sendInngestEvents: vi.fn(),
+}));
+
+vi.mock('@/lib/services/optout', () => ({
+  markOptOutInTx: vi.fn().mockResolvedValue([]),
 }));
 
 vi.mock('@/lib/services/campaigns', () => ({
@@ -74,6 +79,7 @@ import { sendInngestEvent } from '@/lib/inngest/client';
 import { dispatchCall } from '@/lib/services/calls';
 import { requireRunning } from '@/lib/services/campaigns';
 import { getBalance } from '@/lib/services/credit';
+import { markOptOutInTx } from '@/lib/services/optout';
 
 import {
   ContactNotEligibleError,
@@ -1708,8 +1714,19 @@ describe('campaignDispatchCallHandler — verify-rpo integration', () => {
     expect(result).toBeNull();
     expect(dispatchCall).not.toHaveBeenCalled();
     expect(mockSet).toHaveBeenCalledWith({ status: 'failed', error_code: 'rpo_blocked' });
-    // Contact row marked opt_out=true with reason 'rpo_block' (Task 4 inline; Task 5 will move to a service)
-    expect(mockSet).toHaveBeenCalledWith({ opt_out: true, opt_out_reason: 'rpo_block' });
+    // Plan 11 task 5: opt-out is now routed through the unified service.
+    // The dispatch step delegates registry insert + contact flip + audit to
+    // `markOptOutInTx`, which is mocked here.
+    expect(markOptOutInTx).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        orgId: ORG,
+        phoneE164: PHONE,
+        source: 'rpo_block',
+        callId: CALL,
+        actorType: 'system',
+      }),
+    );
     expect(recordAudit).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({

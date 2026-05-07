@@ -24,6 +24,7 @@ describe('opt_out_registry schema', () => {
       'dealer_input',
       'gdpr_request',
       'inbound_ivr',
+      'rpo_block',
     ]);
   });
 

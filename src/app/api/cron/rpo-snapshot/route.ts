@@ -26,9 +26,13 @@ import { NextResponse } from 'next/server';
 import { getRpoClient, type RpoClient } from '@/lib/compliance/rpo/client';
 import { recordAudit } from '@/lib/db/audit';
 import { withSystemContext } from '@/lib/db/context';
-import { contacts, rpoSnapshots } from '@/lib/db/schema';
+import { contacts, optOutRegistry, rpoSnapshots } from '@/lib/db/schema';
 import { env } from '@/lib/env';
 import { sendInngestEvents } from '@/lib/inngest/client';
+import {
+  COMPLIANCE_OPT_OUT_REGISTERED_EVENT,
+  type ComplianceOptOutRegisteredData,
+} from '@/lib/services/optout';
 
 const CHUNK_SIZE = 1000;
 const STALE_THRESHOLD_DAYS = 7;
@@ -269,8 +273,8 @@ async function persistChunk({
 }
 
 async function emitRpoBlockEvents(phones: string[], checkedAt: Date): Promise<number> {
-  const affected = await withSystemContext(async (tx) =>
-    tx
+  const affected = await withSystemContext(async (tx) => {
+    const rows = await tx
       .select({
         id: contacts.id,
         org_id: contacts.org_id,
@@ -279,23 +283,75 @@ async function emitRpoBlockEvents(phones: string[], checkedAt: Date): Promise<nu
       .from(contacts)
       .where(
         and(inArray(contacts.phone_e164, phones), isNull(contacts.deleted_at)),
-      ),
-  );
+      );
+
+    if (rows.length === 0) return rows;
+
+    // Plan 11 task 5: route every newly-blocked tuple through the unified
+    // opt-out registry. The cron's bulk UPDATE on `contacts` is the fast path
+    // for the daily sweep — without this companion insert each (org, phone)
+    // would lack the registry entry that downstream services expect.
+    await tx
+      .insert(optOutRegistry)
+      .values(
+        rows.map((r) => ({
+          org_id: r.org_id,
+          phone_e164: r.phone_e164,
+          source: 'rpo_block' as const,
+        })),
+      )
+      .onConflictDoNothing();
+
+    // Per-tuple audit entry — only fires on a true clear|unchecked → blocked
+    // transition (the caller already filtered through `priorBlocked` so daily
+    // re-runs of an already-blocked number do not pile up duplicate entries).
+    for (const r of rows) {
+      await recordAudit(tx, {
+        orgId: r.org_id,
+        actorType: 'system',
+        action: 'opt_out.recorded',
+        subjectType: 'phone_number',
+        subjectId: r.phone_e164,
+        metadata: {
+          source: 'rpo_block',
+          contactId: r.id,
+          checkedAt: checkedAt.toISOString(),
+        },
+      });
+    }
+
+    return rows;
+  });
 
   if (affected.length === 0) return 0;
 
-  await sendInngestEvents(
-    affected.map((c) => ({
-      name: RPO_BLOCK_DETECTED_EVENT,
-      data: {
-        orgId: c.org_id,
-        contactId: c.id,
-        phoneE164: c.phone_e164,
-        checkedAt: checkedAt.toISOString(),
-      },
-      id: `rpo-block-${c.id}-${checkedAt.getTime()}`,
-    })),
-  );
+  // One batch with both event types: the legacy `compliance/rpo-block-detected`
+  // (RPO-specific dealer notifier in plan 13) and the unified
+  // `compliance/opt-out-registered` (consumed by the same plan-13 notifier for
+  // every opt-out source). Inngest dedupes both kinds via the per-event id.
+  const rpoEvents = affected.map((c) => ({
+    name: RPO_BLOCK_DETECTED_EVENT,
+    data: {
+      orgId: c.org_id,
+      contactId: c.id,
+      phoneE164: c.phone_e164,
+      checkedAt: checkedAt.toISOString(),
+    },
+    id: `rpo-block-${c.id}-${checkedAt.getTime()}`,
+  }));
+
+  const optOutEvents = affected.map((c) => ({
+    name: COMPLIANCE_OPT_OUT_REGISTERED_EVENT,
+    data: {
+      orgId: c.org_id,
+      phoneE164: c.phone_e164,
+      source: 'rpo_block' as const,
+      recordedAt: checkedAt.toISOString(),
+    } satisfies ComplianceOptOutRegisteredData as unknown as Record<string, unknown>,
+    id: `opt-out-${c.org_id}-${c.phone_e164}-rpo_block`,
+  }));
+
+  await sendInngestEvents([...rpoEvents, ...optOutEvents]);
 
   return affected.length;
 }

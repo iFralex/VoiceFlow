@@ -13,9 +13,10 @@
 import { and, eq, isNull, sql } from 'drizzle-orm';
 
 import type { DbTx } from '@/lib/db/context';
-import { appointments, calls, contacts, optOutRegistry } from '@/lib/db/schema';
+import { appointments, calls, contacts } from '@/lib/db/schema';
 import type { InngestEventPayload } from '@/lib/inngest/client';
 import { APPOINTMENT_BOOKED_EVENT, CALL_TRANSFERRED_EVENT } from '@/lib/inngest/voice/events';
+import { markOptOutInTx } from '@/lib/services/optout';
 
 export { APPOINTMENT_BOOKED_EVENT, CALL_TRANSFERRED_EVENT };
 
@@ -231,17 +232,17 @@ async function runRegisterOptOut(
   const contact = await loadCallContact(tx, callId, orgId);
   if (!contact) return { inngestEvents: [] };
 
-  // Insert into opt_out_registry — idempotent via unique constraint
-  await tx
-    .insert(optOutRegistry)
-    .values({ org_id: orgId, phone_e164: contact.phoneE164, source: 'call_outcome' })
-    .onConflictDoNothing();
-
-  // Mark contact as opted out
-  await tx
-    .update(contacts)
-    .set({ opt_out: true, opt_out_reason: args.confirmation_text })
-    .where(and(eq(contacts.id, contact.contactId), eq(contacts.org_id, orgId)));
+  // Routes through the unified opt-out service so registry insert, contact
+  // flag, audit log, and `compliance/opt-out-registered` event all stay in
+  // sync. The LLM's confirmation_text is preserved as supplementary context
+  // on the audit entry; `contacts.opt_out_reason` carries the source enum.
+  const optOutEvents = await markOptOutInTx(tx, {
+    orgId,
+    phoneE164: contact.phoneE164,
+    source: 'call_outcome',
+    reason: args.confirmation_text,
+    callId,
+  });
 
   // Set call outcome — idempotent via NULL guard
   await tx
@@ -249,7 +250,7 @@ async function runRegisterOptOut(
     .set({ outcome: 'do_not_call' })
     .where(and(eq(calls.id, callId), eq(calls.org_id, orgId), isNull(calls.outcome)));
 
-  return { inngestEvents: [] };
+  return { inngestEvents: optOutEvents };
 }
 
 async function runConfirmAppointment(

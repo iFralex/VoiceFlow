@@ -5,7 +5,8 @@ import { getRpoClient, type RpoClient } from '@/lib/compliance/rpo/client';
 import { recordAudit } from '@/lib/db/audit';
 import { withOrgContext, withSystemContext } from '@/lib/db/context';
 import { calls, contacts, phoneNumbers, rpoSnapshots } from '@/lib/db/schema';
-import { sendInngestEvent } from '@/lib/inngest/client';
+import { sendInngestEvent, sendInngestEvents } from '@/lib/inngest/client';
+import type { InngestEventPayload } from '@/lib/inngest/client';
 import { CREDIT_LOW_BALANCE_EVENT } from '@/lib/inngest/handlers/credit';
 import {
   dispatchCall as dispatchCallToProvider,
@@ -13,6 +14,7 @@ import {
 } from '@/lib/services/calls';
 import { requireRunning } from '@/lib/services/campaigns';
 import { getBalance } from '@/lib/services/credit';
+import { markOptOutInTx } from '@/lib/services/optout';
 import { nextWindowOpen } from '@/lib/utils/time-window';
 
 import { checkAndFinaliseCampaignCompletion } from './completed';
@@ -849,7 +851,8 @@ export async function campaignDispatchCallHandler(
   // is unavailable and no snapshot exists, fail closed.
   const rpoOutcome = await verifyRpoCompliance(orgId, contactId);
   if (rpoOutcome.decision === 'blocked' && rpoOutcome.phoneE164) {
-    const flipped = await withOrgContext(orgId, async (tx) => {
+    const blockedPhone = rpoOutcome.phoneE164;
+    const result = await withOrgContext(orgId, async (tx) => {
       const updated = await tx
         .update(calls)
         .set({ status: 'failed', error_code: 'rpo_blocked' })
@@ -862,20 +865,18 @@ export async function campaignDispatchCallHandler(
         )
         .returning({ id: calls.id });
 
-      if (updated.length === 0) return false;
+      if (updated.length === 0) return { flipped: false, optOutEvents: [] as InngestEventPayload[] };
 
-      // Mark every live row sharing the phone — Task 5 will consolidate this
-      // through a unified opt-out service that also writes to opt_out_registry.
-      await tx
-        .update(contacts)
-        .set({ opt_out: true, opt_out_reason: 'rpo_block' })
-        .where(
-          and(
-            eq(contacts.org_id, orgId),
-            eq(contacts.phone_e164, rpoOutcome.phoneE164!),
-            isNull(contacts.deleted_at),
-          ),
-        );
+      // Routes through the unified opt-out service so the registry insert,
+      // contact flag, audit log, and `compliance/opt-out-registered` event
+      // all stay in sync — same path as call_outcome / dealer_input / etc.
+      const optOutEvents = await markOptOutInTx(tx, {
+        orgId,
+        phoneE164: blockedPhone,
+        source: 'rpo_block',
+        callId,
+        actorType: 'system',
+      });
 
       await recordAudit(tx, {
         orgId,
@@ -886,13 +887,16 @@ export async function campaignDispatchCallHandler(
         metadata: {
           reason: 'rpo_blocked',
           contactId,
-          phoneE164: rpoOutcome.phoneE164,
+          phoneE164: blockedPhone,
         },
       });
-      return true;
+      return { flipped: true, optOutEvents };
     });
 
-    if (flipped) {
+    if (result.optOutEvents.length > 0) {
+      await sendInngestEvents(result.optOutEvents);
+    }
+    if (result.flipped) {
       await checkAndFinaliseCampaignCompletion(orgId, campaignId);
     }
     return null;

@@ -27,7 +27,12 @@ vi.mock('@/lib/db/schema', () => ({
     notes: 'notes',
     status: 'status',
   },
-  optOutRegistry: { id: 'id', org_id: 'org_id', phone_e164: 'phone_e164', source: 'source' },
+}));
+
+const mockMarkOptOutInTx = vi.fn();
+
+vi.mock('@/lib/services/optout', () => ({
+  markOptOutInTx: mockMarkOptOutInTx,
 }));
 
 vi.mock('drizzle-orm', () => ({
@@ -282,7 +287,18 @@ describe('dispatchToolSideEffect', () => {
   // ── register_opt_out ───────────────────────────────────────────────────────
 
   describe('register_opt_out', () => {
-    it('inserts opt-out entry, marks contact opted out, sets outcome', async () => {
+    beforeEach(() => {
+      mockMarkOptOutInTx.mockReset();
+      mockMarkOptOutInTx.mockResolvedValue([
+        {
+          name: 'compliance/opt-out-registered',
+          data: { orgId: ORG_ID, phoneE164: '+39123456789', source: 'call_outcome' },
+          id: `opt-out-${ORG_ID}-+39123456789-call_outcome`,
+        },
+      ]);
+    });
+
+    it('routes through markOptOutInTx and forwards its events', async () => {
       pushContact(mockTx, CONTACT_ID, '+39123456789');
 
       const result = await dispatchToolSideEffect(
@@ -293,22 +309,29 @@ describe('dispatchToolSideEffect', () => {
         { confirmation_text: 'Non voglio essere ricontattato' },
       );
 
-      expect(mockTx.insert).toHaveBeenCalledOnce();
-      const insertedRow = mockTx._insertedRows[0] as Record<string, unknown>;
-      expect(insertedRow.org_id).toBe(ORG_ID);
-      expect(insertedRow.phone_e164).toBe('+39123456789');
-      expect(insertedRow.source).toBe('call_outcome');
+      // Plan 11 task 5: opt-out is now centralised — handler delegates the
+      // registry insert + contact flip + audit + event to the unified service.
+      expect(mockMarkOptOutInTx).toHaveBeenCalledOnce();
+      const [, params] = mockMarkOptOutInTx.mock.calls[0]!;
+      expect(params).toEqual(
+        expect.objectContaining({
+          orgId: ORG_ID,
+          phoneE164: '+39123456789',
+          source: 'call_outcome',
+          reason: 'Non voglio essere ricontattato',
+          callId: CALL_ID,
+        }),
+      );
 
-      // Two updates: contacts.opt_out + calls.outcome
-      expect(mockTx.update).toHaveBeenCalledTimes(2);
-      const contactUpdate = mockTx._updatedSets[0] as Record<string, unknown>;
-      expect(contactUpdate.opt_out).toBe(true);
-      expect(contactUpdate.opt_out_reason).toBe('Non voglio essere ricontattato');
-
-      const callUpdate = mockTx._updatedSets[1] as Record<string, unknown>;
+      // Only one local UPDATE remains: setting calls.outcome='do_not_call'.
+      expect(mockTx.update).toHaveBeenCalledTimes(1);
+      const callUpdate = mockTx._updatedSets[0] as Record<string, unknown>;
       expect(callUpdate.outcome).toBe('do_not_call');
 
-      expect(result.inngestEvents).toHaveLength(0);
+      // The events returned by markOptOutInTx are propagated up so that
+      // recordToolInvocation emits them after commit.
+      expect(result.inngestEvents).toHaveLength(1);
+      expect(result.inngestEvents[0]!.name).toBe('compliance/opt-out-registered');
     });
 
     it('returns empty events when contact not found', async () => {
@@ -324,7 +347,7 @@ describe('dispatchToolSideEffect', () => {
       );
 
       expect(result.inngestEvents).toHaveLength(0);
-      expect(mockTx.insert).not.toHaveBeenCalled();
+      expect(mockMarkOptOutInTx).not.toHaveBeenCalled();
     });
   });
 

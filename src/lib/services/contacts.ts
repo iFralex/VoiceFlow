@@ -3,10 +3,21 @@ import type { SQL } from 'drizzle-orm';
 
 import { recordAudit } from '@/lib/db/audit';
 import { withOrgContext } from '@/lib/db/context';
-import { contacts, optOutRegistry, optOutSourceEnum, rpoStatusEnum } from '@/lib/db/schema';
+import { contacts, rpoStatusEnum } from '@/lib/db/schema';
 import type { Contact, NewContact } from '@/lib/db/schema';
 
-export type OptOutSource = (typeof optOutSourceEnum.enumValues)[number];
+export {
+  bulkMarkOptOut,
+  markOptOut,
+  markOptOutInTx,
+  COMPLIANCE_OPT_OUT_REGISTERED_EVENT,
+} from './optout';
+export type {
+  ComplianceOptOutRegisteredData,
+  MarkOptOutOptions,
+  OptOutSource,
+} from './optout';
+
 export type RpoStatus = (typeof rpoStatusEnum.enumValues)[number];
 
 const BATCH_SIZE = 500;
@@ -249,61 +260,3 @@ export async function countContactsForOrg(orgId: string): Promise<number> {
   });
 }
 
-export async function markOptOut(
-  orgId: string,
-  phoneE164: string,
-  source: OptOutSource,
-  reason?: string,
-): Promise<void> {
-  await withOrgContext(orgId, async (tx) => {
-    await tx
-      .insert(optOutRegistry)
-      .values({ org_id: orgId, phone_e164: phoneE164, source })
-      .onConflictDoNothing();
-
-    await tx
-      .update(contacts)
-      .set({ opt_out: true, opt_out_reason: reason ?? null })
-      .where(
-        and(
-          eq(contacts.org_id, orgId),
-          eq(contacts.phone_e164, phoneE164),
-          isNull(contacts.deleted_at),
-        ),
-      );
-  });
-}
-
-/**
- * Bulk-inserts multiple phone numbers into the opt-out registry in a single
- * transaction. Existing entries are silently skipped (ON CONFLICT DO NOTHING).
- * Matching live contact rows are also marked opt_out = true.
- */
-export async function bulkMarkOptOut(
-  orgId: string,
-  phonesE164: string[],
-  source: OptOutSource,
-): Promise<void> {
-  if (phonesE164.length === 0) return;
-
-  for (let i = 0; i < phonesE164.length; i += BATCH_SIZE) {
-    const batch = phonesE164.slice(i, i + BATCH_SIZE);
-    await withOrgContext(orgId, async (tx) => {
-      await tx
-        .insert(optOutRegistry)
-        .values(batch.map((phone_e164) => ({ org_id: orgId, phone_e164, source })))
-        .onConflictDoNothing();
-
-      await tx
-        .update(contacts)
-        .set({ opt_out: true })
-        .where(
-          and(
-            eq(contacts.org_id, orgId),
-            inArray(contacts.phone_e164, batch),
-            isNull(contacts.deleted_at),
-          ),
-        );
-    });
-  }
-}

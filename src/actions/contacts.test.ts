@@ -271,7 +271,7 @@ describe('markContactOptOut', () => {
     });
 
     expect(result.ok).toBe(true);
-    expect(mockMarkOptOut).toHaveBeenCalledWith(ORG_ID, '+393401234567', 'dealer_input', undefined);
+    expect(mockMarkOptOut).toHaveBeenCalledWith(ORG_ID, '+393401234567', 'dealer_input', {});
   });
 
   it('passes reason when provided', async () => {
@@ -281,7 +281,9 @@ describe('markContactOptOut', () => {
       reason: 'Customer request',
     });
 
-    expect(mockMarkOptOut).toHaveBeenCalledWith(ORG_ID, '+393401234567', 'dealer_input', 'Customer request');
+    expect(mockMarkOptOut).toHaveBeenCalledWith(ORG_ID, '+393401234567', 'dealer_input', {
+      reason: 'Customer request',
+    });
   });
 
   it('returns error when contactId is not a valid UUID', async () => {
