@@ -52,7 +52,7 @@ export class RpoIntermediaryClient implements RpoClient {
 
 ### Task 2: Daily RPO snapshot cron
 
-- [ ] Create `src/app/api/cron/rpo-snapshot/route.ts` running daily at 04:30 Europe/Rome (add to `vercel.json`):
+- [x] Create `src/app/api/cron/rpo-snapshot/route.ts` running daily at 04:30 Europe/Rome (add to `vercel.json`):
   - select all distinct `contacts.phone_e164` across all orgs that are `b2c` and not opt-out and have `rpo_status` either `unchecked` or `last_checked_at < now() - interval '7 days'`
   - paginate over results in chunks of 1000
   - call `rpoClient.bulkCheck(chunk)`
@@ -60,8 +60,8 @@ export class RpoIntermediaryClient implements RpoClient {
   - update `contacts.rpo_status` and `contacts.rpo_checked_at` accordingly
   - log totals to audit_log with `actor_type='system'`
   - if any number transitions `clear → blocked`, mark `contacts.opt_out=true` and `contacts.opt_out_reason='rpo_block'` and emit Inngest event for plan 13 dealer notification
-- [ ] Use `withSystemContext` (cross-org)
-- [ ] Mark completed
+- [x] Use `withSystemContext` (cross-org)
+- [x] Mark completed
 
 ### Task 3: Batch RPO check on contact upload
 
