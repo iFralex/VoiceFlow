@@ -11,6 +11,7 @@ describe('organizations schema', () => {
     expect(cols).toContain('vat_number');
     expect(cols).toContain('country');
     expect(cols).toContain('timezone');
+    expect(cols).toContain('recording_retention_days');
     expect(cols).toContain('created_at');
     expect(cols).toContain('deleted_at');
   });

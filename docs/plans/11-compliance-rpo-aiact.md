@@ -167,14 +167,14 @@ export class RpoIntermediaryClient implements RpoClient {
 
 ### Task 12: Retention policy enforcement
 
-- [ ] Define retention policy per spec §12.4 in `src/lib/compliance/retention.ts`:
-  - recordings: retained 12 months by default; configurable per-org (`organizations.recording_retention_days`, migration `0016_org_retention.sql`)
+- [x] Define retention policy per spec §12.4 in `src/lib/compliance/retention.ts`:
+  - recordings: retained 12 months by default; configurable per-org (`organizations.recording_retention_days`, migration `0033_org_retention.sql` — `0016` slot was already taken)
   - transcripts: retained 24 months
   - audit_log: retained 7 years (regulatory baseline)
   - `contacts` soft-deleted: hard-deleted after 30 days
   - `payments`: retained indefinitely (tax requirement)
-- [ ] Helper `getRetentionThresholds(orgId)` returning the cutoffs
-- [ ] Mark completed
+- [x] Helper `getRetentionThresholds(orgId)` returning the cutoffs
+- [x] Mark completed
 
 ### Task 13: Retention purge cron
 
