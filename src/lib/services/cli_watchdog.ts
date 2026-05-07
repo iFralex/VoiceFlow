@@ -180,13 +180,17 @@ async function collectCliMetricsInner(
 
   const out: CliMetricsRow[] = [];
   for (const cli of cliRows) {
-    // Dialed = any call that left "pending" (started_at IS NOT NULL) from this CLI.
+    // Dialed = any outbound call that left "pending" (started_at IS NOT NULL)
+    // from this CLI. Inbound IVR rows share the pool DID as `from_number`, so
+    // every metric subquery filters on `direction = 'outbound'` to keep the
+    // spam score scoped to dispatched campaign traffic.
     const dialedRows = await tx
       .select({ n: count() })
       .from(calls)
       .where(
         and(
           eq(calls.from_number, cli.e164),
+          eq(calls.direction, 'outbound'),
           isNotNull(calls.started_at),
           gte(calls.started_at, since),
         ),
@@ -199,6 +203,7 @@ async function collectCliMetricsInner(
       .where(
         and(
           eq(calls.from_number, cli.e164),
+          eq(calls.direction, 'outbound'),
           isNotNull(calls.started_at),
           gte(calls.started_at, since),
           eq(calls.status, 'completed'),
@@ -213,6 +218,7 @@ async function collectCliMetricsInner(
       .where(
         and(
           eq(calls.from_number, cli.e164),
+          eq(calls.direction, 'outbound'),
           isNotNull(calls.started_at),
           gte(calls.started_at, since),
           eq(calls.status, 'voicemail'),
@@ -222,7 +228,10 @@ async function collectCliMetricsInner(
 
     // Complaints: opt-outs sourced from inbound IVR for any number ever called
     // from this CLI in the window. The inbound IVR (plan 10 task 9) records
-    // source='inbound_ivr', so the join key is the dialed contact's phone.
+    // source='inbound_ivr', so the join key is the dialed contact's phone. The
+    // direction filter is defensive — inbound rows have null `contact_id` and
+    // are already excluded by the INNER JOIN, but the explicit predicate makes
+    // intent clear and protects against schema changes.
     const complaintRows = await tx.execute<{ n: number }>(sql`
       SELECT COUNT(*)::int AS n
       FROM ${optOutRegistry} o
@@ -232,6 +241,7 @@ async function collectCliMetricsInner(
           SELECT 1 FROM ${calls} c
           INNER JOIN contacts ct ON ct.id = c.contact_id
           WHERE c.from_number = ${cli.e164}
+            AND c.direction = 'outbound'
             AND c.started_at IS NOT NULL
             AND c.started_at >= ${since}
             AND ct.phone_e164 = o.phone_e164

@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, isNull, lt, or, sql } from 'drizzle-orm';
+import { and, asc, eq, inArray, isNotNull, isNull, lt, or, sql } from 'drizzle-orm';
 
 import { type DbTx, withSystemContext } from '@/lib/db/context';
 import type { phoneProviderEnum } from '@/lib/db/schema';
@@ -100,12 +100,15 @@ async function doPick(
 ): Promise<PickedCli> {
   const region = inferRegionFromPhone(contactPhone);
 
-  // Correlated subquery: count of calls dispatched from this CLI in the past
-  // hour. The CLI picker only enforces the cap; the dispatcher writes
-  // `calls.from_number` so that future picks see the activity.
+  // Correlated subquery: count of outbound calls dispatched from this CLI in
+  // the past hour. The CLI picker only enforces the cap; the dispatcher writes
+  // `calls.from_number` so that future picks see the activity. Inbound IVR rows
+  // share the pool DID as `from_number`, so the direction filter keeps the
+  // hourly cap scoped to outbound traffic.
   const hourlyCount = sql<number>`(
     SELECT COUNT(*)::int FROM ${calls} c
     WHERE c.from_number = ${phoneNumbers.e164}
+      AND c.direction = 'outbound'
       AND c.started_at IS NOT NULL
       AND c.started_at >= NOW() - INTERVAL '1 hour'
   )`;
@@ -143,6 +146,11 @@ async function doPick(
     .where(
       and(
         eq(phoneNumbers.status, 'active'),
+        // Seed rows ship with provider_external_id=null until the founder
+        // populates each row's Vapi phoneNumberId post-import. Excluding them
+        // at the picker keeps NoAvailableCliError as the saturation signal
+        // instead of a generic dispatch error from createCall.
+        isNotNull(phoneNumbers.provider_external_id),
         or(eq(phoneNumbers.org_id, orgId), isNull(phoneNumbers.org_id)),
         lt(phoneNumbers.daily_call_count, dailyCap),
         sql`${hourlyCount} < ${hourlyCap}`,

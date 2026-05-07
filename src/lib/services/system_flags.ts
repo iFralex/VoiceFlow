@@ -197,6 +197,17 @@ function persistState(state: SbcHealthState, tx: DbTx): Promise<void> {
 }
 
 /**
+ * Stable advisory-lock key used to serialise concurrent SBC-health bookkeeping
+ * transactions. `recordSbcDispatchFailure`/`recordSbcDispatchSuccess` perform a
+ * read-modify-write on the same `system_flags` row; without serialisation two
+ * concurrent failures can both read the pre-update state and the second write
+ * clobbers the first, dropping a failure timestamp and breaking the trip
+ * threshold. We pick a fixed bigint per key — pg_advisory_xact_lock is
+ * released automatically at the end of the surrounding transaction.
+ */
+const SBC_UNHEALTHY_FLAG_LOCK_KEY = 7_283_419_521;
+
+/**
  * Records an SBC dispatch failure. When the rolling count of failures within
  * the trip window reaches `SBC_FAILURE_TRIP_THRESHOLD`, the `sbc_unhealthy`
  * flag is set so the picker excludes SBC providers on subsequent picks.
@@ -209,6 +220,12 @@ export async function recordSbcDispatchFailure(
 ): Promise<SbcHealthState> {
   const now = options.now ?? new Date();
   const run = async (tx: DbTx): Promise<SbcHealthState> => {
+    // Serialise concurrent updaters: without this, two simultaneous failures
+    // both read the same `recentFailures` array, both push their timestamp,
+    // and the second `setFlag` overwrites the first — losing a failure event
+    // and potentially preventing the trip threshold from firing.
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(${SBC_UNHEALTHY_FLAG_LOCK_KEY})`);
+
     const stored = await getFlag<unknown>(SBC_UNHEALTHY_FLAG_KEY, { tx });
     const state = readState(stored);
 
@@ -244,6 +261,10 @@ export async function recordSbcDispatchSuccess(
 ): Promise<SbcHealthState> {
   const now = options.now ?? new Date();
   const run = async (tx: DbTx): Promise<SbcHealthState> => {
+    // Same advisory lock as the failure path: a success interleaved with a
+    // failure must not lose either side's bookkeeping.
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(${SBC_UNHEALTHY_FLAG_LOCK_KEY})`);
+
     const stored = await getFlag<unknown>(SBC_UNHEALTHY_FLAG_KEY, { tx });
     const state = readState(stored);
 
@@ -291,6 +312,9 @@ export async function clearStaleSbcUnhealthyFlag(
 ): Promise<boolean> {
   const now = options.now ?? new Date();
   const run = async (tx: DbTx): Promise<boolean> => {
+    // Take the same advisory lock the record-* helpers use so a stale-flag
+    // sweep cannot interleave with a concurrent failure/success update.
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(${SBC_UNHEALTHY_FLAG_LOCK_KEY})`);
     const stored = await getFlag<unknown>(SBC_UNHEALTHY_FLAG_KEY, { tx });
     const state = readState(stored);
     if (!state.unhealthy) return false;

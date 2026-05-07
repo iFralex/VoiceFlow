@@ -6,7 +6,10 @@ import { withOrgContext } from '@/lib/db/context';
 import { calls, contacts, phoneNumbers } from '@/lib/db/schema';
 import { sendInngestEvent } from '@/lib/inngest/client';
 import { CREDIT_LOW_BALANCE_EVENT } from '@/lib/inngest/handlers/credit';
-import { dispatchCall as dispatchCallToProvider } from '@/lib/services/calls';
+import {
+  dispatchCall as dispatchCallToProvider,
+  NoPhoneNumberAvailableError,
+} from '@/lib/services/calls';
 import { requireRunning } from '@/lib/services/campaigns';
 import { getBalance } from '@/lib/services/credit';
 import { nextWindowOpen } from '@/lib/utils/time-window';
@@ -713,7 +716,21 @@ export async function campaignDispatchCallHandler(
   }
 
   // 7. Dispatch to voice provider
-  await dispatchCallToProvider(orgId, callId);
+  //
+  // CLI-pool saturation (plan 10 task 4): when every active candidate is at
+  // its daily/hourly cap or already locked by a concurrent picker, the picker
+  // raises `NoPhoneNumberAvailableError`. Treat this as a transient saturation
+  // signal and reschedule the dispatch step in 30 minutes instead of letting
+  // it fail through Inngest's retry policy and end up as a permanent
+  // provider_error on the call row.
+  try {
+    await dispatchCallToProvider(orgId, callId);
+  } catch (err) {
+    if (err instanceof NoPhoneNumberAvailableError) {
+      return { sleepUntil: new Date(Date.now() + 30 * 60 * 1000) };
+    }
+    throw err;
+  }
 
   return null;
 }

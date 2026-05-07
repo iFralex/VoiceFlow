@@ -36,7 +36,7 @@ await withSystemContext(async (tx) => {
 });
 ```
 
-System-owned tables (`script_templates`, `voice_catalogue`, `credit_packages`) have no RLS and must be queried via `withSystemContext`, never `withOrgContext`.
+System-owned tables (`script_templates`, `voice_catalogue`, `credit_packages`, `phone_numbers`, `system_flags`, `cli_cooldown_history`) have no RLS and must be queried via `withSystemContext`, never `withOrgContext`.
 
 Inside `(app)/` Server Components and Server Actions, use `dbForRequest()` which auto-resolves the org from middleware headers:
 

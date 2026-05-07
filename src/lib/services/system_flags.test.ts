@@ -76,6 +76,10 @@ const mockTx = {
   delete: vi.fn(() => ({
     where: makeWhereChain('delete'),
   })),
+  // pg_advisory_xact_lock is a no-op in this in-memory mock — the unit tests
+  // exercise the bookkeeping math, not the concurrency contract (which is
+  // covered by `system_flags.integration.test.ts`).
+  execute: vi.fn(() => Promise.resolve([])),
 };
 
 // Capture the key argument out-of-band — drizzle eq() is opaque inside the

@@ -220,11 +220,11 @@ export async function POST(request: Request): Promise<Response> {
         if (callId && msg.functionCall) {
           await recordToolInvocation(callId, msg.functionCall.name, msg.functionCall.parameters ?? null);
         } else if (isInbound && msg.functionCall?.name === 'register_inbound_optout') {
-          const params = (msg.functionCall.parameters ?? {}) as { callerNumber?: unknown };
-          const callerNumber =
-            typeof params.callerNumber === 'string'
-              ? params.callerNumber
-              : (msg.call?.customer?.number ?? null);
+          // Always use Vapi's verified caller number — the LLM-supplied
+          // `callerNumber` argument is untrusted (a caller could social-engineer
+          // the assistant into setting a different number, which would enrol an
+          // unrelated third party in opt-out across every org that called them).
+          const callerNumber = msg.call?.customer?.number ?? null;
           if (callerNumber) {
             await recordInboundOptout({ providerCallId, callerNumber });
           }

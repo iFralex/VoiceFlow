@@ -1,6 +1,6 @@
 # Plan: Telephony — Italian SBC, CLI Pool, Anti-Spam
 
-**Branch:** `feat/10-telephony-cli-pool`
+**Branch:** `telephony-cli-pool`
 **Wave:** 3
 **Depends on:** 01, 02, 03, 04, 08
 **Estimated effort:** 4–6 days
