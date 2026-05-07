@@ -198,12 +198,12 @@ export class RpoIntermediaryClient implements RpoClient {
 
 ### Task 15: Audit log viewer
 
-- [ ] Create `src/app/(app)/settings/audit-log/page.tsx` (capability `audit.view`, defaults to `admin` and `owner` roles):
+- [x] Create `src/app/(app)/settings/audit-log/page.tsx` (capability `audit.view`, defaults to `admin` and `owner` roles):
   - paginated data table with columns: timestamp, actor (user/system/webhook), action, subject type/id, details (collapsed JSON viewer)
   - filters: action prefix (e.g. `compliance.*`), date range, actor user
   - export to CSV button (signed URL with 1h TTL)
-- [ ] Server-side rendered with cursor pagination on `audit_log(org_id, created_at DESC)` index
-- [ ] Mark completed
+- [x] Server-side rendered with cursor pagination on `audit_log(org_id, created_at DESC)` index
+- [x] Mark completed
 
 ### Task 16: DPA acceptance gate
 
