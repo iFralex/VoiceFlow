@@ -20,14 +20,17 @@
  * Cross-org by design — runs through `withSystemContext` and is mounted at a
  * cron-only route guarded by `Authorization: Bearer ${CRON_SECRET}`.
  *
- * Legal hold (plan 11 task 14) will add a `contacts.legal_hold_until` column
- * and a filter here that skips those contacts and their associated artifacts.
- * Until that column lands, the purge respects only `deleted_at` semantics.
+ * Legal hold (plan 11 task 14): a contact whose `legal_hold_until` is non-NULL
+ * and still in the future is excluded from every step here — its calls keep
+ * their recording / transcript paths, and the contact row is not hard-deleted
+ * even after the 30-day grace period has elapsed. The hold expires implicitly
+ * once `legal_hold_until <= now()`, after which the next cron run resumes
+ * normal retention. Inbound IVR calls (no `contact_id`) are unaffected.
  */
 
 import { timingSafeEqual } from 'crypto';
 
-import { and, eq, inArray, isNotNull, isNull, lt } from 'drizzle-orm';
+import { and, eq, gt, inArray, isNotNull, isNull, lt, notInArray, or } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
 
 import { getRetentionThresholds } from '@/lib/compliance/retention';
@@ -150,21 +153,30 @@ export async function runRetentionPurge(now: Date = new Date()): Promise<Retenti
 async function purgeOrg(orgId: string, now: Date): Promise<RetentionPurgeOrgResult> {
   const thresholds = await getRetentionThresholds(orgId, { now });
 
+  // Resolve held contacts up-front so every subsequent step can exclude them.
+  // Hold expiry is measured against `now` (the cron's wall clock), so a hold
+  // whose `legal_hold_until` has passed simply doesn't appear in the set and
+  // retention proceeds normally for that contact.
+  const heldContactIds = await fetchHeldContactIds(orgId, now);
+
   const recordings = await purgeArtifactColumn({
     orgId,
     cutoff: thresholds.recordingCutoff,
     column: 'recording_path',
+    heldContactIds,
   });
 
   const transcripts = await purgeArtifactColumn({
     orgId,
     cutoff: thresholds.transcriptCutoff,
     column: 'transcript_path',
+    heldContactIds,
   });
 
   const contactsHardDeleted = await hardDeleteSoftDeletedContacts(
     orgId,
     thresholds.softDeletedContactCutoff,
+    heldContactIds,
   );
 
   return {
@@ -191,6 +203,34 @@ async function fetchOrgIds(): Promise<string[]> {
 }
 
 // ---------------------------------------------------------------------------
+// Helpers — legal hold (plan 11 task 14)
+// ---------------------------------------------------------------------------
+
+/**
+ * Resolves contacts under an active legal hold for the given org.
+ *
+ * "Active" means `legal_hold_until` is non-NULL and strictly in the future
+ * relative to `now` — past timestamps let a hold expire on its own without
+ * any operator action. We materialise the IDs into a Set so callers can do
+ * cheap exclusion in tight loops without re-querying.
+ */
+async function fetchHeldContactIds(orgId: string, now: Date): Promise<Set<string>> {
+  return withSystemContext(async (tx) => {
+    const rows = await tx
+      .select({ id: contacts.id })
+      .from(contacts)
+      .where(
+        and(
+          eq(contacts.org_id, orgId),
+          isNotNull(contacts.legal_hold_until),
+          gt(contacts.legal_hold_until, now),
+        ),
+      );
+    return new Set(rows.map((r) => r.id));
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Helpers — artifact (recording / transcript) purge
 // ---------------------------------------------------------------------------
 
@@ -198,6 +238,7 @@ interface PurgeArtifactArgs {
   orgId: string;
   cutoff: Date;
   column: 'recording_path' | 'transcript_path';
+  heldContactIds: Set<string>;
 }
 
 interface PurgeArtifactResult {
@@ -220,12 +261,13 @@ async function purgeArtifactColumn({
   orgId,
   cutoff,
   column,
+  heldContactIds,
 }: PurgeArtifactArgs): Promise<PurgeArtifactResult> {
   let deleted = 0;
   let storageErrors = 0;
 
   for (;;) {
-    const rows = await fetchExpiredCalls(orgId, cutoff, column);
+    const rows = await fetchExpiredCalls(orgId, cutoff, column, heldContactIds);
     if (rows.length === 0) break;
 
     const paths = rows.map((r) => r.path);
@@ -257,9 +299,15 @@ async function fetchExpiredCalls(
   orgId: string,
   cutoff: Date,
   column: 'recording_path' | 'transcript_path',
+  heldContactIds: Set<string>,
 ): Promise<ExpiredCallRow[]> {
   return withSystemContext(async (tx) => {
     const pathCol = column === 'recording_path' ? calls.recording_path : calls.transcript_path;
+    // Calls with `contact_id IS NULL` are inbound IVR rows — they have no
+    // contact and therefore no legal-hold linkage; they purge as normal.
+    const heldExclusion = heldContactIds.size > 0
+      ? or(isNull(calls.contact_id), notInArray(calls.contact_id, [...heldContactIds]))
+      : undefined;
     const rows = await tx
       .select({ id: calls.id, path: pathCol })
       .from(calls)
@@ -268,6 +316,7 @@ async function fetchExpiredCalls(
           eq(calls.org_id, orgId),
           isNotNull(pathCol),
           lt(calls.created_at, cutoff),
+          heldExclusion,
         ),
       )
       .limit(ARTIFACT_BATCH_SIZE);
@@ -331,8 +380,12 @@ async function deleteStorageObjects(paths: string[]): Promise<boolean> {
 async function hardDeleteSoftDeletedContacts(
   orgId: string,
   cutoff: Date,
+  heldContactIds: Set<string>,
 ): Promise<number> {
   return withSystemContext(async (tx) => {
+    const heldExclusion = heldContactIds.size > 0
+      ? notInArray(contacts.id, [...heldContactIds])
+      : undefined;
     const r = await tx
       .delete(contacts)
       .where(
@@ -340,6 +393,7 @@ async function hardDeleteSoftDeletedContacts(
           eq(contacts.org_id, orgId),
           isNotNull(contacts.deleted_at),
           lt(contacts.deleted_at, cutoff),
+          heldExclusion,
         ),
       )
       .returning({ id: contacts.id });

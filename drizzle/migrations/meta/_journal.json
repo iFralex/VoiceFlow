@@ -239,6 +239,13 @@
       "when": 1777800275517,
       "tag": "0033_org_retention",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1777800275518,
+      "tag": "0034_legal_hold",
+      "breakpoints": true
     }
   ]
 }

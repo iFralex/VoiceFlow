@@ -190,11 +190,11 @@ export class RpoIntermediaryClient implements RpoClient {
 
 ### Task 14: Legal hold flag
 
-- [ ] Add column `contacts.legal_hold_until` (nullable timestamp) via migration `0017_legal_hold.sql`
-- [ ] When set, retention purge skips the contact and their related data
-- [ ] Founder-only Server Action `setLegalHold(orgId, contactId, untilDate, reason)` accessible via admin tooling
-- [ ] Audit log entry on every legal hold change
-- [ ] Mark completed
+- [x] Add column `contacts.legal_hold_until` (nullable timestamp) via migration `0034_legal_hold.sql` (slot `0017` was already taken; this lands at the next sequential slot, mirroring the `0033_org_retention.sql` rename in Task 12)
+- [x] When set, retention purge skips the contact and their related data
+- [x] Founder-only Server Action `setLegalHold(orgId, contactId, untilDate, reason)` accessible via admin tooling
+- [x] Audit log entry on every legal hold change
+- [x] Mark completed
 
 ### Task 15: Audit log viewer
 

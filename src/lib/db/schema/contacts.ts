@@ -37,6 +37,7 @@ export const contacts = pgTable(
     rpo_checked_at: timestamp('rpo_checked_at', { withTimezone: true }),
     opt_out: boolean('opt_out').notNull().default(false),
     opt_out_reason: text('opt_out_reason'),
+    legal_hold_until: timestamp('legal_hold_until', { withTimezone: true }),
     metadata: jsonb('metadata'),
     created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     deleted_at: timestamp('deleted_at', { withTimezone: true }),
@@ -47,6 +48,9 @@ export const contacts = pgTable(
       .where(sql`${t.deleted_at} IS NULL`),
     index('contacts_contact_list_id_idx').on(t.contact_list_id),
     index('contacts_org_opt_out_rpo_idx').on(t.org_id, t.opt_out, t.rpo_status),
+    index('contacts_legal_hold_until_idx')
+      .on(t.legal_hold_until)
+      .where(sql`${t.legal_hold_until} IS NOT NULL`),
   ],
 );
 

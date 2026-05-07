@@ -55,6 +55,7 @@ const makeContact = (phone: string, overrides = {}) => ({
   rpo_checked_at: null,
   opt_out: false,
   opt_out_reason: null,
+  legal_hold_until: null,
   metadata: null,
   created_at: new Date('2024-01-01'),
   deleted_at: null,

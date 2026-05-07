@@ -56,6 +56,7 @@ vi.mock('@/lib/db/schema', () => ({
   calls: {
     id: 'c_id',
     org_id: 'c_org_id',
+    contact_id: 'c_contact_id',
     recording_path: 'c_recording_path',
     transcript_path: 'c_transcript_path',
     created_at: 'c_created_at',
@@ -64,16 +65,20 @@ vi.mock('@/lib/db/schema', () => ({
     id: 'k_id',
     org_id: 'k_org_id',
     deleted_at: 'k_deleted_at',
+    legal_hold_until: 'k_legal_hold_until',
   },
 }));
 
 vi.mock('drizzle-orm', () => ({
   and: (...args: unknown[]) => ({ type: 'and', args: args.filter((a) => a !== undefined) }),
   eq: (col: unknown, val: unknown) => ({ type: 'eq', col, val }),
+  gt: (col: unknown, val: unknown) => ({ type: 'gt', col, val }),
   inArray: (col: unknown, vals: unknown[]) => ({ type: 'inArray', col, vals }),
   isNull: (col: unknown) => ({ type: 'isNull', col }),
   isNotNull: (col: unknown) => ({ type: 'isNotNull', col }),
   lt: (col: unknown, val: unknown) => ({ type: 'lt', col, val }),
+  notInArray: (col: unknown, vals: unknown[]) => ({ type: 'notInArray', col, vals }),
+  or: (...args: unknown[]) => ({ type: 'or', args: args.filter((a) => a !== undefined) }),
 }));
 
 // ---------------------------------------------------------------------------
@@ -110,6 +115,10 @@ interface DeleteRecorder {
   returningRows: unknown[];
 }
 
+interface SelectRecorder {
+  whereArg?: unknown;
+}
+
 interface SelectResult {
   rows: unknown[];
 }
@@ -122,6 +131,7 @@ interface TxPlan {
 
 interface Captured {
   inserts: unknown[];
+  selects: SelectRecorder[];
   updates: UpdateRecorder[];
   deletes: DeleteRecorder[];
 }
@@ -130,11 +140,14 @@ function buildTx(plan: TxPlan, captured: Captured): unknown {
   return {
     select: vi.fn(() => ({
       from: vi.fn(() => ({
-        where: vi.fn((..._args: unknown[]) => ({
-          // resolves both `await chain.where(...)` and `chain.where(...).limit(N)`
-          then: (resolve: (v: unknown) => void) => resolve(plan.select?.rows ?? []),
-          limit: vi.fn().mockResolvedValue(plan.select?.rows ?? []),
-        })),
+        where: vi.fn((...args: unknown[]) => {
+          captured.selects.push({ whereArg: args[0] });
+          return {
+            // resolves both `await chain.where(...)` and `chain.where(...).limit(N)`
+            then: (resolve: (v: unknown) => void) => resolve(plan.select?.rows ?? []),
+            limit: vi.fn().mockResolvedValue(plan.select?.rows ?? []),
+          };
+        }),
       })),
     })),
     update: vi.fn(() => {
@@ -181,6 +194,8 @@ function buildTx(plan: TxPlan, captured: Captured): unknown {
 
 interface OrgPlan {
   orgId: string;
+  /** Contact IDs returned by the held-contacts lookup (empty by default). */
+  heldContactIds?: string[];
   recordings?: Array<{ id: string; path: string }>; // expired calls with recording paths
   transcripts?: Array<{ id: string; path: string }>; // expired calls with transcript paths
   recordingsClearedRows?: Array<{ id: string }>; // returning rows from update set recording_path=null
@@ -205,6 +220,8 @@ function queueOrgPlans(plans: OrgPlan[], captured: Captured) {
     // does not invoke withSystemContext from inside this test's queue.
     //
     // Per-org sequence inside `purgeOrg`:
+    //   held contacts:
+    //     - fetchHeldContactIds (select) → always one query
     //   recordings:
     //     - fetchExpiredCalls (select) → only invoked when previous chunk == BATCH_SIZE
     //     - clearArtifactColumn (update) → only when storage delete succeeded
@@ -215,6 +232,11 @@ function queueOrgPlans(plans: OrgPlan[], captured: Captured) {
     // The route loops chunks until rows.length < ARTIFACT_BATCH_SIZE. Our test
     // chunks are always small (<500), so each artifact column gets exactly
     // ONE select + (optionally) ONE update per org.
+
+    // held contacts (legal hold)
+    queue.push(async (fn) =>
+      fn(buildTx({ select: { rows: (plan.heldContactIds ?? []).map((id) => ({ id })) } }, captured)),
+    );
 
     // recordings
     queue.push(async (fn) => fn(buildTx({ select: { rows: plan.recordings ?? [] } }, captured)));
@@ -306,7 +328,7 @@ describe('GET /api/cron/retention-purge — auth', () => {
   });
 
   it('returns 200 and runs the purge on a valid request', async () => {
-    queueOrgPlans([], { inserts: [], updates: [], deletes: [] });
+    queueOrgPlans([], { inserts: [], selects: [], updates: [], deletes: [] });
     const res = await GET(makeRequest(CRON_SECRET));
     expect(res.status).toBe(200);
     const json = (await res.json()) as { ok: boolean };
@@ -320,7 +342,7 @@ describe('GET /api/cron/retention-purge — auth', () => {
 
 describe('runRetentionPurge', () => {
   it('returns zeros and writes an audit entry when no orgs exist', async () => {
-    queueOrgPlans([], { inserts: [], updates: [], deletes: [] });
+    queueOrgPlans([], { inserts: [], selects: [], updates: [], deletes: [] });
 
     const result = await runRetentionPurge(NOW);
 
@@ -353,7 +375,7 @@ describe('runRetentionPurge', () => {
   });
 
   it('purges expired recordings and transcripts and clears their columns', async () => {
-    const captured: Captured = { inserts: [], updates: [], deletes: [] };
+    const captured: Captured = { inserts: [], selects: [], updates: [], deletes: [] };
     queueOrgPlans(
       [
         {
@@ -399,7 +421,7 @@ describe('runRetentionPurge', () => {
   });
 
   it('counts storage errors and skips DB clear when storage delete fails', async () => {
-    const captured: Captured = { inserts: [], updates: [], deletes: [] };
+    const captured: Captured = { inserts: [], selects: [], updates: [], deletes: [] };
     queueOrgPlans(
       [
         {
@@ -431,7 +453,7 @@ describe('runRetentionPurge', () => {
   });
 
   it('hard-deletes soft-deleted contacts past the grace period', async () => {
-    const captured: Captured = { inserts: [], updates: [], deletes: [] };
+    const captured: Captured = { inserts: [], selects: [], updates: [], deletes: [] };
     queueOrgPlans(
       [
         {
@@ -451,7 +473,7 @@ describe('runRetentionPurge', () => {
   });
 
   it('processes multiple orgs and aggregates totals', async () => {
-    const captured: Captured = { inserts: [], updates: [], deletes: [] };
+    const captured: Captured = { inserts: [], selects: [], updates: [], deletes: [] };
     queueOrgPlans(
       [
         {
@@ -480,7 +502,7 @@ describe('runRetentionPurge', () => {
   });
 
   it('counts an org-level error and continues with the other orgs', async () => {
-    const captured: Captured = { inserts: [], updates: [], deletes: [] };
+    const captured: Captured = { inserts: [], selects: [], updates: [], deletes: [] };
     queueOrgPlans(
       [
         { orgId: ORG_A }, // baseline (will succeed)
@@ -513,7 +535,8 @@ describe('runRetentionPurge', () => {
     queue.push(async (fn) =>
       fn(buildTx({ select: { rows: [{ id: ORG_A }, { id: ORG_B }] } }, captured)),
     );
-    // ORG_B: recordings (empty), transcripts (empty), hard-delete (1)
+    // ORG_B: held contacts (empty), recordings (empty), transcripts (empty), hard-delete (1)
+    queue.push(async (fn) => fn(buildTx({ select: { rows: [] } }, captured)));
     queue.push(async (fn) => fn(buildTx({ select: { rows: [] } }, captured)));
     queue.push(async (fn) => fn(buildTx({ select: { rows: [] } }, captured)));
     queue.push(async (fn) =>
@@ -547,5 +570,58 @@ describe('runRetentionPurge', () => {
         }),
       }),
     );
+  });
+
+  it('passes held contact ids through every artifact and contact query', async () => {
+    const captured: Captured = { inserts: [], selects: [], updates: [], deletes: [] };
+    queueOrgPlans(
+      [
+        {
+          orgId: ORG_A,
+          // Two contacts under active legal hold for this org.
+          heldContactIds: ['held-contact-1', 'held-contact-2'],
+          // The DB filter is what enforces the skip; here we verify the
+          // exclusion clauses are wired into every where() invocation.
+          recordings: [],
+          transcripts: [],
+          hardDeletedContacts: [],
+        },
+      ],
+      captured,
+    );
+
+    await runRetentionPurge(NOW);
+
+    // Exactly one delete (the hard-purge of soft-deleted contacts) and its
+    // where() must include a `notInArray` clause excluding the held ids.
+    expect(captured.deletes).toHaveLength(1);
+    const deleteWhere = captured.deletes[0]!.whereArg as {
+      type: string;
+      args: Array<{ type: string; col?: unknown; vals?: unknown[] }>;
+    };
+    const deleteNotIn = deleteWhere.args.find((arg) => arg.type === 'notInArray');
+    expect(deleteNotIn).toBeDefined();
+    expect(deleteNotIn?.vals).toEqual(['held-contact-1', 'held-contact-2']);
+
+    // Recordings and transcripts selects must each include the
+    // `or(isNull(contact_id), notInArray(contact_id, [...heldIds]))` clause
+    // that lets inbound IVR rows (no contact) purge while excluding any call
+    // attached to a held contact.
+    interface SelectAndArg {
+      type: string;
+      args: Array<{ type: string; args?: Array<{ type: string; vals?: unknown[] }> }>;
+    }
+    const artifactSelects = captured.selects
+      .map((s) => s.whereArg as SelectAndArg)
+      .filter((w) => w?.type === 'and');
+    // Two artifact selects per org (recordings, transcripts) + the
+    // hard-delete soft-deleted-contacts where (delete, captured separately).
+    // The held-contacts and org-list selects use simpler where shapes.
+    const artifactSelectsWithExclusion = artifactSelects.filter((sel) =>
+      sel.args.some(
+        (arg) => arg.type === 'or' && arg.args?.some((sub) => sub.type === 'notInArray'),
+      ),
+    );
+    expect(artifactSelectsWithExclusion.length).toBeGreaterThanOrEqual(2);
   });
 });
