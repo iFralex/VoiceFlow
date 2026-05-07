@@ -23,8 +23,8 @@ RPO is the Italian national do-not-call registry. Calling B2C numbers without ch
 
 ### Task 1: RPO intermediary client
 
-- [ ] Open commercial account with an RPO intermediary provider; capture API endpoint and API key in `RPO_PROVIDER_API_KEY` and `RPO_PROVIDER_ENDPOINT`
-- [ ] Create `src/lib/compliance/rpo/client.ts`:
+- [x] Open commercial account with an RPO intermediary provider; capture API endpoint and API key in `RPO_PROVIDER_API_KEY` and `RPO_PROVIDER_ENDPOINT` (skipped — operational/manual; env vars already declared in `src/lib/env.ts`)
+- [x] Create `src/lib/compliance/rpo/client.ts`:
 
 ```typescript
 export interface RpoClient {
@@ -46,9 +46,9 @@ export class RpoIntermediaryClient implements RpoClient {
 }
 ```
 
-- [ ] Mock implementation `RpoMockClient` for dev/test environments returning random ~5% block rate
-- [ ] Factory `getRpoClient()` selecting based on `NODE_ENV` and presence of credentials
-- [ ] Mark completed
+- [x] Mock implementation `RpoMockClient` for dev/test environments returning random ~5% block rate
+- [x] Factory `getRpoClient()` selecting based on `NODE_ENV` and presence of credentials
+- [x] Mark completed
 
 ### Task 2: Daily RPO snapshot cron
 
