@@ -105,17 +105,17 @@ export class RpoIntermediaryClient implements RpoClient {
 
 ### Task 7: AI Act three-layer enforcement audit
 
-- [ ] Create automated audit `src/lib/compliance/aiact/audit.ts` with `runAiActConformanceAudit(timeWindow)`:
+- [x] Create automated audit `src/lib/compliance/aiact/audit.ts` with `runAiActConformanceAudit(timeWindow)`:
   - sample up to 500 calls from the time window
   - for each, verify:
     - **Layer 1**: assembled system prompt starts with the canonical preamble (read from `audit_log` if present, else reconstruct from script + template version)
     - **Layer 2**: first message contains "assistente vocale automatico" (case-insensitive)
     - **Layer 3**: transcript first 30 seconds contains the same phrase (already verified per-call by plan 08's classifier; this audit just aggregates)
   - returns `{ totalSampled, layer1Passed, layer2Passed, layer3Passed, samples }`
-- [ ] Schedule monthly via Vercel cron `/api/cron/aiact-audit` (1st of month, 06:00 Europe/Rome)
-- [ ] Output stored in `audit_log` with `action='compliance.aiact_audit_completed'` and full result in metadata
-- [ ] Surface to founder dashboard (plan 14)
-- [ ] Mark completed
+- [x] Schedule monthly via Vercel cron `/api/cron/aiact-audit` (1st of month, 06:00 Europe/Rome)
+- [x] Output stored in `audit_log` with `action='compliance.aiact_audit_completed'` and full result in metadata
+- [x] Surface to founder dashboard (plan 14) (deferred to plan 14: this audit emits the `compliance.aiact_audit_completed` audit_log row; plan 14's founder dashboard will read it)
+- [x] Mark completed
 
 ### Task 8: Disclosure failure runbook
 
