@@ -25,7 +25,7 @@
  *     and we deliberately don't create one.
  */
 
-import { and, asc, eq, isNull } from 'drizzle-orm';
+import { and, asc, eq, isNotNull, isNull } from 'drizzle-orm';
 
 import { type DbTx, withSystemContext } from '@/lib/db/context';
 import { phoneNumbers } from '@/lib/db/schema';
@@ -176,6 +176,11 @@ async function pickSbcCandidate(
       and(
         eq(phoneNumbers.status, 'active'),
         isNull(phoneNumbers.org_id),
+        // Mirror the picker's filter: rows whose Vapi phoneNumberId hasn't been
+        // imported yet would sort first (daily_call_count=0, last_used_at=NULL)
+        // and cause `create_call_failed` even when other healthy SBC CLIs are
+        // available. Excluding them here keeps the smoke test on the warm path.
+        isNotNull(phoneNumbers.provider_external_id),
       ),
     )
     .orderBy(asc(phoneNumbers.daily_call_count), asc(phoneNumbers.last_used_at));

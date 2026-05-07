@@ -56,6 +56,7 @@ vi.mock('drizzle-orm', () => ({
   and: (...args: unknown[]) => ({ kind: 'and', args }),
   asc: (col: unknown) => ({ kind: 'asc', col }),
   eq: (col: unknown, val: unknown) => ({ kind: 'eq', col, val }),
+  isNotNull: (col: unknown) => ({ kind: 'isNotNull', col }),
   isNull: (col: unknown) => ({ kind: 'isNull', col }),
 }));
 
