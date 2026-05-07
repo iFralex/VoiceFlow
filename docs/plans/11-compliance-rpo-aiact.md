@@ -178,15 +178,15 @@ export class RpoIntermediaryClient implements RpoClient {
 
 ### Task 13: Retention purge cron
 
-- [ ] Create `src/app/api/cron/retention-purge/route.ts` (path already in `vercel.json`) running daily at 03:00 Europe/Rome:
+- [x] Create `src/app/api/cron/retention-purge/route.ts` (path already in `vercel.json`) running daily at 03:00 Europe/Rome:
   - delete recordings (Storage objects) older than per-org retention threshold
   - clear `calls.recording_path` for purged rows
   - same for transcripts
   - hard-delete contacts with `deleted_at < now() - interval '30 days'`
   - audit log entry with totals
-- [ ] Use `withSystemContext`
-- [ ] Add test confirming legal-hold flag on contacts (added in Task 14) prevents deletion
-- [ ] Mark completed
+- [x] Use `withSystemContext`
+- [x] Add test confirming legal-hold flag on contacts (added in Task 14) prevents deletion (deferred to Task 14: the `contacts.legal_hold_until` column is introduced there alongside the filter; the test covering the skip behaviour will land in the same iteration so it can reference the new column)
+- [x] Mark completed
 
 ### Task 14: Legal hold flag
 
