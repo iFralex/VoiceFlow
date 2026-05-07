@@ -129,15 +129,15 @@ export class RpoIntermediaryClient implements RpoClient {
 
 ### Task 9: GDPR data subject rights — export (Article 15)
 
-- [ ] Create `src/lib/compliance/gdpr/export.ts` with `buildSubjectExport(orgId, phoneE164OrEmail)`:
+- [x] Create `src/lib/compliance/gdpr/export.ts` with `buildSubjectExport(orgId, phoneE164OrEmail)`:
   - resolves contact by phone or email within the org
   - fetches all related records: contact row, all calls (with recording URLs and transcripts), appointments, opt-out entries, audit-log entries mentioning the contact
   - generates a ZIP containing JSON files + the recording MP3s + transcript JSONs
   - uploads to Storage `<org_id>/exports/gdpr-<contact_id>-<timestamp>.zip` with 7-day signed URL
   - logs to audit_log with `action='compliance.gdpr_export'`
-- [ ] Server Action `requestSubjectExport({ identifier })` accessible from `/settings/compliance` page (capability `compliance.export`)
-- [ ] Returns the signed URL for immediate download; also emails the export link to the requesting member
-- [ ] Mark completed
+- [x] Server Action `requestSubjectExport({ identifier })` accessible from `/settings/compliance` page (capability `compliance.export`)
+- [x] Returns the signed URL for immediate download; also emails the export link to the requesting member
+- [x] Mark completed
 
 ### Task 10: GDPR data subject rights — erasure (Article 17)
 
