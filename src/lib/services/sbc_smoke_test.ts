@@ -210,13 +210,23 @@ async function waitForCallEnd(
   const deadline = now() + timeoutMs;
   let lastStatus: string | undefined;
   while (now() < deadline) {
-    const res = await fetchImpl(
-      `${VAPI_BASE_URL}/call/${encodeURIComponent(providerCallId)}`,
-      {
-        method: 'GET',
-        headers: { Authorization: `Bearer ${apiKey}` },
-      },
-    );
+    let res: Response;
+    try {
+      res = await fetchImpl(
+        `${VAPI_BASE_URL}/call/${encodeURIComponent(providerCallId)}`,
+        {
+          method: 'GET',
+          headers: { Authorization: `Bearer ${apiKey}` },
+        },
+      );
+    } catch (err) {
+      // Network failure (DNS, connection refused, TLS, abort): treat the same
+      // as a 5xx blip so a transient outage doesn't break the cron's contract
+      // of always resolving. The timeout still bounds total wait.
+      lastStatus = `fetch_error:${err instanceof Error ? err.message : 'unknown'}`;
+      await sleep(pollIntervalMs);
+      continue;
+    }
     if (!res.ok) {
       // Treat transient fetch errors as "not yet ended" so a single 5xx blip
       // doesn't fail the smoke test. The timeout still bounds total wait.
@@ -224,7 +234,15 @@ async function waitForCallEnd(
       await sleep(pollIntervalMs);
       continue;
     }
-    const json = (await res.json()) as VapiPollShape;
+    let json: VapiPollShape;
+    try {
+      json = (await res.json()) as VapiPollShape;
+    } catch (err) {
+      // Malformed JSON from a 200 response — treat as a transient blip too.
+      lastStatus = `json_error:${err instanceof Error ? err.message : 'unknown'}`;
+      await sleep(pollIntervalMs);
+      continue;
+    }
     lastStatus = json.status;
     if (json.status === 'ended') {
       return { ended: json, lastStatus };

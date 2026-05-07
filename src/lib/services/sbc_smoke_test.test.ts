@@ -387,6 +387,53 @@ describe('runSbcSmokeTest', () => {
     expect(emit).not.toHaveBeenCalled();
   });
 
+  it('treats fetch network errors as "not ended yet" and keeps polling instead of throwing', async () => {
+    // The cron route depends on runSbcSmokeTest never throwing. A DNS / TCP
+    // glitch during polling must not bubble out — it should be classified
+    // identically to a 5xx blip and continue polling until the call ends or
+    // the timeout elapses.
+    setPoolRows([HAPPY_PATH_ROW]);
+    const emit = vi.fn();
+    const adapter = makeAdapter({ createCallReturn: { providerCallId: VAPI_CALL_ID } });
+
+    let polls = 0;
+    const fetchImpl = vi.fn(async () => {
+      polls += 1;
+      if (polls <= 2) throw new Error('ECONNRESET');
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          id: VAPI_CALL_ID,
+          status: 'ended',
+          endedReason: 'hangup',
+          startedAt: '2026-05-07T03:00:00.000Z',
+          endedAt: '2026-05-07T03:00:05.000Z',
+        }),
+      } as unknown as Response;
+    }) as unknown as typeof fetch;
+
+    let nowMs = 0;
+    const result = await runSbcSmokeTest({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      adapter: adapter as any,
+      emit,
+      fetchImpl,
+      timeoutMs: 60_000,
+      pollIntervalMs: 1_000,
+      now: () => {
+        const t = nowMs;
+        nowMs += 1_000;
+        return t;
+      },
+      sleep: async () => undefined,
+    });
+
+    expect(result.ok).toBe(true);
+    expect(result.endedReason).toBe('hangup');
+    expect(polls).toBe(3);
+  });
+
   it('treats transient HTTP errors as "not ended yet" and keeps polling until timeout', async () => {
     setPoolRows([HAPPY_PATH_ROW]);
     const emit = vi.fn();
