@@ -1,9 +1,10 @@
 import { TZDate } from '@date-fns/tz';
-import { and, count, desc, eq, gt, inArray, ne } from 'drizzle-orm';
+import { and, count, desc, eq, gt, inArray, isNull, ne, sql } from 'drizzle-orm';
 
+import { getRpoClient, type RpoClient } from '@/lib/compliance/rpo/client';
 import { recordAudit } from '@/lib/db/audit';
-import { withOrgContext } from '@/lib/db/context';
-import { calls, contacts, phoneNumbers } from '@/lib/db/schema';
+import { withOrgContext, withSystemContext } from '@/lib/db/context';
+import { calls, contacts, phoneNumbers, rpoSnapshots } from '@/lib/db/schema';
 import { sendInngestEvent } from '@/lib/inngest/client';
 import { CREDIT_LOW_BALANCE_EVENT } from '@/lib/inngest/handlers/credit';
 import {
@@ -487,6 +488,146 @@ export async function verifyContactStillEligible(
   if (contact.rpo_status === 'blocked') throw new ContactNotEligibleError(contactId, 'rpo_blocked');
 }
 
+// ─── Per-call RPO verification ───────────────────────────────────────────────
+
+/** Snapshots older than this are considered stale and trigger a live re-check. */
+export const RPO_STALE_THRESHOLD_MS = 7 * 24 * 60 * 60 * 1000;
+
+/**
+ * Outcome of {@link verifyRpoCompliance}.
+ *
+ * - `safe` — proceed with dispatch
+ * - `blocked` — the number is on the RPO registry; abort and opt-out
+ * - `unverifiable` — live API failed and no snapshot exists; fail closed
+ */
+export type RpoVerifyDecision = 'safe' | 'blocked' | 'unverifiable';
+
+export interface RpoVerifyOutcome {
+  decision: RpoVerifyDecision;
+  phoneE164?: string;
+}
+
+/**
+ * Per-call live RPO verification (plan 11 task 4).
+ *
+ * Acts as a final safety net just before dialing. B2B contacts are skipped
+ * (RPO covers B2C only per Italian regulation). For B2C contacts whose
+ * snapshot is missing or older than {@link RPO_STALE_THRESHOLD_MS}, the
+ * intermediary is queried live; the result refreshes both `rpo_snapshots`
+ * and the contact's `rpo_status`.
+ *
+ * Failure handling:
+ *  - On singleCheck error, fall back to the latest stored snapshot.
+ *  - When neither a live answer nor a snapshot is available, the function
+ *    returns `unverifiable` so the caller can fail closed.
+ */
+export async function verifyRpoCompliance(
+  orgId: string,
+  contactId: string,
+  clientOverride?: RpoClient,
+): Promise<RpoVerifyOutcome> {
+  const [contact] = await withOrgContext(orgId, (tx) =>
+    tx
+      .select({
+        phone_e164: contacts.phone_e164,
+        contact_type: contacts.contact_type,
+        rpo_status: contacts.rpo_status,
+        rpo_checked_at: contacts.rpo_checked_at,
+      })
+      .from(contacts)
+      .where(and(eq(contacts.id, contactId), eq(contacts.org_id, orgId)))
+      .limit(1),
+  );
+
+  // The eligibility re-check ran first, so a missing row here is unexpected.
+  // Treat as safe — eligibility would have already short-circuited if there's
+  // a real problem; we don't want to double-report.
+  if (!contact) return { decision: 'safe' };
+
+  // RPO covers B2C only per Italian regulation
+  if (contact.contact_type === 'b2b') {
+    return { decision: 'safe', phoneE164: contact.phone_e164 };
+  }
+
+  const cutoff = new Date(Date.now() - RPO_STALE_THRESHOLD_MS);
+  const isStale =
+    contact.rpo_status === 'unchecked' ||
+    contact.rpo_checked_at === null ||
+    contact.rpo_checked_at < cutoff;
+
+  if (!isStale) {
+    return { decision: 'safe', phoneE164: contact.phone_e164 };
+  }
+
+  const phoneE164 = contact.phone_e164;
+  const rpoClient = clientOverride ?? getRpoClient();
+
+  let result: { isBlocked: boolean; checkedAt: Date };
+  try {
+    result = await rpoClient.singleCheck(phoneE164);
+  } catch (e) {
+    console.warn(
+      `[dispatch] RPO singleCheck failed for ${phoneE164}; falling back to snapshot: ${
+        e instanceof Error ? e.message : String(e)
+      }`,
+    );
+    const stale = await fetchRpoSnapshotState(phoneE164);
+    if (stale === null) return { decision: 'unverifiable', phoneE164 };
+    return { decision: stale ? 'blocked' : 'safe', phoneE164 };
+  }
+
+  await persistRpoCheck(orgId, phoneE164, result.isBlocked, result.checkedAt);
+
+  return { decision: result.isBlocked ? 'blocked' : 'safe', phoneE164 };
+}
+
+async function fetchRpoSnapshotState(phoneE164: string): Promise<boolean | null> {
+  const [snap] = await withSystemContext((tx) =>
+    tx
+      .select({ is_blocked: rpoSnapshots.is_blocked })
+      .from(rpoSnapshots)
+      .where(eq(rpoSnapshots.phone_e164, phoneE164))
+      .limit(1),
+  );
+  return snap?.is_blocked ?? null;
+}
+
+async function persistRpoCheck(
+  orgId: string,
+  phoneE164: string,
+  isBlocked: boolean,
+  checkedAt: Date,
+): Promise<void> {
+  await withSystemContext(async (tx) => {
+    await tx
+      .insert(rpoSnapshots)
+      .values({ phone_e164: phoneE164, is_blocked: isBlocked, last_checked_at: checkedAt })
+      .onConflictDoUpdate({
+        target: rpoSnapshots.phone_e164,
+        set: {
+          is_blocked: sql`excluded.is_blocked`,
+          last_checked_at: sql`excluded.last_checked_at`,
+        },
+      });
+  });
+
+  await withOrgContext(orgId, async (tx) => {
+    await tx
+      .update(contacts)
+      .set({
+        rpo_status: isBlocked ? 'blocked' : 'clear',
+        rpo_checked_at: checkedAt,
+      })
+      .where(
+        and(
+          eq(contacts.org_id, orgId),
+          eq(contacts.phone_e164, phoneE164),
+          isNull(contacts.deleted_at),
+        ),
+      );
+  });
+}
+
 // ─── Credit check ────────────────────────────────────────────────────────────
 
 /**
@@ -693,6 +834,96 @@ export async function campaignDispatchCallHandler(
       });
       return true;
     });
+    if (flipped) {
+      await checkAndFinaliseCampaignCompletion(orgId, campaignId);
+    }
+    return null;
+  }
+
+  // 5.7 Per-call live RPO verification (Task 11.4)
+  //
+  // Final safety net before dialing. For B2C contacts whose snapshot is stale
+  // or never checked, we hit the RPO intermediary live. If the number is
+  // blocked, abort dispatch, register the opt-out, and write an audit entry —
+  // no provider dispatch happens and no credit is consumed. If the live API
+  // is unavailable and no snapshot exists, fail closed.
+  const rpoOutcome = await verifyRpoCompliance(orgId, contactId);
+  if (rpoOutcome.decision === 'blocked' && rpoOutcome.phoneE164) {
+    const flipped = await withOrgContext(orgId, async (tx) => {
+      const updated = await tx
+        .update(calls)
+        .set({ status: 'failed', error_code: 'rpo_blocked' })
+        .where(
+          and(
+            eq(calls.id, callId),
+            eq(calls.org_id, orgId),
+            inArray(calls.status, ['pending', 'dialing', 'in_progress']),
+          ),
+        )
+        .returning({ id: calls.id });
+
+      if (updated.length === 0) return false;
+
+      // Mark every live row sharing the phone — Task 5 will consolidate this
+      // through a unified opt-out service that also writes to opt_out_registry.
+      await tx
+        .update(contacts)
+        .set({ opt_out: true, opt_out_reason: 'rpo_block' })
+        .where(
+          and(
+            eq(contacts.org_id, orgId),
+            eq(contacts.phone_e164, rpoOutcome.phoneE164!),
+            isNull(contacts.deleted_at),
+          ),
+        );
+
+      await recordAudit(tx, {
+        orgId,
+        actorType: 'system',
+        action: 'call.skipped',
+        subjectType: 'call',
+        subjectId: callId,
+        metadata: {
+          reason: 'rpo_blocked',
+          contactId,
+          phoneE164: rpoOutcome.phoneE164,
+        },
+      });
+      return true;
+    });
+
+    if (flipped) {
+      await checkAndFinaliseCampaignCompletion(orgId, campaignId);
+    }
+    return null;
+  }
+  if (rpoOutcome.decision === 'unverifiable') {
+    const flipped = await withOrgContext(orgId, async (tx) => {
+      const updated = await tx
+        .update(calls)
+        .set({ status: 'failed', error_code: 'rpo_unverifiable' })
+        .where(
+          and(
+            eq(calls.id, callId),
+            eq(calls.org_id, orgId),
+            inArray(calls.status, ['pending', 'dialing', 'in_progress']),
+          ),
+        )
+        .returning({ id: calls.id });
+
+      if (updated.length === 0) return false;
+
+      await recordAudit(tx, {
+        orgId,
+        actorType: 'system',
+        action: 'call.skipped',
+        subjectType: 'call',
+        subjectId: callId,
+        metadata: { reason: 'rpo_unverifiable', contactId },
+      });
+      return true;
+    });
+
     if (flipped) {
       await checkAndFinaliseCampaignCompletion(orgId, campaignId);
     }

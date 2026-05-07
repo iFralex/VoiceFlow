@@ -40,23 +40,40 @@ const mockSelect = vi.fn();
 const mockFrom = vi.fn(() => ({ where: vi.fn(() => ({ limit: vi.fn().mockResolvedValue([]) })) }));
 mockSelect.mockReturnValue({ from: mockFrom });
 
+const mockInsert = vi.fn(() => ({
+  values: vi.fn(() => ({
+    onConflictDoUpdate: vi.fn().mockResolvedValue(undefined),
+    onConflictDoNothing: vi.fn().mockResolvedValue(undefined),
+  })),
+}));
+
 const mockTxChain = {
   update: mockUpdate,
   select: mockSelect,
+  insert: mockInsert,
 };
 
 vi.mock('@/lib/db/context', () => ({
   withOrgContext: vi.fn((_orgId: string, fn: (tx: unknown) => unknown) => fn(mockTxChain)),
+  withSystemContext: vi.fn((fn: (tx: unknown) => unknown) => fn(mockTxChain)),
+}));
+
+vi.mock('@/lib/compliance/rpo/client', () => ({
+  getRpoClient: vi.fn(),
+}));
+
+vi.mock('./completed', () => ({
+  checkAndFinaliseCampaignCompletion: vi.fn().mockResolvedValue(undefined),
 }));
 
 // ─── Module under test ────────────────────────────────────────────────────────
 
+import { getRpoClient } from '@/lib/compliance/rpo/client';
+import { recordAudit } from '@/lib/db/audit';
 import { sendInngestEvent } from '@/lib/inngest/client';
 import { dispatchCall } from '@/lib/services/calls';
 import { requireRunning } from '@/lib/services/campaigns';
 import { getBalance } from '@/lib/services/credit';
-
-import { recordAudit } from '@/lib/db/audit';
 
 import {
   ContactNotEligibleError,
@@ -66,6 +83,7 @@ import {
   InsufficientCreditError,
   PROVIDER_DEGRADATION_THRESHOLD,
   PROVIDER_DEGRADATION_WINDOW_MS,
+  RPO_STALE_THRESHOLD_MS,
   campaignDispatchCallHandler,
   checkCliHourlyCap,
   checkConcurrencySlot,
@@ -78,6 +96,7 @@ import {
   onDispatchFailure,
   verifyCreditAvailable,
   verifyContactStillEligible,
+  verifyRpoCompliance,
   waitForCallWindow,
 } from './dispatch';
 
@@ -458,12 +477,9 @@ describe('campaignDispatchCallHandler', () => {
     vi.useFakeTimers({ now: new Date('2025-01-15T09:00:00Z') });
     vi.mocked(requireRunning).mockResolvedValue(runningCampaign); // concurrency_limit = 5
 
-    // 1st select: daily cap check (100 today < 5000 cap → proceed)
-    // 2nd select: concurrency gate (active = 3 < 5 = limit → slot available)
-    // 3rd select: contact eligibility query
-    // 4th select: org-level cooldown check (no recent cross-campaign call)
-    // 5th select: CLI hourly cap — CLI count (1 active)
-    // 6th select: CLI hourly cap — calls in last hour (0 → under cap)
+    // 1st: daily cap, 2nd: concurrency, 3rd: eligibility, 4th: cooldown,
+    // 5th: verify-rpo contact load (b2b skip → safe),
+    // 6th: CLI count, 7th: CLI hourly calls
     let callCount = 0;
     mockSelect.mockImplementation(() => {
       callCount++;
@@ -500,10 +516,27 @@ describe('campaignDispatchCallHandler', () => {
         };
       }
       if (callCount === 5) {
+        // verify-rpo contact load: b2b → skipped (safe)
+        return {
+          from: vi.fn(() => ({
+            where: vi.fn(() => ({
+              limit: vi.fn().mockResolvedValue([
+                {
+                  phone_e164: '+393331234567',
+                  contact_type: 'b2b',
+                  rpo_status: 'unchecked',
+                  rpo_checked_at: null,
+                },
+              ]),
+            })),
+          })),
+        };
+      }
+      if (callCount === 6) {
         // CLI hourly cap: 1 active CLI
         return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 1 }]) })) };
       }
-      // 6th: CLI hourly call count: 0 (under cap)
+      // 7th: CLI hourly call count: 0 (under cap)
       return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 0 }]) })) };
     });
 
@@ -656,11 +689,12 @@ describe('campaignDispatchCallHandler', () => {
     expect(dispatchCall).not.toHaveBeenCalled();
   });
 
-  it('propagates InsufficientCreditError when credit is too low', async () => {
+  it('returns null when credit is too low (graceful skip)', async () => {
     vi.useFakeTimers({ now: new Date('2025-01-15T09:00:00Z') });
     vi.mocked(requireRunning).mockResolvedValue(runningCampaign);
 
-    // 1st: daily cap, 2nd: concurrency, 3rd: eligibility, 4th: cooldown (none); then credit fails → throws before CLI cap
+    // 1st: daily cap, 2nd: concurrency, 3rd: eligibility, 4th: cooldown,
+    // 5th: verify-rpo (safe via b2b skip); credit then trips → graceful skip
     let callCount = 0;
     mockSelect.mockImplementation(() => {
       callCount++;
@@ -684,22 +718,40 @@ describe('campaignDispatchCallHandler', () => {
           })),
         };
       }
-      // cooldown check → no recent cross-campaign call
+      if (callCount === 4) {
+        // cooldown check → no recent cross-campaign call
+        return {
+          from: vi.fn(() => ({
+            where: vi.fn(() => ({
+              orderBy: vi.fn(() => ({
+                limit: vi.fn().mockResolvedValue([]),
+              })),
+            })),
+          })),
+        };
+      }
+      // verify-rpo: b2b → safe
       return {
         from: vi.fn(() => ({
           where: vi.fn(() => ({
-            orderBy: vi.fn(() => ({
-              limit: vi.fn().mockResolvedValue([]),
-            })),
+            limit: vi.fn().mockResolvedValue([
+              {
+                phone_e164: '+393331234567',
+                contact_type: 'b2b',
+                rpo_status: 'unchecked',
+                rpo_checked_at: null,
+              },
+            ]),
           })),
         })),
       };
     });
     vi.mocked(getBalance).mockResolvedValue({ balanceCents: 0, remainingMinutes: 0 });
 
-    await expect(campaignDispatchCallHandler(dispatchData)).rejects.toThrow(InsufficientCreditError);
+    const result = await campaignDispatchCallHandler(dispatchData);
 
     vi.useRealTimers();
+    expect(result).toBeNull();
     expect(dispatchCall).not.toHaveBeenCalled();
   });
 
@@ -707,7 +759,8 @@ describe('campaignDispatchCallHandler', () => {
     vi.useFakeTimers({ now: new Date('2025-01-15T09:00:00Z') });
     vi.mocked(requireRunning).mockResolvedValue(runningCampaign);
 
-    // 1st: daily cap, 2nd: concurrency gate, 3rd: eligibility, 4th: cooldown, 5th: CLI count, 6th: CLI hourly calls
+    // 1st: daily cap, 2nd: concurrency, 3rd: eligibility, 4th: cooldown,
+    // 5th: verify-rpo (b2b skip → safe), 6th: CLI count, 7th: CLI hourly calls
     let callCount = 0;
     mockSelect.mockImplementation(() => {
       callCount++;
@@ -744,10 +797,27 @@ describe('campaignDispatchCallHandler', () => {
         };
       }
       if (callCount === 5) {
+        // verify-rpo: b2b → safe
+        return {
+          from: vi.fn(() => ({
+            where: vi.fn(() => ({
+              limit: vi.fn().mockResolvedValue([
+                {
+                  phone_e164: '+393331234567',
+                  contact_type: 'b2b',
+                  rpo_status: 'unchecked',
+                  rpo_checked_at: null,
+                },
+              ]),
+            })),
+          })),
+        };
+      }
+      if (callCount === 6) {
         // CLI hourly cap: 1 active CLI
         return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 1 }]) })) };
       }
-      // 6th: CLI hourly call count: 0 (under cap)
+      // 7th: CLI hourly call count: 0 (under cap)
       return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 0 }]) })) };
     });
 
@@ -785,7 +855,8 @@ describe('campaignDispatchCallHandler', () => {
       scheduledFor: pastDate.toISOString(),
     };
 
-    // 1st: daily cap, 2nd: concurrency gate, 3rd: eligibility, 4th: cooldown, 5th: CLI count, 6th: CLI hourly calls
+    // 1st: daily cap, 2nd: concurrency, 3rd: eligibility, 4th: cooldown,
+    // 5th: verify-rpo (b2b skip → safe), 6th: CLI count, 7th: CLI hourly calls
     let callCount = 0;
     mockSelect.mockImplementation(() => {
       callCount++;
@@ -822,10 +893,27 @@ describe('campaignDispatchCallHandler', () => {
         };
       }
       if (callCount === 5) {
+        // verify-rpo: b2b → safe
+        return {
+          from: vi.fn(() => ({
+            where: vi.fn(() => ({
+              limit: vi.fn().mockResolvedValue([
+                {
+                  phone_e164: '+393331234567',
+                  contact_type: 'b2b',
+                  rpo_status: 'unchecked',
+                  rpo_checked_at: null,
+                },
+              ]),
+            })),
+          })),
+        };
+      }
+      if (callCount === 6) {
         // CLI hourly cap: 1 active CLI
         return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 1 }]) })) };
       }
-      // 6th: CLI hourly call count: 0 (under cap)
+      // 7th: CLI hourly call count: 0 (under cap)
       return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 0 }]) })) };
     });
 
@@ -1257,9 +1345,10 @@ describe('campaignDispatchCallHandler — quota gates', () => {
     // 2: concurrency gate → slot available (2 active)
     // 3: contact eligibility → eligible
     // 4: org cooldown → no recent cross-campaign call
+    // 5: verify-rpo contact load → b2b skip → safe
     // credit: passes (balance > 100)
-    // 5: CLI hourly cap → CLIs (1), hourly calls (30) → at cap
-    // 6: CLI hourly calls (30)
+    // 6: CLI hourly cap — CLIs (1)
+    // 7: CLI hourly calls (30) → at cap
     let callIdx = 0;
     mockSelect.mockImplementation(() => {
       callIdx++;
@@ -1294,10 +1383,27 @@ describe('campaignDispatchCallHandler — quota gates', () => {
         };
       }
       if (callIdx === 5) {
+        // verify-rpo: b2b → safe
+        return {
+          from: vi.fn(() => ({
+            where: vi.fn(() => ({
+              limit: vi.fn().mockResolvedValue([
+                {
+                  phone_e164: '+393331234567',
+                  contact_type: 'b2b',
+                  rpo_status: 'unchecked',
+                  rpo_checked_at: null,
+                },
+              ]),
+            })),
+          })),
+        };
+      }
+      if (callIdx === 6) {
         // CLI hourly cap — CLI count query: 1 active CLI
         return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 1 }]) })) };
       }
-      // callIdx === 6: CLI hourly call count: 30 (at cap)
+      // callIdx === 7: CLI hourly call count: 30 (at cap)
       return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 30 }]) })) };
     });
 
@@ -1307,5 +1413,395 @@ describe('campaignDispatchCallHandler — quota gates', () => {
     expect(result).not.toBeNull();
     expect(result).toHaveProperty('sleepUntil');
     expect(dispatchCall).not.toHaveBeenCalled();
+  });
+});
+
+// ─── Tests: verifyRpoCompliance ──────────────────────────────────────────────
+
+describe('verifyRpoCompliance', () => {
+  const PHONE = '+393331234567';
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockUpdate.mockReturnValue({ set: mockSet });
+    mockSet.mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) });
+  });
+
+  const mockContactRow = (row: Record<string, unknown> | null) => {
+    mockSelect.mockReturnValueOnce({
+      from: vi.fn(() => ({
+        where: vi.fn(() => ({
+          limit: vi.fn().mockResolvedValue(row ? [row] : []),
+        })),
+      })),
+    });
+  };
+
+  it('exports the correct stale threshold (7 days)', () => {
+    expect(RPO_STALE_THRESHOLD_MS).toBe(7 * 24 * 60 * 60 * 1000);
+  });
+
+  it('returns safe when contact is b2b (RPO covers B2C only)', async () => {
+    const rpoClient = { singleCheck: vi.fn(), bulkCheck: vi.fn() };
+    mockContactRow({
+      phone_e164: PHONE,
+      contact_type: 'b2b',
+      rpo_status: 'unchecked',
+      rpo_checked_at: null,
+    });
+
+    const result = await verifyRpoCompliance(ORG, CONTACT, rpoClient);
+    expect(result).toEqual({ decision: 'safe', phoneE164: PHONE });
+    expect(rpoClient.singleCheck).not.toHaveBeenCalled();
+  });
+
+  it('returns safe when contact rpo_status is clear and recent', async () => {
+    vi.useFakeTimers({ now: new Date('2025-01-15T10:00:00Z') });
+    const rpoClient = { singleCheck: vi.fn(), bulkCheck: vi.fn() };
+    mockContactRow({
+      phone_e164: PHONE,
+      contact_type: 'b2c',
+      rpo_status: 'clear',
+      rpo_checked_at: new Date('2025-01-14T10:00:00Z'), // 1 day ago, fresh
+    });
+
+    const result = await verifyRpoCompliance(ORG, CONTACT, rpoClient);
+    vi.useRealTimers();
+    expect(result).toEqual({ decision: 'safe', phoneE164: PHONE });
+    expect(rpoClient.singleCheck).not.toHaveBeenCalled();
+  });
+
+  it('calls singleCheck when rpo_status is unchecked', async () => {
+    vi.useFakeTimers({ now: new Date('2025-01-15T10:00:00Z') });
+    const rpoClient = {
+      singleCheck: vi.fn().mockResolvedValue({ isBlocked: false, checkedAt: new Date() }),
+      bulkCheck: vi.fn(),
+    };
+    mockContactRow({
+      phone_e164: PHONE,
+      contact_type: 'b2c',
+      rpo_status: 'unchecked',
+      rpo_checked_at: null,
+    });
+
+    const result = await verifyRpoCompliance(ORG, CONTACT, rpoClient);
+    vi.useRealTimers();
+    expect(rpoClient.singleCheck).toHaveBeenCalledWith(PHONE);
+    expect(result).toEqual({ decision: 'safe', phoneE164: PHONE });
+  });
+
+  it('calls singleCheck when rpo_checked_at is older than 7 days', async () => {
+    vi.useFakeTimers({ now: new Date('2025-01-15T10:00:00Z') });
+    const rpoClient = {
+      singleCheck: vi.fn().mockResolvedValue({ isBlocked: false, checkedAt: new Date() }),
+      bulkCheck: vi.fn(),
+    };
+    mockContactRow({
+      phone_e164: PHONE,
+      contact_type: 'b2c',
+      rpo_status: 'clear',
+      rpo_checked_at: new Date('2025-01-01T10:00:00Z'), // 14 days ago
+    });
+
+    const result = await verifyRpoCompliance(ORG, CONTACT, rpoClient);
+    vi.useRealTimers();
+    expect(rpoClient.singleCheck).toHaveBeenCalledWith(PHONE);
+    expect(result.decision).toBe('safe');
+  });
+
+  it('returns blocked when singleCheck reports the number is on RPO', async () => {
+    vi.useFakeTimers({ now: new Date('2025-01-15T10:00:00Z') });
+    const rpoClient = {
+      singleCheck: vi.fn().mockResolvedValue({ isBlocked: true, checkedAt: new Date() }),
+      bulkCheck: vi.fn(),
+    };
+    mockContactRow({
+      phone_e164: PHONE,
+      contact_type: 'b2c',
+      rpo_status: 'unchecked',
+      rpo_checked_at: null,
+    });
+
+    const result = await verifyRpoCompliance(ORG, CONTACT, rpoClient);
+    vi.useRealTimers();
+    expect(result).toEqual({ decision: 'blocked', phoneE164: PHONE });
+  });
+
+  it('falls back to a stored snapshot when singleCheck throws (blocked)', async () => {
+    vi.useFakeTimers({ now: new Date('2025-01-15T10:00:00Z') });
+    const rpoClient = {
+      singleCheck: vi.fn().mockRejectedValue(new Error('network error')),
+      bulkCheck: vi.fn(),
+    };
+    mockContactRow({
+      phone_e164: PHONE,
+      contact_type: 'b2c',
+      rpo_status: 'unchecked',
+      rpo_checked_at: null,
+    });
+    // Stale snapshot says blocked
+    mockSelect.mockReturnValueOnce({
+      from: vi.fn(() => ({
+        where: vi.fn(() => ({
+          limit: vi.fn().mockResolvedValue([{ is_blocked: true }]),
+        })),
+      })),
+    });
+
+    const result = await verifyRpoCompliance(ORG, CONTACT, rpoClient);
+    vi.useRealTimers();
+    expect(result).toEqual({ decision: 'blocked', phoneE164: PHONE });
+  });
+
+  it('falls back to a stored snapshot when singleCheck throws (clear)', async () => {
+    vi.useFakeTimers({ now: new Date('2025-01-15T10:00:00Z') });
+    const rpoClient = {
+      singleCheck: vi.fn().mockRejectedValue(new Error('network error')),
+      bulkCheck: vi.fn(),
+    };
+    mockContactRow({
+      phone_e164: PHONE,
+      contact_type: 'b2c',
+      rpo_status: 'unchecked',
+      rpo_checked_at: null,
+    });
+    // Stale snapshot says clear
+    mockSelect.mockReturnValueOnce({
+      from: vi.fn(() => ({
+        where: vi.fn(() => ({
+          limit: vi.fn().mockResolvedValue([{ is_blocked: false }]),
+        })),
+      })),
+    });
+
+    const result = await verifyRpoCompliance(ORG, CONTACT, rpoClient);
+    vi.useRealTimers();
+    expect(result).toEqual({ decision: 'safe', phoneE164: PHONE });
+  });
+
+  it('returns unverifiable (fail closed) when singleCheck throws and no snapshot exists', async () => {
+    vi.useFakeTimers({ now: new Date('2025-01-15T10:00:00Z') });
+    const rpoClient = {
+      singleCheck: vi.fn().mockRejectedValue(new Error('network error')),
+      bulkCheck: vi.fn(),
+    };
+    mockContactRow({
+      phone_e164: PHONE,
+      contact_type: 'b2c',
+      rpo_status: 'unchecked',
+      rpo_checked_at: null,
+    });
+    // No snapshot row
+    mockSelect.mockReturnValueOnce({
+      from: vi.fn(() => ({
+        where: vi.fn(() => ({
+          limit: vi.fn().mockResolvedValue([]),
+        })),
+      })),
+    });
+
+    const result = await verifyRpoCompliance(ORG, CONTACT, rpoClient);
+    vi.useRealTimers();
+    expect(result).toEqual({ decision: 'unverifiable', phoneE164: PHONE });
+  });
+
+  it('returns safe when contact row is missing (eligibility caught it earlier)', async () => {
+    const rpoClient = { singleCheck: vi.fn(), bulkCheck: vi.fn() };
+    mockContactRow(null);
+
+    const result = await verifyRpoCompliance(ORG, CONTACT, rpoClient);
+    expect(result).toEqual({ decision: 'safe' });
+    expect(rpoClient.singleCheck).not.toHaveBeenCalled();
+  });
+});
+
+// ─── Tests: campaignDispatchCallHandler — verify-rpo integration ─────────────
+
+describe('campaignDispatchCallHandler — verify-rpo integration', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockUpdate.mockReturnValue({ set: mockSet });
+    mockSet.mockReturnValue({ where: vi.fn(() => makeWhereChain()) });
+    vi.mocked(sendInngestEvent).mockResolvedValue(undefined);
+    vi.mocked(dispatchCall).mockResolvedValue(undefined);
+    vi.mocked(getBalance).mockResolvedValue({ balanceCents: 5000, remainingMinutes: 100 });
+  });
+
+  /**
+   * Builds the standard mockSelect chain for the dispatch handler that allows
+   * the flow to reach verify-rpo with a B2C/unchecked contact, and lets the
+   * caller specify what verify-rpo's snapshot fallback returns (or omit it
+   * when the live RPO call succeeds).
+   */
+  const setupHappyPathThroughCooldown = (verifyRpoContactRow: Record<string, unknown> | null) => {
+    let callIdx = 0;
+    mockSelect.mockImplementation(() => {
+      callIdx++;
+      if (callIdx === 1) {
+        // daily cap: under cap
+        return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 100 }]) })) };
+      }
+      if (callIdx === 2) {
+        // concurrency: slot available
+        return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 0 }]) })) };
+      }
+      if (callIdx === 3) {
+        // eligibility: ok (clear status to slip past eligibility check)
+        return {
+          from: vi.fn(() => ({
+            where: vi.fn(() => ({
+              limit: vi.fn().mockResolvedValue([
+                { deleted_at: null, opt_out: false, rpo_status: 'clear' },
+              ]),
+            })),
+          })),
+        };
+      }
+      if (callIdx === 4) {
+        // cooldown: no recent cross-campaign call
+        return {
+          from: vi.fn(() => ({
+            where: vi.fn(() => ({
+              orderBy: vi.fn(() => ({
+                limit: vi.fn().mockResolvedValue([]),
+              })),
+            })),
+          })),
+        };
+      }
+      if (callIdx === 5) {
+        // verify-rpo contact load
+        return {
+          from: vi.fn(() => ({
+            where: vi.fn(() => ({
+              limit: vi.fn().mockResolvedValue(
+                verifyRpoContactRow ? [verifyRpoContactRow] : [],
+              ),
+            })),
+          })),
+        };
+      }
+      // Unused after blocking path — safety default
+      return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 0 }]) })) };
+    });
+  };
+
+  it('aborts dispatch and marks call rpo_blocked when live RPO returns blocked', async () => {
+    vi.useFakeTimers({ now: new Date('2025-01-15T09:00:00Z') });
+    vi.mocked(requireRunning).mockResolvedValue(runningCampaign);
+
+    const PHONE = '+393331234567';
+    vi.mocked(getRpoClient).mockReturnValue({
+      singleCheck: vi.fn().mockResolvedValue({ isBlocked: true, checkedAt: new Date() }),
+      bulkCheck: vi.fn(),
+    });
+    setupHappyPathThroughCooldown({
+      phone_e164: PHONE,
+      contact_type: 'b2c',
+      rpo_status: 'unchecked',
+      rpo_checked_at: null,
+    });
+
+    const result = await campaignDispatchCallHandler(dispatchData);
+    vi.useRealTimers();
+
+    expect(result).toBeNull();
+    expect(dispatchCall).not.toHaveBeenCalled();
+    expect(mockSet).toHaveBeenCalledWith({ status: 'failed', error_code: 'rpo_blocked' });
+    // Contact row marked opt_out=true with reason 'rpo_block' (Task 4 inline; Task 5 will move to a service)
+    expect(mockSet).toHaveBeenCalledWith({ opt_out: true, opt_out_reason: 'rpo_block' });
+    expect(recordAudit).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        actorType: 'system',
+        action: 'call.skipped',
+        subjectType: 'call',
+        subjectId: CALL,
+        metadata: expect.objectContaining({
+          reason: 'rpo_blocked',
+          contactId: CONTACT,
+          phoneE164: PHONE,
+        }),
+      }),
+    );
+  });
+
+  it('fails closed (rpo_unverifiable) when live RPO errors and no snapshot exists', async () => {
+    vi.useFakeTimers({ now: new Date('2025-01-15T09:00:00Z') });
+    vi.mocked(requireRunning).mockResolvedValue(runningCampaign);
+
+    vi.mocked(getRpoClient).mockReturnValue({
+      singleCheck: vi.fn().mockRejectedValue(new Error('network down')),
+      bulkCheck: vi.fn(),
+    });
+
+    let callIdx = 0;
+    mockSelect.mockImplementation(() => {
+      callIdx++;
+      if (callIdx === 1) {
+        return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 100 }]) })) };
+      }
+      if (callIdx === 2) {
+        return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ cnt: 0 }]) })) };
+      }
+      if (callIdx === 3) {
+        return {
+          from: vi.fn(() => ({
+            where: vi.fn(() => ({
+              limit: vi.fn().mockResolvedValue([
+                { deleted_at: null, opt_out: false, rpo_status: 'clear' },
+              ]),
+            })),
+          })),
+        };
+      }
+      if (callIdx === 4) {
+        return {
+          from: vi.fn(() => ({
+            where: vi.fn(() => ({
+              orderBy: vi.fn(() => ({ limit: vi.fn().mockResolvedValue([]) })),
+            })),
+          })),
+        };
+      }
+      if (callIdx === 5) {
+        // verify-rpo contact load
+        return {
+          from: vi.fn(() => ({
+            where: vi.fn(() => ({
+              limit: vi.fn().mockResolvedValue([
+                {
+                  phone_e164: '+393331234567',
+                  contact_type: 'b2c',
+                  rpo_status: 'unchecked',
+                  rpo_checked_at: null,
+                },
+              ]),
+            })),
+          })),
+        };
+      }
+      // 6th: snapshot fallback lookup → no row
+      return {
+        from: vi.fn(() => ({
+          where: vi.fn(() => ({ limit: vi.fn().mockResolvedValue([]) })),
+        })),
+      };
+    });
+
+    const result = await campaignDispatchCallHandler(dispatchData);
+    vi.useRealTimers();
+
+    expect(result).toBeNull();
+    expect(dispatchCall).not.toHaveBeenCalled();
+    expect(mockSet).toHaveBeenCalledWith({ status: 'failed', error_code: 'rpo_unverifiable' });
+    expect(mockSet).not.toHaveBeenCalledWith({ opt_out: true, opt_out_reason: 'rpo_block' });
+    expect(recordAudit).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        action: 'call.skipped',
+        metadata: expect.objectContaining({ reason: 'rpo_unverifiable', contactId: CONTACT }),
+      }),
+    );
   });
 });

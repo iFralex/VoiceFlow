@@ -74,13 +74,13 @@ export class RpoIntermediaryClient implements RpoClient {
 
 ### Task 4: Per-call live RPO verification
 
-- [ ] In plan 09's `dispatch-call` chain, add a step `verify-rpo`:
+- [x] In plan 09's `dispatch-call` chain, add a step `verify-rpo`:
   - if `contact.contact_type='b2b'` skip (RPO covers B2C only per Italian regulation)
   - if `contact.rpo_checked_at < now() - interval '7 days'` OR `contact.rpo_status='unchecked'`, call `rpoClient.singleCheck`
   - update snapshot and contact accordingly
   - if `is_blocked=true` abort the dispatch, mark call `failed/error_code='rpo_blocked'`, set contact `opt_out=true` with reason `rpo_block`, do NOT charge credit, emit audit log entry
-- [ ] If `rpoClient.singleCheck` fails (network error), use stale data from `rpo_snapshots` if available; if no data → fail closed (do not place call)
-- [ ] Mark completed
+- [x] If `rpoClient.singleCheck` fails (network error), use stale data from `rpo_snapshots` if available; if no data → fail closed (do not place call)
+- [x] Mark completed
 
 ### Task 5: Opt-out registry — full wiring
 
