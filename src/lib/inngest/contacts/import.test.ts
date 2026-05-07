@@ -53,9 +53,10 @@ vi.mock('@/lib/supabase/admin', () => ({
   },
 }));
 
-// DB context mocks — opt-out and RPO queries
+// DB context mocks — opt-out, RPO snapshot, and RPO batch-check queries
 const mockTx = {
   select: vi.fn(),
+  selectDistinct: vi.fn(),
   insert: vi.fn(),
   update: vi.fn(),
   execute: vi.fn().mockResolvedValue(undefined),
@@ -64,6 +65,17 @@ const mockTx = {
 vi.mock('@/lib/db/context', () => ({
   withOrgContext: vi.fn(async (_orgId: string, fn: (tx: unknown) => Promise<unknown>) => fn(mockTx)),
   withSystemContext: vi.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn(mockTx)),
+}));
+
+// RPO client mock — see plan 11 task 3
+const mockRpoBulkCheck = vi.fn();
+const mockGetRpoClient = vi.fn(() => ({
+  bulkCheck: (...args: unknown[]) => mockRpoBulkCheck(...args),
+  singleCheck: vi.fn(),
+}));
+
+vi.mock('@/lib/compliance/rpo/client', () => ({
+  getRpoClient: () => mockGetRpoClient(),
 }));
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
@@ -121,6 +133,32 @@ describe('processContactsImport', () => {
         where: vi.fn().mockResolvedValue([]),
       })),
     });
+
+    // Default: no newly-inserted phones requiring an RPO batch check
+    mockTx.selectDistinct.mockReturnValue({
+      from: vi.fn(() => ({
+        where: vi.fn().mockResolvedValue([]),
+      })),
+    });
+
+    // Default insert/update chains — used by the RPO batch-check step
+    mockTx.insert.mockReturnValue({
+      values: vi.fn(() => ({
+        onConflictDoUpdate: vi.fn().mockResolvedValue(undefined),
+      })),
+    });
+    mockTx.update.mockReturnValue({
+      set: vi.fn(() => ({
+        where: vi.fn().mockResolvedValue(undefined),
+      })),
+    });
+
+    // Default RPO client: returns no blocked numbers
+    mockRpoBulkCheck.mockResolvedValue(new Map());
+    mockGetRpoClient.mockImplementation(() => ({
+      bulkCheck: (...args: unknown[]) => mockRpoBulkCheck(...args),
+      singleCheck: vi.fn(),
+    }));
   });
 
   it('sets status to parsing at the start', async () => {
@@ -419,5 +457,166 @@ describe('processContactsImport', () => {
 
     expect(mockCountContactsForOrg).toHaveBeenCalledWith('org-1');
     expect(mockBulkUpsertContacts).toHaveBeenCalledOnce();
+  });
+
+  // ── Plan 11 Task 3: live RPO batch-check after upsert ──────────────────────
+
+  it('does not invoke RPO bulkCheck when no newly-inserted unchecked B2C contacts exist', async () => {
+    const { processContactsImport } = await import('./import');
+    await processContactsImport(importData);
+
+    expect(mockRpoBulkCheck).not.toHaveBeenCalled();
+  });
+
+  it('calls RPO bulkCheck with newly-inserted unchecked B2C phone numbers', async () => {
+    mockTx.selectDistinct.mockReturnValueOnce({
+      from: vi.fn(() => ({
+        where: vi
+          .fn()
+          .mockResolvedValue([{ phone_e164: '+393401234567' }, { phone_e164: '+393409876543' }]),
+      })),
+    });
+
+    const { processContactsImport } = await import('./import');
+    await processContactsImport(importData);
+
+    expect(mockRpoBulkCheck).toHaveBeenCalledOnce();
+    expect(mockRpoBulkCheck).toHaveBeenCalledWith(['+393401234567', '+393409876543']);
+  });
+
+  it('upserts rpo_snapshots for the checked numbers', async () => {
+    mockTx.selectDistinct.mockReturnValueOnce({
+      from: vi.fn(() => ({
+        where: vi.fn().mockResolvedValue([{ phone_e164: '+393401234567' }]),
+      })),
+    });
+    mockRpoBulkCheck.mockResolvedValue(new Map([['+393401234567', false]]));
+
+    const valuesSpy = vi.fn((_values: unknown) => ({
+      onConflictDoUpdate: vi.fn().mockResolvedValue(undefined),
+    }));
+    mockTx.insert.mockReturnValueOnce({ values: valuesSpy });
+
+    const { processContactsImport } = await import('./import');
+    await processContactsImport(importData);
+
+    expect(valuesSpy).toHaveBeenCalledOnce();
+    const valuesArg = valuesSpy.mock.calls[0]![0] as unknown as Array<{
+      phone_e164: string;
+      is_blocked: boolean;
+      last_checked_at: Date;
+    }>;
+    expect(valuesArg).toHaveLength(1);
+    expect(valuesArg[0]?.phone_e164).toBe('+393401234567');
+    expect(valuesArg[0]?.is_blocked).toBe(false);
+    expect(valuesArg[0]?.last_checked_at).toBeInstanceOf(Date);
+  });
+
+  it('updates contacts.rpo_status=blocked for blocked numbers', async () => {
+    mockTx.selectDistinct.mockReturnValueOnce({
+      from: vi.fn(() => ({
+        where: vi.fn().mockResolvedValue([{ phone_e164: '+393401234567' }]),
+      })),
+    });
+    mockRpoBulkCheck.mockResolvedValue(new Map([['+393401234567', true]]));
+
+    const setSpy = vi.fn(() => ({ where: vi.fn().mockResolvedValue(undefined) }));
+    mockTx.update.mockReturnValue({ set: setSpy });
+
+    const { processContactsImport } = await import('./import');
+    await processContactsImport(importData);
+
+    expect(setSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ rpo_status: 'blocked', rpo_checked_at: expect.any(Date) }),
+    );
+  });
+
+  it('updates contacts.rpo_status=clear for unblocked numbers', async () => {
+    mockTx.selectDistinct.mockReturnValueOnce({
+      from: vi.fn(() => ({
+        where: vi.fn().mockResolvedValue([{ phone_e164: '+393401234567' }]),
+      })),
+    });
+    mockRpoBulkCheck.mockResolvedValue(new Map([['+393401234567', false]]));
+
+    const setSpy = vi.fn(() => ({ where: vi.fn().mockResolvedValue(undefined) }));
+    mockTx.update.mockReturnValue({ set: setSpy });
+
+    const { processContactsImport } = await import('./import');
+    await processContactsImport(importData);
+
+    expect(setSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ rpo_status: 'clear', rpo_checked_at: expect.any(Date) }),
+    );
+  });
+
+  it('does not fail the import when RPO bulkCheck throws', async () => {
+    mockTx.selectDistinct.mockReturnValueOnce({
+      from: vi.fn(() => ({
+        where: vi.fn().mockResolvedValue([{ phone_e164: '+393401234567' }]),
+      })),
+    });
+    mockRpoBulkCheck.mockRejectedValue(new Error('intermediary unavailable'));
+
+    const { processContactsImport } = await import('./import');
+    const result = await processContactsImport(importData);
+
+    expect(result.status).toBe('completed');
+    expect(mockRecordAudit).toHaveBeenCalledWith(
+      mockTx,
+      expect.objectContaining({
+        metadata: expect.objectContaining({ rpoErrors: 1 }),
+      }),
+    );
+  });
+
+  it('does not fail the import when getRpoClient throws (mis-configured)', async () => {
+    mockGetRpoClient.mockImplementationOnce(() => {
+      throw new Error('RPO_PROVIDER_ENDPOINT missing');
+    });
+
+    const { processContactsImport } = await import('./import');
+    const result = await processContactsImport(importData);
+
+    expect(result.status).toBe('completed');
+    expect(mockRecordAudit).toHaveBeenCalledWith(
+      mockTx,
+      expect.objectContaining({
+        metadata: expect.objectContaining({ rpoSkipped: true }),
+      }),
+    );
+    expect(mockRpoBulkCheck).not.toHaveBeenCalled();
+  });
+
+  it('records RPO totals in the audit log metadata', async () => {
+    mockTx.selectDistinct.mockReturnValueOnce({
+      from: vi.fn(() => ({
+        where: vi
+          .fn()
+          .mockResolvedValue([{ phone_e164: '+393401234567' }, { phone_e164: '+393409876543' }]),
+      })),
+    });
+    mockRpoBulkCheck.mockResolvedValue(
+      new Map([
+        ['+393401234567', true],
+        ['+393409876543', false],
+      ]),
+    );
+
+    const { processContactsImport } = await import('./import');
+    await processContactsImport(importData);
+
+    expect(mockRecordAudit).toHaveBeenCalledWith(
+      mockTx,
+      expect.objectContaining({
+        metadata: expect.objectContaining({
+          rpoChecked: 2,
+          rpoBlocked: 1,
+          rpoClear: 1,
+          rpoErrors: 0,
+          rpoSkipped: false,
+        }),
+      }),
+    );
   });
 });

@@ -65,12 +65,12 @@ export class RpoIntermediaryClient implements RpoClient {
 
 ### Task 3: Batch RPO check on contact upload
 
-- [ ] Update plan 06's import Inngest function to call `rpoClient.bulkCheck` after `bulk-upsert` step:
+- [x] Update plan 06's import Inngest function to call `rpoClient.bulkCheck` after `bulk-upsert` step:
   - chunk newly-inserted contacts (b2c only)
   - upsert into `rpo_snapshots`
   - update `contacts.rpo_status` and `rpo_checked_at`
-- [ ] If RPO intermediary is unavailable, log warning but do NOT fail the import; contacts remain `unchecked` and the safety net at dispatch time (Task 4) catches them
-- [ ] Mark completed
+- [x] If RPO intermediary is unavailable, log warning but do NOT fail the import; contacts remain `unchecked` and the safety net at dispatch time (Task 4) catches them
+- [x] Mark completed
 
 ### Task 4: Per-call live RPO verification
 

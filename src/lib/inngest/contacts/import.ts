@@ -1,14 +1,15 @@
 /**
  * Contact import processor.
  *
- * Implements the 7-step pipeline described in plan 06, Task 6:
- *   1. download-file  — fetch the CSV from Supabase Storage
- *   2. parse          — run parseContactsCsv; store errors artifact
- *   3. enrich         — resolve opt-out and RPO status for each valid row
- *   4. bulk-upsert    — idempotent INSERT ... ON CONFLICT in batches of 500
- *   5. update-list    — update counts and set import_status
- *   6. audit          — record audit log entry with totals
- *   7. notify         — emit contacts/import-completed event
+ * Implements the pipeline described in plan 06 (Task 6) and plan 11 (Task 3):
+ *   1. download-file   — fetch the CSV from Supabase Storage
+ *   2. parse           — run parseContactsCsv; store errors artifact
+ *   3. enrich          — resolve opt-out and RPO status for each valid row
+ *   4. bulk-upsert     — idempotent INSERT ... ON CONFLICT in batches of 500
+ *   5. rpo-batch-check — live RPO bulkCheck for newly-inserted unchecked B2C
+ *   6. update-list     — update counts and set import_status
+ *   7. audit           — record audit log entry with totals
+ *   8. notify          — emit contacts/import-completed event
  *
  * The function is idempotent on (orgId, listId): re-running it after a partial
  * failure is safe because bulkUpsertContacts uses ON CONFLICT DO UPDATE and
@@ -19,12 +20,13 @@
  * the business logic.
  */
 
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 
+import { getRpoClient, type RpoClient } from '@/lib/compliance/rpo/client';
 import { recordAudit } from '@/lib/db/audit';
 import { withOrgContext, withSystemContext } from '@/lib/db/context';
 import type { NewContact } from '@/lib/db/schema';
-import { optOutRegistry, rpoSnapshots } from '@/lib/db/schema';
+import { contacts, optOutRegistry, rpoSnapshots } from '@/lib/db/schema';
 import { env } from '@/lib/env';
 import { sendInngestEvent } from '@/lib/inngest/client';
 import { updateListCounts, updateListImportStatus } from '@/lib/services/contact_lists';
@@ -139,6 +141,146 @@ async function enrichWithOptOutAndRpo(
   });
 }
 
+/**
+ * Live batch RPO check for the import's newly-inserted B2C contacts.
+ *
+ * Runs after `bulk-upsert`: any row left at `rpo_status='unchecked'` is a
+ * phone number we have never seen before. We hit the RPO intermediary, write
+ * fresh entries into `rpo_snapshots`, and propagate the result back into the
+ * org's `contacts` rows.
+ *
+ * Failure-tolerant: if `getRpoClient()` throws (mis-configured) or any chunk
+ * fails (network, intermediary outage), we log a warning, keep the contact
+ * `rpo_status='unchecked'`, and let the per-call live check at dispatch time
+ * (plan 11 Task 4) act as the safety net. The import never fails on RPO.
+ */
+
+interface RpoBatchCheckResult {
+  checked: number;
+  blocked: number;
+  clear: number;
+  errors: number;
+  skipped: boolean;
+}
+
+const RPO_BATCH_CHUNK_SIZE = 500;
+
+async function performBatchRpoCheck(
+  orgId: string,
+  listId: string,
+): Promise<RpoBatchCheckResult> {
+  let rpoClient: RpoClient;
+  try {
+    rpoClient = getRpoClient();
+  } catch (e) {
+    console.warn(
+      `[contacts/import] RPO client unavailable; skipping batch RPO check: ${e instanceof Error ? e.message : String(e)}`,
+    );
+    return { checked: 0, blocked: 0, clear: 0, errors: 1, skipped: true };
+  }
+
+  // Newly-inserted B2C contacts whose phone wasn't already in rpo_snapshots
+  // surface here as rpo_status='unchecked'. Re-imports of already-known
+  // phones keep their existing status (ON CONFLICT preserves it).
+  const phones = await withOrgContext(orgId, async (tx) => {
+    const rows = await tx
+      .selectDistinct({ phone_e164: contacts.phone_e164 })
+      .from(contacts)
+      .where(
+        and(
+          eq(contacts.org_id, orgId),
+          eq(contacts.contact_list_id, listId),
+          eq(contacts.contact_type, 'b2c'),
+          eq(contacts.rpo_status, 'unchecked'),
+          isNull(contacts.deleted_at),
+        ),
+      );
+    return rows.map((r) => r.phone_e164);
+  });
+
+  if (phones.length === 0) {
+    return { checked: 0, blocked: 0, clear: 0, errors: 0, skipped: false };
+  }
+
+  let checked = 0;
+  let blocked = 0;
+  let clear = 0;
+  let errors = 0;
+
+  for (const chunk of chunkArray(phones, RPO_BATCH_CHUNK_SIZE)) {
+    let result: Map<string, boolean>;
+    try {
+      result = await rpoClient.bulkCheck(chunk);
+    } catch (e) {
+      console.warn(
+        `[contacts/import] RPO bulkCheck failed for chunk; dispatch-time safety net will cover: ${e instanceof Error ? e.message : String(e)}`,
+      );
+      errors += 1;
+      continue;
+    }
+
+    const checkedAt = new Date();
+    const blockedNow: string[] = [];
+    const clearNow: string[] = [];
+    for (const phone of chunk) {
+      if (result.get(phone) === true) blockedNow.push(phone);
+      else clearNow.push(phone);
+    }
+
+    await withSystemContext(async (tx) => {
+      await tx
+        .insert(rpoSnapshots)
+        .values(
+          chunk.map((phone) => ({
+            phone_e164: phone,
+            is_blocked: result.get(phone) ?? false,
+            last_checked_at: checkedAt,
+          })),
+        )
+        .onConflictDoUpdate({
+          target: rpoSnapshots.phone_e164,
+          set: {
+            is_blocked: sql`excluded.is_blocked`,
+            last_checked_at: sql`excluded.last_checked_at`,
+          },
+        });
+    });
+
+    await withOrgContext(orgId, async (tx) => {
+      if (clearNow.length > 0) {
+        await tx
+          .update(contacts)
+          .set({ rpo_status: 'clear', rpo_checked_at: checkedAt })
+          .where(
+            and(
+              eq(contacts.org_id, orgId),
+              inArray(contacts.phone_e164, clearNow),
+              isNull(contacts.deleted_at),
+            ),
+          );
+      }
+      if (blockedNow.length > 0) {
+        await tx
+          .update(contacts)
+          .set({ rpo_status: 'blocked', rpo_checked_at: checkedAt })
+          .where(
+            and(
+              eq(contacts.org_id, orgId),
+              inArray(contacts.phone_e164, blockedNow),
+              isNull(contacts.deleted_at),
+            ),
+          );
+      }
+    });
+
+    checked += chunk.length;
+    blocked += blockedNow.length;
+    clear += clearNow.length;
+  }
+
+  return { checked, blocked, clear, errors, skipped: false };
+}
+
 // ─── Public processor ────────────────────────────────────────────────────────
 
 export async function processContactsImport(
@@ -184,14 +326,17 @@ export async function processContactsImport(
     upsertCounts = await bulkUpsertContacts(orgId, enrichedRows);
   }
 
-  // Step 5: update-list
+  // Step 5: rpo-batch-check — live RPO check for newly-inserted B2C contacts
+  const rpoResult = await performBatchRpoCheck(orgId, listId);
+
+  // Step 6: update-list
   const finalStatus: 'completed' | 'failed' =
     parseResult.validRows.length === 0 ? 'failed' : 'completed';
 
   await updateListCounts(orgId, listId, parseResult.totalRows, parseResult.validRows.length);
   await updateListImportStatus(orgId, listId, finalStatus);
 
-  // Step 6: audit
+  // Step 7: audit
   await withOrgContext(orgId, async (tx) => {
     await recordAudit(tx, {
       orgId,
@@ -206,11 +351,16 @@ export async function processContactsImport(
         insertedCount: upsertCounts.insertedCount,
         updatedCount: upsertCounts.updatedCount,
         status: finalStatus,
+        rpoChecked: rpoResult.checked,
+        rpoBlocked: rpoResult.blocked,
+        rpoClear: rpoResult.clear,
+        rpoErrors: rpoResult.errors,
+        rpoSkipped: rpoResult.skipped,
       },
     });
   });
 
-  // Step 7: notify
+  // Step 8: notify
   const completedData: ContactsImportCompletedData = {
     orgId,
     listId,
