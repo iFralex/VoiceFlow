@@ -141,7 +141,7 @@ export class RpoIntermediaryClient implements RpoClient {
 
 ### Task 10: GDPR data subject rights — erasure (Article 17)
 
-- [ ] Create `src/lib/compliance/gdpr/erase.ts` with `eraseSubject(orgId, byUserId, identifier, reason)`:
+- [x] Create `src/lib/compliance/gdpr/erase.ts` with `eraseSubject(orgId, byUserId, identifier, reason)`:
   - resolves contact by phone or email
   - confirmation gate: requires the requestor to type the contact's phone number to confirm
   - in a transaction:
@@ -152,8 +152,8 @@ export class RpoIntermediaryClient implements RpoClient {
     - replace `calls.metadata` PII fields with tombstones
     - audit_log entry with `action='compliance.gdpr_erasure'`
   - emit `compliance/gdpr-erasure` event for plan 13 notification
-- [ ] 30-day soft-delete grace period: actual hard purge runs in retention cron (Task 13)
-- [ ] Mark completed
+- [x] 30-day soft-delete grace period: actual hard purge runs in retention cron (Task 13)
+- [x] Mark completed
 
 ### Task 11: GDPR self-service UI
 
