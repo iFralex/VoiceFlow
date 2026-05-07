@@ -14,9 +14,15 @@ import { env } from '@/lib/env';
 function authorize(request: Request): boolean {
   const secret = env.CRON_SECRET;
   const auth = request.headers.get('authorization');
-  const expected = `Bearer ${secret}`;
-  if (!auth || auth.length !== expected.length) return false;
-  return timingSafeEqual(Buffer.from(auth), Buffer.from(expected));
+  if (!auth) return false;
+  // Compare on byte length, not string length: a multibyte UTF-8 header value
+  // can match `expected.length` (string length) while differing in byte length,
+  // which makes `timingSafeEqual` throw and the route return 500 instead of a
+  // clean 401.
+  const authBuf = Buffer.from(auth);
+  const expectedBuf = Buffer.from(`Bearer ${secret}`);
+  if (authBuf.length !== expectedBuf.length) return false;
+  return timingSafeEqual(authBuf, expectedBuf);
 }
 
 // ---------------------------------------------------------------------------

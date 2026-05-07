@@ -290,15 +290,35 @@ export async function recordSbcDispatchSuccess(
 /**
  * Returns true if the SBC trunk is currently considered unhealthy.
  *
- * This is a read-only check used by the picker on every dispatch decision.
- * It does not auto-clear stale flags — that side effect happens inside
- * `recordSbcDispatchSuccess` so we keep reads cheap. The CLI watchdog cron
- * (plan 10 task 7) calls `clearStaleSbcUnhealthyFlag` to garbage-collect
- * flags that have not auto-cleared for orgs with no active dispatch.
+ * Lazily garbage-collects a stale flag whose `lastFailureAt` is older than
+ * `SBC_HEALTHY_AUTO_CLEAR_MS`. This is the only reliable auto-clear path:
+ * once the flag is raised, the picker constrains all dispatches to Twilio,
+ * so `recordSbcDispatchSuccess` is never called and the success-driven clear
+ * cannot fire. Without this lazy sweep the flag would stay raised until the
+ * next daily watchdog cron run — contradicting the "30 minutes of healthy
+ * operation" guarantee in plan 10 task 13. We accept the extra round-trip on
+ * the rare reads that need to clear because the alternative is locking
+ * dispatch onto the Twilio fallback for up to ~24 h.
  */
-export async function isSbcUnhealthy(options: FlagOptions = {}): Promise<boolean> {
+export async function isSbcUnhealthy(options: SbcHealthOptions = {}): Promise<boolean> {
   const stored = await getFlag<unknown>(SBC_UNHEALTHY_FLAG_KEY, options);
-  return readState(stored).unhealthy;
+  const state = readState(stored);
+  if (!state.unhealthy) return false;
+  if (state.lastFailureAt) {
+    const now = options.now ?? new Date();
+    const elapsed = now.getTime() - Date.parse(state.lastFailureAt);
+    if (elapsed >= SBC_HEALTHY_AUTO_CLEAR_MS) {
+      // Best-effort lazy clear; if the sweep itself fails we still return the
+      // current (raised) state so the caller routes to the fallback pool.
+      try {
+        const cleared = await clearStaleSbcUnhealthyFlag(options);
+        if (cleared) return false;
+      } catch (err) {
+        console.error('[system_flags] Lazy stale-flag clear failed', err);
+      }
+    }
+  }
+  return state.unhealthy;
 }
 
 /**

@@ -105,12 +105,24 @@ async function doPick(
   // `calls.from_number` so that future picks see the activity. Inbound IVR rows
   // share the pool DID as `from_number`, so the direction filter keeps the
   // hourly cap scoped to outbound traffic.
+  //
+  // Two windows are unioned so a burst of dispatches cannot all observe
+  // `hourly_count = 0`:
+  //   - Calls already started in the last hour (`started_at`).
+  //   - Calls dispatched in the last hour but whose `started_at` has not yet
+  //     been written by the `call-started` webhook (`created_at`,
+  //     `started_at IS NULL`). The dispatcher writes `from_number` and
+  //     `created_at` immediately at row creation, so this window also catches
+  //     in-flight dispatches that would otherwise bypass the cap until the
+  //     provider webhook lands.
   const hourlyCount = sql<number>`(
     SELECT COUNT(*)::int FROM ${calls} c
     WHERE c.from_number = ${phoneNumbers.e164}
       AND c.direction = 'outbound'
-      AND c.started_at IS NOT NULL
-      AND c.started_at >= NOW() - INTERVAL '1 hour'
+      AND (
+        (c.started_at IS NOT NULL AND c.started_at >= NOW() - INTERVAL '1 hour')
+        OR (c.started_at IS NULL AND c.created_at >= NOW() - INTERVAL '1 hour')
+      )
   )`;
 
   // Ownership rank: org-dedicated rows (org_id = orgId) sort before shared

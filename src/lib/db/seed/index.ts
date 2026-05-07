@@ -122,10 +122,17 @@ export async function seedVoiceCatalogue(): Promise<void> {
 /**
  * Seed the shared CLI pool. Upserts the placeholder DIDs from
  * `phone_numbers.ts`, refreshing only the metadata fields the founder is
- * expected to update post-procurement (`provider`, `provider_external_id`,
- * `region`, `capabilities`). Live usage state (`status`, `daily_call_count`,
- * `spam_score`, `last_used_at`) is left untouched on conflict so re-running
- * the seed never resets a number that the watchdog has cooled down.
+ * expected to update post-procurement (`provider`, `region`, `capabilities`).
+ * Live usage state (`status`, `daily_call_count`, `spam_score`, `last_used_at`)
+ * is left untouched on conflict so re-running the seed never resets a number
+ * that the watchdog has cooled down.
+ *
+ * `provider_external_id` is preserved on conflict via COALESCE: every row in
+ * `phoneNumberSeedData` ships with `provider_external_id=null` because the
+ * Vapi `phoneNumberId` is captured by the founder post-import (see
+ * `docs/runbooks/cli-pool-management.md`). Re-running the seed must not clobber
+ * that value back to NULL — the picker excludes rows with
+ * `provider_external_id IS NULL`, so a wiped seed would silently break dispatch.
  */
 export async function seedPhoneNumbers(): Promise<void> {
   await withSystemContext(async (tx) => {
@@ -136,7 +143,7 @@ export async function seedPhoneNumbers(): Promise<void> {
         target: phoneNumbers.e164,
         set: {
           provider: sql`excluded.provider`,
-          provider_external_id: sql`excluded.provider_external_id`,
+          provider_external_id: sql`COALESCE(${phoneNumbers.provider_external_id}, excluded.provider_external_id)`,
           region: sql`excluded.region`,
           capabilities: sql`excluded.capabilities`,
         },

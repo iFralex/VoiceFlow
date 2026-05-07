@@ -219,8 +219,12 @@ describe('SBC auto-clear', () => {
         }),
       );
     }
+    // Within the auto-clear window, isSbcUnhealthy still reports raised.
+    const insideWindow = new Date(t0.getTime() + 5 * 60_000);
     expect(
-      await withKey(SBC_UNHEALTHY_FLAG_KEY, () => isSbcUnhealthy()),
+      await withKey(SBC_UNHEALTHY_FLAG_KEY, () =>
+        isSbcUnhealthy({ now: insideWindow }),
+      ),
     ).toBe(true);
 
     // The 3rd failure was at t0+2s, so we need wellAfter > lastFailureAt + 30 min.
@@ -275,6 +279,40 @@ describe('SBC auto-clear', () => {
     expect(cleared).toBe(true);
     expect(
       await withKey(SBC_UNHEALTHY_FLAG_KEY, () => isSbcUnhealthy()),
+    ).toBe(false);
+  });
+
+  it('isSbcUnhealthy lazily clears a stale flag once the auto-clear window has elapsed', async () => {
+    // Trip the flag at t0…t0+2s.
+    const t0 = new Date('2026-05-06T10:00:00Z');
+    for (const i of [0, 1, 2]) {
+      await withKey(SBC_UNHEALTHY_FLAG_KEY, () =>
+        recordSbcDispatchFailure('x', {
+          now: new Date(t0.getTime() + i * 1000),
+        }),
+      );
+    }
+    // While we are inside the 30-min window, the flag stays raised.
+    const insideWindow = new Date(t0.getTime() + 5 * 60_000);
+    expect(
+      await withKey(SBC_UNHEALTHY_FLAG_KEY, () =>
+        isSbcUnhealthy({ now: insideWindow }),
+      ),
+    ).toBe(true);
+
+    // Advance past the auto-clear window. While the flag is raised, dispatches
+    // are routed away from SBC, so `recordSbcDispatchSuccess` will never run;
+    // the read path is the only place the flag can be cleared until the daily
+    // watchdog runs. isSbcUnhealthy must lazy-clear here.
+    const stale = new Date(t0.getTime() + 2_000 + SBC_HEALTHY_AUTO_CLEAR_MS + 1_000);
+    const stillUnhealthy = await withKey(SBC_UNHEALTHY_FLAG_KEY, () =>
+      isSbcUnhealthy({ now: stale }),
+    );
+    expect(stillUnhealthy).toBe(false);
+
+    // Subsequent reads see a healthy state because the flag was actually cleared.
+    expect(
+      await withKey(SBC_UNHEALTHY_FLAG_KEY, () => isSbcUnhealthy({ now: stale })),
     ).toBe(false);
   });
 });

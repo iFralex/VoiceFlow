@@ -154,6 +154,33 @@ describe('seed/index', () => {
       expect(updatedKeys).not.toContain('spam_score');
       expect(updatedKeys).not.toContain('last_used_at');
     });
+
+    it('preserves a founder-populated provider_external_id when re-seeding (COALESCE)', async () => {
+      const chain = makeInsertChain();
+      vi.mocked(db.insert).mockReturnValue(chain as never);
+
+      await seedPhoneNumbers();
+
+      const [conflictArg] = chain.onConflictDoUpdate.mock.calls[0] as [
+        { target: unknown; set: Record<string, unknown> },
+      ];
+      // The set clause for provider_external_id must be a SQL fragment
+      // referencing COALESCE so an existing non-null value is preserved.
+      // Drizzle SQL fragments have circular references, so traverse the
+      // queryChunks array directly and look for the COALESCE token.
+      const expr = conflictArg.set['provider_external_id'] as {
+        queryChunks?: Array<unknown>;
+      };
+      const chunks = expr?.queryChunks ?? [];
+      const flat = chunks
+        .map((c) =>
+          typeof c === 'string'
+            ? c
+            : (c as { value?: string[] }).value?.join(' ') ?? '',
+        )
+        .join(' ');
+      expect(flat.toUpperCase()).toContain('COALESCE');
+    });
   });
 
   describe('seed (orchestrator)', () => {

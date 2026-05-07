@@ -8,6 +8,9 @@ import { type NextRequest, NextResponse } from 'next/server';
  *   - Auth callback (/auth/*)
  *   - Webhook endpoints (signature-verified by their own route handlers)
  *   - Cron and admin API routes (authenticated by their own token checks)
+ *   - The founder-only `/admin/cli-pool` page (gated by ?token + timingSafeEqual
+ *     in the page itself; new pages under /admin/ should opt in here explicitly
+ *     so they don't inherit a blanket bypass and end up with no auth at all).
  *   - Marketing home and dev kitchen-sink
  */
 function isPublicPath(pathname: string): boolean {
@@ -21,7 +24,7 @@ function isPublicPath(pathname: string): boolean {
     pathname.startsWith('/api/webhooks/') ||
     pathname.startsWith('/api/cron/') ||
     pathname.startsWith('/api/admin/') ||
-    pathname.startsWith('/admin/') ||
+    pathname === '/admin/cli-pool' ||
     pathname.startsWith('/_kitchen-sink')
   );
 }
