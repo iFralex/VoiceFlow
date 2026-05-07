@@ -119,13 +119,13 @@ export class RpoIntermediaryClient implements RpoClient {
 
 ### Task 8: Disclosure failure runbook
 
-- [ ] Create `docs/runbooks/aiact-disclosure-failure.md` documenting:
+- [x] Create `docs/runbooks/aiact-disclosure-failure.md` documenting:
   - what triggers a `quality.disclosure-missing` event
   - how to triage (listen to recording, read transcript)
   - corrective action (refund call to dealer, log incident, retrain prompt if pattern emerges)
   - regulatory escalation procedure if pattern persists
-- [ ] Add `/admin/disclosure-failures` page (founder only) listing all `quality/disclosure-missing` events with audio playback and triage status
-- [ ] Mark completed
+- [x] Add `/admin/disclosure-failures` page (founder only) listing all `quality/disclosure-missing` events with audio playback and triage status
+- [x] Mark completed
 
 ### Task 9: GDPR data subject rights — export (Article 15)
 
