@@ -97,11 +97,11 @@ export class RpoIntermediaryClient implements RpoClient {
 
 ### Task 6: Opt-out propagation across campaigns
 
-- [ ] When `markOptOut` runs, abort any pending or in-progress calls to that contact in any active campaign:
+- [x] When `markOptOut` runs, abort any pending or in-progress calls to that contact in any active campaign:
   - SELECT calls WHERE org_id, contact_id matches phone, status IN (pending, dialing, in_progress)
   - for each: if `dialing` or `in_progress` → call `provider.cancelCall(provider_call_id)`; else update status to `failed/error_code='opted_out'`
-- [ ] Emit Inngest event `campaign/contact-opted-out` so the campaign engine can recompute remaining
-- [ ] Mark completed
+- [x] Emit Inngest event `campaign/contact-opted-out` so the campaign engine can recompute remaining
+- [x] Mark completed
 
 ### Task 7: AI Act three-layer enforcement audit
 

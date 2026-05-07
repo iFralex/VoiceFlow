@@ -83,3 +83,6 @@ export {
   scheduleRetryIfNeeded,
   MAX_RETRY_ATTEMPTS,
 } from './calls/completed';
+export { CAMPAIGN_CONTACT_OPTED_OUT_EVENT } from './compliance/events';
+export type { CampaignContactOptedOutData } from './compliance/events';
+export { complianceOptOutRegisteredHandler } from './compliance/optout-handler';
