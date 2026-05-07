@@ -157,13 +157,13 @@ export class RpoIntermediaryClient implements RpoClient {
 
 ### Task 11: GDPR self-service UI
 
-- [ ] Create `src/app/(app)/settings/compliance/page.tsx` (capability `compliance.export` for read; `compliance.erase` for erase):
+- [x] Create `src/app/(app)/settings/compliance/page.tsx` (capability `compliance.export` for read; `compliance.erase` for erase):
   - section "Diritti dell'interessato (GDPR)":
     - input field for phone or email
     - two buttons: "Esporta dati" → calls `requestSubjectExport`; "Cancella dati" → opens confirmation dialog calling `eraseSubject`
   - section "Storico richieste GDPR" listing past exports/erasures from audit_log
   - section "Documentazione" with downloadable PDFs: DPA, privacy policy, RPO compliance certificate
-- [ ] Mark completed
+- [x] Mark completed
 
 ### Task 12: Retention policy enforcement
 

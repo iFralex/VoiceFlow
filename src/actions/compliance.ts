@@ -1,15 +1,20 @@
 'use server';
 
-import { eq } from 'drizzle-orm';
+import { and, desc, eq, inArray, lte } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { getAuthContext, requireCapability } from '@/lib/auth/context';
+import {
+  eraseSubject,
+  SubjectErasureConfirmationError,
+  SubjectNotFoundError as ErasureSubjectNotFoundError,
+} from '@/lib/compliance/gdpr/erase';
 import {
   buildSubjectExport,
   SubjectNotFoundError,
 } from '@/lib/compliance/gdpr/export';
 import { withSystemContext } from '@/lib/db/context';
-import { users } from '@/lib/db/schema';
+import { auditLog, users } from '@/lib/db/schema';
 import { sendEmail } from '@/lib/email';
 import type { ActionResult } from '@/lib/utils/action-toast';
 
@@ -99,5 +104,160 @@ export async function requestSubjectExport(
       return { ok: false, message: 'subject_not_found' };
     }
     return { ok: false, message: e instanceof Error ? e.message : 'export_failed' };
+  }
+}
+
+const requestSubjectErasureSchema = z.object({
+  identifier: z.string().min(1).max(254),
+  confirmPhone: z.string().min(1).max(32),
+  reason: z.string().min(1).max(500),
+});
+
+export interface SubjectErasureActionData {
+  contactId: string;
+  phoneE164: string;
+  totals: {
+    callsScrubbed: number;
+    recordingsDeleted: number;
+    transcriptsDeleted: number;
+    storageErrors: number;
+  };
+}
+
+/**
+ * Server Action — fulfils a GDPR Article 17 erasure request. Resolves the
+ * contact by phone or email, scrubs PII, tombstones call metadata, deletes
+ * recordings and transcripts from Storage, and registers a permanent opt-out.
+ *
+ * Requires capability `compliance.erase` (owner / admin only).
+ *
+ * The caller must also pass `confirmPhone` equal to the contact's phone
+ * number — the UI surfaces this as a retype-to-confirm gate. Mismatches
+ * surface as `confirmation_mismatch` without performing any writes.
+ */
+export async function requestSubjectErasure(
+  input: z.infer<typeof requestSubjectErasureSchema>,
+): Promise<ActionResult & { data?: SubjectErasureActionData }> {
+  const parsed = requestSubjectErasureSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? 'validation_error' };
+  }
+
+  try {
+    const { orgId, userId } = await getAuthContext();
+    await requireCapability('compliance.erase');
+
+    const result = await eraseSubject({
+      orgId,
+      byUserId: userId,
+      identifier: parsed.data.identifier,
+      reason: parsed.data.reason,
+      confirmPhone: parsed.data.confirmPhone,
+    });
+
+    return {
+      ok: true,
+      data: {
+        contactId: result.contactId,
+        phoneE164: result.phoneE164,
+        totals: result.totals,
+      },
+    };
+  } catch (e) {
+    if (e instanceof ErasureSubjectNotFoundError) {
+      return { ok: false, message: 'subject_not_found' };
+    }
+    if (e instanceof SubjectErasureConfirmationError) {
+      return { ok: false, message: 'confirmation_mismatch' };
+    }
+    return { ok: false, message: e instanceof Error ? e.message : 'erasure_failed' };
+  }
+}
+
+// ─── GDPR history listing ────────────────────────────────────────────────────
+
+export type GdprHistoryEntryAction = 'compliance.gdpr_export' | 'compliance.gdpr_erasure';
+
+export interface GdprHistoryEntry {
+  id: string;
+  action: GdprHistoryEntryAction;
+  createdAt: string;
+  actorUserId: string | null;
+  actorEmail: string | null;
+  subjectId: string;
+  metadata: Record<string, unknown> | null;
+}
+
+const GDPR_HISTORY_ACTIONS: GdprHistoryEntryAction[] = [
+  'compliance.gdpr_export',
+  'compliance.gdpr_erasure',
+];
+
+/**
+ * Lists the most recent GDPR export and erasure audit entries for the active
+ * org. Powers the "Storico richieste GDPR" section of the compliance settings
+ * page.
+ *
+ * Requires capability `compliance.export` (read-only listing — anyone who can
+ * trigger an export can also see prior requests).
+ */
+export async function listGdprHistory(
+  input: { limit?: number; before?: string } = {},
+): Promise<ActionResult & { data?: { entries: GdprHistoryEntry[] } }> {
+  const limit = Math.min(Math.max(input.limit ?? 50, 1), 200);
+
+  try {
+    const { orgId } = await getAuthContext();
+    await requireCapability('compliance.export');
+
+    const rows = await withSystemContext(async (tx) => {
+      const baseConditions = [
+        eq(auditLog.org_id, orgId),
+        inArray(auditLog.action, GDPR_HISTORY_ACTIONS),
+      ];
+      if (input.before) {
+        baseConditions.push(lte(auditLog.created_at, new Date(input.before)));
+      }
+
+      const entries = await tx
+        .select({
+          id: auditLog.id,
+          action: auditLog.action,
+          createdAt: auditLog.created_at,
+          actorUserId: auditLog.actor_user_id,
+          subjectId: auditLog.subject_id,
+          metadata: auditLog.metadata,
+        })
+        .from(auditLog)
+        .where(and(...baseConditions))
+        .orderBy(desc(auditLog.created_at))
+        .limit(limit);
+
+      // Resolve actor emails in a single query.
+      const actorIds = Array.from(
+        new Set(entries.map((e) => e.actorUserId).filter((v): v is string => v !== null)),
+      );
+      const actorRows = actorIds.length
+        ? await tx
+            .select({ id: users.id, email: users.email })
+            .from(users)
+            .where(inArray(users.id, actorIds))
+        : [];
+      const actorEmailById = new Map(actorRows.map((u) => [u.id, u.email]));
+
+      return entries.map((e) => ({
+        id: String(e.id),
+        action: e.action as GdprHistoryEntryAction,
+        createdAt: e.createdAt.toISOString(),
+        actorUserId: e.actorUserId,
+        actorEmail: e.actorUserId ? actorEmailById.get(e.actorUserId) ?? null : null,
+        subjectId: e.subjectId,
+        metadata: (e.metadata ?? null) as Record<string, unknown> | null,
+      }));
+    });
+
+    return { ok: true, data: { entries: rows } };
+  } catch (e) {
+    return { ok: false, message: e instanceof Error ? e.message : 'history_failed' };
   }
 }
