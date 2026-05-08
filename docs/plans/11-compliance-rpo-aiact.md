@@ -226,14 +226,14 @@ export class RpoIntermediaryClient implements RpoClient {
 
 ### Task 18: Integration tests
 
-- [ ] Test: RPO daily snapshot updates `rpo_snapshots` and `contacts.rpo_status`
-- [ ] Test: live RPO check on dispatch fails closed when client errors and no stale snapshot
-- [ ] Test: opt-out via any source aborts in-flight calls
-- [ ] Test: GDPR export ZIP contains expected files
-- [ ] Test: GDPR erasure scrubs PII while preserving opt-out registry
-- [ ] Test: retention purge respects legal hold
-- [ ] Test: DPA acceptance gate blocks campaign launch when version expired
-- [ ] Mark completed
+- [x] Test: RPO daily snapshot updates `rpo_snapshots` and `contacts.rpo_status`
+- [x] Test: live RPO check on dispatch fails closed when client errors and no stale snapshot
+- [x] Test: opt-out via any source aborts in-flight calls
+- [x] Test: GDPR export ZIP contains expected files
+- [x] Test: GDPR erasure scrubs PII while preserving opt-out registry
+- [x] Test: retention purge respects legal hold
+- [x] Test: DPA acceptance gate blocks campaign launch when version expired
+- [x] Mark completed
 
 ### Task 19: Definition of Done
 
