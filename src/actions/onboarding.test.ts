@@ -6,30 +6,35 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const {
   mockGetUser,
   mockCreateOrganization,
-  mockTransaction,
-  mockInsert,
-  mockValues,
+  mockRecordDpaAcceptance,
   mockRedirect,
   mockCookiesSet,
   mockCookies,
+  mockHeaders,
 } = vi.hoisted(() => {
-  const mockValues = vi.fn().mockResolvedValue(undefined);
-  const mockInsert = vi.fn().mockReturnValue({ values: mockValues });
-  const mockTransaction = vi.fn();
   const mockGetUser = vi.fn();
+  const mockCreateOrganization = vi.fn();
+  const mockRecordDpaAcceptance = vi.fn().mockResolvedValue({
+    version: '2026-01-01',
+    accepted_at: '2026-05-08T00:00:00.000Z',
+    ip: null,
+    user_agent: null,
+  });
   const mockRedirect = vi.fn();
   const mockCookiesSet = vi.fn();
   const mockCookies = vi.fn().mockResolvedValue({ set: mockCookiesSet });
-  const mockCreateOrganization = vi.fn();
+  const headersMap = new Map<string, string>();
+  const mockHeaders = vi.fn().mockResolvedValue({
+    get: (k: string) => headersMap.get(k.toLowerCase()) ?? null,
+  });
   return {
     mockGetUser,
     mockCreateOrganization,
-    mockTransaction,
-    mockInsert,
-    mockValues,
+    mockRecordDpaAcceptance,
     mockRedirect,
     mockCookiesSet,
     mockCookies,
+    mockHeaders,
   };
 });
 
@@ -45,12 +50,9 @@ vi.mock('@/lib/services/organizations', () => ({
   createOrganization: mockCreateOrganization,
 }));
 
-vi.mock('@/lib/db/client', () => ({
-  db: { transaction: mockTransaction },
-}));
-
-vi.mock('@/lib/db/schema', () => ({
-  auditLog: { _: { name: 'audit_log' } },
+vi.mock('@/lib/compliance/dpa', () => ({
+  recordDpaAcceptance: mockRecordDpaAcceptance,
+  CURRENT_DPA_VERSION: '2026-01-01',
 }));
 
 vi.mock('next/navigation', () => ({
@@ -59,17 +61,8 @@ vi.mock('next/navigation', () => ({
 
 vi.mock('next/headers', () => ({
   cookies: mockCookies,
+  headers: mockHeaders,
 }));
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function setupTransaction() {
-  mockTransaction.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) => {
-    return fn({ insert: mockInsert });
-  });
-}
 
 const userId = 'user-uuid-1';
 const orgId = 'org-uuid-1';
@@ -82,9 +75,14 @@ import { createOrganizationAndOnboard } from './onboarding';
 describe('createOrganizationAndOnboard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    setupTransaction();
     mockGetUser.mockResolvedValue({ data: { user: { id: userId } }, error: null });
     mockCreateOrganization.mockResolvedValue({ id: orgId, name: 'Test Org' });
+    mockRecordDpaAcceptance.mockResolvedValue({
+      version: '2026-01-01',
+      accepted_at: '2026-05-08T00:00:00.000Z',
+      ip: null,
+      user_agent: null,
+    });
   });
 
   it('returns name_required for empty name', async () => {
@@ -133,17 +131,59 @@ describe('createOrganizationAndOnboard', () => {
     });
   });
 
-  it('records org.dpa_accepted audit log entry', async () => {
+  it('records DPA acceptance with orgId, userId, ip and user-agent', async () => {
+    const headersMap = new Map<string, string>([
+      ['x-forwarded-for', '203.0.113.1, 10.0.0.1'],
+      ['user-agent', 'Mozilla/5.0 (Test)'],
+    ]);
+    mockHeaders.mockResolvedValueOnce({
+      get: (k: string) => headersMap.get(k.toLowerCase()) ?? null,
+    });
+
     await createOrganizationAndOnboard({ name: 'My Org' });
-    expect(mockInsert).toHaveBeenCalledOnce();
-    const [row] = mockValues.mock.calls[0] as [Record<string, unknown>];
-    expect(row['action']).toBe('org.dpa_accepted');
-    expect(row['org_id']).toBe(orgId);
-    expect(row['actor_user_id']).toBe(userId);
-    expect(row['subject_id']).toBe(orgId);
-    expect((row['metadata'] as Record<string, string>)['dpa_accepted_at']).toMatch(
-      /^\d{4}-\d{2}-\d{2}T/,
-    );
+
+    expect(mockRecordDpaAcceptance).toHaveBeenCalledOnce();
+    expect(mockRecordDpaAcceptance).toHaveBeenCalledWith({
+      orgId,
+      userId,
+      ip: '203.0.113.1',
+      userAgent: 'Mozilla/5.0 (Test)',
+    });
+  });
+
+  it('records DPA acceptance with null ip / ua when headers absent', async () => {
+    const headersMap = new Map<string, string>();
+    mockHeaders.mockResolvedValueOnce({
+      get: (k: string) => headersMap.get(k.toLowerCase()) ?? null,
+    });
+
+    await createOrganizationAndOnboard({ name: 'My Org' });
+
+    expect(mockRecordDpaAcceptance).toHaveBeenCalledWith({
+      orgId,
+      userId,
+      ip: null,
+      userAgent: null,
+    });
+  });
+
+  it('falls back to x-real-ip when x-forwarded-for is absent', async () => {
+    const headersMap = new Map<string, string>([
+      ['x-real-ip', '198.51.100.7'],
+      ['user-agent', 'Test/1'],
+    ]);
+    mockHeaders.mockResolvedValueOnce({
+      get: (k: string) => headersMap.get(k.toLowerCase()) ?? null,
+    });
+
+    await createOrganizationAndOnboard({ name: 'My Org' });
+
+    expect(mockRecordDpaAcceptance).toHaveBeenCalledWith({
+      orgId,
+      userId,
+      ip: '198.51.100.7',
+      userAgent: 'Test/1',
+    });
   });
 
   it('sets active_org_id cookie with the new org id', async () => {

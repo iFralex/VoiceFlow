@@ -427,6 +427,14 @@ const _italianStrings: Record<string, Record<string, string>> = {
     docs_terms: 'Termini di servizio',
     docs_cookie: 'Cookie policy',
     docs_rpo: 'Certificato di conformità RPO',
+    dpa_banner_title: 'Aggiornamento DPA richiesto',
+    dpa_banner_description_outdated:
+      "L'Accordo sul Trattamento dei Dati è stato aggiornato dalla versione {acceptedVersion} alla versione {currentVersion}. Conferma la nuova versione per continuare ad utilizzare la piattaforma.",
+    dpa_banner_description_never:
+      "La tua organizzazione non ha ancora accettato l'Accordo sul Trattamento dei Dati (versione {currentVersion}). Conferma per continuare ad utilizzare la piattaforma.",
+    dpa_banner_accept: 'Accetta DPA',
+    dpa_banner_accepting: 'Accettazione…',
+    dpa_banner_accept_success: 'Accordo accettato',
   },
   audit_log: {
     title: 'Registro audit',

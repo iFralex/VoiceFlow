@@ -1,11 +1,10 @@
 'use server';
 
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 
-import { recordAudit } from '@/lib/db/audit';
-import { withSystemContext } from '@/lib/db/context';
+import { recordDpaAcceptance } from '@/lib/compliance/dpa';
 import { createOrganization } from '@/lib/services/organizations';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import type { ActionResult } from '@/lib/utils/action-toast';
@@ -50,17 +49,19 @@ export async function createOrganizationAndOnboard(
       ...(parsed.data.vatNumber ? { vatNumber: parsed.data.vatNumber } : {}),
     });
 
-    // Record DPA acceptance in the audit log
-    await withSystemContext(async (tx) => {
-      await recordAudit(tx, {
-        orgId: org.id,
-        actorUserId: user.id,
-        actorType: 'user',
-        action: 'org.dpa_accepted',
-        subjectType: 'organization',
-        subjectId: org.id,
-        metadata: { dpa_accepted_at: new Date().toISOString() },
-      });
+    // Record DPA acceptance in the audit log with IP, user-agent and version.
+    const h = await headers();
+    const ip =
+      h.get('x-forwarded-for')?.split(',')[0]?.trim() ??
+      h.get('x-real-ip')?.trim() ??
+      null;
+    const userAgent = h.get('user-agent') ?? null;
+
+    await recordDpaAcceptance({
+      orgId: org.id,
+      userId: user.id,
+      ip,
+      userAgent,
     });
 
     // Set the new org as the active org

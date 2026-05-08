@@ -1,9 +1,11 @@
 'use server';
 
 import { and, desc, eq, inArray, lte } from 'drizzle-orm';
+import { headers } from 'next/headers';
 import { z } from 'zod';
 
 import { getAuthContext, requireCapability } from '@/lib/auth/context';
+import { CURRENT_DPA_VERSION, recordDpaAcceptance } from '@/lib/compliance/dpa';
 import {
   eraseSubject,
   SubjectErasureConfirmationError,
@@ -259,5 +261,37 @@ export async function listGdprHistory(
     return { ok: true, data: { entries: rows } };
   } catch (e) {
     return { ok: false, message: e instanceof Error ? e.message : 'history_failed' };
+  }
+}
+
+// ─── DPA re-acceptance ───────────────────────────────────────────────────────
+
+/**
+ * Server Action — records re-acceptance of the current DPA version for the
+ * active org. Called by the in-app banner shown to organisations whose latest
+ * accepted DPA version is older than {@link CURRENT_DPA_VERSION}.
+ *
+ * No capability gate beyond a valid auth context: any active member of the org
+ * may re-accept on behalf of the organization. The acceptance row records
+ * which user, IP and user-agent confirmed.
+ */
+export async function acceptCurrentDpaVersion(): Promise<
+  ActionResult & { data?: { version: string } }
+> {
+  try {
+    const { orgId, userId } = await getAuthContext();
+
+    const h = await headers();
+    const ip =
+      h.get('x-forwarded-for')?.split(',')[0]?.trim() ??
+      h.get('x-real-ip')?.trim() ??
+      null;
+    const userAgent = h.get('user-agent') ?? null;
+
+    await recordDpaAcceptance({ orgId, userId, ip, userAgent });
+
+    return { ok: true, data: { version: CURRENT_DPA_VERSION } };
+  } catch (e) {
+    return { ok: false, message: e instanceof Error ? e.message : 'dpa_accept_failed' };
   }
 }

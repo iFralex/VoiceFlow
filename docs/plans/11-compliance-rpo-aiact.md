@@ -207,11 +207,11 @@ export class RpoIntermediaryClient implements RpoClient {
 
 ### Task 16: DPA acceptance gate
 
-- [ ] On organization creation (plan 04 onboarding), the user must tick a DPA checkbox before submitting
-- [ ] Capture the acceptance event with: timestamp, user_id, IP, user_agent, DPA version (constant string in `src/lib/compliance/dpa.ts`)
-- [ ] Persist as audit_log entry `action='compliance.dpa_accepted'` with full metadata
-- [ ] On DPA version bump (manual change to constant), the next time members log in they see a banner requiring re-acceptance before continuing
-- [ ] Mark completed
+- [x] On organization creation (plan 04 onboarding), the user must tick a DPA checkbox before submitting
+- [x] Capture the acceptance event with: timestamp, user_id, IP, user_agent, DPA version (constant string in `src/lib/compliance/dpa.ts`)
+- [x] Persist as audit_log entry `action='compliance.dpa_accepted'` with full metadata
+- [x] On DPA version bump (manual change to constant), the next time members log in they see a banner requiring re-acceptance before continuing
+- [x] Mark completed
 
 ### Task 17: Privacy and DPA static documents
 

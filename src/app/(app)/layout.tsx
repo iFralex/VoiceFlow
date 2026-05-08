@@ -2,6 +2,7 @@ import { cookies, headers } from 'next/headers';
 import { Suspense, type ReactNode } from 'react';
 
 import { Shell } from '@/components/app/shell';
+import { DpaBanner } from '@/components/compliance/dpa-banner';
 import { ListPageSkeleton } from '@/components/ui/page-skeleton';
 import { Toaster } from '@/components/ui/sonner';
 import { listOrganizationsForUser } from '@/lib/services/organizations';
@@ -16,6 +17,9 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   return (
     <>
       <Shell orgs={orgs} activeOrgId={activeOrgId}>
+        <Suspense fallback={null}>
+          <DpaBanner />
+        </Suspense>
         <Suspense fallback={<ListPageSkeleton />}>{children}</Suspense>
       </Shell>
       <Toaster />

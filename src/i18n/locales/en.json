@@ -503,7 +503,13 @@
     "docs_privacy": "Privacy policy",
     "docs_terms": "Terms of service",
     "docs_cookie": "Cookie policy",
-    "docs_rpo": "RPO compliance certificate"
+    "docs_rpo": "RPO compliance certificate",
+    "dpa_banner_title": "DPA update required",
+    "dpa_banner_description_outdated": "The Data Processing Agreement has been updated from version {acceptedVersion} to version {currentVersion}. Confirm the new version to continue using the platform.",
+    "dpa_banner_description_never": "Your organization has not yet accepted the Data Processing Agreement (version {currentVersion}). Confirm to continue using the platform.",
+    "dpa_banner_accept": "Accept DPA",
+    "dpa_banner_accepting": "Accepting…",
+    "dpa_banner_accept_success": "Agreement accepted"
   },
   "audit_log": {
     "title": "Audit log",
