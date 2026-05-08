@@ -18,7 +18,17 @@ export async function DpaBanner() {
   const orgId = h.get('x-org-id');
   if (!orgId) return null;
 
-  const status = await getDpaStatus(orgId);
+  // Degrade silently on a transient DB hiccup. The compliance gate at
+  // `launchCampaign` still blocks campaign launches, so hiding the banner here
+  // is a UX-only nudge — letting an exception propagate would otherwise crash
+  // the entire app shell via the nearest error boundary.
+  let status;
+  try {
+    status = await getDpaStatus(orgId);
+  } catch (err) {
+    console.error('[dpa-banner] failed to resolve status', err);
+    return null;
+  }
   if (status.state === 'current') return null;
 
   return (

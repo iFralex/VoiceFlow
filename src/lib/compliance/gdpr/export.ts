@@ -150,10 +150,15 @@ async function collectSubjectData(
   if (!subject) throw new SubjectNotFoundError(identifier);
 
   // audit_log has no RLS — query system-context and filter by org_id explicitly.
-  // We match entries whose subject_id is the contact id, phone, or email
-  // (covers contact.*, opt_out.recorded, compliance.*, etc.).
+  // We match entries whose subject_id is the contact id, phone, email, or any
+  // of the contact's call / appointment ids. This covers contact.*,
+  // opt_out.recorded, compliance.*, plus call.* and appointment.* events
+  // recorded against the call/appointment id rather than the contact (which is
+  // how voice tools and dispatcher write their audit rows).
   const subjectIds = [subject.contact.id, subject.contact.phone_e164];
   if (subject.contact.email) subjectIds.push(subject.contact.email);
+  for (const c of subject.callRows) subjectIds.push(c.id);
+  for (const a of subject.apptRows) subjectIds.push(a.id);
 
   const auditEntries = await withSystemContext(async (tx) =>
     tx

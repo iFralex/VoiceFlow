@@ -253,6 +253,13 @@ async function persistChunk({
     }
 
     if (blockedNow.length > 0) {
+      // Guard with `opt_out = false` so we do NOT flip `opt_out_reason` on
+      // contacts already opted out for an unrelated reason (e.g. another org
+      // has the same number flagged via `dealer_input`). Without this filter
+      // the daily cron would silently rewrite the original source recorded by
+      // the unified opt-out service every run, masking who first opted them
+      // out. Already-opted-out rows keep their existing `rpo_status` — they
+      // aren't callable anyway and `rpo_snapshots` carries the cross-org truth.
       const r = await tx
         .update(contacts)
         .set({
@@ -262,7 +269,11 @@ async function persistChunk({
           opt_out_reason: 'rpo_block',
         })
         .where(
-          and(inArray(contacts.phone_e164, blockedNow), isNull(contacts.deleted_at)),
+          and(
+            inArray(contacts.phone_e164, blockedNow),
+            isNull(contacts.deleted_at),
+            eq(contacts.opt_out, false),
+          ),
         )
         .returning({ id: contacts.id });
       updated += r.length;
