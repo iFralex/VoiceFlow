@@ -215,14 +215,14 @@ export class RpoIntermediaryClient implements RpoClient {
 
 ### Task 17: Privacy and DPA static documents
 
-- [ ] Author Italian-language documents under `src/app/(marketing)/legal/`:
+- [x] Author Italian-language documents under `src/app/(marketing)/legal/`:
   - `/legal/privacy/page.tsx` — full privacy policy
   - `/legal/dpa/page.tsx` — Data Processing Agreement template (we are processor, dealer is controller for their contacts; we are controller for our own user data)
   - `/legal/terms/page.tsx` — Terms of Service
   - `/legal/cookie/page.tsx` — Cookie policy
-- [ ] All linked from marketing footer and from the in-app onboarding/DPA acceptance flow
-- [ ] Documents authored by founder with legal counsel; this plan delivers the page scaffolding only
-- [ ] Mark completed
+- [x] All linked from marketing footer and from the in-app onboarding/DPA acceptance flow
+- [x] Documents authored by founder with legal counsel; this plan delivers the page scaffolding only
+- [x] Mark completed
 
 ### Task 18: Integration tests
 

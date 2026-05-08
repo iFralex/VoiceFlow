@@ -36,19 +36,25 @@ describe('MarketingFooter', () => {
   it('renders Privacy Policy link', () => {
     render(<MarketingFooter />);
     const link = screen.getByRole('link', { name: /privacy policy/i });
-    expect(link.getAttribute('href')).toBe('/privacy');
+    expect(link.getAttribute('href')).toBe('/legal/privacy');
   });
 
   it('renders Termini di Servizio link', () => {
     render(<MarketingFooter />);
     const link = screen.getByRole('link', { name: /termini di servizio/i });
-    expect(link.getAttribute('href')).toBe('/termini');
+    expect(link.getAttribute('href')).toBe('/legal/terms');
   });
 
   it('renders Cookie Policy link', () => {
     render(<MarketingFooter />);
     const link = screen.getByRole('link', { name: /cookie policy/i });
-    expect(link.getAttribute('href')).toBe('/cookie');
+    expect(link.getAttribute('href')).toBe('/legal/cookie');
+  });
+
+  it('renders DPA link', () => {
+    render(<MarketingFooter />);
+    const link = screen.getByRole('link', { name: /^dpa$/i });
+    expect(link.getAttribute('href')).toBe('/legal/dpa');
   });
 
   it('renders the legal nav landmark', () => {

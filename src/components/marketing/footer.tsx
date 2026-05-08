@@ -9,9 +9,10 @@ export function MarketingFooter() {
   const t = useTranslations('common');
 
   const legalLinks = [
-    { href: '/privacy', labelKey: 'marketing_privacy' },
-    { href: '/termini', labelKey: 'marketing_terms' },
-    { href: '/cookie', labelKey: 'marketing_cookies' },
+    { href: '/legal/privacy', labelKey: 'marketing_privacy' },
+    { href: '/legal/terms', labelKey: 'marketing_terms' },
+    { href: '/legal/cookie', labelKey: 'marketing_cookies' },
+    { href: '/legal/dpa', labelKey: 'marketing_dpa' },
   ] as const;
 
   return (
