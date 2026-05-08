@@ -60,6 +60,7 @@ vi.mock('@/lib/db/schema', () => ({
     org_id: 'c_org_id',
     phone_e164: 'c_phone_e164',
     email: 'c_email',
+    deleted_at: 'c_deleted_at',
   },
   calls: { org_id: 'l_org_id', contact_id: 'l_contact_id' },
   appointments: { org_id: 'a_org_id', contact_id: 'a_contact_id' },
@@ -72,6 +73,7 @@ vi.mock('drizzle-orm', () => ({
   or: (...args: unknown[]) => ({ type: 'or', args }),
   eq: (col: unknown, val: unknown) => ({ type: 'eq', col, val }),
   inArray: (col: unknown, vals: unknown[]) => ({ type: 'inArray', col, vals }),
+  isNull: (col: unknown) => ({ type: 'isNull', col }),
 }));
 
 // ─── Imports after mocks ─────────────────────────────────────────────────────
@@ -302,6 +304,51 @@ describe('buildSubjectExport', () => {
     await expect(
       buildSubjectExport({ orgId: ORG_ID, identifier: '+393331234567' }),
     ).rejects.toThrow(/upload failed/);
+  });
+
+  it('filters out soft-deleted (already-erased) contacts', async () => {
+    let capturedConditions: unknown = null;
+
+    mockWithOrgContext.mockImplementation(
+      async (_orgId: string, fn: (tx: unknown) => Promise<unknown>) => {
+        const tx = {
+          select: vi.fn(() => ({
+            from: vi.fn((table: unknown) => {
+              const tableId = (table as { org_id?: string }).org_id;
+              const where = vi.fn((cond: unknown) => {
+                if (tableId === 'c_org_id') {
+                  capturedConditions = cond;
+                  // Tombstone is filtered server-side — simulate the empty
+                  // result the deleted_at filter would return.
+                  return { limit: vi.fn(() => Promise.resolve([])) };
+                }
+                return Promise.resolve([]);
+              });
+              return { where };
+            }),
+          })),
+        };
+        return fn(tx);
+      },
+    );
+    mockWithSystemContext.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) =>
+      fn(buildSystemTx([])),
+    );
+
+    await expect(
+      buildSubjectExport({ orgId: ORG_ID, identifier: '+393331234567' }),
+    ).rejects.toBeInstanceOf(SubjectNotFoundError);
+
+    // Each branch of the lookup OR must include an isNull(deleted_at) clause.
+    const cond = capturedConditions as { type: string; args: Array<{ type: string; args: unknown[] }> };
+    expect(cond.type).toBe('or');
+    for (const branch of cond.args) {
+      expect(branch.type).toBe('and');
+      const hasDeletedAtFilter = (branch.args as Array<{ type: string; col?: string }>).some(
+        (a) => a.type === 'isNull' && a.col === 'c_deleted_at',
+      );
+      expect(hasDeletedAtFilter).toBe(true);
+    }
   });
 
   it('looks up by email when identifier contains @', async () => {

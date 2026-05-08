@@ -373,21 +373,33 @@ async function deleteStorageObjects(paths: string[]): Promise<boolean> {
  * Hard-deletes contacts whose `deleted_at` is older than the soft-delete grace
  * period (30 days, see {@link SOFT_DELETED_CONTACT_PURGE_DAYS}). The FK on
  * `calls.contact_id` is `ON DELETE CASCADE`, so the deletion sweeps the
- * contact's call rows as well — recordings and transcripts attached to those
- * calls are typically already purged (GDPR erasure deletes them up-front; the
- * recording retention cron clears the rest).
+ * contact's call rows as well.
+ *
+ * Storage objects (recordings, transcripts) for those calls would otherwise be
+ * orphaned: the cascade removes the only DB pointer to them, so the artifact
+ * retention cron can never find them again. To stay compliant with the 12-month
+ * recording retention spec we eagerly purge any non-null `recording_path` /
+ * `transcript_path` for every call about to be cascade-deleted, *before* the
+ * contact rows go away. GDPR-erased contacts have `recording_path` /
+ * `transcript_path` already NULLed by `eraseSubject`, so the storage delete is
+ * a no-op for that path.
  */
 async function hardDeleteSoftDeletedContacts(
   orgId: string,
   cutoff: Date,
   heldContactIds: Set<string>,
 ): Promise<number> {
-  return withSystemContext(async (tx) => {
+  // 1. Resolve the contact ids that are about to be deleted. We do this
+  //    before the DELETE so the FK cascade can't remove the rows out from
+  //    under us — once the contacts are gone we lose all paths to their
+  //    calls' storage objects.
+  const contactIds = await withSystemContext(async (tx) => {
     const heldExclusion = heldContactIds.size > 0
       ? notInArray(contacts.id, [...heldContactIds])
       : undefined;
-    const r = await tx
-      .delete(contacts)
+    const ids = await tx
+      .select({ id: contacts.id })
+      .from(contacts)
       .where(
         and(
           eq(contacts.org_id, orgId),
@@ -395,7 +407,53 @@ async function hardDeleteSoftDeletedContacts(
           lt(contacts.deleted_at, cutoff),
           heldExclusion,
         ),
-      )
+      );
+    return ids.map((r) => r.id);
+  });
+
+  if (contactIds.length === 0) return 0;
+
+  // 2. Fetch all storage paths attached to those contacts' calls so we can
+  //    purge them up front. Without this step the cascade-delete would
+  //    leave recordings/transcripts orphaned in the bucket — the artifact
+  //    retention cron can never find them again because the call rows are gone.
+  const { recordingPaths, transcriptPaths } = await withSystemContext(async (tx) => {
+    const rows = await tx
+      .select({ recording: calls.recording_path, transcript: calls.transcript_path })
+      .from(calls)
+      .where(and(eq(calls.org_id, orgId), inArray(calls.contact_id, contactIds)));
+    return {
+      recordingPaths: rows
+        .map((c) => c.recording)
+        .filter((p): p is string => typeof p === 'string' && p.length > 0),
+      transcriptPaths: rows
+        .map((c) => c.transcript)
+        .filter((p): p is string => typeof p === 'string' && p.length > 0),
+    };
+  });
+
+  // 3. Best-effort storage purge. A storage failure is logged but does not
+  //    block the DB delete — privacy is preserved at the DB layer regardless,
+  //    and we cannot re-attempt later because the cascade is about to remove
+  //    the only DB pointer to these paths. This trades occasional orphans on
+  //    storage outages for guaranteed forward progress on retention.
+  const allPaths = [...recordingPaths, ...transcriptPaths];
+  if (allPaths.length > 0) {
+    const { error } = await supabaseAdmin.storage.from(CALL_MEDIA_BUCKET).remove(allPaths);
+    if (error) {
+      console.error('[retention-purge] cascade storage purge failed', {
+        orgId,
+        count: allPaths.length,
+        error: error.message,
+      });
+    }
+  }
+
+  // 4. Hard-delete the contacts; FK cascade removes the calls rows.
+  return withSystemContext(async (tx) => {
+    const r = await tx
+      .delete(contacts)
+      .where(and(eq(contacts.org_id, orgId), inArray(contacts.id, contactIds)))
       .returning({ id: contacts.id });
     return r.length;
   });

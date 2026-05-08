@@ -247,6 +247,31 @@ describe('buildAuditLogCsv', () => {
     expect(result.rowCount).toBe(1);
   });
 
+  it('prefixes formula-injection sigils (= + - @ tab CR) with a tab', async () => {
+    const ts = new Date('2026-05-01T10:00:00Z');
+    const r = row({
+      id: BigInt(1),
+      actor_user_id: null,
+      actor_type: 'system',
+      action: 'opt_out.recorded',
+      subject_id: '+393331234567', // E.164 phone — always starts with `+`
+      created_at: ts,
+      metadata: { note: '=cmd|notepad' },
+    });
+    mockWithSystemContext.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) =>
+      fn(buildTx({ auditRows: [r], userRows: [] })),
+    );
+
+    const result = await buildAuditLogCsv({ orgId: ORG_ID });
+    const lines = result.csv.split('\r\n');
+    expect(lines).toHaveLength(2);
+    // Subject_id (phone number) is prefixed with a tab to disable formula eval.
+    expect(lines[1]).toContain(',\t+393331234567,');
+    // Metadata JSON starts with `{` — no prefix — but the embedded `=cmd...` is
+    // safely buried inside JSON so Excel won't treat it as a formula.
+    expect(lines[1]).not.toContain(',=cmd');
+  });
+
   it('quotes cells that contain commas, quotes or newlines', async () => {
     const r = row({
       id: BigInt(1),

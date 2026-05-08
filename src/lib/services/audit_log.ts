@@ -176,7 +176,13 @@ const CSV_HEADERS = [
 
 function escapeCsvCell(value: unknown): string {
   if (value === null || value === undefined) return '';
-  const s = typeof value === 'string' ? value : JSON.stringify(value);
+  const raw = typeof value === 'string' ? value : JSON.stringify(value);
+  // CSV-injection (CWE-1236) hardening: cells whose first byte is a spreadsheet
+  // formula sigil (`=`, `+`, `-`, `@`, tab, CR) are interpreted as formulas by
+  // Excel / LibreOffice / Sheets. Phone numbers exported as `subject_id` always
+  // start with `+`, so this prefix triggers on every audit-log CSV. Prepending
+  // a tab keeps the displayed value intact while disabling formula evaluation.
+  const s = raw.length > 0 && /^[=+\-@\t\r]/.test(raw) ? `\t${raw}` : raw;
   // RFC 4180: enclose in quotes when the cell contains a delimiter, quote or newline.
   if (/[",\r\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
   return s;

@@ -22,7 +22,7 @@
 
 import { randomUUID } from 'node:crypto';
 
-import { and, eq, inArray, or } from 'drizzle-orm';
+import { and, eq, inArray, isNull, or } from 'drizzle-orm';
 import JSZip from 'jszip';
 
 import { recordAudit } from '@/lib/db/audit';
@@ -109,11 +109,27 @@ async function collectSubjectData(
   identifier: string,
 ): Promise<SubjectData> {
   const subject = await withOrgContext(orgId, async (tx) => {
+    // Filter `deleted_at IS NULL` to match `resolveSubject` in erase.ts. After
+    // an Article 17 erasure the contact row is tombstoned (PII scrubbed,
+    // `deleted_at` set, `metadata.gdpr_erasure: true`). Without this guard a
+    // subsequent Article 15 lookup by phone could surface the tombstone
+    // metadata and prior call/audit ids — information the data subject is
+    // entitled to be told no longer exists.
     const lookupConditions = [
-      and(eq(contacts.org_id, orgId), eq(contacts.phone_e164, identifier)),
+      and(
+        eq(contacts.org_id, orgId),
+        eq(contacts.phone_e164, identifier),
+        isNull(contacts.deleted_at),
+      ),
     ];
     if (looksLikeEmail(identifier)) {
-      lookupConditions.push(and(eq(contacts.org_id, orgId), eq(contacts.email, identifier)));
+      lookupConditions.push(
+        and(
+          eq(contacts.org_id, orgId),
+          eq(contacts.email, identifier),
+          isNull(contacts.deleted_at),
+        ),
+      );
     }
 
     const [contact] = await tx

@@ -201,6 +201,11 @@ interface OrgPlan {
   recordingsClearedRows?: Array<{ id: string }>; // returning rows from update set recording_path=null
   transcriptsClearedRows?: Array<{ id: string }>; // returning rows from update set transcript_path=null
   hardDeletedContacts?: Array<{ id: string }>;
+  /** Storage paths attached to the hard-deleted contacts' calls. Used to
+   *  exercise the cascade storage purge introduced when hard-deleting
+   *  contacts (FK ON DELETE CASCADE removes the calls rows along with the
+   *  contact, so we must purge storage up-front). */
+  cascadeCallPaths?: Array<{ recording: string | null; transcript: string | null }>;
   /** When true, simulate a storage error on the recordings batch. */
   recordingsStorageError?: boolean;
   /** When true, simulate a storage error on the transcripts batch. */
@@ -227,7 +232,9 @@ function queueOrgPlans(plans: OrgPlan[], captured: Captured) {
     //     - clearArtifactColumn (update) → only when storage delete succeeded
     //   transcripts: same pattern
     //   contacts hard-delete:
-    //     - delete returning ids
+    //     - select contact ids (soft-deleted past cutoff)
+    //     - (only if any) select recording/transcript paths for cascade purge
+    //     - (only if any) delete returning ids
     //
     // The route loops chunks until rows.length < ARTIFACT_BATCH_SIZE. Our test
     // chunks are always small (<500), so each artifact column gets exactly
@@ -259,10 +266,24 @@ function queueOrgPlans(plans: OrgPlan[], captured: Captured) {
       );
     }
 
-    // contacts hard-delete
+    // contacts hard-delete:
+    //   1. select contact ids (soft-deleted past cutoff)
+    //   2. (only if any) select call paths for those contacts
+    //   3. (only if any) delete contacts
+    const hardDeletedRows = plan.hardDeletedContacts ?? [];
     queue.push(async (fn) =>
-      fn(buildTx({ delete: { rows: plan.hardDeletedContacts ?? [] } }, captured)),
+      fn(buildTx({ select: { rows: hardDeletedRows } }, captured)),
     );
+    if (hardDeletedRows.length > 0) {
+      // Call paths lookup — empty by default; tests that exercise the storage
+      // purge override mockStorageRemove and wire `cascadePaths` separately.
+      queue.push(async (fn) =>
+        fn(buildTx({ select: { rows: plan.cascadeCallPaths ?? [] } }, captured)),
+      );
+      queue.push(async (fn) =>
+        fn(buildTx({ delete: { rows: hardDeletedRows } }, captured)),
+      );
+    }
   }
 
   // Final close-out audit
@@ -472,6 +493,69 @@ describe('runRetentionPurge', () => {
     expect(captured.deletes).toHaveLength(1);
   });
 
+  it('purges storage objects for cascade-deleted calls before hard-deleting contacts', async () => {
+    const captured: Captured = { inserts: [], selects: [], updates: [], deletes: [] };
+    queueOrgPlans(
+      [
+        {
+          orgId: ORG_A,
+          recordings: [],
+          transcripts: [],
+          hardDeletedContacts: [{ id: 'contact-1' }],
+          cascadeCallPaths: [
+            { recording: 'recordings/aaa/c1.mp3', transcript: 'transcripts/aaa/c1.json' },
+            { recording: 'recordings/aaa/c2.mp3', transcript: null },
+          ],
+        },
+      ],
+      captured,
+    );
+
+    await runRetentionPurge(NOW);
+
+    // The cascade purge should hit storage exactly once with both paths
+    // collected (recordings + transcripts) before the contacts DELETE runs.
+    // Without this, FK ON DELETE CASCADE would orphan the storage objects —
+    // the artifact retention cron can never find them again because the
+    // call rows are gone.
+    expect(mockStorageRemove).toHaveBeenCalledTimes(1);
+    const removed = mockStorageRemove.mock.calls[0]?.[0] as string[];
+    expect(removed).toEqual(
+      expect.arrayContaining([
+        'recordings/aaa/c1.mp3',
+        'recordings/aaa/c2.mp3',
+        'transcripts/aaa/c1.json',
+      ]),
+    );
+    expect(removed).toHaveLength(3);
+    expect(captured.deletes).toHaveLength(1);
+  });
+
+  it('still hard-deletes contacts when the cascade storage purge errors', async () => {
+    const captured: Captured = { inserts: [], selects: [], updates: [], deletes: [] };
+    queueOrgPlans(
+      [
+        {
+          orgId: ORG_A,
+          recordings: [],
+          transcripts: [],
+          hardDeletedContacts: [{ id: 'contact-1' }],
+          cascadeCallPaths: [{ recording: 'recordings/aaa/c1.mp3', transcript: null }],
+        },
+      ],
+      captured,
+    );
+
+    // Storage purge fails — DB delete must still proceed so retention is not
+    // permanently blocked by a transient storage outage.
+    mockStorageRemove.mockResolvedValueOnce({ data: null, error: { message: 'simulated' } });
+
+    const result = await runRetentionPurge(NOW);
+
+    expect(result.totalContactsHardDeleted).toBe(1);
+    expect(captured.deletes).toHaveLength(1);
+  });
+
   it('processes multiple orgs and aggregates totals', async () => {
     const captured: Captured = { inserts: [], selects: [], updates: [], deletes: [] };
     queueOrgPlans(
@@ -535,9 +619,14 @@ describe('runRetentionPurge', () => {
     queue.push(async (fn) =>
       fn(buildTx({ select: { rows: [{ id: ORG_A }, { id: ORG_B }] } }, captured)),
     );
-    // ORG_B: held contacts (empty), recordings (empty), transcripts (empty), hard-delete (1)
+    // ORG_B: held contacts (empty), recordings (empty), transcripts (empty),
+    // hard-delete: select contact ids (1 row) → select call paths (empty) → delete (1 row)
     queue.push(async (fn) => fn(buildTx({ select: { rows: [] } }, captured)));
     queue.push(async (fn) => fn(buildTx({ select: { rows: [] } }, captured)));
+    queue.push(async (fn) => fn(buildTx({ select: { rows: [] } }, captured)));
+    queue.push(async (fn) =>
+      fn(buildTx({ select: { rows: [{ id: 'kc-b' }] } }, captured)),
+    );
     queue.push(async (fn) => fn(buildTx({ select: { rows: [] } }, captured)));
     queue.push(async (fn) =>
       fn(buildTx({ delete: { rows: [{ id: 'kc-b' }] } }, captured)),
@@ -592,16 +681,23 @@ describe('runRetentionPurge', () => {
 
     await runRetentionPurge(NOW);
 
-    // Exactly one delete (the hard-purge of soft-deleted contacts) and its
-    // where() must include a `notInArray` clause excluding the held ids.
-    expect(captured.deletes).toHaveLength(1);
-    const deleteWhere = captured.deletes[0]!.whereArg as {
+    // The hard-purge fetch (which precedes the DELETE) must include a
+    // `notInArray` clause excluding the held ids — that's where the filter
+    // actually runs now. The DELETE itself just consumes the resolved id set.
+    interface AndExpr {
       type: string;
       args: Array<{ type: string; col?: unknown; vals?: unknown[] }>;
-    };
-    const deleteNotIn = deleteWhere.args.find((arg) => arg.type === 'notInArray');
-    expect(deleteNotIn).toBeDefined();
-    expect(deleteNotIn?.vals).toEqual(['held-contact-1', 'held-contact-2']);
+    }
+    const hardPurgeSelect = captured.selects
+      .map((s) => s.whereArg as AndExpr)
+      .find((sel) =>
+        sel?.args?.some(
+          (a) => a.type === 'notInArray' && a.col === 'k_id',
+        ),
+      );
+    expect(hardPurgeSelect).toBeDefined();
+    const selectNotIn = hardPurgeSelect!.args.find((arg) => arg.type === 'notInArray');
+    expect(selectNotIn?.vals).toEqual(['held-contact-1', 'held-contact-2']);
 
     // Recordings and transcripts selects must each include the
     // `or(isNull(contact_id), notInArray(contact_id, [...heldIds]))` clause
