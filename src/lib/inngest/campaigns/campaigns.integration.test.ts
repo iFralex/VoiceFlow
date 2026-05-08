@@ -46,6 +46,22 @@ vi.mock('@/lib/services/billing-rules', () => ({
   computeCallCost: vi.fn().mockReturnValue({ billableSeconds: 60, costCents: 50 }),
 }));
 
+// DPA gate (plan 11 task 16): launchCampaign now consults getDpaStatus, so we
+// stub it to `current` for these dispatch / launch tests. The actual DPA
+// blocking path is exercised in src/lib/services/campaigns.test.ts.
+vi.mock('@/lib/compliance/dpa', () => ({
+  getDpaStatus: vi.fn().mockResolvedValue({
+    state: 'current',
+    record: {
+      acceptedAt: '2026-01-01T00:00:00.000Z',
+      version: '2026-01-01',
+      acceptedByUserId: 'user-1',
+      ip: null,
+      userAgent: null,
+    },
+  }),
+}));
+
 vi.mock('@/lib/services/eligibility', () => ({
   findEligibleContactsForCampaign: vi.fn(),
 }));

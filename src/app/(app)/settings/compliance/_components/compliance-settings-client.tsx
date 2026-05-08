@@ -195,11 +195,6 @@ export function ComplianceSettingsClient({
               {t('docs_cookie')}
             </Link>
           </li>
-          <li>
-            <Link className="text-primary underline" href="/legal/rpo-compliance" target="_blank">
-              {t('docs_rpo')}
-            </Link>
-          </li>
         </ul>
       </section>
 

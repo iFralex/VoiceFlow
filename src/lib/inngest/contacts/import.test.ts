@@ -15,6 +15,11 @@ const mockCountContactsForOrg = vi.fn().mockResolvedValue(0);
 const mockParseContactsCsv = vi.fn();
 const mockSendInngestEvent = vi.fn().mockResolvedValue(undefined);
 const mockRecordAudit = vi.fn().mockResolvedValue(undefined);
+const mockBulkMarkOptOut = vi.fn().mockResolvedValue(undefined);
+
+vi.mock('@/lib/services/optout', () => ({
+  bulkMarkOptOut: (...args: unknown[]) => mockBulkMarkOptOut(...args),
+}));
 
 vi.mock('@/lib/services/contact_lists', () => ({
   updateListImportStatus: (...args: unknown[]) => mockUpdateListImportStatus(...args),
@@ -529,6 +534,46 @@ describe('processContactsImport', () => {
     expect(setSpy).toHaveBeenCalledWith(
       expect.objectContaining({ rpo_status: 'blocked', rpo_checked_at: expect.any(Date) }),
     );
+  });
+
+  it('enrols import-time RPO blocks in the unified opt-out registry', async () => {
+    mockTx.selectDistinct.mockReturnValueOnce({
+      from: vi.fn(() => ({
+        where: vi
+          .fn()
+          .mockResolvedValue([{ phone_e164: '+393401234567' }, { phone_e164: '+393409876543' }]),
+      })),
+    });
+    mockRpoBulkCheck.mockResolvedValue(
+      new Map([
+        ['+393401234567', true],
+        ['+393409876543', false],
+      ]),
+    );
+
+    const { processContactsImport } = await import('./import');
+    await processContactsImport(importData);
+
+    expect(mockBulkMarkOptOut).toHaveBeenCalledOnce();
+    expect(mockBulkMarkOptOut).toHaveBeenCalledWith(
+      'org-1',
+      ['+393401234567'],
+      'rpo_block',
+    );
+  });
+
+  it('does not enrol opt-out registry when no contacts are blocked', async () => {
+    mockTx.selectDistinct.mockReturnValueOnce({
+      from: vi.fn(() => ({
+        where: vi.fn().mockResolvedValue([{ phone_e164: '+393401234567' }]),
+      })),
+    });
+    mockRpoBulkCheck.mockResolvedValue(new Map([['+393401234567', false]]));
+
+    const { processContactsImport } = await import('./import');
+    await processContactsImport(importData);
+
+    expect(mockBulkMarkOptOut).not.toHaveBeenCalled();
   });
 
   it('updates contacts.rpo_status=clear for unblocked numbers', async () => {

@@ -107,9 +107,7 @@ describe('triageDisclosureFailureAction', () => {
       note: 'looked good',
       actor: 'founder',
     });
-    expect(mockRevalidatePath).toHaveBeenCalledWith(
-      '/admin/disclosure-failures?status=pending',
-    );
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/admin/disclosure-failures');
   });
 
   it('surfaces a not-found result from the helper', async () => {

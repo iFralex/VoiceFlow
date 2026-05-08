@@ -154,7 +154,5 @@ describe('ComplianceSettingsClient', () => {
     expect(dpaLink).toHaveAttribute('href', '/legal/dpa');
     const privacyLink = screen.getByRole('link', { name: /Informativa sulla privacy/i });
     expect(privacyLink).toHaveAttribute('href', '/legal/privacy');
-    const rpoLink = screen.getByRole('link', { name: /Certificato di conformità RPO/i });
-    expect(rpoLink).toHaveAttribute('href', '/legal/rpo-compliance');
   });
 });

@@ -129,6 +129,10 @@ export default async function DisclosureFailuresAdminPage({ searchParams }: Page
 
   return (
     <main style={{ padding: '2rem', fontFamily: 'monospace', maxWidth: 1400, margin: '0 auto' }}>
+      {/* Suppress the Referer header to keep the admin token out of upstream
+          access logs (Supabase Storage signed URLs, transcript JSON links) and
+          out of any nav-target's referrer chain. */}
+      <meta name="referrer" content="no-referrer" />
       <h1 style={{ marginBottom: '0.5rem' }}>AI Act disclosure failures</h1>
       <p style={{ color: '#666', marginBottom: '1rem' }}>
         Calls whose post-call classifier did not detect the phrase &ldquo;assistente vocale automatico&rdquo;

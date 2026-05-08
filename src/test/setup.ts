@@ -427,7 +427,6 @@ const _italianStrings: Record<string, Record<string, string>> = {
     docs_privacy: 'Informativa sulla privacy',
     docs_terms: 'Termini di servizio',
     docs_cookie: 'Cookie policy',
-    docs_rpo: 'Certificato di conformità RPO',
     dpa_banner_title: 'Aggiornamento DPA richiesto',
     dpa_banner_description_outdated:
       "L'Accordo sul Trattamento dei Dati è stato aggiornato dalla versione {acceptedVersion} alla versione {currentVersion}. Conferma la nuova versione per continuare ad utilizzare la piattaforma.",
@@ -621,6 +620,7 @@ const _italianStrings: Record<string, Record<string, string>> = {
     error_no_billing_rate: 'Nessun pacchetto crediti attivo. Acquista crediti prima di avviare.',
     error_not_found: 'Campagna non trovata',
     error_not_launchable: 'La campagna non può essere avviata in questo stato',
+    error_dpa_outdated: 'Devi accettare la versione corrente del DPA prima di avviare campagne.',
     error_not_running: 'La campagna non è in esecuzione',
     error_not_paused: 'La campagna non è in pausa',
     error_already_terminal: 'La campagna è già stata completata o annullata',

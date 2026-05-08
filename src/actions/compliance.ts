@@ -24,6 +24,15 @@ const requestSubjectExportSchema = z.object({
   identifier: z.string().min(1).max(254),
 });
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 export interface SubjectExportActionData {
   url: string;
   expiresAt: string;
@@ -71,9 +80,10 @@ export async function requestSubjectExport(
 
     if (requester?.email) {
       const expiresHuman = result.expiresAt.toUTCString();
-      const escapedUrl = result.signedUrl.replace(/"/g, '&quot;');
+      const escapedUrl = escapeHtml(result.signedUrl);
+      const escapedName = requester.fullName ? escapeHtml(requester.fullName) : '';
       const html = `
-        <p>Buongiorno${requester.fullName ? ` ${requester.fullName}` : ''},</p>
+        <p>Buongiorno${escapedName ? ` ${escapedName}` : ''},</p>
         <p>L'export dei dati del contatto richiesto (GDPR Articolo 15) è pronto.</p>
         <p><a href="${escapedUrl}">Scarica l'archivio ZIP</a></p>
         <p>Il link è valido fino al ${expiresHuman} (7 giorni dalla generazione).</p>

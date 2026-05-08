@@ -25,6 +25,7 @@ const ERROR_MAP: Record<string, string> = {
   no_billing_rate: 'error_no_billing_rate',
   campaign_not_found: 'error_not_found',
   campaign_not_launchable: 'error_not_launchable',
+  dpa_outdated: 'error_dpa_outdated',
   campaign_not_running: 'error_not_running',
   campaign_not_paused: 'error_not_paused',
   campaign_already_terminal: 'error_already_terminal',

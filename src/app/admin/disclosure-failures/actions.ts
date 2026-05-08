@@ -63,11 +63,11 @@ export async function triageDisclosureFailureAction(
     return { ok: false, message: 'Call not found or not a disclosure failure' };
   }
 
-  const filterQuery =
-    typeof filterStatus === 'string' && filterStatus.length > 0
-      ? `?status=${encodeURIComponent(filterStatus)}`
-      : '';
-  revalidatePath(`/admin/disclosure-failures${filterQuery}`);
+  // `revalidatePath` keys the cache on path only (search-params aren't part
+  // of its key); the form's hidden `filterStatus` carries the active filter
+  // through to the next request so the page renders the same view.
+  void filterStatus;
+  revalidatePath('/admin/disclosure-failures');
   return { ok: true, message: 'Updated' };
 }
 

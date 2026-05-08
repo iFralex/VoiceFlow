@@ -1,5 +1,6 @@
 import { and, count, desc, eq, gt, inArray, isNull, lt, ne, not, or, sql } from 'drizzle-orm';
 
+import { getDpaStatus } from '@/lib/compliance/dpa';
 import { recordAudit } from '@/lib/db/audit';
 import { withOrgContext } from '@/lib/db/context';
 import {
@@ -216,6 +217,7 @@ export async function createCampaign(
  *
  * Throws `'campaign_not_found'` if the campaign does not exist.
  * Throws `'campaign_not_launchable'` if the campaign is in a non-launchable state.
+ * Throws `'dpa_outdated'` if the org has not accepted the current DPA version.
  * Throws `'no_eligible_contacts'` if zero contacts are eligible.
  * Throws `'insufficient_credit'` if the org has insufficient credit to cover the reservation.
  * Throws `'no_billing_rate'` if no per-minute rate can be computed (no credit packages purchased).
@@ -231,6 +233,14 @@ export async function launchCampaign(
 
   if (campaign.status !== 'draft' && campaign.status !== 'scheduled') {
     throw new Error('campaign_not_launchable');
+  }
+
+  // DPA gate (plan 11 task 16/18). The in-app banner already nudges users to
+  // re-accept on outdated DPA versions, but enforcement must also live on the
+  // server so a direct Server Action call cannot bypass it.
+  const dpaStatus = await getDpaStatus(orgId);
+  if (dpaStatus.state !== 'current') {
+    throw new Error('dpa_outdated');
   }
 
   // Count eligible contacts

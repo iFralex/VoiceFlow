@@ -86,29 +86,44 @@ describe('createOrganizationAndOnboard', () => {
   });
 
   it('returns name_required for empty name', async () => {
-    const result = await createOrganizationAndOnboard({ name: '' });
+    const result = await createOrganizationAndOnboard({ name: '', dpaAccepted: true });
     expect(result).toEqual({ ok: false, message: 'name_required' });
   });
 
   it('returns name_too_long for name over 100 characters', async () => {
-    const result = await createOrganizationAndOnboard({ name: 'a'.repeat(101) });
+    const result = await createOrganizationAndOnboard({ name: 'a'.repeat(101), dpaAccepted: true });
     expect(result).toEqual({ ok: false, message: 'name_too_long' });
   });
 
   it('returns auth.unauthenticated when no session', async () => {
     mockGetUser.mockResolvedValue({ data: { user: null }, error: null });
-    const result = await createOrganizationAndOnboard({ name: 'My Org' });
+    const result = await createOrganizationAndOnboard({ name: 'My Org', dpaAccepted: true });
     expect(result).toEqual({ ok: false, message: 'auth.unauthenticated' });
   });
 
   it('returns auth.unauthenticated when getUser errors', async () => {
     mockGetUser.mockResolvedValue({ data: { user: null }, error: { message: 'token expired' } });
-    const result = await createOrganizationAndOnboard({ name: 'My Org' });
+    const result = await createOrganizationAndOnboard({ name: 'My Org', dpaAccepted: true });
     expect(result).toEqual({ ok: false, message: 'auth.unauthenticated' });
   });
 
+  it('rejects when dpaAccepted is missing or false', async () => {
+    const missing = await createOrganizationAndOnboard({
+      name: 'My Org',
+    } as unknown as { name: string; dpaAccepted: true });
+    expect(missing).toEqual({ ok: false, message: 'dpa_required' });
+    expect(mockCreateOrganization).not.toHaveBeenCalled();
+    expect(mockRecordDpaAcceptance).not.toHaveBeenCalled();
+
+    const explicitFalse = await createOrganizationAndOnboard({
+      name: 'My Org',
+      dpaAccepted: false,
+    } as unknown as { name: string; dpaAccepted: true });
+    expect(explicitFalse).toEqual({ ok: false, message: 'dpa_required' });
+  });
+
   it('calls createOrganization with name and ownerId', async () => {
-    await createOrganizationAndOnboard({ name: 'My Org' });
+    await createOrganizationAndOnboard({ name: 'My Org', dpaAccepted: true });
     expect(mockCreateOrganization).toHaveBeenCalledWith({
       ownerId: userId,
       name: 'My Org',
@@ -122,6 +137,7 @@ describe('createOrganizationAndOnboard', () => {
       name: 'My Org',
       legalName: 'My Org S.r.l.',
       vatNumber: '12345678901',
+      dpaAccepted: true,
     });
     expect(mockCreateOrganization).toHaveBeenCalledWith({
       ownerId: userId,
@@ -140,7 +156,7 @@ describe('createOrganizationAndOnboard', () => {
       get: (k: string) => headersMap.get(k.toLowerCase()) ?? null,
     });
 
-    await createOrganizationAndOnboard({ name: 'My Org' });
+    await createOrganizationAndOnboard({ name: 'My Org', dpaAccepted: true });
 
     expect(mockRecordDpaAcceptance).toHaveBeenCalledOnce();
     expect(mockRecordDpaAcceptance).toHaveBeenCalledWith({
@@ -157,7 +173,7 @@ describe('createOrganizationAndOnboard', () => {
       get: (k: string) => headersMap.get(k.toLowerCase()) ?? null,
     });
 
-    await createOrganizationAndOnboard({ name: 'My Org' });
+    await createOrganizationAndOnboard({ name: 'My Org', dpaAccepted: true });
 
     expect(mockRecordDpaAcceptance).toHaveBeenCalledWith({
       orgId,
@@ -176,7 +192,7 @@ describe('createOrganizationAndOnboard', () => {
       get: (k: string) => headersMap.get(k.toLowerCase()) ?? null,
     });
 
-    await createOrganizationAndOnboard({ name: 'My Org' });
+    await createOrganizationAndOnboard({ name: 'My Org', dpaAccepted: true });
 
     expect(mockRecordDpaAcceptance).toHaveBeenCalledWith({
       orgId,
@@ -187,7 +203,7 @@ describe('createOrganizationAndOnboard', () => {
   });
 
   it('sets active_org_id cookie with the new org id', async () => {
-    await createOrganizationAndOnboard({ name: 'My Org' });
+    await createOrganizationAndOnboard({ name: 'My Org', dpaAccepted: true });
     expect(mockCookiesSet).toHaveBeenCalledWith(
       'active_org_id',
       orgId,
@@ -196,25 +212,25 @@ describe('createOrganizationAndOnboard', () => {
   });
 
   it('redirects to /dashboard on success', async () => {
-    await createOrganizationAndOnboard({ name: 'My Org' });
+    await createOrganizationAndOnboard({ name: 'My Org', dpaAccepted: true });
     expect(mockRedirect).toHaveBeenCalledWith('/dashboard');
   });
 
   it('returns vat_invalid when createOrganization throws invalid_vat_number', async () => {
     mockCreateOrganization.mockRejectedValue(new Error('invalid_vat_number'));
-    const result = await createOrganizationAndOnboard({ name: 'My Org', vatNumber: '00000000000' });
+    const result = await createOrganizationAndOnboard({ name: 'My Org', vatNumber: '00000000000', dpaAccepted: true });
     expect(result).toEqual({ ok: false, message: 'vat_invalid' });
   });
 
   it('returns error_generic when createOrganization throws unexpected error', async () => {
     mockCreateOrganization.mockRejectedValue(new Error('database connection lost'));
-    const result = await createOrganizationAndOnboard({ name: 'My Org' });
+    const result = await createOrganizationAndOnboard({ name: 'My Org', dpaAccepted: true });
     expect(result).toEqual({ ok: false, message: 'error_generic' });
   });
 
   it('does not set cookie or redirect when createOrganization fails', async () => {
     mockCreateOrganization.mockRejectedValue(new Error('fail'));
-    await createOrganizationAndOnboard({ name: 'My Org' });
+    await createOrganizationAndOnboard({ name: 'My Org', dpaAccepted: true });
     expect(mockCookiesSet).not.toHaveBeenCalled();
     expect(mockRedirect).not.toHaveBeenCalled();
   });

@@ -33,6 +33,7 @@ import { updateListCounts, updateListImportStatus } from '@/lib/services/contact
 import { bulkUpsertContacts, countContactsForOrg } from '@/lib/services/contacts';
 import type { CsvParseResult } from '@/lib/services/csv';
 import { parseContactsCsv } from '@/lib/services/csv';
+import { bulkMarkOptOut } from '@/lib/services/optout';
 import { CSV_UPLOADS_BUCKET as CSV_BUCKET } from '@/lib/storage/signed';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 
@@ -272,6 +273,16 @@ async function performBatchRpoCheck(
           );
       }
     });
+
+    // Plan 11 task 5: route every newly-detected RPO block through the
+    // unified opt-out registry. Without this, contacts blocked at import
+    // time would only carry `rpo_status='blocked'` — they would never be
+    // enrolled in `opt_out_registry` and the dispatch-time RPO check
+    // would mark each call `rpo_blocked` without ever notifying the
+    // dealer, diverging from the daily-snapshot behaviour.
+    if (blockedNow.length > 0) {
+      await bulkMarkOptOut(orgId, blockedNow, 'rpo_block');
+    }
 
     checked += chunk.length;
     blocked += blockedNow.length;

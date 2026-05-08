@@ -7,6 +7,20 @@ const mockSendInngestEvent = vi.fn().mockResolvedValue(undefined);
 const mockReserveForCampaign = vi.fn().mockResolvedValue(undefined);
 const mockReleaseReservation = vi.fn().mockResolvedValue(undefined);
 const mockComputePerMinuteCents = vi.fn().mockResolvedValue(10); // 10 cents/min
+const mockGetDpaStatus = vi.fn().mockResolvedValue({
+  state: 'current',
+  record: {
+    acceptedAt: '2026-01-01T00:00:00.000Z',
+    version: '2026-01-01',
+    acceptedByUserId: 'user-1',
+    ip: null,
+    userAgent: null,
+  },
+});
+
+vi.mock('@/lib/compliance/dpa', () => ({
+  getDpaStatus: (...args: unknown[]) => mockGetDpaStatus(...args),
+}));
 
 vi.mock('@/lib/db/audit', () => ({
   recordAudit: (...args: unknown[]) => mockRecordAudit(...args),
@@ -100,6 +114,16 @@ beforeEach(() => {
   insertResults = [];
   updateResults = [];
   resetMockTx();
+  mockGetDpaStatus.mockResolvedValue({
+    state: 'current',
+    record: {
+      acceptedAt: '2026-01-01T00:00:00.000Z',
+      version: '2026-01-01',
+      acceptedByUserId: 'user-1',
+      ip: null,
+      userAgent: null,
+    },
+  });
 });
 
 const ORG_ID = 'org-1';
@@ -268,6 +292,41 @@ describe('launchCampaign', () => {
     const { launchCampaign } = await import('./campaigns');
     await expect(launchCampaign(ORG_ID, USER_ID, CAMPAIGN_ID)).rejects.toThrow(
       'insufficient_credit',
+    );
+  });
+
+  it('throws dpa_outdated when org has not accepted current DPA version', async () => {
+    selectResults = [[DRAFT_CAMPAIGN], []];
+    mockGetDpaStatus.mockResolvedValueOnce({
+      state: 'outdated',
+      record: {
+        acceptedAt: '2020-01-01T00:00:00.000Z',
+        version: '2020-01-01',
+        acceptedByUserId: USER_ID,
+        ip: null,
+        userAgent: null,
+      },
+      currentVersion: '2026-01-01',
+    });
+
+    const { launchCampaign } = await import('./campaigns');
+    await expect(launchCampaign(ORG_ID, USER_ID, CAMPAIGN_ID)).rejects.toThrow(
+      'dpa_outdated',
+    );
+    expect(mockReserveForCampaign).not.toHaveBeenCalled();
+    expect(mockSendInngestEvent).not.toHaveBeenCalled();
+  });
+
+  it('throws dpa_outdated when org has never accepted DPA', async () => {
+    selectResults = [[DRAFT_CAMPAIGN], []];
+    mockGetDpaStatus.mockResolvedValueOnce({
+      state: 'never_accepted',
+      currentVersion: '2026-01-01',
+    });
+
+    const { launchCampaign } = await import('./campaigns');
+    await expect(launchCampaign(ORG_ID, USER_ID, CAMPAIGN_ID)).rejects.toThrow(
+      'dpa_outdated',
     );
   });
 });

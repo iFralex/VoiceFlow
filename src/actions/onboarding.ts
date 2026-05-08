@@ -13,6 +13,9 @@ const onboardingSchema = z.object({
   name: z.string().min(1, 'name_required').max(100, 'name_too_long'),
   legalName: z.string().optional(),
   vatNumber: z.string().optional(),
+  // Plan 11 task 16: the DPA tickbox is required on the onboarding form;
+  // enforce server-side too so a direct Server Action call cannot bypass it.
+  dpaAccepted: z.literal(true, { message: 'dpa_required' }),
 });
 
 type OnboardingInput = z.infer<typeof onboardingSchema>;

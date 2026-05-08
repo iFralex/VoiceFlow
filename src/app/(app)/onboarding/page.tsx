@@ -46,6 +46,9 @@ export default function OnboardingPage() {
         name: values.name,
         legalName: values.legalName || undefined,
         vatNumber: values.vatNumber || undefined,
+        // The client schema enforces this is literally true via .refine();
+        // the server re-validates with z.literal(true).
+        dpaAccepted: values.dpaAccepted as true,
       });
       // Success causes a server-side redirect; only failures reach this point
       toastResult(result);
