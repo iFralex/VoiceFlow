@@ -128,15 +128,15 @@ export type DashboardData = {
 
 ### Task 8: Daily report email
 
-- [ ] Install `@react-email/components` and `react-email` (dev tool)
-- [ ] Author `src/lib/email/templates/daily-report.tsx`:
+- [x] Install `@react-email/components` and `react-email` (dev tool)
+- [x] Author `src/lib/email/templates/daily-report.tsx`:
   - subject: "Report giornaliero — [data] — [N chiamate]"
   - hero: yesterday's totals (chiamate, lead qualificati, appuntamenti)
   - table: top campaigns by completion
   - section: appuntamenti fissati ieri (max 10)
   - footer: link al dashboard, link gestisci preferenze notifiche
-- [ ] Localised in Italian; English fallback for `users.locale='en'` members
-- [ ] Mark completed
+- [x] Localised in Italian; English fallback for `users.locale='en'` members
+- [x] Mark completed
 
 ### Task 9: Daily report cron and dispatch
 
