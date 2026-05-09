@@ -64,8 +64,9 @@ function ListsTab({ lists }: { lists: SerializedContactList[] }) {
     return (
       <EmptyState
         illustration={<List className="size-10" />}
-        title={t('no_lists')}
-        action={{ label: t('upload_new_list'), href: '/contacts/upload' }}
+        title={t('first_list_title')}
+        description={t('first_list_desc')}
+        action={{ label: t('first_list_cta'), href: '/contacts/upload' }}
       />
     );
   }

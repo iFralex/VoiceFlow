@@ -1,6 +1,7 @@
 import { ActiveCampaigns } from '@/components/dashboard/active-campaigns';
 import { AlertsList } from '@/components/dashboard/alerts-list';
 import { KpiCard } from '@/components/dashboard/kpi-card';
+import { DashboardOnboardingCard } from '@/components/dashboard/onboarding-card';
 import { parsePeriod } from '@/components/dashboard/period';
 import { PeriodSelector } from '@/components/dashboard/period-selector';
 import { RecentAppointments } from '@/components/dashboard/recent-appointments';
@@ -36,39 +37,43 @@ export default async function DashboardPage({ searchParams }: Props) {
         <PeriodSelector value={period} />
       </header>
 
-      <section
-        aria-label={translate('kpi_section_label')}
-        className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
-      >
-        <KpiCard
-          label={translate('kpi_calls_completed')}
-          value={formatNumber(data.kpis.callsCompleted)}
-          trend={data.sparklines.callsCompleted}
-          trendLabel={translate('sparkline_aria_calls')}
-          hint={translate('kpi_trend_14d')}
-        />
-        <KpiCard
-          label={translate('kpi_qualified_leads')}
-          value={formatNumber(data.kpis.qualifiedLeads)}
-          trend={data.sparklines.qualifiedLeads}
-          trendLabel={translate('sparkline_aria_leads')}
-          hint={translate('kpi_trend_14d')}
-        />
-        <KpiCard
-          label={translate('kpi_appointments')}
-          value={formatNumber(data.kpis.appointmentsBooked)}
-          trend={data.sparklines.appointmentsBooked}
-          trendLabel={translate('sparkline_aria_appointments')}
-          hint={translate('kpi_trend_14d')}
-        />
-        <KpiCard
-          label={translate('kpi_credit_residual')}
-          value={formatEuros(data.kpis.creditBalance.cents)}
-          hint={translate('kpi_credit_minutes', {
-            minutes: data.kpis.creditBalance.minutes,
-          })}
-        />
-      </section>
+      {data.hasAnyCampaign ? (
+        <section
+          aria-label={translate('kpi_section_label')}
+          className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
+        >
+          <KpiCard
+            label={translate('kpi_calls_completed')}
+            value={formatNumber(data.kpis.callsCompleted)}
+            trend={data.sparklines.callsCompleted}
+            trendLabel={translate('sparkline_aria_calls')}
+            hint={translate('kpi_trend_14d')}
+          />
+          <KpiCard
+            label={translate('kpi_qualified_leads')}
+            value={formatNumber(data.kpis.qualifiedLeads)}
+            trend={data.sparklines.qualifiedLeads}
+            trendLabel={translate('sparkline_aria_leads')}
+            hint={translate('kpi_trend_14d')}
+          />
+          <KpiCard
+            label={translate('kpi_appointments')}
+            value={formatNumber(data.kpis.appointmentsBooked)}
+            trend={data.sparklines.appointmentsBooked}
+            trendLabel={translate('sparkline_aria_appointments')}
+            hint={translate('kpi_trend_14d')}
+          />
+          <KpiCard
+            label={translate('kpi_credit_residual')}
+            value={formatEuros(data.kpis.creditBalance.cents)}
+            hint={translate('kpi_credit_minutes', {
+              minutes: data.kpis.creditBalance.minutes,
+            })}
+          />
+        </section>
+      ) : (
+        <DashboardOnboardingCard />
+      )}
 
       <section className="grid gap-4 lg:grid-cols-3">
         <TrendChart data={data.trends} className="lg:col-span-2" />

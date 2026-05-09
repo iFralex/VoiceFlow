@@ -169,10 +169,10 @@ export type DashboardData = {
 
 ### Task 12: Empty-state polish
 
-- [ ] First-time-user dashboard (zero campaigns): replace KPI cards with a guided onboarding card showing 3 steps: Carica contatti → Configura script → Crea campagna; CTAs link to the relevant flows
-- [ ] First-time-user campaigns page: show illustrated empty state with "Crea prima campagna" CTA
-- [ ] First-time-user contacts page: same with "Carica prima lista"
-- [ ] Mark completed
+- [x] First-time-user dashboard (zero campaigns): replace KPI cards with a guided onboarding card showing 3 steps: Carica contatti → Configura script → Crea campagna; CTAs link to the relevant flows
+- [x] First-time-user campaigns page: show illustrated empty state with "Crea prima campagna" CTA
+- [x] First-time-user contacts page: same with "Carica prima lista"
+- [x] Mark completed
 
 ### Task 13: Live dashboard updates (Realtime + revalidate)
 
