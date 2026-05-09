@@ -4,9 +4,9 @@ import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import Papa from 'papaparse';
 import * as React from 'react';
 
+import { exportCampaignResults } from '@/actions/campaigns';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -38,6 +38,7 @@ import type {
   CampaignCallOutcome,
   CampaignResultRow,
 } from '@/lib/services/campaign-results';
+import { toastResult } from '@/lib/utils/action-toast';
 import { cn } from '@/lib/utils/index';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -163,6 +164,7 @@ export function CampaignResultsClient({
   const searchParams = useSearchParams();
 
   const [selected, setSelected] = React.useState<Record<string, boolean>>({});
+  const [isExporting, setIsExporting] = React.useState(false);
 
   const selectedCount = Object.values(selected).filter(Boolean).length;
   const allSelected = rows.length > 0 && rows.every((r) => selected[r.id]);
@@ -225,27 +227,47 @@ export function CampaignResultsClient({
 
   // ─── CSV export ────────────────────────────────────────────────────────────
 
-  function handleExportSelected() {
-    const idSet = new Set(Object.entries(selected).filter(([, v]) => v).map(([k]) => k));
-    const data = idSet.size > 0 ? rows.filter((r) => idSet.has(r.id)) : rows;
-    const csv = Papa.unparse(
-      data.map((r) => ({
-        contatto: r.contactName,
-        telefono: r.phoneE164 ?? '',
-        stato: r.status,
-        esito: r.outcome ?? '',
-        durata_secondi: r.billableSeconds ?? '',
-        costo_eur: r.costCents != null ? (r.costCents / 100).toFixed(2) : '',
-        ora_chiamata: r.startedAtIso ?? r.createdAtIso,
-      })),
-    );
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `campaign-${campaignId}-results.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+  async function handleExport() {
+    if (isExporting) return;
+    setIsExporting(true);
+    try {
+      const selectedIds = Object.entries(selected)
+        .filter(([, v]) => v)
+        .map(([k]) => k);
+
+      const input: Parameters<typeof exportCampaignResults>[0] = { campaignId };
+      if (selectedIds.length > 0) {
+        input.callIds = selectedIds;
+      } else {
+        if (outcomes.length > 0) input.outcomes = outcomes;
+        if (durationMinSeconds != null) input.durationMinSeconds = durationMinSeconds;
+        if (durationMaxSeconds != null) input.durationMaxSeconds = durationMaxSeconds;
+        if (dateFrom) input.startedAfter = new Date(`${dateFrom}T00:00:00.000Z`).toISOString();
+        if (dateTo) input.startedBefore = new Date(`${dateTo}T23:59:59.999Z`).toISOString();
+      }
+
+      const result = await exportCampaignResults(input);
+      toastResult(
+        result.ok
+          ? {
+              ok: true,
+              message: result.deferred
+                ? t('results_export_deferred')
+                : t('results_export_ready'),
+            }
+          : result,
+      );
+
+      if (result.ok && result.url) {
+        const a = document.createElement('a');
+        a.href = result.url;
+        a.download = `campaign-${campaignId}-results.csv`;
+        a.rel = 'noopener';
+        a.click();
+      }
+    } finally {
+      setIsExporting(false);
+    }
   }
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
@@ -390,8 +412,8 @@ export function CampaignResultsClient({
             variant="outline"
             size="sm"
             className="h-8"
-            onClick={handleExportSelected}
-            disabled={rows.length === 0}
+            onClick={handleExport}
+            disabled={isExporting || total === 0}
           >
             {selectedCount > 0
               ? t('results_export_selected', { count: selectedCount })

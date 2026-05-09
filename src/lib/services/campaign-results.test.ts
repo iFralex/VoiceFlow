@@ -198,3 +198,151 @@ describe('listCampaignResults', () => {
     expect(offsetCall?.args[0]).toBe(0);
   });
 });
+
+describe('collectCampaignResultsForExport', () => {
+  function pushResult(opts: { rows?: unknown[]; total?: number }) {
+    // Same Promise.all order as listCampaignResults: rows then total.
+    selectResults.push(opts.rows ?? []);
+    selectResults.push([{ cnt: opts.total ?? (opts.rows?.length ?? 0) }]);
+  }
+
+  it('returns rows joined with appointment scheduled_at and the total count', async () => {
+    pushResult({
+      rows: [
+        {
+          id: 'call-1',
+          contactId: 'contact-1',
+          status: 'completed',
+          outcome: 'appointment_booked',
+          billableSeconds: 90,
+          costCents: 75,
+          startedAt: new Date('2026-05-09T10:00:00Z'),
+          endedAt: new Date('2026-05-09T10:01:30Z'),
+          createdAt: new Date('2026-05-09T09:59:00Z'),
+          firstName: 'Anna',
+          lastName: 'Bianchi',
+          phoneE164: '+393331111111',
+          appointmentScheduledAt: new Date('2026-05-15T14:00:00Z'),
+        },
+      ],
+      total: 1,
+    });
+
+    const { collectCampaignResultsForExport } = await import('./campaign-results');
+    const out = await collectCampaignResultsForExport('org-1', 'camp-1', {}, 5000);
+
+    expect(out.total).toBe(1);
+    expect(out.rows).toHaveLength(1);
+    expect(out.rows[0]).toMatchObject({
+      id: 'call-1',
+      contactName: 'Anna Bianchi',
+      appointmentScheduledAtIso: '2026-05-15T14:00:00.000Z',
+    });
+
+    // The export query joins both contacts and appointments
+    const joins = selectChainCalls.filter((c) => c.method === 'leftJoin');
+    expect(joins.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('applies the requested cap as the LIMIT', async () => {
+    pushResult({ rows: [], total: 0 });
+
+    const { collectCampaignResultsForExport } = await import('./campaign-results');
+    await collectCampaignResultsForExport('org-1', 'camp-1', {}, 5000);
+
+    const limitCall = selectChainCalls.find((c) => c.method === 'limit');
+    expect(limitCall?.args[0]).toBe(5000);
+  });
+
+  it('reports total separately from the row cap', async () => {
+    pushResult({ rows: [], total: 12_500 });
+
+    const { collectCampaignResultsForExport } = await import('./campaign-results');
+    const out = await collectCampaignResultsForExport('org-1', 'camp-1', {}, 5000);
+
+    expect(out.total).toBe(12_500);
+    expect(out.rows).toHaveLength(0);
+  });
+});
+
+describe('campaignResultsToCsv', () => {
+  it('produces a CSV with the expected header columns', async () => {
+    const { campaignResultsToCsv } = await import('./campaign-results');
+    const csv = campaignResultsToCsv([
+      {
+        id: 'c1',
+        contactId: null,
+        contactName: '',
+        phoneE164: null,
+        status: 'completed',
+        outcome: null,
+        billableSeconds: null,
+        costCents: null,
+        startedAtIso: null,
+        endedAtIso: null,
+        createdAtIso: '2026-05-09T09:00:00.000Z',
+        appointmentScheduledAtIso: null,
+      },
+    ]);
+    expect(csv.split('\r\n')[0] ?? csv.split('\n')[0]).toBe(
+      'contatto,telefono,stato,esito,durata_secondi,costo_eur,ora_chiamata,appuntamento_fissato_per',
+    );
+  });
+
+  it('returns an empty string when given no rows', async () => {
+    const { campaignResultsToCsv } = await import('./campaign-results');
+    expect(campaignResultsToCsv([])).toBe('');
+  });
+
+  it('serialises a row with formatted euro currency and ISO timestamps', async () => {
+    const { campaignResultsToCsv } = await import('./campaign-results');
+    const csv = campaignResultsToCsv([
+      {
+        id: 'c1',
+        contactId: 'k1',
+        contactName: 'Mario Rossi',
+        phoneE164: '+393331234567',
+        status: 'completed',
+        outcome: 'appointment_booked',
+        billableSeconds: 120,
+        costCents: 175,
+        startedAtIso: '2026-05-09T10:00:00.000Z',
+        endedAtIso: '2026-05-09T10:02:00.000Z',
+        createdAtIso: '2026-05-09T09:59:00.000Z',
+        appointmentScheduledAtIso: '2026-05-15T14:00:00.000Z',
+      },
+    ]);
+
+    const lines = csv.trim().split('\n');
+    expect(lines).toHaveLength(2);
+    // costCents 175 → "1.75" in EUR
+    expect(lines[1]).toContain('1.75');
+    expect(lines[1]).toContain('+393331234567');
+    expect(lines[1]).toContain('Mario Rossi');
+    expect(lines[1]).toContain('2026-05-15T14:00:00.000Z');
+  });
+
+  it('serialises null fields as empty strings', async () => {
+    const { campaignResultsToCsv } = await import('./campaign-results');
+    const csv = campaignResultsToCsv([
+      {
+        id: 'c1',
+        contactId: null,
+        contactName: '',
+        phoneE164: null,
+        status: 'no_answer',
+        outcome: null,
+        billableSeconds: null,
+        costCents: null,
+        startedAtIso: null,
+        endedAtIso: null,
+        createdAtIso: '2026-05-09T09:00:00.000Z',
+        appointmentScheduledAtIso: null,
+      },
+    ]);
+
+    // Empty fields render as just commas
+    const dataRow = csv.trim().split('\n')[1] ?? '';
+    expect(dataRow).toContain(',,no_answer,,,,2026-05-09T09:00:00.000Z,');
+  });
+});

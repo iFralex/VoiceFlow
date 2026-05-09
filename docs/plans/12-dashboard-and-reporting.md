@@ -98,12 +98,12 @@ export type DashboardData = {
 
 ### Task 5: Campaign results CSV export
 
-- [ ] Server Action `exportCampaignResults(campaignId, filters)`:
+- [x] Server Action `exportCampaignResults(campaignId, filters)`:
   - resolves all calls matching, joins contacts and appointments
   - writes CSV to Storage path `<org_id>/exports/campaign-<id>-<timestamp>.csv`
   - returns signed URL valid 1h
-- [ ] For >5,000 rows defer to Inngest function with email-on-completion (plan 13 wiring)
-- [ ] Mark completed
+- [x] For >5,000 rows defer to Inngest function with email-on-completion (plan 13 wiring)
+- [x] Mark completed
 
 ### Task 6: Recording + transcript synced player
 

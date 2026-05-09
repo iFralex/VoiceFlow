@@ -1,6 +1,8 @@
 export const CAMPAIGN_LAUNCHED_EVENT = 'campaign/launched' as const;
 export const CAMPAIGN_DISPATCH_CALL_EVENT = 'campaign/dispatch-call' as const;
 export const CAMPAIGN_COMPLETED_EVENT = 'campaign/completed' as const;
+export const CAMPAIGN_EXPORT_REQUESTED_EVENT = 'campaign/export-requested' as const;
+export const CAMPAIGN_EXPORT_COMPLETED_EVENT = 'campaign/export-completed' as const;
 export const VOICE_PROVIDER_DEGRADED_EVENT = 'system/voice-provider-degraded' as const;
 
 export interface CampaignLaunchedData {
@@ -27,6 +29,35 @@ export interface CampaignDispatchCallData {
 export interface CampaignCompletedData {
   campaignId: string;
   orgId: string;
+}
+
+export interface CampaignExportFilters {
+  outcomes?: string[];
+  durationMinSeconds?: number;
+  durationMaxSeconds?: number;
+  /** ISO-8601 datetime — calls started at or after this instant */
+  startedAfter?: string;
+  /** ISO-8601 datetime — calls started at or before this instant */
+  startedBefore?: string;
+  /** When set, restrict export to these specific call ids */
+  callIds?: string[];
+}
+
+export interface CampaignExportRequestedData {
+  orgId: string;
+  campaignId: string;
+  exportId: string;
+  requestedByUserId: string;
+  filters: CampaignExportFilters;
+}
+
+export interface CampaignExportCompletedData {
+  orgId: string;
+  campaignId: string;
+  exportId: string;
+  storagePath: string;
+  rowCount: number;
+  status: 'completed' | 'failed';
 }
 
 export interface VoiceProviderDegradedData {

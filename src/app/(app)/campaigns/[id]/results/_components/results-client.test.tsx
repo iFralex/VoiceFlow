@@ -13,6 +13,10 @@ vi.mock('next/navigation', () => ({
   useSearchParams: () => mockSearchParams,
 }));
 
+vi.mock('@/actions/campaigns', () => ({
+  exportCampaignResults: vi.fn().mockResolvedValue({ ok: true }),
+}));
+
 import type { CampaignResultRow } from '@/lib/services/campaign-results';
 
 import { CampaignResultsClient } from './results-client';

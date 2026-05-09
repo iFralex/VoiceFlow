@@ -756,6 +756,8 @@ const _italianStrings: Record<string, Record<string, string>> = {
     results_sort_cost_asc: 'Costo (crescente)',
     results_export_all: 'Esporta CSV',
     results_export_selected: 'Esporta selezionati ({count})',
+    results_export_ready: 'Esportazione pronta. Download avviato.',
+    results_export_deferred: "Esportazione in coda. Riceverai un'email quando il file sarà pronto.",
     results_col_contact: 'Contatto',
     results_col_phone: 'Telefono',
     results_col_status: 'Stato chiamata',

@@ -271,6 +271,8 @@
     "results_sort_cost_asc": "Cost (lowest)",
     "results_export_all": "Export CSV",
     "results_export_selected": "Export selected ({count})",
+    "results_export_ready": "Export ready. Download started.",
+    "results_export_deferred": "Export queued. You'll receive an email when the file is ready.",
     "results_col_contact": "Contact",
     "results_col_phone": "Phone",
     "results_col_status": "Call status",
