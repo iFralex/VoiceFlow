@@ -165,4 +165,79 @@ describe('RecordingPlayer', () => {
     expect(screen.getAllByText('Agente').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Interlocutore').length).toBeGreaterThan(0);
   });
+
+  it('audio starts with preload="none" and promotes to "metadata" on first interaction', () => {
+    const { container } = renderPlayer();
+    const audio = container.querySelector('audio') as HTMLAudioElement;
+    expect(audio.getAttribute('preload')).toBe('none');
+    fireEvent.click(screen.getByRole('button', { name: 'Riproduci' }));
+    expect(audio.getAttribute('preload')).toBe('metadata');
+  });
+
+  it('paginates very long transcripts and shows a "more segments" button', () => {
+    const longTranscript: TranscriptSegment[] = Array.from({ length: 150 }, (_, i) => ({
+      speaker: i % 2 === 0 ? 'agent' : 'caller',
+      text: `Segmento numero ${i}`,
+      startMs: i * 1_000,
+      endMs: (i + 1) * 1_000,
+    }));
+    const { container } = renderPlayer({ transcript: longTranscript });
+
+    // Only the first 100 segments are rendered initially.
+    expect(screen.getByText('Segmento numero 0')).toBeInTheDocument();
+    expect(screen.getByText('Segmento numero 99')).toBeInTheDocument();
+    expect(screen.queryByText('Segmento numero 100')).not.toBeInTheDocument();
+
+    const list = container.querySelector('ol[data-paginated="true"]');
+    expect(list).not.toBeNull();
+
+    // The "show full" button advertises the remaining count and expands on click.
+    const showAllButton = screen.getByRole('button', {
+      name: 'Mostra altri 50 segmenti',
+    });
+    fireEvent.click(showAllButton);
+    expect(screen.getByText('Segmento numero 100')).toBeInTheDocument();
+    expect(screen.getByText('Segmento numero 149')).toBeInTheDocument();
+  });
+
+  it('auto-expands the transcript when playback crosses the initial page', () => {
+    const longTranscript: TranscriptSegment[] = Array.from({ length: 150 }, (_, i) => ({
+      speaker: i % 2 === 0 ? 'agent' : 'caller',
+      text: `Auto segmento ${i}`,
+      startMs: i * 1_000,
+      endMs: (i + 1) * 1_000,
+    }));
+    const { container } = renderPlayer({ transcript: longTranscript });
+
+    expect(screen.queryByText('Auto segmento 120')).not.toBeInTheDocument();
+
+    // Simulate the audio reporting a position inside segment 120 (≈120s).
+    fireEvent.timeUpdate(document.querySelector('audio')!, {
+      target: { currentTime: 120.5 },
+    });
+
+    // After auto-expansion, segments past the initial page render and the
+    // "show full" button is gone.
+    expect(screen.getByText('Auto segmento 120')).toBeInTheDocument();
+    expect(
+      container.querySelector('[data-slot="transcript-show-full"]'),
+    ).toBeNull();
+  });
+
+  it('does not paginate transcripts at or below the threshold', () => {
+    const exactlyAtThreshold: TranscriptSegment[] = Array.from(
+      { length: 100 },
+      (_, i) => ({
+        speaker: 'agent' as const,
+        text: `At threshold ${i}`,
+        startMs: i * 1_000,
+        endMs: (i + 1) * 1_000,
+      }),
+    );
+    const { container } = renderPlayer({ transcript: exactlyAtThreshold });
+    expect(container.querySelector('ol[data-paginated="true"]')).toBeNull();
+    expect(
+      container.querySelector('[data-slot="transcript-show-full"]'),
+    ).toBeNull();
+  });
 });

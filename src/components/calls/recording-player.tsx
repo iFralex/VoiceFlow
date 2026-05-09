@@ -13,6 +13,12 @@ type PlaybackRate = (typeof PLAYBACK_RATES)[number];
 
 const SKIP_SECONDS = 15;
 
+// Long-call transcripts (≈10+ minutes at typical pacing) can run into the
+// hundreds of segments. Render the first page eagerly and let the user expand
+// the rest on demand to keep the initial DOM small. The cutoff is also
+// auto-bypassed once playback advances past the visible range.
+const TRANSCRIPT_INITIAL_SEGMENTS = 100;
+
 export type RecordingPlayerProps = {
   audioUrl: string;
   transcript: TranscriptSegment[];
@@ -33,6 +39,13 @@ export function RecordingPlayer({
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(durationSeconds ?? 0);
   const [rate, setRate] = useState<PlaybackRate>(1);
+  // Audio is loaded lazily: the <audio> element starts with preload="none" so
+  // no bytes are fetched until the user actually interacts. Once the user hits
+  // play (or seeks), we promote preload to "metadata" so duration/seeking work.
+  const [audioActivated, setAudioActivated] = useState(false);
+  const [showFullTranscript, setShowFullTranscript] = useState(false);
+
+  const isPaginated = transcript.length > TRANSCRIPT_INITIAL_SEGMENTS;
 
   // Index of the segment that contains, or most recently started before, currentTime.
   const currentSegmentIdx = useMemo(() => {
@@ -46,25 +59,41 @@ export function RecordingPlayer({
     return idx;
   }, [transcript, currentTime]);
 
+  // Auto-expand the remainder of the transcript once playback crosses the
+  // initial page boundary, so the auto-scroll-to-current-segment behaviour
+  // keeps working on long calls. Derived from playback state so we don't need
+  // to mirror it in `useState` + `useEffect`.
+  const effectiveShowFull =
+    showFullTranscript || currentSegmentIdx >= TRANSCRIPT_INITIAL_SEGMENTS;
+  const visibleTranscript =
+    !isPaginated || effectiveShowFull
+      ? transcript
+      : transcript.slice(0, TRANSCRIPT_INITIAL_SEGMENTS);
+
   // Apply playback rate to the audio element whenever the user changes it.
   useEffect(() => {
     if (audioRef.current) audioRef.current.playbackRate = rate;
   }, [rate]);
 
-  // Auto-scroll the active segment into view.
+  // Auto-scroll the active segment into view. When the transcript is paginated
+  // and the current segment hasn't been rendered yet, skip the scroll: the
+  // auto-expand effect above will expand the list, and a re-render will fire
+  // this effect again with the segment now in the DOM.
   useEffect(() => {
     if (currentSegmentIdx < 0) return;
+    if (currentSegmentIdx >= visibleTranscript.length) return;
     const list = transcriptListRef.current;
     if (!list) return;
     const segmentEl = list.children[currentSegmentIdx];
     if (segmentEl instanceof HTMLElement) {
       segmentEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
-  }, [currentSegmentIdx]);
+  }, [currentSegmentIdx, visibleTranscript.length]);
 
   const togglePlay = useCallback(() => {
     const audio = audioRef.current;
     if (!audio) return;
+    setAudioActivated(true);
     if (audio.paused) void audio.play();
     else audio.pause();
   }, []);
@@ -72,6 +101,7 @@ export function RecordingPlayer({
   const skip = useCallback((seconds: number) => {
     const audio = audioRef.current;
     if (!audio) return;
+    setAudioActivated(true);
     const max = Number.isFinite(audio.duration) ? audio.duration : Infinity;
     audio.currentTime = Math.max(0, Math.min(max, audio.currentTime + seconds));
     setCurrentTime(audio.currentTime);
@@ -80,6 +110,7 @@ export function RecordingPlayer({
   const seekToMs = useCallback((ms: number) => {
     const audio = audioRef.current;
     if (!audio) return;
+    setAudioActivated(true);
     audio.currentTime = ms / 1000;
     setCurrentTime(audio.currentTime);
     if (audio.paused) void audio.play();
@@ -126,7 +157,7 @@ export function RecordingPlayer({
         <audio
           ref={audioRef}
           src={audioUrl}
-          preload="metadata"
+          preload={audioActivated ? 'metadata' : 'none'}
           aria-label={t('audio_label')}
           onPlay={() => setPlaying(true)}
           onPause={() => setPlaying(false)}
@@ -213,47 +244,66 @@ export function RecordingPlayer({
           ref={transcriptListRef}
           className="max-h-[400px] overflow-y-auto rounded-lg border p-2"
           aria-label={t('transcript')}
+          data-paginated={isPaginated && !effectiveShowFull ? 'true' : undefined}
         >
           {transcript.length === 0 ? (
             <li className="px-2 py-4 text-center text-sm text-muted-foreground">
               {t('transcript_empty')}
             </li>
           ) : (
-            transcript.map((seg, idx) => {
-              const isCurrent = currentSegmentIdx === idx;
-              return (
-                <li
-                  key={`${seg.startMs}-${idx}`}
-                  data-current={isCurrent ? 'true' : undefined}
-                  className={cn(
-                    'cursor-pointer rounded px-2 py-1 text-sm transition-colors hover:bg-muted',
-                    isCurrent && 'bg-muted font-medium',
-                  )}
-                  onClick={() => seekToMs(seg.startMs)}
-                  role="button"
-                  tabIndex={0}
-                  aria-current={isCurrent ? 'true' : undefined}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      seekToMs(seg.startMs);
-                    }
-                  }}
-                >
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>
-                      {seg.speaker === 'agent'
-                        ? t('speaker_agent')
-                        : t('speaker_caller')}
-                    </span>
-                    <span className="tabular-nums">
-                      {formatTime(seg.startMs / 1000)}
-                    </span>
-                  </div>
-                  <p className="text-foreground">{seg.text}</p>
+            <>
+              {visibleTranscript.map((seg, idx) => {
+                const isCurrent = currentSegmentIdx === idx;
+                return (
+                  <li
+                    key={`${seg.startMs}-${idx}`}
+                    data-current={isCurrent ? 'true' : undefined}
+                    className={cn(
+                      'cursor-pointer rounded px-2 py-1 text-sm transition-colors hover:bg-muted',
+                      isCurrent && 'bg-muted font-medium',
+                    )}
+                    onClick={() => seekToMs(seg.startMs)}
+                    role="button"
+                    tabIndex={0}
+                    aria-current={isCurrent ? 'true' : undefined}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        seekToMs(seg.startMs);
+                      }
+                    }}
+                  >
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>
+                        {seg.speaker === 'agent'
+                          ? t('speaker_agent')
+                          : t('speaker_caller')}
+                      </span>
+                      <span className="tabular-nums">
+                        {formatTime(seg.startMs / 1000)}
+                      </span>
+                    </div>
+                    <p className="text-foreground">{seg.text}</p>
+                  </li>
+                );
+              })}
+              {isPaginated && !effectiveShowFull && (
+                <li className="px-2 py-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    data-slot="transcript-show-full"
+                    onClick={() => setShowFullTranscript(true)}
+                  >
+                    {t('transcript_show_full', {
+                      remaining: transcript.length - TRANSCRIPT_INITIAL_SEGMENTS,
+                    })}
+                  </Button>
                 </li>
-              );
-            })
+              )}
+            </>
           )}
         </ol>
       </div>

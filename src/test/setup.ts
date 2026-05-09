@@ -927,6 +927,7 @@ const _italianStrings: Record<string, Record<string, string>> = {
     speed_group_label: 'Velocità di riproduzione',
     transcript: 'Trascrizione',
     transcript_empty: 'Trascrizione non disponibile',
+    transcript_show_full: 'Mostra altri {remaining} segmenti',
     speaker_agent: 'Agente',
     speaker_caller: 'Interlocutore',
   },

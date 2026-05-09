@@ -950,6 +950,7 @@
     "speed_group_label": "Playback speed",
     "transcript": "Transcript",
     "transcript_empty": "Transcript unavailable",
+    "transcript_show_full": "Show {remaining} more segments",
     "speaker_agent": "Agent",
     "speaker_caller": "Caller"
   },
