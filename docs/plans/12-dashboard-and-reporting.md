@@ -76,15 +76,15 @@ export type DashboardData = {
 
 ### Task 3: Campaign live tab
 
-- [ ] Add `src/app/(app)/campaigns/[id]/live/page.tsx` (or implement as a tab within `campaigns/[id]/page.tsx`):
+- [x] Add `src/app/(app)/campaigns/[id]/live/page.tsx` (or implement as a tab within `campaigns/[id]/page.tsx`):
   - real-time view of in-progress + recent calls
   - each row: contact name, status (dialing/in_progress/completed), live duration timer for in-progress, outcome chip when complete
   - subscribe to Supabase Realtime on `calls` filtered by `campaign_id`
   - subscribe to Realtime on `campaigns` for status changes
   - "Pausa" / "Riprendi" / "Annulla" buttons surfaced when campaign is `running` / `paused` / non-terminal
-- [ ] Live progress bar at top: completed / total
-- [ ] Live KPIs (refreshed via Realtime): calls in progress, calls completed, appointments fissati so far, costo accumulato
-- [ ] Mark completed
+- [x] Live progress bar at top: completed / total
+- [x] Live KPIs (refreshed via Realtime): calls in progress, calls completed, appointments fissati so far, costo accumulato
+- [x] Mark completed
 
 ### Task 4: Campaign results tab
 

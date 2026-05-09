@@ -1,5 +1,6 @@
 export * from './billing-rules';
 export * from './campaign-cost-estimator';
+export * from './campaign-live';
 export * from './campaigns';
 export * from './dashboard';
 export * from './eligibility';
