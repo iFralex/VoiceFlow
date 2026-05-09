@@ -140,14 +140,14 @@ export type DashboardData = {
 
 ### Task 9: Daily report cron and dispatch
 
-- [ ] Create `src/app/api/cron/daily-report/route.ts` (path already in `vercel.json`) running daily at 19:00 Europe/Rome:
+- [x] Create `src/app/api/cron/daily-report/route.ts` (path already in `vercel.json`) running daily at 19:00 Europe/Rome:
   - select all orgs with at least one call in the last 24h (skip orgs with no activity)
-  - for each, build the report data via `getDashboardData(orgId, "yesterday")`
-  - resolve subscribed recipients: by default org owners; per-user opt-out preference (Task 11)
+  - for each, build the report data via `getDashboardData(orgId, "yesterday")` (implemented as `buildDailyReportData` in `src/lib/services/daily-report.ts`, scoped to a Europe/Rome yesterday window so the dashboard service's UI period type stays unchanged)
+  - resolve subscribed recipients: by default org owners; per-user opt-out preference is wired in Task 10 (`user_notification_preferences`)
   - render via React Email and send via Resend
   - log success/failure per org to audit_log
-- [ ] Batch with rate limit (≤10 emails/sec to respect Resend free-tier caps)
-- [ ] Mark completed
+- [x] Batch with rate limit (≤10 emails/sec to respect Resend free-tier caps)
+- [x] Mark completed
 
 ### Task 10: Notifications preferences
 
