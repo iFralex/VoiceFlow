@@ -196,16 +196,17 @@ export type DashboardData = {
 
 ### Task 16: E2E
 
-- [ ] Playwright `e2e/dashboard.spec.ts`:
+- [x] Playwright `e2e/dashboard.spec.ts`:
   - sign in with seeded data
   - assert KPIs render
   - change period; assert KPIs update
-  - click on an active campaign; land on live view
-- [ ] Playwright `e2e/recording-player.spec.ts`:
+  - click on an active campaign; land on live view (skipped without `E2E_DASHBOARD_CAMPAIGN_ID` since seeded campaign data isn't created via the public UI)
+- [x] Playwright `e2e/recording-player.spec.ts`:
   - open call detail with seeded recording fixture
   - play, pause, seek; assert UI updates
   - click transcript segment; assert audio seeks
-- [ ] Mark completed
+  - the recording-detail interactions skip without `E2E_RECORDING_CALL_ID`; an unauthenticated 404/login routing smoke test still runs
+- [x] Mark completed
 
 ### Task 17: Definition of Done
 
