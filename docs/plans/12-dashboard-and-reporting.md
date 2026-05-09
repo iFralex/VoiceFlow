@@ -183,9 +183,9 @@ export type DashboardData = {
 
 ### Task 14: Print-friendly campaign report
 
-- [ ] Add a "Stampa report" button on the campaign detail page generating a print-optimised view (uses CSS `@media print`)
-- [ ] Includes summary, outcome breakdown chart, top appointments table; truncates contact phones to last-4-digits unless explicitly toggled
-- [ ] Mark completed
+- [x] Add a "Stampa report" button on the campaign detail page generating a print-optimised view (uses CSS `@media print`) — landed as `/campaigns/[id]/report` with the toolbar/shell hidden via `@media print` rules in `src/app/globals.css`
+- [x] Includes summary, outcome breakdown chart, top appointments table; truncates contact phones to last-4-digits unless explicitly toggled — `?fullPhones=1` URL param flips between masked (default) and full numbers; outcome breakdown rendered as accessible CSS bars to keep the surface print-friendly without a chart lib
+- [x] Mark completed
 
 ### Task 15: Performance audit
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, Clock, Copy, Pause, Play, X } from 'lucide-react';
+import { ArrowLeft, Clock, Copy, Pause, Play, Printer, X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
@@ -358,6 +358,13 @@ export function CampaignDetailClient({
           >
             <Copy className="mr-1 size-3" />
             {t('action_duplicate')}
+          </Button>
+
+          <Button variant="outline" size="sm" disabled={pending} asChild>
+            <Link href={`/campaigns/${campaign.id}/report`}>
+              <Printer className="mr-1 size-3" />
+              {t('action_print_report')}
+            </Link>
           </Button>
 
           {canExport && (
