@@ -28,13 +28,19 @@
 
 // Minimal Supabase client interface used by this stub.
 // Replaced with full @supabase/supabase-js types when that package is added in plan 12.
+export type RealtimeSubscribeStatus =
+  | 'SUBSCRIBED'
+  | 'CHANNEL_ERROR'
+  | 'TIMED_OUT'
+  | 'CLOSED';
+
 export interface RealtimeChannelLike {
   on(
     event: string,
     opts: Record<string, unknown>,
     handler: (payload: unknown) => void,
   ): this;
-  subscribe(): this;
+  subscribe(callback?: (status: RealtimeSubscribeStatus) => void): this;
 }
 
 export interface SupabaseClientLike {
@@ -51,11 +57,21 @@ export type RealtimePayload = {
   commit_timestamp: string;
 };
 
+export type SubscribeOptions = {
+  /**
+   * Called whenever the channel transitions through a non-SUBSCRIBED state.
+   * Useful to detect reconnects after network drops so callers can force a
+   * server-side revalidate to catch missed events.
+   */
+  onStatus?: (status: RealtimeSubscribeStatus) => void;
+};
+
 function subscribeToTable(
   supabase: SupabaseClientLike,
   table: string,
   orgId: string,
   onPayload: (payload: RealtimePayload) => void,
+  options: SubscribeOptions = {},
 ): () => void {
   const channel = supabase
     .channel(`${table}:org:${orgId}`)
@@ -71,7 +87,9 @@ function subscribeToTable(
         onPayload(payload as RealtimePayload);
       },
     )
-    .subscribe();
+    .subscribe((status) => {
+      options.onStatus?.(status);
+    });
 
   return () => {
     void supabase.removeChannel(channel);
@@ -90,8 +108,9 @@ export function subscribeToCalls(
   supabase: SupabaseClientLike,
   orgId: string,
   onPayload: (payload: RealtimePayload) => void,
+  options: SubscribeOptions = {},
 ): () => void {
-  return subscribeToTable(supabase, 'calls', orgId, onPayload);
+  return subscribeToTable(supabase, 'calls', orgId, onPayload, options);
 }
 
 /**
@@ -106,6 +125,21 @@ export function subscribeToCampaigns(
   supabase: SupabaseClientLike,
   orgId: string,
   onPayload: (payload: RealtimePayload) => void,
+  options: SubscribeOptions = {},
 ): () => void {
-  return subscribeToTable(supabase, 'campaigns', orgId, onPayload);
+  return subscribeToTable(supabase, 'campaigns', orgId, onPayload, options);
+}
+
+/**
+ * Subscribe to all changes on the `campaign_stats` denormalised table for a
+ * given org. Used by the dashboard to update progress bars and per-campaign
+ * counters without paying the cost of a full-page revalidation.
+ */
+export function subscribeToCampaignStats(
+  supabase: SupabaseClientLike,
+  orgId: string,
+  onPayload: (payload: RealtimePayload) => void,
+  options: SubscribeOptions = {},
+): () => void {
+  return subscribeToTable(supabase, 'campaign_stats', orgId, onPayload, options);
 }

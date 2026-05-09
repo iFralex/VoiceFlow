@@ -1,4 +1,4 @@
-import { ActiveCampaigns } from '@/components/dashboard/active-campaigns';
+import { ActiveCampaignsLive } from '@/components/dashboard/active-campaigns-live';
 import { AlertsList } from '@/components/dashboard/alerts-list';
 import { KpiCard } from '@/components/dashboard/kpi-card';
 import { DashboardOnboardingCard } from '@/components/dashboard/onboarding-card';
@@ -77,7 +77,10 @@ export default async function DashboardPage({ searchParams }: Props) {
 
       <section className="grid gap-4 lg:grid-cols-3">
         <TrendChart data={data.trends} className="lg:col-span-2" />
-        <ActiveCampaigns campaigns={data.activeCampaigns} />
+        <ActiveCampaignsLive
+          orgId={orgId}
+          initialCampaigns={data.activeCampaigns}
+        />
       </section>
 
       <section className="grid gap-4 lg:grid-cols-3">

@@ -176,10 +176,10 @@ export type DashboardData = {
 
 ### Task 13: Live dashboard updates (Realtime + revalidate)
 
-- [ ] On dashboard, when an active campaign is running, subscribe to `campaign_stats` Realtime updates and re-render only the active-campaigns row (avoid full-page revalidation cost)
-- [ ] On the campaign live page, also subscribe to `campaigns` row to detect status changes triggered by other tabs (multi-window safety)
-- [ ] On reconnect after network drop, force a server-side revalidate to catch missed events
-- [ ] Mark completed
+- [x] On dashboard, when an active campaign is running, subscribe to `campaign_stats` Realtime updates and re-render only the active-campaigns row (avoid full-page revalidation cost) — landed as `<ActiveCampaignsLive>` (`src/components/dashboard/active-campaigns-live.tsx`); `campaign_stats` was added to the `supabase_realtime` publication in migration `0036_campaign_stats_realtime.sql`
+- [x] On the campaign live page, also subscribe to `campaigns` row to detect status changes triggered by other tabs (multi-window safety) — already wired in `campaign-live-client.tsx` via `subscribeToCampaigns`
+- [x] On reconnect after network drop, force a server-side revalidate to catch missed events — both surfaces now call `router.refresh()` on the SUBSCRIBED-after-error edge and on the browser `online` event; the `subscribeTo*` helpers grew an `onStatus` option for this
+- [x] Mark completed
 
 ### Task 14: Print-friendly campaign report
 

@@ -21,6 +21,7 @@ import {
   subscribeToCalls,
   subscribeToCampaigns,
   type RealtimePayload,
+  type RealtimeSubscribeStatus,
 } from '@/lib/supabase/realtime';
 import type { ActionResult } from '@/lib/utils/action-toast';
 import { toastResult } from '@/lib/utils/action-toast';
@@ -134,18 +135,43 @@ export function CampaignLiveClient({
       if (status) setCampaignStatus(status);
     };
 
-    const unsubCalls = subscribeToCalls(supabase, orgId, handleCallPayload);
+    // Reconnect-aware revalidate: if the channel ever drops, force a
+    // server-side refresh once it's back so we recover any events missed
+    // during the outage. We only fire on the recovery edge to avoid
+    // refreshing on the very first SUBSCRIBED.
+    let everDropped = false;
+    const onStatus = (status: RealtimeSubscribeStatus) => {
+      if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+        everDropped = true;
+        return;
+      }
+      if (status === 'SUBSCRIBED' && everDropped) {
+        everDropped = false;
+        router.refresh();
+      }
+    };
+
+    const unsubCalls = subscribeToCalls(supabase, orgId, handleCallPayload, {
+      onStatus,
+    });
     const unsubCampaigns = subscribeToCampaigns(
       supabase,
       orgId,
       handleCampaignPayload,
+      { onStatus },
     );
+
+    function handleOnline() {
+      router.refresh();
+    }
+    window.addEventListener('online', handleOnline);
 
     return () => {
       unsubCalls();
       unsubCampaigns();
+      window.removeEventListener('online', handleOnline);
     };
-  }, [orgId, campaignId]);
+  }, [orgId, campaignId, router]);
 
   // ─── Derived UI data ───────────────────────────────────────────────────────
   const callsList = React.useMemo(
