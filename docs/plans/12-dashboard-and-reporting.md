@@ -118,13 +118,13 @@ export type DashboardData = {
 
 ### Task 7: Per-call detail page
 
-- [ ] Create `src/app/(app)/calls/[id]/page.tsx`:
+- [x] Create `src/app/(app)/calls/[id]/page.tsx`:
   - header: contact name, phone, campaign, script, time, duration, cost, outcome badge
   - timeline (vertical): call dispatched → ringing → answered → tool invocations (with timestamps and tool names) → ended
   - tabs: Registrazione (recording player + transcript), Dati strutturati (raw JSON of `calls.metadata` + tool args), Audit (filtered audit log entries for this call)
   - actions (capability-gated): Rimborsa chiamata (creates a ledger refund), Segnala problema (sends email to support)
-- [ ] If recording or transcript missing (still being processed), show placeholder with "In elaborazione" + auto-refresh
-- [ ] Mark completed
+- [x] If recording or transcript missing (still being processed), show placeholder with "In elaborazione" + auto-refresh
+- [x] Mark completed
 
 ### Task 8: Daily report email
 

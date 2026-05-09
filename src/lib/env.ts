@@ -20,6 +20,7 @@ const Env = z.object({
   RESEND_API_KEY: z.string().min(1),
   EMAIL_FROM_ADDRESS: z.string().email(),
   EMAIL_REPLY_TO: z.string().email().optional(),
+  SUPPORT_EMAIL_ADDRESS: z.string().email().optional(),
   SENTRY_DSN: z.string().url().optional(),
   SENTRY_AUTH_TOKEN: z.string().optional(),
   AXIOM_TOKEN: z.string().optional(),
