@@ -158,14 +158,14 @@ export type DashboardData = {
 
 ### Task 11: cmd+K search wired against data
 
-- [ ] Extend the cmd+K palette stub from plan 03 with real data sources:
+- [x] Extend the cmd+K palette stub from plan 03 with real data sources:
   - search contacts by name or phone (LIKE query, capped 20 results, capability-gated)
   - search campaigns by name
   - search scripts by name
   - quick actions: "Crea campagna", "Carica contatti", "Ricarica credito", "Vai a impostazioni"
-- [ ] Server-side search via Server Action returning grouped results
-- [ ] Keyboard navigation in palette (already provided by `cmdk`)
-- [ ] Mark completed
+- [x] Server-side search via Server Action returning grouped results
+- [x] Keyboard navigation in palette (already provided by `cmdk`)
+- [x] Mark completed
 
 ### Task 12: Empty-state polish
 
