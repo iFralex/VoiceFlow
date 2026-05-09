@@ -542,6 +542,23 @@
     "billing_portal_button": "Open invoice history",
     "billing_portal_opening": "Opening…"
   },
+  "notifications_settings": {
+    "title": "Notifications",
+    "description": "Choose which emails you receive from this organisation. Settings are per user and per organisation.",
+    "save_success": "Preference updated",
+    "daily_report_label": "Daily report",
+    "daily_report_description": "Evening email digest with the day's KPIs and booked appointments.",
+    "appointment_booked_label": "Appointment booked",
+    "appointment_booked_description": "Immediate notification whenever a call books a new appointment.",
+    "qualified_lead_label": "Qualified lead",
+    "qualified_lead_description": "Notification when a contact is qualified as interested.",
+    "low_credit_label": "Low credit",
+    "low_credit_description": "Warning when the remaining credit drops below the safety threshold.",
+    "campaign_completed_label": "Campaign completed",
+    "campaign_completed_description": "Notification when a campaign finishes, with a summary of results.",
+    "weekly_summary_label": "Weekly summary",
+    "weekly_summary_description": "Monday-morning email with the previous week's performance."
+  },
   "compliance": {
     "gdpr_notice": "Data is processed in accordance with GDPR.",
     "opt_out_label": "Opt out of contact",

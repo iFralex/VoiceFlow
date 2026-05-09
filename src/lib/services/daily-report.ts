@@ -23,6 +23,7 @@ import {
   contacts,
   memberships,
   organizations,
+  userNotificationPreferences,
   users,
 } from '@/lib/db/schema';
 import { sendEmail } from '@/lib/email';
@@ -33,6 +34,7 @@ import {
   renderDailyReportEmail,
 } from '@/lib/email/templates/daily-report';
 import { env } from '@/lib/env';
+import { DEFAULT_NOTIFICATION_PREFERENCES } from '@/lib/services/notification-preferences';
 
 const REPORT_TIMEZONE = 'Europe/Rome';
 const TOP_CAMPAIGNS_LIMIT = 5;
@@ -409,6 +411,8 @@ export async function getDailyReportRecipients(
   orgId: string,
 ): Promise<DailyReportRecipient[]> {
   return withSystemContext(async (tx) => {
+    // Owners are the default recipient pool; other roles never receive the
+    // daily report regardless of their per-user preferences.
     const rows = await tx
       .select({
         userId: users.id,
@@ -426,12 +430,29 @@ export async function getDailyReportRecipients(
         ),
       );
 
-    return rows.map((r) => ({
-      userId: r.userId,
-      email: r.email,
-      fullName: r.fullName,
-      locale: (r.locale === 'en' ? 'en' : 'it') as DailyReportLocale,
-    }));
+    if (rows.length === 0) return [];
+
+    // Pull every existing pref row for this org and use it to filter the
+    // candidate owners. Missing rows fall back to the default (opted in).
+    const prefRows = await tx
+      .select({
+        user_id: userNotificationPreferences.user_id,
+        daily_report: userNotificationPreferences.daily_report,
+      })
+      .from(userNotificationPreferences)
+      .where(eq(userNotificationPreferences.org_id, orgId));
+
+    const prefByUser = new Map(prefRows.map((r) => [r.user_id, r.daily_report]));
+    const fallback = DEFAULT_NOTIFICATION_PREFERENCES.daily_report;
+
+    return rows
+      .filter((r) => prefByUser.get(r.userId) ?? fallback)
+      .map((r) => ({
+        userId: r.userId,
+        email: r.email,
+        fullName: r.fullName,
+        locale: (r.locale === 'en' ? 'en' : 'it') as DailyReportLocale,
+      }));
   });
 }
 

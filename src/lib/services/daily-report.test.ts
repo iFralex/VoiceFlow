@@ -27,6 +27,7 @@ import {
   type DailyReportData,
   type DailyReportRange,
   type DailyReportRecipient,
+  getDailyReportRecipients,
   runDailyReport,
 } from './daily-report';
 
@@ -331,6 +332,49 @@ describe('buildDailyReportData', () => {
     expect(data.recentAppointments[0]?.contactName).toBe('Mario Rossi');
     expect(data.recentAppointments[1]?.contactName).toBe('+39111');
     expect(data.recentAppointments[1]?.campaignName).toBe('');
+  });
+});
+
+// ─── getDailyReportRecipients ────────────────────────────────────────────────
+
+describe('getDailyReportRecipients', () => {
+  it('skips owners who have explicitly disabled the daily report', async () => {
+    const ownerRows = [
+      { userId: 'u1', email: 'in@example.com', fullName: 'Inny', locale: 'it' },
+      { userId: 'u2', email: 'out@example.com', fullName: 'Outy', locale: 'it' },
+      { userId: 'u3', email: 'def@example.com', fullName: 'Deffy', locale: 'en' },
+    ];
+    const prefRows = [
+      { user_id: 'u1', daily_report: true },
+      { user_id: 'u2', daily_report: false },
+      // u3 has no row → defaults to true (still receives)
+    ];
+
+    const queueOfResults: unknown[][] = [ownerRows, prefRows];
+    const tx = makeStubTx(queueOfResults);
+    const dbContext = await import('@/lib/db/context');
+    vi.mocked(dbContext.withSystemContext).mockImplementationOnce(async (fn) =>
+      fn(tx as unknown as Parameters<typeof fn>[0]),
+    );
+
+    const recipients = await getDailyReportRecipients('org-z');
+
+    expect(recipients.map((r) => r.userId)).toEqual(['u1', 'u3']);
+    expect(recipients.find((r) => r.userId === 'u3')?.locale).toBe('en');
+  });
+
+  it('returns no recipients early when the org has no owners', async () => {
+    const tx = makeStubTx([[]]);
+    const dbContext = await import('@/lib/db/context');
+    vi.mocked(dbContext.withSystemContext).mockImplementationOnce(async (fn) =>
+      fn(tx as unknown as Parameters<typeof fn>[0]),
+    );
+
+    const recipients = await getDailyReportRecipients('org-empty');
+
+    expect(recipients).toEqual([]);
+    // Only the owners query should fire — no pref query when there are no owners.
+    expect(tx.select).toHaveBeenCalledTimes(1);
   });
 });
 

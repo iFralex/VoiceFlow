@@ -151,10 +151,10 @@ export type DashboardData = {
 
 ### Task 10: Notifications preferences
 
-- [ ] Add migration `0018_user_notification_prefs.sql`: `user_notification_preferences` (`user_id`, `org_id`, `daily_report` boolean default true, `appointment_booked` boolean default true, `qualified_lead` boolean default true, `low_credit` boolean default true, `campaign_completed` boolean default true, `weekly_summary` boolean default false)
-- [ ] Settings page `/settings/notifications` exposing toggles
-- [ ] Daily report cron and other notifications consult these preferences before sending
-- [ ] Mark completed
+- [x] Add migration `0018_user_notification_prefs.sql`: `user_notification_preferences` (`user_id`, `org_id`, `daily_report` boolean default true, `appointment_booked` boolean default true, `qualified_lead` boolean default true, `low_credit` boolean default true, `campaign_completed` boolean default true, `weekly_summary` boolean default false) — landed as `0035_user_notification_prefs.sql` (slot 0018 was occupied by an earlier migration)
+- [x] Settings page `/settings/notifications` exposing toggles
+- [x] Daily report cron and other notifications consult these preferences before sending — `getDailyReportRecipients` now filters owners by their stored `daily_report` preference (missing rows fall back to the default opt-in)
+- [x] Mark completed
 
 ### Task 11: cmd+K search wired against data
 

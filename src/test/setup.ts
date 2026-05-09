@@ -423,6 +423,29 @@ const _italianStrings: Record<string, Record<string, string>> = {
     billing_portal_button: 'Apri storico fatture',
     billing_portal_opening: 'Apertura in corso…',
   },
+  notifications_settings: {
+    title: 'Notifiche',
+    description:
+      'Scegli quali email vuoi ricevere da questa organizzazione. Le impostazioni sono per utente e per organizzazione.',
+    save_success: 'Preferenza aggiornata',
+    daily_report_label: 'Report giornaliero',
+    daily_report_description:
+      'Riepilogo email serale con i KPI del giorno e gli appuntamenti fissati.',
+    appointment_booked_label: 'Appuntamento fissato',
+    appointment_booked_description:
+      'Notifica immediata ogni volta che una chiamata fissa un nuovo appuntamento.',
+    qualified_lead_label: 'Lead qualificato',
+    qualified_lead_description: 'Notifica quando un contatto viene qualificato come interessato.',
+    low_credit_label: 'Credito basso',
+    low_credit_description:
+      'Avviso quando il credito residuo scende sotto la soglia di sicurezza.',
+    campaign_completed_label: 'Campagna completata',
+    campaign_completed_description:
+      'Notifica al termine di una campagna con il riepilogo dei risultati.',
+    weekly_summary_label: 'Riepilogo settimanale',
+    weekly_summary_description:
+      "Email del lunedì mattina con l'andamento della settimana precedente.",
+  },
   compliance_settings: {
     title: 'Compliance e GDPR',
     description: 'Gestisci le richieste degli interessati e consulta la documentazione.',
