@@ -880,5 +880,18 @@
     "cookie_section_consent_body": "I cookie tecnici non richiedono consenso. Per i cookie analitici aggregati ci basiamo sul legittimo interesse, con possibilità di opposizione tramite le impostazioni del browser.",
     "cookie_section_management_title": "4. Gestione dei cookie",
     "cookie_section_management_body": "L'utente può configurare il proprio browser per rifiutare o eliminare i cookie. La disabilitazione di alcuni cookie può limitare la funzionalità della piattaforma."
+  },
+  "recording_player": {
+    "audio_label": "Registrazione della chiamata",
+    "play": "Riproduci",
+    "pause": "Pausa",
+    "skip_back": "Indietro di 15 secondi",
+    "skip_forward": "Avanti di 15 secondi",
+    "seek_label": "Posizione di riproduzione",
+    "speed_group_label": "Velocità di riproduzione",
+    "transcript": "Trascrizione",
+    "transcript_empty": "Trascrizione non disponibile",
+    "speaker_agent": "Agente",
+    "speaker_caller": "Interlocutore"
   }
 }

@@ -107,14 +107,14 @@ export type DashboardData = {
 
 ### Task 6: Recording + transcript synced player
 
-- [ ] Create `src/components/calls/recording-player.tsx` (Client Component):
+- [x] Create `src/components/calls/recording-player.tsx` (Client Component):
   - HTML5 `<audio>` with custom controls (play/pause, scrub, speed 0.5x/1x/1.5x/2x, skip ±15s)
   - transcript panel beside the audio: list of `[speaker] [timestamp] text` with auto-scroll-to-current-segment behaviour
   - clicking a transcript segment seeks audio to that segment's start
   - keyboard shortcuts: space (play/pause), J/K/L (skip back/play/skip forward)
-- [ ] Audio source from signed URL fetched server-side (`getDownloadUrl(call.recording_path, 60)`)
-- [ ] Transcript fetched as JSON via Server Component and passed as initial prop
-- [ ] Mark completed
+- [x] Audio source from signed URL fetched server-side (`getCallMediaDownloadUrl(call.recording_path, 60)` in `src/lib/storage/signed.ts`)
+- [x] Transcript fetched as JSON via Server Component and passed as initial prop
+- [x] Mark completed
 
 ### Task 7: Per-call detail page
 

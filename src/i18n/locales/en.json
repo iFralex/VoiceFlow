@@ -880,5 +880,18 @@
     "cookie_section_consent_body": "Technical cookies do not require consent. Aggregated analytics cookies rely on legitimate interest, with the option to opt out via browser settings.",
     "cookie_section_management_title": "4. Cookie management",
     "cookie_section_management_body": "Users can configure their browser to refuse or delete cookies. Disabling some cookies may limit platform functionality."
+  },
+  "recording_player": {
+    "audio_label": "Call recording",
+    "play": "Play",
+    "pause": "Pause",
+    "skip_back": "Skip back 15 seconds",
+    "skip_forward": "Skip forward 15 seconds",
+    "seek_label": "Playback position",
+    "speed_group_label": "Playback speed",
+    "transcript": "Transcript",
+    "transcript_empty": "Transcript unavailable",
+    "speaker_agent": "Agent",
+    "speaker_caller": "Caller"
   }
 }

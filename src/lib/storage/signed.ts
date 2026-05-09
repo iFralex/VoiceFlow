@@ -10,6 +10,7 @@
 
 import { getAuthContext } from '@/lib/auth/context';
 import { supabaseAdmin } from '@/lib/supabase/admin';
+import { CALL_MEDIA_BUCKET } from '@/lib/voice/persistence';
 
 export const CSV_UPLOADS_BUCKET = 'csv-uploads';
 const BUCKET = CSV_UPLOADS_BUCKET;
@@ -79,6 +80,52 @@ export async function getUploadUrl(path: string, _ttlSeconds: number): Promise<s
 
   if (error || !data?.signedUrl) {
     throw new Error(`Failed to create upload URL: ${error?.message ?? 'unknown error'}`);
+  }
+
+  return data.signedUrl;
+}
+
+/**
+ * Generates a signed download URL for a recording or transcript in the
+ * `call-media` bucket.
+ *
+ * Call-media paths are laid out as `<kind>/<org_id>/<call_id>.<ext>` where
+ * `<kind>` is either `recordings` or `transcripts` (see
+ * `src/lib/voice/persistence.ts`). The org_id is therefore the *second*
+ * segment, not the first.
+ *
+ * @param path       Storage object path, e.g. `recordings/<org_id>/<call_id>.mp3`
+ * @param ttlSeconds Seconds until the signed URL expires
+ */
+export async function getCallMediaDownloadUrl(
+  path: string,
+  ttlSeconds: number,
+): Promise<string> {
+  const segments = path.split('/');
+  const kind = segments[0];
+  const pathOrgId = segments[1];
+
+  if ((kind !== 'recordings' && kind !== 'transcripts') || !pathOrgId) {
+    throw new Error(
+      `Invalid call-media path: '${path}' — expected '(recordings|transcripts)/<org_id>/<call_id>.<ext>'`,
+    );
+  }
+
+  const { orgId } = await getAuthContext();
+  if (orgId !== pathOrgId) {
+    throw new Error(
+      `Forbidden: path belongs to org '${pathOrgId}', caller is in org '${orgId}'`,
+    );
+  }
+
+  const { data, error } = await supabaseAdmin.storage
+    .from(CALL_MEDIA_BUCKET)
+    .createSignedUrl(path, ttlSeconds);
+
+  if (error || !data?.signedUrl) {
+    throw new Error(
+      `Failed to create call-media download URL: ${error?.message ?? 'unknown error'}`,
+    );
   }
 
   return data.signedUrl;
