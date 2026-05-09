@@ -88,13 +88,13 @@ export type DashboardData = {
 
 ### Task 4: Campaign results tab
 
-- [ ] Add `src/app/(app)/campaigns/[id]/results/page.tsx`:
+- [x] Add `src/app/(app)/campaigns/[id]/results/page.tsx`:
   - data table (using the table component from plan 03) with columns: contatto, telefono, stato chiamata, esito, durata, costo, ora chiamata, link a dettaglio
   - filters: esito (multi-select), durata range, data range
   - bulk actions: esporta selezionati (CSV)
   - column "Esito" with status badge mapping (interested → green, appointment_booked → blue, etc.)
-- [ ] Per-row "Dettaglio" link → call detail page (Task 7)
-- [ ] Mark completed
+- [x] Per-row "Dettaglio" link → call detail page (Task 7)
+- [x] Mark completed
 
 ### Task 5: Campaign results CSV export
 
