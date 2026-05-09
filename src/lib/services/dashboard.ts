@@ -1,11 +1,15 @@
 import { and, desc, eq, gte, lte, sql } from 'drizzle-orm';
+import { unstable_cache } from 'next/cache';
 
 import type { ActiveCampaignRow } from '@/components/dashboard/active-campaigns';
 import type { DashboardAlert } from '@/components/dashboard/alerts-list';
 import type { PeriodRange } from '@/components/dashboard/period';
+import { resolvePeriodRange } from '@/components/dashboard/period';
+import type { DashboardPeriod } from '@/components/dashboard/period-selector';
 import type { RecentAppointmentRow } from '@/components/dashboard/recent-appointments';
 import type { TrendPoint } from '@/components/dashboard/trend-chart';
 import type { DbTx } from '@/lib/db/context';
+import { withOrgContext } from '@/lib/db/context';
 import {
   appointments,
   auditLog,
@@ -32,6 +36,7 @@ export type DashboardSparklines = {
 };
 
 export type DashboardData = {
+  period: { start: Date; end: Date; label: DashboardPeriod };
   kpis: DashboardKpis;
   sparklines: DashboardSparklines;
   trends: TrendPoint[];
@@ -41,11 +46,63 @@ export type DashboardData = {
   hasAnyCampaign: boolean;
 };
 
-export async function loadDashboardData(
+const CACHE_TTL_SECONDS = 60;
+
+/**
+ * Public service entry-point: returns all data required to render the
+ * dashboard for `orgId` over `period`. Result is cached for 60s keyed by
+ * `(orgId, period)` via `unstable_cache`. The period range is recomputed
+ * on every call so that the boundaries stay current after the cache
+ * revalidates.
+ */
+export async function getDashboardData(
   orgId: string,
-  withOrgContext: <T>(fn: (tx: DbTx) => Promise<T>) => Promise<T>,
-  range: PeriodRange,
+  period: DashboardPeriod,
 ): Promise<DashboardData> {
+  const range = resolvePeriodRange(period);
+  const cached = await loadDashboardCached(orgId, period, range.start.toISOString(), range.end.toISOString());
+  return {
+    period: { start: range.start, end: range.end, label: period },
+    kpis: cached.kpis,
+    sparklines: cached.sparklines,
+    trends: cached.trends,
+    activeCampaigns: cached.activeCampaigns,
+    recentAppointments: cached.recentAppointments,
+    alerts: cached.alerts,
+    hasAnyCampaign: cached.hasAnyCampaign,
+  };
+}
+
+type CachedDashboardPayload = Omit<DashboardData, 'period'>;
+
+const loadDashboardCached = unstable_cache(
+  async (
+    orgId: string,
+    _period: DashboardPeriod,
+    startIso: string,
+    endIso: string,
+  ): Promise<CachedDashboardPayload> => {
+    const range: PeriodRange = {
+      period: _period,
+      start: new Date(startIso),
+      end: new Date(endIso),
+    };
+    return loadDashboardUncached(orgId, range);
+  },
+  ['dashboard'],
+  { revalidate: CACHE_TTL_SECONDS, tags: ['dashboard'] },
+);
+
+/**
+ * Performs the actual aggregation queries inside a single transaction and
+ * returns the cacheable payload. Multiple parallel queries share one
+ * connection; the org-scoped GUC is set once via `withOrgContext` so RLS
+ * policies are honoured for every read.
+ */
+export async function loadDashboardUncached(
+  orgId: string,
+  range: PeriodRange,
+): Promise<CachedDashboardPayload> {
   const sparklineDays = 14;
   const sparklineStart = startOfDay(daysAgo(sparklineDays - 1));
 
@@ -58,30 +115,21 @@ export async function loadDashboardData(
     coolingPhonesCount,
     disclosureFailureCount,
     hasAnyCampaign,
-  ] = await withOrgContext(async (tx) =>
+  ] = await withOrgContext(orgId, async (tx) =>
     Promise.all([
-      // KPI aggregates over selected range
       kpiAggregateInRange(tx, orgId, range),
-      // Trend chart per-day rows over selected range
       perDayOutcomeCounts(tx, orgId, range.start, range.end),
-      // Sparkline last 14 days (calls/leads/appointments)
       perDaySparklines(tx, orgId, sparklineStart, endOfDay(new Date())),
-      // Active campaigns (running or paused)
-      activeCampaigns(tx, orgId),
-      // Recent appointments (last 10)
-      recentAppointments(tx, orgId, 10),
-      // CLI numbers cooling down for this org
-      coolingPhones(tx, orgId),
-      // Disclosure failure flags via audit log (last 7 days)
+      activeCampaignsRows(tx, orgId),
+      recentAppointmentsRows(tx, orgId, 10),
+      coolingPhonesForOrg(tx, orgId),
       disclosureFailureFlags(tx, orgId),
-      // Whether any campaign exists at all (for empty-state polish in Task 12)
       anyCampaignExists(tx, orgId),
     ]),
   );
 
   const balance = await getBalance(orgId);
 
-  // Build sparklines arrays in chronological order
   const sparklineDates = lastNDates(sparklineDays);
   const dayMap = new Map(perDay14d.map((r) => [r.date, r] as const));
   const sparklines: DashboardSparklines = {
@@ -90,7 +138,6 @@ export async function loadDashboardData(
     appointmentsBooked: sparklineDates.map((d) => dayMap.get(d)?.appointmentBooked ?? 0),
   };
 
-  // Trend chart: fill missing days with zeros over the period range
   const trendDates = datesBetween(range.start, range.end);
   const trendMap = new Map(perDayInRange.map((r) => [r.date, r] as const));
   const trends: TrendPoint[] = trendDates.map((d) => {
@@ -117,11 +164,7 @@ export async function loadDashboardData(
     });
   }
   if (coolingPhonesCount > 0) {
-    alerts.push({
-      id: 'cli_cooldown',
-      kind: 'cli_cooldown',
-      count: coolingPhonesCount,
-    });
+    alerts.push({ id: 'cli_cooldown', kind: 'cli_cooldown', count: coolingPhonesCount });
   }
   if (disclosureFailureCount > 0) {
     alerts.push({
@@ -169,9 +212,7 @@ async function kpiAggregateInRange(
     );
 
   const [apptRow] = await tx
-    .select({
-      booked: sql<number>`count(*)::int`,
-    })
+    .select({ booked: sql<number>`count(*)::int` })
     .from(appointments)
     .where(
       and(
@@ -203,7 +244,7 @@ async function perDayOutcomeCounts(
   start: Date,
   end: Date,
 ): Promise<PerDayRow[]> {
-  const rows = await tx
+  return tx
     .select({
       date: sql<string>`to_char(date_trunc('day', ${calls.created_at}), 'YYYY-MM-DD')`,
       completed: sql<number>`count(*) filter (where ${calls.status} = 'completed')::int`,
@@ -222,8 +263,6 @@ async function perDayOutcomeCounts(
     )
     .groupBy(sql`date_trunc('day', ${calls.created_at})`)
     .orderBy(sql`date_trunc('day', ${calls.created_at})`);
-
-  return rows;
 }
 
 type PerDaySparkRow = {
@@ -258,7 +297,7 @@ async function perDaySparklines(
     .orderBy(sql`date_trunc('day', ${calls.created_at})`);
 }
 
-async function activeCampaigns(tx: DbTx, orgId: string): Promise<ActiveCampaignRow[]> {
+async function activeCampaignsRows(tx: DbTx, orgId: string): Promise<ActiveCampaignRow[]> {
   const rows = await tx
     .select({
       id: campaigns.id,
@@ -289,7 +328,7 @@ async function activeCampaigns(tx: DbTx, orgId: string): Promise<ActiveCampaignR
   }));
 }
 
-async function recentAppointments(
+async function recentAppointmentsRows(
   tx: DbTx,
   orgId: string,
   limit: number,
@@ -322,7 +361,7 @@ async function recentAppointments(
   }));
 }
 
-async function coolingPhones(tx: DbTx, orgId: string): Promise<number> {
+async function coolingPhonesForOrg(tx: DbTx, orgId: string): Promise<number> {
   const [row] = await tx
     .select({ count: sql<number>`count(*)::int` })
     .from(phoneNumbers)
@@ -361,11 +400,13 @@ function startOfDay(d: Date): Date {
   x.setHours(0, 0, 0, 0);
   return x;
 }
+
 function endOfDay(d: Date): Date {
   const x = new Date(d);
   x.setHours(23, 59, 59, 999);
   return x;
 }
+
 function daysAgo(n: number): Date {
   const d = startOfDay(new Date());
   d.setDate(d.getDate() - n);

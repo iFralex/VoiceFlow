@@ -1,14 +1,13 @@
 import { ActiveCampaigns } from '@/components/dashboard/active-campaigns';
 import { AlertsList } from '@/components/dashboard/alerts-list';
 import { KpiCard } from '@/components/dashboard/kpi-card';
-import { parsePeriod, resolvePeriodRange } from '@/components/dashboard/period';
+import { parsePeriod } from '@/components/dashboard/period';
 import { PeriodSelector } from '@/components/dashboard/period-selector';
 import { RecentAppointments } from '@/components/dashboard/recent-appointments';
 import { TrendChart } from '@/components/dashboard/trend-chart';
 import { t } from '@/i18n/server';
-import { dbForRequest } from '@/lib/db/client';
-
-import { loadDashboardData } from './_data';
+import { getAuthContext } from '@/lib/auth/context';
+import { getDashboardData } from '@/lib/services/dashboard';
 
 interface Props {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -17,10 +16,9 @@ interface Props {
 export default async function DashboardPage({ searchParams }: Props) {
   const sp = await searchParams;
   const period = parsePeriod(sp.period);
-  const range = resolvePeriodRange(period);
 
-  const { orgId, withOrgContext } = await dbForRequest();
-  const data = await loadDashboardData(orgId, withOrgContext, range);
+  const { orgId } = await getAuthContext();
+  const data = await getDashboardData(orgId, period);
 
   const translate = await t('dashboard');
 
