@@ -22,14 +22,14 @@ The product is read-heavy after the first calls happen. Dashboards must feel ins
 
 ### Task 1: Main dashboard layout
 
-- [ ] Replace placeholder `src/app/(app)/dashboard/page.tsx` with the real dashboard:
+- [x] Replace placeholder `src/app/(app)/dashboard/page.tsx` with the real dashboard:
   - top: greeting + period selector (oggi, ultimi 7 giorni, ultimi 30 giorni, mese corrente, mese scorso) — selection stored in URL search param for shareability
   - KPI grid (4 cards): Chiamate completate, Lead qualificati, Appuntamenti fissati, Credito residuo
   - middle row: trend chart (calls per day stacked by outcome) using Recharts; status of active campaigns (compact list with progress bars)
   - bottom row: "Ultimi appuntamenti fissati" (last 10 with contact, scheduled date, source campaign), "Avvisi" (low credit, CLI cooling down, disclosure failure flags)
-- [ ] Each KPI card includes a small sparkline showing 14-day trend
-- [ ] Render Server Component fetching aggregated data from `campaign_stats` joined with `appointments` and `credit_ledger`
-- [ ] Mark completed
+- [x] Each KPI card includes a small sparkline showing 14-day trend
+- [x] Render Server Component fetching aggregated data from `campaign_stats` joined with `appointments` and `credit_ledger`
+- [x] Mark completed
 
 ### Task 2: Aggregation query layer
 
