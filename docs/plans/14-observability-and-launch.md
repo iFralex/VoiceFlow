@@ -45,7 +45,7 @@ beforeSend(event, hint) {
 
 ### Task 2: Axiom logging
 
-- [ ] Install `@axiomhq/js`; create `src/lib/observability/logger.ts`:
+- [x] Install `@axiomhq/js`; create `src/lib/observability/logger.ts`:
 
 ```typescript
 import { Axiom } from '@axiomhq/js';
@@ -70,9 +70,9 @@ async function write(level: string, message: string, ctx: Record<string, unknown
 }
 ```
 
-- [ ] Mandatory context for every log: `org_id`, `user_id`, `call_id` (if present), `campaign_id` (if present), `request_id`
-- [ ] Add a request middleware that injects a `request_id` header (UUID v4) on inbound requests; propagate via `AsyncLocalStorage` so nested logs include it automatically
-- [ ] Mark completed
+- [x] Mandatory context for every log: `org_id`, `user_id`, `call_id` (if present), `campaign_id` (if present), `request_id`
+- [x] Add a request middleware that injects a `request_id` header (UUID v4) on inbound requests; propagate via `AsyncLocalStorage` so nested logs include it automatically
+- [x] Mark completed
 
 ### Task 3: Replace ad-hoc logs with structured logger
 
