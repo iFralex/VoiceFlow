@@ -243,10 +243,10 @@ const headers = {
 
 ### Task 16: Webhook receiver test tool
 
-- [ ] Provide a small static page `/dev/webhook-test` (gated by feature flag) showing a real-time stream of received deliveries from a hosted endpoint our team controls (or use Webhook.site as recommended in docs)
-- [ ] Document the expected payload shapes in `docs/webhooks.md` with sample envelopes per event type
-- [ ] Document signature verification snippet in JS, Python, PHP for receivers
-- [ ] Mark completed
+- [x] Provide a small static page `/dev/webhook-test` (gated by feature flag) showing a real-time stream of received deliveries from a hosted endpoint our team controls (or use Webhook.site as recommended in docs)
+- [x] Document the expected payload shapes in `docs/webhooks.md` with sample envelopes per event type
+- [x] Document signature verification snippet in JS, Python, PHP for receivers
+- [x] Mark completed
 
 ### Task 17: Slack/Teams placeholder (deferred)
 
