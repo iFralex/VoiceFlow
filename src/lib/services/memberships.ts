@@ -3,8 +3,11 @@ import { and, count, eq, isNotNull, isNull } from 'drizzle-orm';
 import { recordAudit } from '@/lib/db/audit';
 import type { DbTx } from '@/lib/db/context';
 import { withOrgContext, withSystemContext } from '@/lib/db/context';
-import { memberships, users } from '@/lib/db/schema';
+import { memberships, organizations, users } from '@/lib/db/schema';
 import type { Membership, User } from '@/lib/db/schema';
+import { sendEmail } from '@/lib/email';
+import { renderMemberInviteEmail } from '@/lib/email/templates/member-invite';
+import { env } from '@/lib/env';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import type { MemberRole } from '@/types';
 
@@ -54,10 +57,40 @@ async function countAcceptedOwners(tx: DbTx, orgId: string): Promise<number> {
   return result?.total ?? 0;
 }
 
-// ─── Email stub ───────────────────────────────────────────────────────────────
+// ─── Email helper ─────────────────────────────────────────────────────────────
 
-async function sendInviteEmail(_email: string, _orgId: string): Promise<void> {
-  // TODO: full email template implementation in plan 13 (Resend)
+interface InviteEmailData {
+  toEmail: string;
+  orgName: string;
+  inviterName: string;
+  locale: 'it' | 'en';
+  role: MemberRole;
+  inviteeName: string | null;
+}
+
+async function sendInviteEmail(data: InviteEmailData): Promise<void> {
+  const base = env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, '') ?? '';
+  const acceptUrl = `${base}/login`;
+
+  const { subject, html, text } = await renderMemberInviteEmail({
+    locale: data.locale,
+    orgName: data.orgName,
+    inviterName: data.inviterName,
+    role: data.role,
+    acceptUrl,
+    ...(data.inviteeName && { recipientName: data.inviteeName }),
+    ...(base && { appUrl: base }),
+  });
+
+  await sendEmail({
+    to: data.toEmail,
+    subject,
+    html,
+    text,
+    tags: [
+      { name: 'template', value: 'member-invite' },
+    ],
+  });
 }
 
 // ─── Service functions ────────────────────────────────────────────────────────
@@ -71,6 +104,7 @@ export async function inviteMember(
   // (supabaseAdmin HTTP call cannot participate in a DB transaction).
   // Permission check is performed first, before any side effects.
   let inviteeId: string | null = null;
+  let emailData: InviteEmailData | null = null;
 
   await withSystemContext(async (tx) => {
     // Check caller permission before any side effects to avoid creating orphaned users
@@ -94,11 +128,32 @@ export async function inviteMember(
     }
 
     const [existingUser] = await tx
-      .select({ id: users.id })
+      .select({ id: users.id, full_name: users.full_name })
       .from(users)
       .where(eq(users.email, input.email));
     if (existingUser) {
       inviteeId = existingUser.id;
+    }
+
+    // Collect email data while we have a system-context transaction open
+    const [orgRow] = await tx
+      .select({ name: organizations.name })
+      .from(organizations)
+      .where(eq(organizations.id, orgId));
+    const [inviterRow] = await tx
+      .select({ full_name: users.full_name, locale: users.locale })
+      .from(users)
+      .where(eq(users.id, byUserId));
+
+    if (orgRow) {
+      emailData = {
+        toEmail: input.email,
+        orgName: orgRow.name,
+        inviterName: inviterRow?.full_name?.trim() || 'Un membro del team',
+        locale: inviterRow?.locale ?? 'it',
+        role: input.role,
+        inviteeName: existingUser?.full_name ?? null,
+      };
     }
   });
 
@@ -155,8 +210,12 @@ export async function inviteMember(
       metadata: { email: input.email, role: input.role },
     });
 
-    // Non-fatal: send invite email (stub; full implementation in plan 13)
-    void sendInviteEmail(input.email, orgId);
+    // Non-fatal: send invite email with data collected in the preflight context
+    if (emailData) {
+      void sendInviteEmail(emailData).catch((e: unknown) =>
+        console.error('[memberships] sendInviteEmail failed:', e),
+      );
+    }
 
     return membership;
   });

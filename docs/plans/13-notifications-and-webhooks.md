@@ -85,11 +85,11 @@ Resend is the email provider (spec §4); transactional templates use React Email
 
 ### Task 8: Email — member invite
 
-- [ ] Author `src/lib/email/templates/member-invite.tsx`:
+- [x] Author `src/lib/email/templates/member-invite.tsx`:
   - subject: "[inviter_name] ti ha invitato a unirti a [org_name] su VoiceFlow"
   - body: short value-prop, role assigned, accept CTA
-- [ ] Wired from plan 04's `inviteMember`
-- [ ] Mark completed
+- [x] Wired from plan 04's `inviteMember`
+- [x] Mark completed
 
 ### Task 9: Email — suspicious login
 

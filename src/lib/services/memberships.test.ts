@@ -20,6 +20,15 @@ vi.mock('@/lib/supabase/admin', () => ({
   },
 }));
 
+vi.mock('@/lib/email', () => ({ sendEmail: vi.fn().mockResolvedValue(undefined) }));
+vi.mock('@/lib/email/templates/member-invite', () => ({
+  renderMemberInviteEmail: vi.fn().mockResolvedValue({
+    subject: 'invite subject',
+    html: '<p>invite</p>',
+    text: 'invite',
+  }),
+}));
+
 // Variable-based result queues — reset each test, no mockReturnValueOnce accumulation
 let selectResults: unknown[][] = [];
 let insertResults: unknown[][] = [];
@@ -133,6 +142,8 @@ describe('inviteMember', () => {
   it('invites an existing user via withSystemContext then withOrgContext', async () => {
     selectResults.push([{ role: 'owner' }]); // preflight permission check (in withSystemContext)
     selectResults.push([{ id: fakeInvitee.id }]); // findByEmail → found
+    selectResults.push([{ name: 'Test Org' }]); // org lookup for email
+    selectResults.push([{ full_name: 'Owner', locale: 'it' }]); // inviter lookup for email
     selectResults.push([{ role: 'owner' }]); // defense-in-depth role check (in withOrgContext)
     insertResults.push([fakePendingMembership]); // membership insert
 
@@ -149,7 +160,9 @@ describe('inviteMember', () => {
 
   it('records member.invited audit entry', async () => {
     selectResults.push([{ role: 'owner' }]); // preflight
-    selectResults.push([{ id: fakeInvitee.id }]);
+    selectResults.push([{ id: fakeInvitee.id }]); // findByEmail
+    selectResults.push([{ name: 'Test Org' }]); // org lookup for email
+    selectResults.push([{ full_name: 'Owner', locale: 'it' }]); // inviter lookup for email
     selectResults.push([{ role: 'owner' }]); // withOrgContext check
     insertResults.push([fakePendingMembership]);
 
@@ -167,6 +180,8 @@ describe('inviteMember', () => {
 
     selectResults.push([{ role: 'owner' }]); // preflight permission check
     selectResults.push([]); // findByEmail → not found
+    selectResults.push([{ name: 'Test Org' }]); // org lookup for email
+    selectResults.push([{ full_name: 'Owner', locale: 'it' }]); // inviter lookup for email
     selectResults.push([{ role: 'owner' }]); // withOrgContext check
     insertResults.push([]); // users.onConflictDoNothing
     insertResults.push([{ ...fakePendingMembership, user_id: 'new-u-id' }]); // membership
@@ -178,7 +193,7 @@ describe('inviteMember', () => {
       email: 'new@example.com',
       email_confirm: false,
     });
-    // withSystemContext called twice: permission+findByEmail + mirror insert
+    // withSystemContext called twice: permission+findByEmail+emailData + mirror insert
     expect(withSystemContext).toHaveBeenCalledTimes(2);
   });
 
@@ -220,6 +235,8 @@ describe('inviteMember', () => {
   it('allows admin to invite with non-owner role', async () => {
     selectResults.push([{ role: 'admin' }]); // preflight
     selectResults.push([{ id: fakeInvitee.id }]); // findByEmail
+    selectResults.push([{ name: 'Test Org' }]); // org lookup for email
+    selectResults.push([{ full_name: 'Admin', locale: 'it' }]); // inviter lookup for email
     selectResults.push([{ role: 'admin' }]); // withOrgContext check
     insertResults.push([fakePendingMembership]);
 
