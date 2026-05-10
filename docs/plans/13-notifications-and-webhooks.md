@@ -102,7 +102,7 @@ Resend is the email provider (spec §4); transactional templates use React Email
 
 ### Task 10: Email dispatcher service
 
-- [ ] Create `src/lib/email/dispatcher.ts` exposing typed dispatch functions per template:
+- [x] Create `src/lib/email/dispatcher.ts` exposing typed dispatch functions per template:
 
 ```typescript
 export async function sendAppointmentBookedEmail(params: {
@@ -132,9 +132,9 @@ export async function sendSuspiciousLoginEmail(params: {
 }): Promise<void>;
 ```
 
-- [ ] Each function: resolves recipients honouring per-user notification preferences, renders the React Email template, sends via Resend, logs to `email_log`
-- [ ] Idempotency: emails of types appointment-booked, qualified-lead, campaign-completed dedupe on `(template, ref_id)` over 1 hour to handle event replays
-- [ ] Mark completed
+- [x] Each function: resolves recipients honouring per-user notification preferences, renders the React Email template, sends via Resend, logs to `email_log`
+- [x] Idempotency: emails of types appointment-booked, qualified-lead, campaign-completed dedupe on `(template, ref_id)` over 1 hour to handle event replays
+- [x] Mark completed
 
 ### Task 11: Inngest event consumers wiring all email triggers
 
