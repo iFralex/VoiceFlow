@@ -296,12 +296,13 @@ describe('webhookDeliverHandler — deactivation after MAX_FAILURES', () => {
     const ownerRow = { email: 'owner@example.com', fullName: 'Owner Name', locale: 'it' };
 
     // [0] fetch webhook, [1] insert delivery, [2] update failure_count (atomic → 6),
-    // [3] deactivate (set active=false), [4] fetch owners for notification
+    // [3] deactivate (set active=false WHERE active=true → returns affected row),
+    // [4] fetch owners for notification
     setupSystemContextReturns([
       [webhookNearMax],
       [],
       [{ failureCount: 6 }],
-      [],
+      [{ id: WEBHOOK_ID }],
       [ownerRow],
     ]);
 
@@ -326,7 +327,7 @@ describe('webhookDeliverHandler — deactivation after MAX_FAILURES', () => {
     const webhookNearMax = { ...activeWebhook, failure_count: 5 };
     const ownerRow = { email: 'owner@example.com', fullName: null, locale: 'en' };
 
-    setupSystemContextReturns([[webhookNearMax], [], [{ failureCount: 6 }], [], [ownerRow]]);
+    setupSystemContextReturns([[webhookNearMax], [], [{ failureCount: 6 }], [{ id: WEBHOOK_ID }], [ownerRow]]);
 
     await webhookDeliverHandler({
       webhookId: WEBHOOK_ID,
@@ -344,7 +345,7 @@ describe('webhookDeliverHandler — deactivation after MAX_FAILURES', () => {
     const webhookNearMax = { ...activeWebhook, failure_count: 5 };
     const ownerRow = { email: 'owner@example.com', fullName: null, locale: 'it' };
 
-    setupSystemContextReturns([[webhookNearMax], [], [{ failureCount: 6 }], [], [ownerRow]]);
+    setupSystemContextReturns([[webhookNearMax], [], [{ failureCount: 6 }], [{ id: WEBHOOK_ID }], [ownerRow]]);
 
     await webhookDeliverHandler({
       webhookId: WEBHOOK_ID,

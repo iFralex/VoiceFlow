@@ -370,7 +370,9 @@ function buildAlerts(campaignStats: CampaignStatRow[]): WeeklySummaryAlert[] {
     if (c.total > 0 && c.failed / c.total >= HIGH_FAILURE_RATE_THRESHOLD) {
       alerts.push({
         type: 'warning',
-        message: `Campagna "${c.name}": tasso di fallimento elevato (${c.failed}/${c.total} chiamate fallite)`,
+        campaignName: c.name,
+        failed: c.failed,
+        total: c.total,
       });
     }
   }

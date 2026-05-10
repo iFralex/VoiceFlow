@@ -59,12 +59,21 @@ describe('renderWeeklySummaryEmail', () => {
     expect(result.html).toContain('No alerts this week');
   });
 
-  it('renders alert message when alerts are present', async () => {
+  it('renders alert message in Italian when alerts are present', async () => {
     const result = await renderWeeklySummaryEmail(
-      buildProps({ alerts: [{ type: 'warning', message: 'Low credits detected' }] }),
+      buildProps({ alerts: [{ type: 'warning', campaignName: 'Spring 2024', failed: 10, total: 20 }] }),
     );
-    expect(result.html).toContain('Low credits detected');
+    expect(result.html).toContain('Spring 2024');
+    expect(result.html).toContain('10/20');
     expect(result.html).not.toContain('Nessun avviso');
+  });
+
+  it('renders alert message in English when locale is en', async () => {
+    const result = await renderWeeklySummaryEmail(
+      buildProps({ locale: 'en', alerts: [{ type: 'warning', campaignName: 'Spring 2024', failed: 10, total: 20 }] }),
+    );
+    expect(result.html).toContain('Spring 2024');
+    expect(result.html).toContain('high failure rate');
   });
 
   it('includes dashboard CTA with correct link', async () => {

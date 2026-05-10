@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 
-import { and, desc, eq, lt } from 'drizzle-orm';
+import { and, desc, eq, lt, or } from 'drizzle-orm';
 
 import { recordAudit } from '@/lib/db/audit';
 import { withOrgContext } from '@/lib/db/context';
@@ -136,15 +136,27 @@ export async function listDeliveries(
 
     if (!webhook) throw new Error('webhook_not_found');
 
-    const conditions: ReturnType<typeof eq>[] = [eq(webhookDeliveries.webhook_id, webhookId)];
+    const baseCondition = eq(webhookDeliveries.webhook_id, webhookId);
+    let cursorCondition: ReturnType<typeof or> | undefined;
     if (page.cursor) {
-      conditions.push(lt(webhookDeliveries.delivered_at, new Date(page.cursor)));
+      // Composite cursor "ISO_DATE|uuid" prevents skipping rows when multiple
+      // deliveries share the same delivered_at timestamp.
+      const sepIdx = page.cursor.indexOf('|');
+      const cursorDate = new Date(page.cursor.slice(0, sepIdx));
+      const cursorId = page.cursor.slice(sepIdx + 1);
+      cursorCondition = or(
+        lt(webhookDeliveries.delivered_at, cursorDate),
+        and(
+          eq(webhookDeliveries.delivered_at, cursorDate),
+          lt(webhookDeliveries.id, cursorId),
+        ),
+      );
     }
 
     const rows = await tx
       .select()
       .from(webhookDeliveries)
-      .where(and(...conditions))
+      .where(cursorCondition ? and(baseCondition, cursorCondition) : baseCondition)
       .orderBy(desc(webhookDeliveries.delivered_at), desc(webhookDeliveries.id))
       .limit(limit + 1);
 
@@ -153,8 +165,10 @@ export async function listDeliveries(
 
     const out: { items: WebhookDelivery[]; nextCursor?: string } = { items };
     if (hasMore && items.length > 0) {
-      const lastDeliveredAt = items[items.length - 1]!.delivered_at;
-      if (lastDeliveredAt) out.nextCursor = lastDeliveredAt.toISOString();
+      const last = items[items.length - 1]!;
+      if (last.delivered_at) {
+        out.nextCursor = `${last.delivered_at.toISOString()}|${last.id}`;
+      }
     }
     return out;
   });
@@ -172,6 +186,7 @@ export async function replayDelivery(
         webhookId: webhookDeliveries.webhook_id,
         eventType: webhookDeliveries.event_type,
         payload: webhookDeliveries.payload,
+        webhookActive: webhooksOutgoing.active,
       })
       .from(webhookDeliveries)
       .innerJoin(webhooksOutgoing, eq(webhookDeliveries.webhook_id, webhooksOutgoing.id))
@@ -180,6 +195,7 @@ export async function replayDelivery(
       );
 
     if (!row) throw new Error('delivery_not_found');
+    if (!row.webhookActive) throw new Error('webhook_not_active');
 
     await recordAudit(tx, {
       orgId,

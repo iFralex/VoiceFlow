@@ -52,7 +52,7 @@ Every delivery is a JSON object with a consistent outer envelope. The `data` fie
 
 | Field | Type | Description |
 |---|---|---|
-| `id` | string (UUID) | Unique delivery ID — use as an idempotency key |
+| `id` | string | Stable delivery ID — use as an idempotency key. Format: `<webhookId>:<eventType>:<entityId>`, consistent across retries of the same delivery. |
 | `event` | string | Event type (see below) |
 | `occurred_at` | ISO 8601 string | When the event occurred (UTC) |
 | `org_id` | string (UUID) | Organisation that owns the event |
@@ -199,7 +199,7 @@ Fired when the AI classifies a contact as a qualified lead (outcome `interested`
 |---|---|
 | `content-type` | `application/json` |
 | `x-vox-event` | Event type, e.g. `call.completed` |
-| `x-vox-event-id` | UUID of the envelope — use as an idempotency key |
+| `x-vox-event-id` | Stable delivery ID (same as `envelope.id`) — use as an idempotency key |
 | `x-vox-signature` | `sha256=<hex>` — HMAC-SHA256 of the raw request body |
 | `x-vox-timestamp` | Unix seconds at the time of delivery (for replay-protection checks) |
 
@@ -302,9 +302,8 @@ If your endpoint returns a non-2xx response or times out (10 s limit), the deliv
 | 4 | 15 minutes |
 | 5 | 1 hour |
 | 6 | 6 hours |
-| 7 | 24 hours |
 
-After 7 consecutive failures the webhook is deactivated automatically (see below). All delivery attempts are visible in **Settings → Integrations → Deliveries**.
+After 6 consecutive failures the webhook is deactivated automatically (see below). All delivery attempts are visible in **Settings → Integrations → Deliveries**.
 
 Your endpoint should return `2xx` quickly (within the 10 s window) and process the event asynchronously. Use `envelope.id` as an idempotency key to handle duplicate deliveries safely.
 

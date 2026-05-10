@@ -105,6 +105,10 @@ Email (optional, validated in `env.ts`):
 - `EMAIL_REPLY_TO` — `Reply-To:` address appended to outgoing emails
 - `SUPPORT_EMAIL_ADDRESS` — support address rendered in email footers
 
+Internal / Security (required, validated in `env.ts`):
+- `CRON_SECRET` — Bearer token Vercel cron passes in the `Authorization` header; validated by all `/api/cron/*` route handlers (min 16 chars)
+- `INTERNAL_ADMIN_TOKEN` — guards internal dev tools (e.g. `/dev/webhook-test`); must be min 32 chars
+
 ## Email Dispatch
 
 All transactional email goes through `sendEmail` from `@/lib/email`. Never call Resend directly.
@@ -235,6 +239,9 @@ Contact capabilities (plan 06):
 
 Script capabilities (plan 07):
 - `scripts.edit` — create, update, copy, delete scripts; granted to `operator`+
+
+Webhook capabilities (plan 13):
+- `webhooks.manage` — create, rotate secret, delete, and replay webhook subscriptions; granted to `admin`+ only (`operator` and `viewer` do NOT have this)
 
 ## Supabase Clients
 

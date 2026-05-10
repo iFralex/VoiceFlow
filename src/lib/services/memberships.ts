@@ -66,6 +66,8 @@ interface InviteEmailData {
   locale: 'it' | 'en';
   role: MemberRole;
   inviteeName: string | null;
+  orgId: string;
+  membershipId: string;
 }
 
 async function sendInviteEmail(data: InviteEmailData): Promise<void> {
@@ -89,6 +91,8 @@ async function sendInviteEmail(data: InviteEmailData): Promise<void> {
     text,
     tags: [
       { name: 'template', value: 'member-invite' },
+      { name: 'org_id', value: data.orgId },
+      { name: 'ref_id', value: data.membershipId },
     ],
   });
 }
@@ -153,6 +157,8 @@ export async function inviteMember(
         locale: existingUser?.locale ?? 'it',
         role: input.role,
         inviteeName: existingUser?.full_name ?? null,
+        orgId,
+        membershipId: '', // filled in after membership row is created
       };
     }
   });
@@ -212,6 +218,7 @@ export async function inviteMember(
 
     // Non-fatal: send invite email with data collected in the preflight context
     if (emailData) {
+      emailData.membershipId = membership.id;
       void sendInviteEmail(emailData).catch((e: unknown) =>
         console.error('[memberships] sendInviteEmail failed:', e),
       );

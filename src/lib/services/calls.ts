@@ -17,7 +17,7 @@ import {
 import { TEMPLATE_DEFINITIONS } from '@/lib/db/seed/script_templates';
 import { env } from '@/lib/env';
 import { sendInngestEvent } from '@/lib/inngest/client';
-import { CALL_CLASSIFY_EVENT, CALL_COMPLETED_EVENT } from '@/lib/inngest/voice/events';
+import { CALL_CLASSIFY_EVENT, CALL_COMPLETED_EVENT, CALL_QUALIFIED_LEAD_EVENT } from '@/lib/inngest/voice/events';
 import { computeCallCost, computePerMinuteCents } from '@/lib/services/billing-rules';
 import { chargeForCall } from '@/lib/services/credit';
 import {
@@ -575,6 +575,11 @@ export async function recordCallEnded(
         dedupKey: callId,
       },
       id: `webhook-emit-lead-qualified-${callId}`,
+    });
+    await sendInngestEvent({
+      name: CALL_QUALIFIED_LEAD_EVENT,
+      data: { callId, orgId },
+      id: `call-qualified-lead-${callId}`,
     });
   }
 }

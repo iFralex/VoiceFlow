@@ -15,11 +15,33 @@ import {
 } from '@/lib/services/webhooks_outgoing';
 import type { ActionResult } from '@/lib/utils/action-toast';
 
+function isPrivateOrLoopbackUrl(url: string): boolean {
+  try {
+    const { hostname } = new URL(url);
+    if (hostname === 'localhost' || hostname === '0.0.0.0') return true;
+    const ipv4 = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(hostname);
+    if (ipv4) {
+      const [a, b] = [Number(ipv4[1]), Number(ipv4[2])];
+      return (
+        a === 10 ||
+        a === 127 ||
+        (a === 169 && b === 254) ||
+        (a === 172 && b >= 16 && b <= 31) ||
+        (a === 192 && b === 168)
+      );
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
 const createWebhookSchema = z.object({
   url: z
     .string()
     .url('url_invalid')
-    .refine((u) => u.startsWith('https://'), 'url_must_be_https'),
+    .refine((u) => u.startsWith('https://'), 'url_must_be_https')
+    .refine((u) => !isPrivateOrLoopbackUrl(u), 'url_must_be_public'),
   eventTypes: z.array(z.enum(ALLOWED_EVENT_TYPES)).min(1, 'event_types_required'),
 });
 

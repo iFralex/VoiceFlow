@@ -288,4 +288,18 @@ export async function bulkMarkOptOut(
   if (events.length > 0) {
     await sendInngestEvents(events);
   }
+
+  const webhookEmitEvents: InngestEventPayload[] = phonesE164.map((phoneE164) => ({
+    name: 'webhook/emit',
+    data: {
+      orgId,
+      eventType: 'contact.opted_out',
+      payload: { phoneE164, source },
+      dedupKey: `${orgId}-${phoneE164}`,
+    },
+    id: `webhook-emit-contact-opted-out-${orgId}-${encodeURIComponent(phoneE164)}`,
+  }));
+  if (webhookEmitEvents.length > 0) {
+    await sendInngestEvents(webhookEmitEvents);
+  }
 }

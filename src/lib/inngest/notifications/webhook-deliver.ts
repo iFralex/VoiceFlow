@@ -8,7 +8,7 @@
  *
  * Envelope format:
  *   {
- *     id: string (UUID),
+ *     id: string — `${webhookId}:${eventType}:${dedupKey}` (stable across retries),
  *     event: string,
  *     occurred_at: ISO 8601,
  *     org_id: string,
@@ -25,6 +25,7 @@ import { and, eq, isNotNull, sql } from 'drizzle-orm';
 import { withSystemContext } from '@/lib/db/context';
 import { memberships, organizations, users, webhookDeliveries, webhooksOutgoing } from '@/lib/db/schema';
 import { sendEmail } from '@/lib/email';
+import { env } from '@/lib/env';
 import { sendInngestEvent } from '@/lib/inngest/client';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -48,6 +49,12 @@ export interface WebhookDeliverData {
   webhookId: string;
   eventType: string;
   payload: Record<string, unknown>;
+  /**
+   * Stable key derived from the triggering business entity (e.g. callId).
+   * Used to build a deterministic envelope id so receivers can deduplicate across
+   * retries AND across different business events of the same type.
+   */
+  dedupKey?: string;
   /** 1-indexed delivery attempt number; defaults to 1. */
   attempt?: number;
 }
@@ -76,9 +83,13 @@ export async function webhookDeliverHandler(data: WebhookDeliverData): Promise<v
   if (!webhook.active) return; // already deactivated — stop processing
 
   // Build canonical envelope — id is deterministic so retries carry the same value,
-  // allowing receivers to deduplicate on it.
+  // allowing receivers to deduplicate on it. When a dedupKey is provided it scopes
+  // the id to the triggering business entity so two distinct events of the same type
+  // (e.g. two separate calls) produce different ids.
   const envelope = {
-    id: `${data.webhookId}:${data.eventType}:${attempt}`,
+    id: data.dedupKey
+      ? `${data.webhookId}:${data.eventType}:${data.dedupKey}`
+      : `${data.webhookId}:${data.eventType}:${attempt}`,
     event: data.eventType,
     occurred_at: new Date().toISOString(),
     org_id: webhook.org_id,
@@ -162,13 +173,18 @@ export async function webhookDeliverHandler(data: WebhookDeliverData): Promise<v
   const newFailureCount = updated?.failureCount ?? MAX_FAILURES;
 
   if (newFailureCount >= MAX_FAILURES) {
-    await withSystemContext((tx) =>
+    // Guard with WHERE active=true so only one concurrent handler wins the
+    // deactivation race and sends the notification email.
+    const [deactivated] = await withSystemContext((tx) =>
       tx
         .update(webhooksOutgoing)
         .set({ active: false })
-        .where(eq(webhooksOutgoing.id, data.webhookId)),
+        .where(and(eq(webhooksOutgoing.id, data.webhookId), eq(webhooksOutgoing.active, true)))
+        .returning({ id: webhooksOutgoing.id }),
     );
-    await notifyWebhookDisabled(webhook.org_id, webhook.url);
+    if (deactivated) {
+      await notifyWebhookDisabled(webhook.org_id, webhook.url);
+    }
     return;
   }
 
@@ -183,6 +199,7 @@ export async function webhookDeliverHandler(data: WebhookDeliverData): Promise<v
       eventType: data.eventType,
       payload: data.payload,
       attempt: nextAttempt,
+      ...(data.dedupKey !== undefined ? { dedupKey: data.dedupKey } : {}),
     } satisfies WebhookDeliverData,
     ts: Date.now() + delayMs,
     id: `webhook-deliver-${data.webhookId}-attempt-${nextAttempt}`,
@@ -216,6 +233,9 @@ async function notifyWebhookDisabled(orgId: string, webhookUrl: string): Promise
   );
 
   const safeUrl = escapeHtml(webhookUrl);
+  const appBase = env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, '') ?? '';
+  const settingsUrl = `${appBase}/settings/integrations`;
+  const safeSettingsUrl = escapeHtml(settingsUrl);
 
   for (const owner of owners) {
     const locale = owner.locale === 'en' ? 'en' : 'it';
@@ -224,13 +244,13 @@ async function notifyWebhookDisabled(orgId: string, webhookUrl: string): Promise
       locale === 'en'
         ? {
             subject: `Webhook deactivated — ${webhookUrl}`,
-            html: `<p>Your webhook at <strong>${safeUrl}</strong> has been automatically deactivated after ${MAX_FAILURES} consecutive delivery failures.</p><p>Please check your endpoint and re-enable the webhook from the <a href="/settings/integrations">integrations settings page</a>.</p>`,
-            text: `Your webhook at ${webhookUrl} has been automatically deactivated after ${MAX_FAILURES} consecutive delivery failures. Please check your endpoint and re-enable the webhook from the integrations settings page.`,
+            html: `<p>Your webhook at <strong>${safeUrl}</strong> has been automatically deactivated after ${MAX_FAILURES} consecutive delivery failures.</p><p>Please check your endpoint and re-enable the webhook from the <a href="${safeSettingsUrl}">integrations settings page</a>.</p>`,
+            text: `Your webhook at ${webhookUrl} has been automatically deactivated after ${MAX_FAILURES} consecutive delivery failures. Please check your endpoint and re-enable the webhook from the integrations settings page: ${settingsUrl}`,
           }
         : {
             subject: `Webhook disabilitato — ${webhookUrl}`,
-            html: `<p>Il tuo webhook <strong>${safeUrl}</strong> è stato disabilitato automaticamente dopo ${MAX_FAILURES} tentativi di consegna falliti consecutivi.</p><p>Verifica il tuo endpoint e riattiva il webhook dalla <a href="/settings/integrations">pagina delle impostazioni di integrazione</a>.</p>`,
-            text: `Il tuo webhook ${webhookUrl} è stato disabilitato automaticamente dopo ${MAX_FAILURES} tentativi di consegna falliti consecutivi. Verifica il tuo endpoint e riattiva il webhook dalla pagina delle impostazioni di integrazione.`,
+            html: `<p>Il tuo webhook <strong>${safeUrl}</strong> è stato disabilitato automaticamente dopo ${MAX_FAILURES} tentativi di consegna falliti consecutivi.</p><p>Verifica il tuo endpoint e riattiva il webhook dalla <a href="${safeSettingsUrl}">pagina delle impostazioni di integrazione</a>.</p>`,
+            text: `Il tuo webhook ${webhookUrl} è stato disabilitato automaticamente dopo ${MAX_FAILURES} tentativi di consegna falliti consecutivi. Verifica il tuo endpoint e riattiva il webhook dalla pagina delle impostazioni di integrazione: ${settingsUrl}`,
           };
 
     await sendEmail({

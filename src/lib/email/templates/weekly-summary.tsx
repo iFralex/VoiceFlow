@@ -27,7 +27,9 @@ export type WeeklySummaryTopCampaign = {
 
 export type WeeklySummaryAlert = {
   type: 'warning' | 'error';
-  message: string;
+  campaignName: string;
+  failed: number;
+  total: number;
 };
 
 export type WeeklySummaryEmailProps = {
@@ -66,6 +68,7 @@ type Strings = {
   topCampaignsLeads: string;
   alertsHeading: string;
   noAlerts: string;
+  alertHighFailureRate: (name: string, failed: number, total: number) => string;
   ctaDashboard: string;
   footerSent: (org: string) => string;
   footerPreferences: string;
@@ -91,6 +94,8 @@ const STRINGS: Record<WeeklySummaryLocale, Strings> = {
     topCampaignsLeads: 'Lead',
     alertsHeading: 'Avvisi e problemi',
     noAlerts: 'Nessun avviso per questa settimana.',
+    alertHighFailureRate: (name, failed, total) =>
+      `Campagna "${name}": tasso di fallimento elevato (${failed}/${total} chiamate fallite)`,
     ctaDashboard: 'Vai alla dashboard',
     footerSent: (org) => `Hai ricevuto questa email perché sei membro di ${org}.`,
     footerPreferences: 'Gestisci le preferenze di notifica',
@@ -114,6 +119,8 @@ const STRINGS: Record<WeeklySummaryLocale, Strings> = {
     topCampaignsLeads: 'Leads',
     alertsHeading: 'Alerts & issues',
     noAlerts: 'No alerts this week.',
+    alertHighFailureRate: (name, failed, total) =>
+      `Campaign "${name}": high failure rate (${failed}/${total} calls failed)`,
     ctaDashboard: 'Go to dashboard',
     footerSent: (org) => `You received this email because you are a member of ${org}.`,
     footerPreferences: 'Manage notification preferences',
@@ -245,7 +252,8 @@ export function WeeklySummaryEmail(props: WeeklySummaryEmailProps) {
                   key={i}
                   style={alert.type === 'error' ? styles.alertError : styles.alertWarning}
                 >
-                  {alert.type === 'error' ? '⚠ ' : '• '}{alert.message}
+                  {alert.type === 'error' ? '⚠ ' : '• '}
+                  {t.alertHighFailureRate(alert.campaignName, alert.failed, alert.total)}
                 </Text>
               ))
             )}

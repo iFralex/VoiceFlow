@@ -338,6 +338,7 @@ describe('webhooks_outgoing service', () => {
           webhookId: WEBHOOK_ID,
           eventType: 'call.completed',
           payload: { callId: 'call-1' },
+          webhookActive: true,
         },
       ]);
 
@@ -361,6 +362,7 @@ describe('webhooks_outgoing service', () => {
           webhookId: WEBHOOK_ID,
           eventType: 'call.completed',
           payload: {},
+          webhookActive: true,
         },
       ]);
 
@@ -377,6 +379,22 @@ describe('webhooks_outgoing service', () => {
 
       await expect(replayDelivery(ORG_ID, USER_ID, DELIVERY_ID)).rejects.toThrow(
         'delivery_not_found',
+      );
+    });
+
+    it('throws webhook_not_active when webhook is deactivated', async () => {
+      selectResults.push([
+        {
+          id: DELIVERY_ID,
+          webhookId: WEBHOOK_ID,
+          eventType: 'call.completed',
+          payload: {},
+          webhookActive: false,
+        },
+      ]);
+
+      await expect(replayDelivery(ORG_ID, USER_ID, DELIVERY_ID)).rejects.toThrow(
+        'webhook_not_active',
       );
     });
   });

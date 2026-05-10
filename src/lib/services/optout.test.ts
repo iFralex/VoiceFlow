@@ -275,6 +275,13 @@ describe('markOptOut', () => {
     const sent = mockSendInngestEvents.mock.calls[0]?.[0] as Array<{ name: string }>;
     expect(sent).toHaveLength(1);
     expect(sent[0]?.name).toBe(COMPLIANCE_OPT_OUT_REGISTERED_EVENT);
+
+    expect(mockSendInngestEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'webhook/emit',
+        data: expect.objectContaining({ eventType: 'contact.opted_out' }),
+      }),
+    );
   });
 
   it('forwards optional fields through to the audit + event', async () => {
@@ -350,14 +357,22 @@ describe('bulkMarkOptOut', () => {
       }),
     });
 
-    // One event per phone
-    expect(mockSendInngestEvents).toHaveBeenCalledOnce();
-    const sent = mockSendInngestEvents.mock.calls[0]?.[0] as Array<{
+    // Two sendInngestEvents calls: one for compliance events, one for webhook emit events
+    expect(mockSendInngestEvents).toHaveBeenCalledTimes(2);
+    const complianceSent = mockSendInngestEvents.mock.calls[0]?.[0] as Array<{
       data: { phoneE164: string; source: OptOutSource };
     }>;
-    expect(sent).toHaveLength(phones.length);
-    expect(sent.every((e) => e.data.source === 'dealer_input')).toBe(true);
-    expect(sent.map((e) => e.data.phoneE164).sort()).toEqual([...phones].sort());
+    expect(complianceSent).toHaveLength(phones.length);
+    expect(complianceSent.every((e) => e.data.source === 'dealer_input')).toBe(true);
+    expect(complianceSent.map((e) => e.data.phoneE164).sort()).toEqual([...phones].sort());
+
+    const webhookSent = mockSendInngestEvents.mock.calls[1]?.[0] as Array<{
+      name: string;
+      data: { eventType: string; orgId: string };
+    }>;
+    expect(webhookSent).toHaveLength(phones.length);
+    expect(webhookSent.every((e) => e.name === 'webhook/emit')).toBe(true);
+    expect(webhookSent.every((e) => e.data.eventType === 'contact.opted_out')).toBe(true);
   });
 
   it('chunks bulk inserts at 500 phones per batch', async () => {
@@ -375,7 +390,11 @@ describe('bulkMarkOptOut', () => {
 
     // 500 + 500 + 200 = 3 batches
     expect(txs).toHaveLength(3);
-    const sent = mockSendInngestEvents.mock.calls[0]?.[0] as Array<unknown>;
-    expect(sent).toHaveLength(1200);
+    // First call = compliance events (1200 events), second call = webhook emit events
+    expect(mockSendInngestEvents).toHaveBeenCalledTimes(2);
+    const complianceSent = mockSendInngestEvents.mock.calls[0]?.[0] as Array<unknown>;
+    expect(complianceSent).toHaveLength(1200);
+    const webhookSent = mockSendInngestEvents.mock.calls[1]?.[0] as Array<unknown>;
+    expect(webhookSent).toHaveLength(1200);
   });
 });

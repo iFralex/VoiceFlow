@@ -66,6 +66,7 @@ export async function webhookEmitFanoutHandler(data: WebhookEmitData): Promise<v
       webhookId: webhook.id,
       eventType,
       payload,
+      ...(dedupKey !== undefined ? { dedupKey } : {}),
     },
     ...(dedupKey !== undefined
       ? { id: `webhook-deliver-${webhook.id}-${eventType}-${dedupKey}` }

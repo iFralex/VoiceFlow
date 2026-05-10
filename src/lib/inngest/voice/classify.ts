@@ -28,7 +28,7 @@ import { CALL_MEDIA_BUCKET } from '@/lib/voice/persistence';
 import type { TranscriptSegment } from '@/lib/voice/types';
 
 import type { CallClassifyData } from './events';
-import { QUALITY_DISCLOSURE_MISSING_EVENT, QUALITY_OUTCOME_MISMATCH_EVENT } from './events';
+import { CALL_QUALIFIED_LEAD_EVENT, QUALITY_DISCLOSURE_MISSING_EVENT, QUALITY_OUTCOME_MISMATCH_EVENT } from './events';
 
 const WEBHOOK_EMIT_EVENT = 'webhook/emit' as const;
 
@@ -173,6 +173,11 @@ export async function classifyCallHandler(data: CallClassifyData): Promise<void>
         dedupKey: callId,
       },
       id: `webhook-emit-lead-qualified-${callId}`,
+    });
+    await sendInngestEvent({
+      name: CALL_QUALIFIED_LEAD_EVENT,
+      data: { callId, orgId },
+      id: `call-qualified-lead-${callId}`,
     });
   }
 }

@@ -63,9 +63,11 @@ describe('renderCampaignCompletedEmail', () => {
     expect(html).toContain(baseProps.preferencesUrl);
   });
 
-  it('formats cost as currency (Italian)', async () => {
+  it('formats cost as currency', async () => {
     const { html } = await renderCampaignCompletedEmail(baseProps);
+    // 4800 cents = €48; verify the euro symbol and the numeric value are present
     expect(html).toContain('48');
+    expect(html).toContain('€');
   });
 
   it('formats avg duration', async () => {
