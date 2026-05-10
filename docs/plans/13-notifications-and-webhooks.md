@@ -65,12 +65,12 @@ Resend is the email provider (spec §4); transactional templates use React Email
 
 ### Task 6: Email — campaign completed
 
-- [ ] Author `src/lib/email/templates/campaign-completed.tsx`:
+- [x] Author `src/lib/email/templates/campaign-completed.tsx`:
   - subject: "Campagna conclusa — [campaign_name]"
   - body: KPIs (chiamate, completate, falliti, lead qualificati, appuntamenti, costo totale, durata media)
   - CTA "Scarica report" linking to a 24h-signed CSV of full results
   - link to detailed campaign page
-- [ ] Mark completed
+- [x] Mark completed
 
 ### Task 7: Email — weekly summary
 
