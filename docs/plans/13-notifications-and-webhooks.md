@@ -250,9 +250,9 @@ const headers = {
 
 ### Task 17: Slack/Teams placeholder (deferred)
 
-- [ ] Document in `docs/integrations-roadmap.md` the deferred state of Slack and Teams integrations and the path to add them via Incoming Webhooks (essentially special-cased `webhooks_outgoing` rows with format-specific render templates)
-- [ ] No code in MVP
-- [ ] Mark completed
+- [x] Document in `docs/integrations-roadmap.md` the deferred state of Slack and Teams integrations and the path to add them via Incoming Webhooks (essentially special-cased `webhooks_outgoing` rows with format-specific render templates)
+- [x] No code in MVP
+- [x] Mark completed
 
 ### Task 18: Integration tests
 
