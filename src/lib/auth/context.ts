@@ -26,7 +26,8 @@ export type Capability =
   | 'scripts.edit'
   | 'compliance.export'
   | 'compliance.erase'
-  | 'audit.view';
+  | 'audit.view'
+  | 'webhooks.manage';
 
 // ─── Role → capability map ────────────────────────────────────────────────────
 
@@ -45,6 +46,7 @@ const ALL_CAPABILITIES: Capability[] = [
   'compliance.export',
   'compliance.erase',
   'audit.view',
+  'webhooks.manage',
 ];
 
 const ROLE_CAPABILITIES: Record<MemberRole, ReadonlySet<Capability>> = {

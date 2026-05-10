@@ -6,10 +6,12 @@ const {
   mockWithOrgContext,
   mockRecordAudit,
   mockSendInngestEvents,
+  mockSendInngestEvent,
 } = vi.hoisted(() => ({
   mockWithOrgContext: vi.fn(),
   mockRecordAudit: vi.fn().mockResolvedValue(undefined),
   mockSendInngestEvents: vi.fn().mockResolvedValue(undefined),
+  mockSendInngestEvent: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('@/lib/db/context', () => ({
@@ -22,6 +24,7 @@ vi.mock('@/lib/db/audit', () => ({
 
 vi.mock('@/lib/inngest/client', () => ({
   sendInngestEvents: mockSendInngestEvents,
+  sendInngestEvent: mockSendInngestEvent,
 }));
 
 vi.mock('@/lib/db/schema', () => ({

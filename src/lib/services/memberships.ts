@@ -128,7 +128,7 @@ export async function inviteMember(
     }
 
     const [existingUser] = await tx
-      .select({ id: users.id, full_name: users.full_name })
+      .select({ id: users.id, full_name: users.full_name, locale: users.locale })
       .from(users)
       .where(eq(users.email, input.email));
     if (existingUser) {
@@ -150,7 +150,7 @@ export async function inviteMember(
         toEmail: input.email,
         orgName: orgRow.name,
         inviterName: inviterRow?.full_name?.trim() || 'Un membro del team',
-        locale: inviterRow?.locale ?? 'it',
+        locale: existingUser?.locale ?? 'it',
         role: input.role,
         inviteeName: existingUser?.full_name ?? null,
       };

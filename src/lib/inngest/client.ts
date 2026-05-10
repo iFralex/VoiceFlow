@@ -48,7 +48,7 @@ export async function sendInngestEvents(events: InngestEventPayload[]): Promise<
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(
-      events.map((e) => ({ name: e.name, data: e.data, ...(e.id ? { id: e.id } : {}) })),
+      events.map((e) => ({ name: e.name, data: e.data, ...(e.id ? { id: e.id } : {}), ...(e.ts !== undefined ? { ts: e.ts } : {}) })),
     ),
   });
 

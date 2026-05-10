@@ -38,6 +38,24 @@ vi.mock('@/lib/db/schema', () => ({
     user_agent: 'auth_signins_user_agent',
     signed_in_at: 'auth_signins_signed_in_at',
   },
+  users: {
+    id: 'users_id',
+    email: 'users_email',
+    locale: 'users_locale',
+  },
+}));
+
+vi.mock('@/lib/email', () => ({
+  sendEmail: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock('@/lib/email/templates/suspicious-login', () => ({
+  renderSuspiciousLoginEmail: vi.fn().mockResolvedValue({
+    subject: 'Alert',
+    html: '<p>alert</p>',
+    text: 'alert',
+  }),
+  summariseUserAgent: vi.fn().mockReturnValue('Test Browser'),
 }));
 
 vi.mock('@/lib/env', () => ({
@@ -309,8 +327,8 @@ describe('POST /api/webhooks/supabase-auth', () => {
       const body = { type: 'SIGNED_IN', user_id: USER_ID };
       const res = await POST(makeRequest(body));
       expect(res.status).toBe(200);
-      // Both dedup and fingerprint transactions should have run
-      expect(mockWithSystemContext).toHaveBeenCalledTimes(2);
+      // dedup + fingerprint check/insert + suspicious-login user lookup = 3 calls
+      expect(mockWithSystemContext).toHaveBeenCalledTimes(3);
     });
 
     it('falls back to 0.0.0.0 when no IP is available', async () => {

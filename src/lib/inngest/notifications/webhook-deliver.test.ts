@@ -70,12 +70,14 @@ function buildMockTx(returnValue: unknown) {
     innerJoin: vi.fn(() => chain),
     leftJoin: vi.fn(() => chain),
     from: vi.fn(() => chain),
+    returning: vi.fn(resolveWith),
   };
 
   return {
     select: vi.fn(() => chain),
     insert: vi.fn(() => ({ values: vi.fn(resolveWith) })),
-    update: vi.fn(() => ({ set: vi.fn(() => ({ where: vi.fn(resolveWith) })) })),
+    // where() returns chain so callers can both await directly and call .returning()
+    update: vi.fn(() => ({ set: vi.fn(() => ({ where: vi.fn(() => chain) })) })),
   };
 }
 
@@ -170,9 +172,8 @@ describe('webhookDeliverHandler — successful delivery', () => {
     expect(envelope.event).toBe(EVENT_TYPE);
     expect(envelope.org_id).toBe(ORG_ID);
     expect(envelope.data).toEqual(PAYLOAD);
-    expect(envelope.id).toMatch(
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
-    );
+    // id is deterministic: webhookId:eventType:attempt (stable across retries for deduplication)
+    expect(envelope.id).toBe(`${WEBHOOK_ID}:${EVENT_TYPE}:1`);
     expect(envelope.occurred_at).toMatch(/^\d{4}-\d{2}-\d{2}T/);
   });
 
@@ -199,8 +200,8 @@ describe('webhookDeliverHandler — failed delivery (non-2xx)', () => {
   });
 
   it('schedules a retry with exponential backoff after attempt 1', async () => {
-    // [0] fetch webhook, [1] insert delivery, [2] update failure_count
-    setupSystemContextReturns([[activeWebhook], [], []]);
+    // [0] fetch webhook, [1] insert delivery, [2] update failure_count (atomic, returns new count)
+    setupSystemContextReturns([[activeWebhook], [], [{ failureCount: 1 }]]);
 
     const before = Date.now();
     await webhookDeliverHandler({
@@ -230,7 +231,7 @@ describe('webhookDeliverHandler — failed delivery (non-2xx)', () => {
     setupSystemContextReturns([
       [{ ...activeWebhook, failure_count: 2 }],
       [],
-      [],
+      [{ failureCount: 3 }],
     ]);
 
     const before = Date.now();
@@ -250,7 +251,7 @@ describe('webhookDeliverHandler — failed delivery (non-2xx)', () => {
   });
 
   it('uses deterministic event id for retry deduplication', async () => {
-    setupSystemContextReturns([[activeWebhook], [], []]);
+    setupSystemContextReturns([[activeWebhook], [], [{ failureCount: 1 }]]);
 
     await webhookDeliverHandler({
       webhookId: WEBHOOK_ID,
@@ -270,7 +271,7 @@ describe('webhookDeliverHandler — timeout', () => {
     abortError.name = 'AbortError';
     mockFetch.mockRejectedValue(abortError);
 
-    setupSystemContextReturns([[activeWebhook], [], []]);
+    setupSystemContextReturns([[activeWebhook], [], [{ failureCount: 1 }]]);
 
     await webhookDeliverHandler({
       webhookId: WEBHOOK_ID,
@@ -294,12 +295,12 @@ describe('webhookDeliverHandler — deactivation after MAX_FAILURES', () => {
     const webhookNearMax = { ...activeWebhook, failure_count: 5 };
     const ownerRow = { email: 'owner@example.com', fullName: 'Owner Name', locale: 'it' };
 
-    // [0] fetch webhook, [1] insert delivery, [2] update failure_count,
+    // [0] fetch webhook, [1] insert delivery, [2] update failure_count (atomic → 6),
     // [3] deactivate (set active=false), [4] fetch owners for notification
     setupSystemContextReturns([
       [webhookNearMax],
       [],
-      [],
+      [{ failureCount: 6 }],
       [],
       [ownerRow],
     ]);
@@ -325,7 +326,7 @@ describe('webhookDeliverHandler — deactivation after MAX_FAILURES', () => {
     const webhookNearMax = { ...activeWebhook, failure_count: 5 };
     const ownerRow = { email: 'owner@example.com', fullName: null, locale: 'en' };
 
-    setupSystemContextReturns([[webhookNearMax], [], [], [], [ownerRow]]);
+    setupSystemContextReturns([[webhookNearMax], [], [{ failureCount: 6 }], [], [ownerRow]]);
 
     await webhookDeliverHandler({
       webhookId: WEBHOOK_ID,
@@ -343,7 +344,7 @@ describe('webhookDeliverHandler — deactivation after MAX_FAILURES', () => {
     const webhookNearMax = { ...activeWebhook, failure_count: 5 };
     const ownerRow = { email: 'owner@example.com', fullName: null, locale: 'it' };
 
-    setupSystemContextReturns([[webhookNearMax], [], [], [], [ownerRow]]);
+    setupSystemContextReturns([[webhookNearMax], [], [{ failureCount: 6 }], [], [ownerRow]]);
 
     await webhookDeliverHandler({
       webhookId: WEBHOOK_ID,
@@ -361,7 +362,7 @@ describe('webhookDeliverHandler — deactivation after MAX_FAILURES', () => {
     setupSystemContextReturns([
       [{ ...activeWebhook, failure_count: 4 }],
       [], // insert delivery
-      [], // update failure_count
+      [{ failureCount: 5 }], // atomic failure_count update returns 5
     ]);
 
     await webhookDeliverHandler({

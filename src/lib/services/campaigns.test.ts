@@ -483,14 +483,23 @@ describe('markCampaignCompleted', () => {
       expect.objectContaining({ action: 'campaign.completed' }),
     );
     expect(mockReleaseReservation).toHaveBeenCalledWith(ORG_ID, CAMPAIGN_ID);
+    expect(mockSendInngestEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'webhook/emit',
+        data: expect.objectContaining({ eventType: 'campaign.completed', orgId: ORG_ID }),
+      }),
+    );
   });
 
   it('is idempotent when campaign already completed', async () => {
     updateResults = [[]];
 
     const { markCampaignCompleted } = await import('./campaigns');
-    // Should not throw
+    // Should not throw, and must not emit webhook when already completed
     await expect(markCampaignCompleted(ORG_ID, CAMPAIGN_ID)).resolves.toBeUndefined();
+    expect(mockSendInngestEvent).not.toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'webhook/emit' }),
+    );
   });
 });
 

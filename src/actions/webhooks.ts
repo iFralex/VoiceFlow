@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 
-import { getAuthContext } from '@/lib/auth/context';
+import { getAuthContext, requireCapability } from '@/lib/auth/context';
 import type { WebhookDelivery, WebhookOutgoing } from '@/lib/db/schema';
 import {
   ALLOWED_EVENT_TYPES,
@@ -16,7 +16,10 @@ import {
 import type { ActionResult } from '@/lib/utils/action-toast';
 
 const createWebhookSchema = z.object({
-  url: z.string().url('url_invalid'),
+  url: z
+    .string()
+    .url('url_invalid')
+    .refine((u) => u.startsWith('https://'), 'url_must_be_https'),
   eventTypes: z.array(z.enum(ALLOWED_EVENT_TYPES)).min(1, 'event_types_required'),
 });
 
@@ -44,6 +47,7 @@ export async function createWebhookAction(input: {
     return { ok: false, message: issue?.message ?? 'validation_error' };
   }
 
+  await requireCapability('webhooks.manage');
   const { userId, orgId } = await getAuthContext();
 
   try {
@@ -66,6 +70,7 @@ export async function deleteWebhookAction(input: { webhookId: string }): Promise
     return { ok: false, message: issue?.message ?? 'validation_error' };
   }
 
+  await requireCapability('webhooks.manage');
   const { userId, orgId } = await getAuthContext();
 
   try {
@@ -87,6 +92,7 @@ export async function rotateSecretAction(input: {
     return { ok: false, message: issue?.message ?? 'validation_error' };
   }
 
+  await requireCapability('webhooks.manage');
   const { userId, orgId } = await getAuthContext();
 
   try {
@@ -147,6 +153,7 @@ export async function replayDeliveryAction(input: { deliveryId: string }): Promi
     return { ok: false, message: issue?.message ?? 'validation_error' };
   }
 
+  await requireCapability('webhooks.manage');
   const { userId, orgId } = await getAuthContext();
 
   try {

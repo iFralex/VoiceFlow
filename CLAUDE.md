@@ -36,7 +36,7 @@ await withSystemContext(async (tx) => {
 });
 ```
 
-System-owned tables (`script_templates`, `voice_catalogue`, `credit_packages`, `phone_numbers`, `system_flags`, `cli_cooldown_history`) have no RLS and must be queried via `withSystemContext`, never `withOrgContext`.
+System-owned tables (`script_templates`, `voice_catalogue`, `credit_packages`, `phone_numbers`, `system_flags`, `cli_cooldown_history`, `email_log`) have no RLS and must be queried via `withSystemContext`, never `withOrgContext`. Note: the idempotency helpers in `src/lib/email/idempotency.ts` use the bare `db` client directly for `email_log` queries — this is intentional (system table, no RLS needed).
 
 Inside `(app)/` Server Components and Server Actions, use `dbForRequest()` which auto-resolves the org from middleware headers:
 
@@ -95,6 +95,26 @@ CLI rotation (optional, validated in `env.ts`):
 - `CLI_DAILY_CAP_DEFAULT` — per-CLI daily dial cap enforced by `pickCliForOrg` (default: 100)
 - `CLI_HOURLY_CAP_DEFAULT` — per-CLI hourly sliding-window cap (default: 30)
 - `SBC_SMOKE_TEST_NUMBER` — destination E.164 for the weekly SBC smoke-test cron `/api/cron/sbc-smoke-test`. When absent the cron emits `sbc/smoke-test-failed` with reason `no_test_number_configured`.
+
+Email (required, validated in `env.ts`):
+- `RESEND_API_KEY` — Resend API key; required for all transactional email dispatch via `src/lib/email/client.ts`
+- `EMAIL_FROM_ADDRESS` — `From:` address for all outgoing emails (e.g. `noreply@voiceflow.it`)
+- `NEXT_PUBLIC_APP_URL` — absolute base URL used to build email CTA links and webhook callback absolute URLs
+
+Email (optional, validated in `env.ts`):
+- `EMAIL_REPLY_TO` — `Reply-To:` address appended to outgoing emails
+- `SUPPORT_EMAIL_ADDRESS` — support address rendered in email footers
+
+## Email Dispatch
+
+All transactional email goes through `sendEmail` from `@/lib/email`. Never call Resend directly.
+
+Typed dispatch functions per template live in `src/lib/email/dispatcher.ts`. When adding a new email type, use one of these idempotency helpers before calling `sendEmail`:
+
+- `hasRecentEmailSentForRef(template, refId, windowHours)` — for event-driven emails keyed on a single domain entity (appointment, call, campaign). Deduplicates on `(template, ref_id)` in `email_log`.
+- `hasRecentEmailSent(orgId, template, windowHours)` — for org-scoped periodic emails (e.g. low-balance). Deduplicates on `(template, org_id)` in `email_log`.
+
+Always pass `tags` to `sendEmail` including at minimum `{name:'template', value:'<template-slug>'}` plus either `{name:'org_id'}` or `{name:'ref_id'}` so idempotency queries can match the row.
 
 ## Migration Naming
 

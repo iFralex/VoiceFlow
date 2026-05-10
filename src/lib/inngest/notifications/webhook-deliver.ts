@@ -20,7 +20,7 @@
 
 import crypto from 'node:crypto';
 
-import { and, eq } from 'drizzle-orm';
+import { and, eq, isNotNull, sql } from 'drizzle-orm';
 
 import { withSystemContext } from '@/lib/db/context';
 import { memberships, organizations, users, webhookDeliveries, webhooksOutgoing } from '@/lib/db/schema';
@@ -75,9 +75,10 @@ export async function webhookDeliverHandler(data: WebhookDeliverData): Promise<v
   if (!webhook) return; // webhook deleted — nothing to deliver
   if (!webhook.active) return; // already deactivated — stop processing
 
-  // Build canonical envelope
+  // Build canonical envelope — id is deterministic so retries carry the same value,
+  // allowing receivers to deduplicate on it.
   const envelope = {
-    id: crypto.randomUUID(),
+    id: `${data.webhookId}:${data.eventType}:${attempt}`,
     event: data.eventType,
     occurred_at: new Date().toISOString(),
     org_id: webhook.org_id,
@@ -150,15 +151,15 @@ export async function webhookDeliverHandler(data: WebhookDeliverData): Promise<v
     return;
   }
 
-  // Delivery failed — increment consecutive failure count
-  const newFailureCount = webhook.failure_count + 1;
-
-  await withSystemContext((tx) =>
+  // Delivery failed — atomically increment failure count and read the new value.
+  const [updated] = await withSystemContext((tx) =>
     tx
       .update(webhooksOutgoing)
-      .set({ failure_count: newFailureCount, last_failure_at: new Date() })
-      .where(eq(webhooksOutgoing.id, data.webhookId)),
+      .set({ failure_count: sql`${webhooksOutgoing.failure_count} + 1`, last_failure_at: new Date() })
+      .where(eq(webhooksOutgoing.id, data.webhookId))
+      .returning({ failureCount: webhooksOutgoing.failure_count }),
   );
+  const newFailureCount = updated?.failureCount ?? MAX_FAILURES;
 
   if (newFailureCount >= MAX_FAILURES) {
     await withSystemContext((tx) =>
@@ -190,6 +191,10 @@ export async function webhookDeliverHandler(data: WebhookDeliverData): Promise<v
 
 // ─── Internal helpers ─────────────────────────────────────────────────────────
 
+function escapeHtml(str: string): string {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 async function notifyWebhookDisabled(orgId: string, webhookUrl: string): Promise<void> {
   const owners = await withSystemContext((tx) =>
     tx
@@ -205,9 +210,12 @@ async function notifyWebhookDisabled(orgId: string, webhookUrl: string): Promise
         and(
           eq(memberships.org_id, orgId),
           eq(memberships.role, 'owner'),
+          isNotNull(memberships.accepted_at),
         ),
       ),
   );
+
+  const safeUrl = escapeHtml(webhookUrl);
 
   for (const owner of owners) {
     const locale = owner.locale === 'en' ? 'en' : 'it';
@@ -216,12 +224,12 @@ async function notifyWebhookDisabled(orgId: string, webhookUrl: string): Promise
       locale === 'en'
         ? {
             subject: `Webhook deactivated — ${webhookUrl}`,
-            html: `<p>Your webhook at <strong>${webhookUrl}</strong> has been automatically deactivated after ${MAX_FAILURES} consecutive delivery failures.</p><p>Please check your endpoint and re-enable the webhook from the <a href="/settings/integrations">integrations settings page</a>.</p>`,
+            html: `<p>Your webhook at <strong>${safeUrl}</strong> has been automatically deactivated after ${MAX_FAILURES} consecutive delivery failures.</p><p>Please check your endpoint and re-enable the webhook from the <a href="/settings/integrations">integrations settings page</a>.</p>`,
             text: `Your webhook at ${webhookUrl} has been automatically deactivated after ${MAX_FAILURES} consecutive delivery failures. Please check your endpoint and re-enable the webhook from the integrations settings page.`,
           }
         : {
             subject: `Webhook disabilitato — ${webhookUrl}`,
-            html: `<p>Il tuo webhook <strong>${webhookUrl}</strong> è stato disabilitato automaticamente dopo ${MAX_FAILURES} tentativi di consegna falliti consecutivi.</p><p>Verifica il tuo endpoint e riattiva il webhook dalla <a href="/settings/integrations">pagina delle impostazioni di integrazione</a>.</p>`,
+            html: `<p>Il tuo webhook <strong>${safeUrl}</strong> è stato disabilitato automaticamente dopo ${MAX_FAILURES} tentativi di consegna falliti consecutivi.</p><p>Verifica il tuo endpoint e riattiva il webhook dalla <a href="/settings/integrations">pagina delle impostazioni di integrazione</a>.</p>`,
             text: `Il tuo webhook ${webhookUrl} è stato disabilitato automaticamente dopo ${MAX_FAILURES} tentativi di consegna falliti consecutivi. Verifica il tuo endpoint e riattiva il webhook dalla pagina delle impostazioni di integrazione.`,
           };
 

@@ -138,21 +138,24 @@ export async function listDeliveries(
 
     const conditions: ReturnType<typeof eq>[] = [eq(webhookDeliveries.webhook_id, webhookId)];
     if (page.cursor) {
-      conditions.push(lt(webhookDeliveries.id, page.cursor));
+      conditions.push(lt(webhookDeliveries.delivered_at, new Date(page.cursor)));
     }
 
     const rows = await tx
       .select()
       .from(webhookDeliveries)
       .where(and(...conditions))
-      .orderBy(desc(webhookDeliveries.id))
+      .orderBy(desc(webhookDeliveries.delivered_at), desc(webhookDeliveries.id))
       .limit(limit + 1);
 
     const hasMore = rows.length > limit;
     const items = hasMore ? rows.slice(0, limit) : rows;
 
     const out: { items: WebhookDelivery[]; nextCursor?: string } = { items };
-    if (hasMore && items.length > 0) out.nextCursor = items[items.length - 1]!.id;
+    if (hasMore && items.length > 0) {
+      const lastDeliveredAt = items[items.length - 1]!.delivered_at;
+      if (lastDeliveredAt) out.nextCursor = lastDeliveredAt.toISOString();
+    }
     return out;
   });
 }

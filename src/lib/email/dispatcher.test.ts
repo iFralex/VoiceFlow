@@ -52,8 +52,24 @@ const mockQueryChain = {
 
 // Self-referential chain
 Object.keys(mockQueryChain).forEach((key) => {
-  (mockQueryChain as Record<string, ReturnType<typeof vi.fn>>)[key].mockReturnValue(mockQueryChain);
+  (mockQueryChain as Record<string, ReturnType<typeof vi.fn>>)[key]?.mockReturnValue(mockQueryChain);
 });
+
+vi.mock('@/lib/email/templates/member-invite', () => ({
+  renderMemberInviteEmail: vi.fn().mockResolvedValue({
+    subject: 'Invite subject',
+    html: '<p>invite html</p>',
+    text: 'invite text',
+  }),
+}));
+
+vi.mock('@/lib/email/templates/suspicious-login', () => ({
+  renderSuspiciousLoginEmail: vi.fn().mockResolvedValue({
+    subject: 'Login alert',
+    html: '<p>alert html</p>',
+    text: 'alert text',
+  }),
+}));
 
 import { sendEmail } from '@/lib/email';
 import { hasRecentEmailSent, hasRecentEmailSentForRef } from '@/lib/email/idempotency';
@@ -143,5 +159,97 @@ describe('email dispatcher — weekly summary', () => {
 
     await sendWeeklySummaryEmail({ orgId: 'org-1', weekStart: new Date('2025-01-06') });
     expect(sendEmail).not.toHaveBeenCalled();
+  });
+});
+
+describe('email dispatcher — member invite', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('returns without sending when membership not found', async () => {
+    const emptyTx = {
+      select: vi.fn().mockReturnThis(),
+      from: vi.fn().mockReturnThis(),
+      innerJoin: vi.fn().mockReturnThis(),
+      where: vi.fn().mockResolvedValue([]),
+    };
+    vi.mocked(withSystemContext).mockImplementationOnce((fn) => fn(emptyTx as never));
+
+    await sendMemberInviteEmail({ orgId: 'org-1', membershipId: 'mem-1' });
+    expect(sendEmail).not.toHaveBeenCalled();
+  });
+
+  it('sends email to invitee when membership found', async () => {
+    const row = {
+      inviteeEmail: 'invitee@example.com',
+      inviteeFullName: 'Invitee Name',
+      inviteeLocale: 'en',
+      role: 'operator',
+      orgName: 'Test Org',
+    };
+    const dataTx = {
+      select: vi.fn().mockReturnThis(),
+      from: vi.fn().mockReturnThis(),
+      innerJoin: vi.fn().mockReturnThis(),
+      where: vi.fn().mockResolvedValue([row]),
+    };
+    vi.mocked(withSystemContext).mockImplementationOnce((fn) => fn(dataTx as never));
+
+    await sendMemberInviteEmail({ orgId: 'org-1', membershipId: 'mem-1' });
+    expect(sendEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: 'invitee@example.com',
+        tags: expect.arrayContaining([
+          expect.objectContaining({ name: 'template', value: 'member-invite' }),
+        ]),
+      }),
+    );
+  });
+});
+
+describe('email dispatcher — suspicious login', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('returns without sending when user not found', async () => {
+    const emptyTx = {
+      select: vi.fn().mockReturnThis(),
+      from: vi.fn().mockReturnThis(),
+      innerJoin: vi.fn().mockReturnThis(),
+      where: vi.fn().mockResolvedValue([]),
+    };
+    vi.mocked(withSystemContext).mockImplementationOnce((fn) => fn(emptyTx as never));
+
+    await sendSuspiciousLoginEmail({ userId: 'user-1', signinId: 'signin-1' });
+    expect(sendEmail).not.toHaveBeenCalled();
+  });
+
+  it('sends email to user when signin found', async () => {
+    const dataRow = {
+      email: 'user@example.com',
+      locale: 'it',
+      ip: '1.2.3.4',
+      userAgent: 'Mozilla/5.0',
+      signinAt: new Date('2026-01-01T10:00:00Z'),
+    };
+    const dataTx = {
+      select: vi.fn().mockReturnThis(),
+      from: vi.fn().mockReturnThis(),
+      innerJoin: vi.fn().mockReturnThis(),
+      where: vi.fn().mockResolvedValue([dataRow]),
+    };
+    vi.mocked(withSystemContext).mockImplementationOnce((fn) => fn(dataTx as never));
+
+    await sendSuspiciousLoginEmail({ userId: 'user-1', signinId: 'signin-1' });
+    expect(sendEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: 'user@example.com',
+        tags: expect.arrayContaining([
+          expect.objectContaining({ name: 'template', value: 'suspicious-login' }),
+        ]),
+      }),
+    );
   });
 });
