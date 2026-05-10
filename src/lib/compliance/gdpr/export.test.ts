@@ -223,7 +223,8 @@ describe('buildSubjectExport', () => {
 
     expect(result.contactId).toBe(CONTACT_ID);
     expect(result.signedUrl).toBe('https://example.com/signed');
-    expect(result.storagePath).toMatch(new RegExp(`^${ORG_ID}/exports/gdpr-${CONTACT_ID}-\\d+\\.zip$`));
+    const uuidPattern = '[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}';
+    expect(result.storagePath).toMatch(new RegExp(`^${ORG_ID}/exports/gdpr-${uuidPattern}\\.zip$`));
     expect(result.totals).toEqual({
       calls: 1,
       appointments: 0,

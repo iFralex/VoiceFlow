@@ -187,7 +187,12 @@ function buildMockTx(selectQueue: any[][] = []) {
     }),
     update: vi.fn(() => ({
       set: vi.fn(() => ({
-        where: vi.fn().mockResolvedValue([{ id: 'updated-id' }]),
+        where: vi.fn(() => {
+          const rows = [{ id: 'updated-id' }];
+          const p = Promise.resolve(rows) as Promise<{ id: string }[]> & { returning: () => Promise<{ id: string }[]> };
+          p.returning = () => Promise.resolve(rows);
+          return p;
+        }),
       })),
     })),
     insert: vi.fn(() => ({
@@ -397,7 +402,7 @@ describe('campaignDispatchCallHandler — credit gate', () => {
     vi.useRealTimers();
   });
 
-  it('marks call failed and throws when balance ≤ MIN_BALANCE_CENTS', async () => {
+  it('marks call failed and returns null when balance ≤ MIN_BALANCE_CENTS', async () => {
     vi.mocked(getBalance).mockResolvedValue({ balanceCents: 50, remainingMinutes: 0 });
 
     // Need mock tx for daily cap, concurrency, eligibility, cooldown checks
@@ -409,7 +414,7 @@ describe('campaignDispatchCallHandler — credit gate', () => {
       [], // no cooldown
     ]);
 
-    await expect(campaignDispatchCallHandler(DISPATCH_DATA)).rejects.toThrow();
+    await expect(campaignDispatchCallHandler(DISPATCH_DATA)).resolves.toBeNull();
     expect(dispatchCall).not.toHaveBeenCalled();
   });
 
@@ -544,18 +549,25 @@ describe('scheduleRetryIfNeeded — retry policy', () => {
       (fn: any) => Promise.resolve(fn({ select: vi.fn(() => makeSelectChain([callRow])) })),
     );
 
-    const mockUpdateWhere = vi.fn().mockResolvedValue([{ id: CALL }]);
-    const mockUpdateSet = vi.fn(() => ({ where: mockUpdateWhere }));
+    const makeWhere = () => {
+      const rows = [{ id: CALL }];
+      const p = Promise.resolve(rows) as Promise<{ id: string }[]> & { returning: () => Promise<{ id: string }[]> };
+      p.returning = () => Promise.resolve(rows);
+      return p;
+    };
+    const mockUpdateSet = vi.fn(() => ({ where: vi.fn(() => makeWhere()) }));
     vi.mocked(withOrgContext).mockImplementation(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (_: string, fn: any) =>
-        Promise.resolve(fn({ update: vi.fn(() => ({ set: mockUpdateSet })) })),
+        Promise.resolve(fn({ update: vi.fn(() => ({ set: mockUpdateSet })), select: vi.fn(() => makeSelectChain([])) })),
     );
 
     await scheduleRetryIfNeeded(CALL);
 
-    // No retry event must be emitted
-    expect(sendInngestEvent).not.toHaveBeenCalled();
+    // No retry-schedule event must be emitted; campaign/completed is emitted by checkAndFinaliseCampaignCompletion
+    expect(sendInngestEvent).not.toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'campaign/dispatch-call' }),
+    );
 
     // The call row must be updated to failed/max_attempts_reached
     expect(mockUpdateSet).toHaveBeenCalledWith(
@@ -602,18 +614,24 @@ describe('scheduleRetryIfNeeded — retry policy', () => {
       (fn: any) => Promise.resolve(fn({ select: vi.fn(() => makeSelectChain([callRow])) })),
     );
 
-    const mockUpdateSet = vi.fn(() => ({
-      where: vi.fn().mockResolvedValue([{ id: CALL }]),
-    }));
+    const makeWhere2 = () => {
+      const rows = [{ id: CALL }];
+      const p = Promise.resolve(rows) as Promise<{ id: string }[]> & { returning: () => Promise<{ id: string }[]> };
+      p.returning = () => Promise.resolve(rows);
+      return p;
+    };
+    const mockUpdateSet = vi.fn(() => ({ where: vi.fn(() => makeWhere2()) }));
     vi.mocked(withOrgContext).mockImplementation(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (_: string, fn: any) =>
-        Promise.resolve(fn({ update: vi.fn(() => ({ set: mockUpdateSet })) })),
+        Promise.resolve(fn({ update: vi.fn(() => ({ set: mockUpdateSet })), select: vi.fn(() => makeSelectChain([])) })),
     );
 
     await scheduleRetryIfNeeded(CALL);
 
-    expect(sendInngestEvent).not.toHaveBeenCalled();
+    expect(sendInngestEvent).not.toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'campaign/dispatch-call' }),
+    );
     expect(mockUpdateSet).toHaveBeenCalledWith(
       expect.objectContaining({ status: 'failed', error_code: 'max_attempts_reached' }),
     );

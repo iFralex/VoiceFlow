@@ -12,10 +12,15 @@ vi.mock('@/lib/services/calls', () => ({
 
 vi.mock('@/lib/services/credit', () => ({
   chargeForCall: vi.fn(),
+  releaseReservation: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('@/lib/inngest/client', () => ({
   sendInngestEvent: vi.fn(),
+}));
+
+vi.mock('@/lib/inngest/campaigns/completed', () => ({
+  checkAndFinaliseCampaignCompletion: vi.fn().mockResolvedValue(undefined),
 }));
 
 // DB context mocks
@@ -29,15 +34,27 @@ vi.mock('@/lib/db/context', () => ({
   withOrgContext: vi.fn((_orgId: string, fn: (tx: unknown) => unknown) => fn(mockOrgTx)),
 }));
 
-// System tx select chain: tx.select({...}).from(...).where(...).limit(1)
+// System tx select chain: supports both .where().limit(1) and plain .where()
+// (the latter is used by countActiveCalls which has no .limit() call).
 const mockSystemLimit = vi.fn();
-const mockSystemWhere = vi.fn(() => ({ limit: mockSystemLimit }));
+const makeSystemWhereChain = (directRows: unknown[] = []) => {
+  const p = Promise.resolve(directRows) as Promise<unknown[]> & { limit: typeof mockSystemLimit };
+  p.limit = mockSystemLimit;
+  return p;
+};
+const mockSystemWhere = vi.fn(() => makeSystemWhereChain());
 const mockSystemFrom = vi.fn(() => ({ where: mockSystemWhere }));
 mockSystemSelect.mockReturnValue({ from: mockSystemFrom });
 mockSystemTx.select = mockSystemSelect;
 
-// Org tx update chain: tx.update(...).set({...}).where(...)
-const mockUpdateWhere = vi.fn();
+// Org tx update chain: tx.update(...).set({...}).where(...)[.returning()]
+// Returns a thenable so plain `await where(...)` works AND `.returning()` works.
+const makeUpdateWhereChain = (returningRows: unknown[] = []) => {
+  const p = Promise.resolve(undefined) as Promise<undefined> & { returning: () => Promise<unknown[]> };
+  p.returning = () => Promise.resolve(returningRows);
+  return p;
+};
+const mockUpdateWhere = vi.fn(() => makeUpdateWhereChain());
 const mockUpdateSet = vi.fn(() => ({ where: mockUpdateWhere }));
 const mockUpdateTable = vi.fn(() => ({ set: mockUpdateSet }));
 mockOrgUpdate.mockImplementation(mockUpdateTable);
@@ -109,7 +126,7 @@ describe('chargeCallToLedger', () => {
     vi.clearAllMocks();
     mockSystemSelect.mockReturnValue({ from: mockSystemFrom });
     mockSystemFrom.mockReturnValue({ where: mockSystemWhere });
-    mockSystemWhere.mockReturnValue({ limit: mockSystemLimit });
+    mockSystemWhere.mockReturnValue(makeSystemWhereChain());
     vi.mocked(chargeForCall).mockResolvedValue(undefined);
   });
 
@@ -153,11 +170,11 @@ describe('incrementCampaignCounters', () => {
     vi.clearAllMocks();
     mockSystemSelect.mockReturnValue({ from: mockSystemFrom });
     mockSystemFrom.mockReturnValue({ where: mockSystemWhere });
-    mockSystemWhere.mockReturnValue({ limit: mockSystemLimit });
+    mockSystemWhere.mockReturnValue(makeSystemWhereChain());
     mockOrgUpdate.mockImplementation(mockUpdateTable);
     mockUpdateTable.mockReturnValue({ set: mockUpdateSet });
     mockUpdateSet.mockReturnValue({ where: mockUpdateWhere });
-    mockUpdateWhere.mockResolvedValue(undefined);
+    mockUpdateWhere.mockImplementation(() => makeUpdateWhereChain());
   });
 
   it('updates campaigns actual_cents via withOrgContext', async () => {
@@ -187,7 +204,7 @@ describe('emitOutcomeEvents', () => {
     vi.clearAllMocks();
     mockSystemSelect.mockReturnValue({ from: mockSystemFrom });
     mockSystemFrom.mockReturnValue({ where: mockSystemWhere });
-    mockSystemWhere.mockReturnValue({ limit: mockSystemLimit });
+    mockSystemWhere.mockReturnValue(makeSystemWhereChain());
     vi.mocked(sendInngestEvent).mockResolvedValue(undefined);
   });
 
@@ -269,7 +286,7 @@ describe('scheduleRetryIfNeeded', () => {
     vi.clearAllMocks();
     mockSystemSelect.mockReturnValue({ from: mockSystemFrom });
     mockSystemFrom.mockReturnValue({ where: mockSystemWhere });
-    mockSystemWhere.mockReturnValue({ limit: mockSystemLimit });
+    mockSystemWhere.mockReturnValue(makeSystemWhereChain());
     vi.mocked(sendInngestEvent).mockResolvedValue(undefined);
     mockOrgInsert.mockImplementation(mockInsertTable);
     mockInsertTable.mockReturnValue({ values: mockInsertValues });
@@ -278,7 +295,7 @@ describe('scheduleRetryIfNeeded', () => {
     mockOrgUpdate.mockImplementation(mockUpdateTable);
     mockUpdateTable.mockReturnValue({ set: mockUpdateSet });
     mockUpdateSet.mockReturnValue({ where: mockUpdateWhere });
-    mockUpdateWhere.mockResolvedValue(undefined);
+    mockUpdateWhere.mockImplementation(() => makeUpdateWhereChain());
   });
 
   it('is a no-op when call not found', async () => {
@@ -396,7 +413,7 @@ describe('callCompletedHandler', () => {
     // 3. emitOutcomeEvents, 4. scheduleRetryIfNeeded
     mockSystemSelect.mockReturnValue({ from: mockSystemFrom });
     mockSystemFrom.mockReturnValue({ where: mockSystemWhere });
-    mockSystemWhere.mockReturnValue({ limit: mockSystemLimit });
+    mockSystemWhere.mockReturnValue(makeSystemWhereChain());
 
     let callCount = 0;
     mockSystemLimit.mockImplementation(() => {
@@ -427,7 +444,7 @@ describe('callCompletedHandler', () => {
     mockOrgUpdate.mockImplementation(mockUpdateTable);
     mockUpdateTable.mockReturnValue({ set: mockUpdateSet });
     mockUpdateSet.mockReturnValue({ where: mockUpdateWhere });
-    mockUpdateWhere.mockResolvedValue(undefined);
+    mockUpdateWhere.mockImplementation(() => makeUpdateWhereChain());
 
     vi.mocked(persistCallArtifacts).mockResolvedValue(undefined);
     vi.mocked(chargeForCall).mockResolvedValue(undefined);

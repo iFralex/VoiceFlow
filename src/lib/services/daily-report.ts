@@ -178,8 +178,13 @@ export async function runDailyReport(
       let sent = 0;
       for (const recipient of recipients) {
         await limiter.acquire();
-        await dispatchOne(mailer, data, recipient);
-        sent++;
+        try {
+          await dispatchOne(mailer, data, recipient);
+          sent++;
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          console.error('[daily-report] recipient failed', { orgId: org.id, userId: recipient.userId, error: msg });
+        }
       }
 
       outcomes.push({

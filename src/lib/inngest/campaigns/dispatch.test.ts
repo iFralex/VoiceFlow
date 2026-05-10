@@ -419,25 +419,25 @@ describe('verifyCreditAvailable', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockUpdate.mockReturnValue({ set: mockSet });
-    mockSet.mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) });
+    mockSet.mockReturnValue({ where: vi.fn(() => makeWhereChain([{ id: 'call-1' }])) });
     vi.mocked(sendInngestEvent).mockResolvedValue(undefined);
   });
 
   it('resolves when balance is above minimum', async () => {
     vi.mocked(getBalance).mockResolvedValue({ balanceCents: 500, remainingMinutes: 10 });
-    await expect(verifyCreditAvailable(ORG, CALL, CAMPAIGN)).resolves.toBeUndefined();
+    await expect(verifyCreditAvailable(ORG, CALL, CAMPAIGN)).resolves.toBe(true);
     expect(mockUpdate).not.toHaveBeenCalled();
   });
 
-  it('marks call failed and throws when balance is zero', async () => {
+  it('marks call failed and returns false when balance is zero', async () => {
     vi.mocked(getBalance).mockResolvedValue({ balanceCents: 0, remainingMinutes: 0 });
-    await expect(verifyCreditAvailable(ORG, CALL, CAMPAIGN)).rejects.toThrow(InsufficientCreditError);
+    await expect(verifyCreditAvailable(ORG, CALL, CAMPAIGN)).resolves.toBe(false);
     expect(mockUpdate).toHaveBeenCalledOnce();
   });
 
   it('emits credit/low-balance event when balance is zero', async () => {
     vi.mocked(getBalance).mockResolvedValue({ balanceCents: 0, remainingMinutes: 0 });
-    await verifyCreditAvailable(ORG, CALL, CAMPAIGN).catch(() => {});
+    await verifyCreditAvailable(ORG, CALL, CAMPAIGN);
     expect(sendInngestEvent).toHaveBeenCalledWith(
       expect.objectContaining({
         name: 'credit/low-balance',
@@ -446,9 +446,9 @@ describe('verifyCreditAvailable', () => {
     );
   });
 
-  it('marks call failed when balance is at minimum threshold (100 cents)', async () => {
+  it('marks call failed and returns false when balance is at minimum threshold (100 cents)', async () => {
     vi.mocked(getBalance).mockResolvedValue({ balanceCents: 100, remainingMinutes: 1 });
-    await expect(verifyCreditAvailable(ORG, CALL, CAMPAIGN)).rejects.toThrow(InsufficientCreditError);
+    await expect(verifyCreditAvailable(ORG, CALL, CAMPAIGN)).resolves.toBe(false);
     expect(mockUpdate).toHaveBeenCalledOnce();
   });
 });

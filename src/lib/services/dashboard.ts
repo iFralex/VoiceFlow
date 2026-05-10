@@ -12,7 +12,6 @@ import type { DbTx } from '@/lib/db/context';
 import { withOrgContext } from '@/lib/db/context';
 import {
   appointments,
-  auditLog,
   calls,
   campaigns,
   campaignStats,
@@ -373,12 +372,12 @@ async function disclosureFailureFlags(tx: DbTx, orgId: string): Promise<number> 
   const since = daysAgo(7);
   const [row] = await tx
     .select({ count: sql<number>`count(*)::int` })
-    .from(auditLog)
+    .from(calls)
     .where(
       and(
-        eq(auditLog.org_id, orgId),
-        eq(auditLog.action, 'compliance.disclosure_failed'),
-        gte(auditLog.created_at, since),
+        eq(calls.org_id, orgId),
+        gte(calls.created_at, since),
+        sql`${calls.metadata}->>'disclosure_verified' = 'false'`,
       ),
     );
   return row?.count ?? 0;

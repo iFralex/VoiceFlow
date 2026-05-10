@@ -10,7 +10,7 @@
  * current org and the user's own user_id. The cron dispatcher reads via
  * `listOrgRecipientsWithPrefs` (system context) since it crosses orgs.
  */
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, inArray, sql } from 'drizzle-orm';
 
 import { recordAudit } from '@/lib/db/audit';
 import { type DbTx, withOrgContext } from '@/lib/db/context';
@@ -163,7 +163,12 @@ export async function filterRecipientsByPreference(
       enabled: sql<boolean>`(${userNotificationPreferences[key]})`,
     })
     .from(userNotificationPreferences)
-    .where(eq(userNotificationPreferences.org_id, orgId));
+    .where(
+      and(
+        eq(userNotificationPreferences.org_id, orgId),
+        inArray(userNotificationPreferences.user_id, candidateUserIds),
+      ),
+    );
 
   const stored = new Map(rows.map((r) => [r.user_id, r.enabled]));
   const defaultValue = DEFAULT_NOTIFICATION_PREFERENCES[key];

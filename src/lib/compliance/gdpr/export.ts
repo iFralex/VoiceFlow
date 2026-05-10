@@ -217,8 +217,7 @@ export async function buildSubjectExport(
   const data = await collectSubjectData(orgId, identifier);
 
   const exportId = randomUUID();
-  const timestamp = Date.now();
-  const storagePath = `${orgId}/exports/gdpr-${data.contact.id}-${timestamp}.zip`;
+  const storagePath = `${orgId}/exports/gdpr-${exportId}.zip`;
 
   // Build the archive
   const zip = new JSZip();

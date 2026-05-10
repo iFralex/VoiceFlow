@@ -247,7 +247,11 @@ async function persistChunk({
         .update(contacts)
         .set({ rpo_status: 'clear', rpo_checked_at: checkedAt })
         .where(
-          and(inArray(contacts.phone_e164, clearNow), isNull(contacts.deleted_at)),
+          and(
+            inArray(contacts.phone_e164, clearNow),
+            isNull(contacts.deleted_at),
+            eq(contacts.contact_type, 'b2c'),
+          ),
         )
         .returning({ id: contacts.id });
       updated += r.length;

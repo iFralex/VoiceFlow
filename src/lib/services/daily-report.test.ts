@@ -214,14 +214,15 @@ describe('runDailyReport', () => {
     });
 
     expect(result.orgsConsidered).toBe(2);
-    expect(result.orgsFailed).toBe(1);
-    expect(result.orgsProcessed).toBe(1);
+    expect(result.orgsFailed).toBe(0);
+    expect(result.orgsProcessed).toBe(2);
     expect(result.emailsSent).toBe(1);
 
+    // ORG_A's single recipient failed; org is still counted as sent with 0 emails
     expect(deps.writeAudit).toHaveBeenCalledWith(
       ORG_A.id,
-      'failed',
-      expect.objectContaining({ error: expect.stringContaining('smtp') }),
+      'sent',
+      expect.objectContaining({ recipients: 0 }),
     );
     expect(deps.writeAudit).toHaveBeenCalledWith(
       ORG_B.id,
