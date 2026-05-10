@@ -234,12 +234,12 @@ const headers = {
 
 ### Task 15: Webhook subscriptions UI
 
-- [ ] Create `src/app/(app)/settings/integrations/page.tsx` (extending plan 04's PAT page):
+- [x] Create `src/app/(app)/settings/integrations/page.tsx` (extending plan 04's PAT page):
   - "Webhook" section listing existing subscriptions with: URL, event types, status (active/cooling/inactive), last delivery time, failure count
   - "Crea webhook" dialog: URL input, multi-select event types, info "Riceverai un secret usato per firmare i payload — salvalo subito perché non sarà più visibile"
   - per-row actions: ruota secret, vedi consegne (drawer with paginated `webhook_deliveries`), elimina
   - in deliveries drawer: each row clickable to expand request/response details; "Replay" button re-emits a delivery
-- [ ] Mark completed
+- [x] Mark completed
 
 ### Task 16: Webhook receiver test tool
 

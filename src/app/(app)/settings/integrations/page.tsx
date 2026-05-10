@@ -1,14 +1,16 @@
 import { getAuthContext } from '@/lib/auth/context';
 import { listPats } from '@/lib/services/pat';
+import { listWebhooks } from '@/lib/services/webhooks_outgoing';
 
 import type { SerializedPat } from './_components/integrations-page-client';
 import { IntegrationsPageClient } from './_components/integrations-page-client';
+import type { SerializedWebhook } from './_components/webhooks-section';
 
 export default async function IntegrationsPage() {
   const { userId, orgId } = await getAuthContext();
-  const pats = await listPats(userId, orgId);
+  const [pats, webhooks] = await Promise.all([listPats(userId, orgId), listWebhooks(orgId)]);
 
-  const serialized: SerializedPat[] = pats.map((p) => ({
+  const serializedPats: SerializedPat[] = pats.map((p) => ({
     id: p.id,
     name: p.name,
     prefix: p.prefix,
@@ -18,5 +20,15 @@ export default async function IntegrationsPage() {
     created_at: p.created_at.toISOString(),
   }));
 
-  return <IntegrationsPageClient pats={serialized} />;
+  const serializedWebhooks: SerializedWebhook[] = webhooks.map((w) => ({
+    id: w.id,
+    url: w.url,
+    event_types: w.event_types,
+    active: w.active,
+    failure_count: w.failure_count,
+    last_delivery_at: w.last_delivery_at?.toISOString() ?? null,
+    created_at: w.created_at.toISOString(),
+  }));
+
+  return <IntegrationsPageClient pats={serializedPats} webhooks={serializedWebhooks} />;
 }
