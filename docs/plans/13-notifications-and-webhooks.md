@@ -39,12 +39,12 @@ Resend is the email provider (spec §4); transactional templates use React Email
 
 ### Task 3: Email — appointment booked
 
-- [ ] Author `src/lib/email/templates/appointment-booked.tsx`:
+- [x] Author `src/lib/email/templates/appointment-booked.tsx`:
   - subject: "Appuntamento fissato — [contact_name] il [date]"
   - hero: contact name, scheduled date, vehicle/service type
   - body: source campaign, snippet from transcript ("L'AI ha fissato l'appuntamento dicendo: ..."), CTA "Apri scheda chiamata"
   - footer: link to call detail, link to manage notification preferences
-- [ ] Mark completed
+- [x] Mark completed
 
 ### Task 4: Email — qualified lead
 
