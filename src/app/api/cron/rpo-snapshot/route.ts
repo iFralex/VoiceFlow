@@ -278,6 +278,7 @@ async function persistChunk({
             inArray(contacts.phone_e164, blockedNow),
             isNull(contacts.deleted_at),
             eq(contacts.opt_out, false),
+            eq(contacts.contact_type, 'b2c'),
           ),
         )
         .returning({ id: contacts.id });

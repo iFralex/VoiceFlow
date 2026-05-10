@@ -221,6 +221,8 @@
     "action_resume": "Resume",
     "action_cancel": "Cancel campaign",
     "action_duplicate": "Duplicate",
+    "action_live": "Live view",
+    "action_results": "Results",
     "action_print_report": "Print report",
     "print_back_to_campaign": "Back to campaign",
     "print_action_print": "Print",

@@ -66,17 +66,17 @@ beforeEach(() => {
 const ORG_ID = 'org-1';
 
 /**
- * The service kicks off eight parallel sub-tasks inside a single transaction.
- * Each sub-task issues its first `tx.select()` synchronously before yielding,
+ * The service runs seven parallel sub-tasks inside withOrgContext and one via
+ * withSystemContext (coolingPhonesForOrg). Both mocks call fn(mockTx) synchronously,
  * so the FIFO order of select() invocations is:
- *   1. KPI calls aggregate              (kpiAggregateInRange — first select)
+ *   1. KPI calls aggregate              (kpiAggregateInRange — first select, inside withOrgContext)
  *   2. per-day outcome counts            (perDayOutcomeCounts)
  *   3. per-day sparklines (14 d)         (perDaySparklines)
  *   4. active campaigns                  (activeCampaignsRows)
  *   5. recent appointments               (recentAppointmentsRows)
- *   6. cooling phones                    (coolingPhonesForOrg)
- *   7. disclosure failure flags          (disclosureFailureFlags)
- *   8. any campaign exists               (anyCampaignExists)
+ *   6. disclosure failure flags          (disclosureFailureFlags)
+ *   7. any campaign exists               (anyCampaignExists)
+ *   8. cooling phones                    (coolingPhonesForOrg — via withSystemContext)
  *   9. KPI appointments aggregate        (kpiAggregateInRange — second select,
  *                                         issued after its first await resolves)
  */
@@ -97,9 +97,9 @@ function pushDefaultSelectResults(opts: {
   selectResults.push(opts.sparklineRows ?? []);
   selectResults.push(opts.activeCampaigns ?? []);
   selectResults.push(opts.recentAppointments ?? []);
-  selectResults.push([{ count: opts.coolingCount ?? 0 }]);
   selectResults.push([{ count: opts.disclosureFailureCount ?? 0 }]);
   selectResults.push(opts.hasCampaign ? [{ id: 'c1' }] : []);
+  selectResults.push([{ count: opts.coolingCount ?? 0 }]);
   selectResults.push([{ booked: opts.appointmentsBooked ?? 0 }]);
 }
 

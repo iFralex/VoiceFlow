@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, Clock, Copy, Pause, Play, Printer, X } from 'lucide-react';
+import { ArrowLeft, BarChart2, Clock, Copy, Pause, Play, Printer, Radio, X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
@@ -214,6 +214,8 @@ export function CampaignDetailClient({
     campaign.status === 'running' ||
     campaign.status === 'paused' ||
     campaign.status === 'scheduled';
+  const canLive = campaign.status === 'running' || campaign.status === 'paused';
+  const canResults = campaign.completedCalls > 0 || campaign.failedCalls > 0;
   const canExport = campaign.status === 'completed';
 
   function translateResult(result: ActionResult): ActionResult {
@@ -360,6 +362,24 @@ export function CampaignDetailClient({
             {t('action_duplicate')}
           </Button>
 
+          {canLive && (
+            <Button variant="outline" size="sm" asChild>
+              <Link href={`/campaigns/${campaign.id}/live`}>
+                <Radio className="mr-1 size-3" />
+                {t('action_live')}
+              </Link>
+            </Button>
+          )}
+
+          {canResults && (
+            <Button variant="outline" size="sm" asChild>
+              <Link href={`/campaigns/${campaign.id}/results`}>
+                <BarChart2 className="mr-1 size-3" />
+                {t('action_results')}
+              </Link>
+            </Button>
+          )}
+
           <Button variant="outline" size="sm" disabled={pending} asChild>
             <Link href={`/campaigns/${campaign.id}/report`}>
               <Printer className="mr-1 size-3" />
@@ -368,8 +388,10 @@ export function CampaignDetailClient({
           </Button>
 
           {canExport && (
-            <Button variant="outline" size="sm" disabled>
-              {t('action_export')}
+            <Button variant="outline" size="sm" asChild>
+              <Link href={`/campaigns/${campaign.id}/results`}>
+                {t('action_export')}
+              </Link>
             </Button>
           )}
         </div>

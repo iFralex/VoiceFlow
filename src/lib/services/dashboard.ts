@@ -9,7 +9,7 @@ import type { DashboardPeriod } from '@/components/dashboard/period-selector';
 import type { RecentAppointmentRow } from '@/components/dashboard/recent-appointments';
 import type { TrendPoint } from '@/components/dashboard/trend-chart';
 import type { DbTx } from '@/lib/db/context';
-import { withOrgContext } from '@/lib/db/context';
+import { withOrgContext, withSystemContext } from '@/lib/db/context';
 import {
   appointments,
   calls,
@@ -106,26 +106,30 @@ export async function loadDashboardUncached(
   const sparklineStart = startOfDay(daysAgo(sparklineDays - 1));
 
   const [
-    kpiAggregates,
-    perDayInRange,
-    perDay14d,
-    activeCampaignRows,
-    recentAppointmentRows,
+    [
+      kpiAggregates,
+      perDayInRange,
+      perDay14d,
+      activeCampaignRows,
+      recentAppointmentRows,
+      disclosureFailureCount,
+      hasAnyCampaign,
+    ],
     coolingPhonesCount,
-    disclosureFailureCount,
-    hasAnyCampaign,
-  ] = await withOrgContext(orgId, async (tx) =>
-    Promise.all([
-      kpiAggregateInRange(tx, orgId, range),
-      perDayOutcomeCounts(tx, orgId, range.start, range.end),
-      perDaySparklines(tx, orgId, sparklineStart, endOfDay(new Date())),
-      activeCampaignsRows(tx, orgId),
-      recentAppointmentsRows(tx, orgId, 10),
-      coolingPhonesForOrg(tx, orgId),
-      disclosureFailureFlags(tx, orgId),
-      anyCampaignExists(tx, orgId),
-    ]),
-  );
+  ] = await Promise.all([
+    withOrgContext(orgId, async (tx) =>
+      Promise.all([
+        kpiAggregateInRange(tx, orgId, range),
+        perDayOutcomeCounts(tx, orgId, range.start, range.end),
+        perDaySparklines(tx, orgId, sparklineStart, endOfDay(new Date())),
+        activeCampaignsRows(tx, orgId),
+        recentAppointmentsRows(tx, orgId, 10),
+        disclosureFailureFlags(tx, orgId),
+        anyCampaignExists(tx, orgId),
+      ]),
+    ),
+    coolingPhonesForOrg(orgId),
+  ]);
 
   const balance = await getBalance(orgId);
 
@@ -360,12 +364,14 @@ async function recentAppointmentsRows(
   }));
 }
 
-async function coolingPhonesForOrg(tx: DbTx, orgId: string): Promise<number> {
-  const [row] = await tx
-    .select({ count: sql<number>`count(*)::int` })
-    .from(phoneNumbers)
-    .where(and(eq(phoneNumbers.org_id, orgId), eq(phoneNumbers.status, 'cooling_down')));
-  return row?.count ?? 0;
+async function coolingPhonesForOrg(orgId: string): Promise<number> {
+  return withSystemContext(async (tx) => {
+    const [row] = await tx
+      .select({ count: sql<number>`count(*)::int` })
+      .from(phoneNumbers)
+      .where(and(eq(phoneNumbers.org_id, orgId), eq(phoneNumbers.status, 'cooling_down')));
+    return row?.count ?? 0;
+  });
 }
 
 async function disclosureFailureFlags(tx: DbTx, orgId: string): Promise<number> {

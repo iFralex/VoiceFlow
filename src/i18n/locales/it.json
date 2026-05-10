@@ -221,6 +221,8 @@
     "action_resume": "Riprendi",
     "action_cancel": "Annulla campagna",
     "action_duplicate": "Duplica",
+    "action_live": "Vista live",
+    "action_results": "Risultati",
     "action_print_report": "Stampa report",
     "print_back_to_campaign": "Torna alla campagna",
     "print_action_print": "Stampa",
