@@ -6,7 +6,12 @@ import { z } from 'zod';
 
 import { recordAudit } from '@/lib/db/audit';
 import { withSystemContext } from '@/lib/db/context';
-import { authSignins, webhookEvents } from '@/lib/db/schema';
+import { authSignins, users, webhookEvents } from '@/lib/db/schema';
+import { sendEmail } from '@/lib/email';
+import {
+  renderSuspiciousLoginEmail,
+  summariseUserAgent,
+} from '@/lib/email/templates/suspicious-login';
 import { env } from '@/lib/env';
 import { acceptPendingInvites } from '@/lib/services/memberships';
 
@@ -66,22 +71,40 @@ function isSigninEvent(type: string): boolean {
   );
 }
 
-/**
- * Stub: enqueues a suspicious-login email alert.
- * Full implementation deferred to plan 13 (Resend integration).
- */
 async function enqueueSuspiciousLoginAlert(
   userId: string,
   ip: string,
   userAgent: string,
 ): Promise<void> {
-  // TODO(plan-13): Send suspicious-login email via Resend template
-  // Payload for the future job: { userId, ip, userAgent, detectedAt: new Date() }
-  // For now this is intentionally a no-op stub — the audit entry written inside
-  // the DB transaction is the durable record.
-  void userId;
-  void ip;
-  void userAgent;
+  const [user] = await withSystemContext((tx) =>
+    tx.select({ email: users.email, locale: users.locale }).from(users).where(eq(users.id, userId)).limit(1),
+  );
+
+  if (!user) return;
+
+  const appUrl = env.NEXT_PUBLIC_APP_URL;
+  const revokeUrl = appUrl ? `${appUrl}/account/security` : '#';
+
+  const { subject, html, text } = await renderSuspiciousLoginEmail({
+    locale: user.locale,
+    userEmail: user.email,
+    occurredAt: new Date(),
+    ip,
+    userAgentSummary: summariseUserAgent(userAgent),
+    revokeUrl,
+    appUrl,
+  });
+
+  await sendEmail({
+    to: user.email,
+    subject,
+    html,
+    text,
+    tags: [
+      { name: 'template', value: 'suspicious-login' },
+      { name: 'user_id', value: userId },
+    ],
+  });
 }
 
 // ---------------------------------------------------------------------------

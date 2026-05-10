@@ -93,12 +93,12 @@ Resend is the email provider (spec §4); transactional templates use React Email
 
 ### Task 9: Email — suspicious login
 
-- [ ] Author `src/lib/email/templates/suspicious-login.tsx`:
+- [x] Author `src/lib/email/templates/suspicious-login.tsx`:
   - subject: "Nuovo accesso al tuo account VoiceFlow"
   - body: timestamp, IP, geolocated city (best-effort), user-agent summary
   - CTA "Non ero io — proteggi l'account" linking to a flow that revokes all sessions
-- [ ] Wired from plan 04's auth-event handler
-- [ ] Mark completed
+- [x] Wired from plan 04's auth-event handler
+- [x] Mark completed
 
 ### Task 10: Email dispatcher service
 
