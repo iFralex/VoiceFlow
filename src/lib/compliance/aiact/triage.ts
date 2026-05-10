@@ -11,7 +11,7 @@
  *   pending → reviewed | refunded | escalated → resolved
  */
 
-import { and, desc, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, or, sql } from 'drizzle-orm';
 
 import { recordAudit } from '@/lib/db/audit';
 import { withSystemContext } from '@/lib/db/context';
@@ -63,6 +63,15 @@ export async function listDisclosureFailures(
 ): Promise<DisclosureFailureRow[]> {
   const limit = opts.limit ?? 200;
 
+  const statusCondition = opts.status
+    ? opts.status === 'pending'
+      ? or(
+          sql`${calls.metadata}->>'disclosure_triage_status' = 'pending'`,
+          sql`${calls.metadata}->>'disclosure_triage_status' IS NULL`,
+        )
+      : sql`${calls.metadata}->>'disclosure_triage_status' = ${opts.status}`
+    : undefined;
+
   const rows = await withSystemContext((tx) =>
     tx
       .select({
@@ -78,12 +87,16 @@ export async function listDisclosureFailures(
         metadata: calls.metadata,
       })
       .from(calls)
-      .where(sql`${calls.metadata}->>'disclosure_verified' = 'false'`)
+      .where(
+        statusCondition
+          ? and(sql`${calls.metadata}->>'disclosure_verified' = 'false'`, statusCondition)
+          : sql`${calls.metadata}->>'disclosure_verified' = 'false'`,
+      )
       .orderBy(desc(calls.created_at))
       .limit(limit),
   );
 
-  const mapped = rows.map((r): DisclosureFailureRow => {
+  return rows.map((r): DisclosureFailureRow => {
     const meta = (r.metadata as Record<string, unknown> | null) ?? null;
     const rawStatus = meta?.['disclosure_triage_status'];
     const status: DisclosureTriageStatus = isDisclosureTriageStatus(rawStatus)
@@ -114,11 +127,6 @@ export async function listDisclosureFailures(
       triagedBy,
     };
   });
-
-  if (opts.status) {
-    return mapped.filter((row) => row.triageStatus === opts.status);
-  }
-  return mapped;
 }
 
 export interface UpdateDisclosureTriageInput {

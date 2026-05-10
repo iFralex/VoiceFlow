@@ -112,18 +112,18 @@ describe('getUploadUrl', () => {
   });
 
   it('returns a signed upload URL for a valid path owned by the caller org', async () => {
-    const url = await getUploadUrl(VALID_PATH, 300);
+    const url = await getUploadUrl(VALID_PATH);
     expect(url).toBe(SIGNED_UPLOAD_URL);
     expect(mockCreateSignedUploadUrl).toHaveBeenCalledWith(VALID_PATH, { upsert: false });
   });
 
   it('throws if the path org does not match the caller org', async () => {
     const foreignPath = `${OTHER_ORG_ID}/uploads/file.csv`;
-    await expect(getUploadUrl(foreignPath, 300)).rejects.toThrow('Forbidden');
+    await expect(getUploadUrl(foreignPath)).rejects.toThrow('Forbidden');
   });
 
   it('throws if the path is missing an org prefix', async () => {
-    await expect(getUploadUrl('', 300)).rejects.toThrow('Invalid storage path');
+    await expect(getUploadUrl('')).rejects.toThrow('Invalid storage path');
   });
 
   it('throws if Supabase returns an error', async () => {
@@ -131,13 +131,13 @@ describe('getUploadUrl', () => {
       data: null,
       error: { message: 'Bucket not found' },
     });
-    await expect(getUploadUrl(VALID_PATH, 300)).rejects.toThrow(
+    await expect(getUploadUrl(VALID_PATH)).rejects.toThrow(
       'Failed to create upload URL: Bucket not found',
     );
   });
 
   it('throws if Supabase returns neither data nor error', async () => {
     mockCreateSignedUploadUrl.mockResolvedValueOnce({ data: null, error: null });
-    await expect(getUploadUrl(VALID_PATH, 300)).rejects.toThrow('Failed to create upload URL');
+    await expect(getUploadUrl(VALID_PATH)).rejects.toThrow('Failed to create upload URL');
   });
 });

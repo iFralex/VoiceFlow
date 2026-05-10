@@ -63,10 +63,9 @@ export async function getDownloadUrl(path: string, ttlSeconds: number): Promise<
  * match the first path segment of `path`.
  *
  * @param path       Storage object path, e.g. `<org_id>/uploads/<uuid>-file.csv`
- * @param ttlSeconds Seconds until the signed URL expires
- * @returns          A temporary signed URL for uploading the file
+ * @returns          A temporary signed URL for uploading the file (TTL is controlled by bucket config)
  */
-export async function getUploadUrl(path: string, _ttlSeconds: number): Promise<string> {
+export async function getUploadUrl(path: string): Promise<string> {
   const pathOrgId = extractOrgId(path);
   const { orgId } = await getAuthContext();
 

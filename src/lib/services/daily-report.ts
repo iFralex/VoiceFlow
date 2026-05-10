@@ -23,7 +23,6 @@ import {
   contacts,
   memberships,
   organizations,
-  userNotificationPreferences,
   users,
 } from '@/lib/db/schema';
 import { sendEmail } from '@/lib/email';
@@ -34,7 +33,7 @@ import {
   renderDailyReportEmail,
 } from '@/lib/email/templates/daily-report';
 import { env } from '@/lib/env';
-import { DEFAULT_NOTIFICATION_PREFERENCES } from '@/lib/services/notification-preferences';
+import { filterRecipientsByPreference } from '@/lib/services/notification-preferences';
 
 const REPORT_TIMEZONE = 'Europe/Rome';
 const TOP_CAMPAIGNS_LIMIT = 5;
@@ -402,7 +401,8 @@ async function fetchActiveOrgs(range: DailyReportRange): Promise<ActiveOrgRow[]>
           inArray(organizations.id, ids),
           sql`${organizations.deleted_at} IS NULL`,
         ),
-      );
+      )
+      .orderBy(organizations.id);
     return rows;
   });
 }
@@ -432,21 +432,12 @@ export async function getDailyReportRecipients(
 
     if (rows.length === 0) return [];
 
-    // Pull every existing pref row for this org and use it to filter the
-    // candidate owners. Missing rows fall back to the default (opted in).
-    const prefRows = await tx
-      .select({
-        user_id: userNotificationPreferences.user_id,
-        daily_report: userNotificationPreferences.daily_report,
-      })
-      .from(userNotificationPreferences)
-      .where(eq(userNotificationPreferences.org_id, orgId));
-
-    const prefByUser = new Map(prefRows.map((r) => [r.user_id, r.daily_report]));
-    const fallback = DEFAULT_NOTIFICATION_PREFERENCES.daily_report;
+    const eligibleIds = new Set(
+      await filterRecipientsByPreference(tx, orgId, rows.map((r) => r.userId), 'daily_report'),
+    );
 
     return rows
-      .filter((r) => prefByUser.get(r.userId) ?? fallback)
+      .filter((r) => eligibleIds.has(r.userId))
       .map((r) => ({
         userId: r.userId,
         email: r.email,

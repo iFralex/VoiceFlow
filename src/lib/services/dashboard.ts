@@ -251,7 +251,7 @@ async function perDayOutcomeCounts(
       appointmentBooked: sql<number>`count(*) filter (where ${calls.outcome} = 'appointment_booked')::int`,
       notInterested: sql<number>`count(*) filter (where ${calls.outcome} = 'not_interested')::int`,
       voicemail: sql<number>`count(*) filter (where ${calls.outcome} in ('voicemail_left','voicemail_no_message'))::int`,
-      failed: sql<number>`count(*) filter (where ${calls.status} in ('failed','no_answer','busy'))::int`,
+      failed: sql<number>`count(*) filter (where ${calls.status} in ('failed','no_answer','busy','voicemail'))::int`,
     })
     .from(calls)
     .where(

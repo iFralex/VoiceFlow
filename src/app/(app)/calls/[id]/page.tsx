@@ -72,12 +72,12 @@ export default async function CallDetailPage({ params }: Props) {
     data: e.data,
   }));
 
-  // Signed URL for the recording (60s TTL). If no recording yet, leave null
+  // Signed URL for the recording (1 hour TTL). If no recording yet, leave null
   // and the client will render an "in elaborazione" placeholder.
   let recordingUrl: string | null = null;
   if (call.recording_path) {
     try {
-      recordingUrl = await getCallMediaDownloadUrl(call.recording_path, 60);
+      recordingUrl = await getCallMediaDownloadUrl(call.recording_path, 3600);
     } catch {
       recordingUrl = null;
     }

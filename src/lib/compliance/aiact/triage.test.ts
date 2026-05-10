@@ -36,6 +36,7 @@ vi.mock('@/lib/db/schema', () => ({
 vi.mock('drizzle-orm', () => ({
   eq: (col: unknown, val: unknown) => ({ type: 'eq', col, val }),
   and: (...args: unknown[]) => ({ type: 'and', args: args.filter((a) => a !== undefined) }),
+  or: (...args: unknown[]) => ({ type: 'or', args }),
   desc: (col: unknown) => ({ type: 'desc', col }),
   sql: Object.assign(
     (strings: TemplateStringsArray, ...values: unknown[]) => ({
@@ -200,7 +201,9 @@ describe('listDisclosureFailures', () => {
     expect(row?.triageStatus).toBe('pending');
   });
 
-  it('filters by triage status in JS after fetching', async () => {
+  it('passes status filter to SQL WHERE and returns only matching rows', async () => {
+    // The SQL WHERE clause filters to pending rows only; the mock simulates the
+    // database returning just the two matching rows (c1 and c3).
     mockWithSystemContext.mockImplementationOnce(
       async (fn: (tx: unknown) => Promise<unknown>) =>
         fn(
@@ -208,10 +211,6 @@ describe('listDisclosureFailures', () => {
             makeRow({
               id: 'c1',
               metadata: { disclosure_verified: false, disclosure_triage_status: 'pending' },
-            }),
-            makeRow({
-              id: 'c2',
-              metadata: { disclosure_verified: false, disclosure_triage_status: 'refunded' },
             }),
             makeRow({
               id: 'c3',

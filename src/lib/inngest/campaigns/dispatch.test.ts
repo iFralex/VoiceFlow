@@ -200,14 +200,21 @@ describe('nextWindowOpen', () => {
 // ─── Tests: waitForCallWindow ────────────────────────────────────────────────
 
 describe('waitForCallWindow', () => {
-  it('is async wrapper delegating to nextWindowOpen', async () => {
-    // Just verify it returns a promise and the result matches nextWindowOpen
-    const now = new Date('2025-01-15T09:00:00Z'); // inside window
-    vi.setSystemTime(now);
+  it('returns null when called inside the call window', async () => {
+    // 2025-01-15T09:00:00Z = Wednesday 10:00 Rome (CET=UTC+1), inside 09:00-19:00
+    vi.useFakeTimers({ now: new Date('2025-01-15T09:00:00Z') });
     const result = await waitForCallWindow('09:00', '19:00', 'Europe/Rome');
     vi.useRealTimers();
-    // Result may be null or a date depending on exact local time; just verify type
-    expect(result === null || result instanceof Date).toBe(true);
+    expect(result).toBeNull();
+  });
+
+  it('returns a future Date when called outside the call window', async () => {
+    // 2025-01-15T22:00:00Z = Wednesday 23:00 Rome (CET=UTC+1), outside 09:00-19:00
+    vi.useFakeTimers({ now: new Date('2025-01-15T22:00:00Z') });
+    const result = await waitForCallWindow('09:00', '19:00', 'Europe/Rome');
+    vi.useRealTimers();
+    expect(result).toBeInstanceOf(Date);
+    expect(result!.getTime()).toBeGreaterThan(new Date('2025-01-15T22:00:00Z').getTime());
   });
 });
 
@@ -289,7 +296,7 @@ describe('checkConcurrencySlot', () => {
     expect(result).toBeInstanceOf(Date);
   });
 
-  it('returns null when limit is 0 and active count is 0', async () => {
+  it('returns a deferral Date when limit is 0 (no calls allowed, active count is 0)', async () => {
     mockSelect.mockReturnValue({
       from: vi.fn(() => ({
         where: vi.fn().mockResolvedValue([{ cnt: 0 }]),

@@ -345,8 +345,8 @@ describe('getDailyReportRecipients', () => {
       { userId: 'u3', email: 'def@example.com', fullName: 'Deffy', locale: 'en' },
     ];
     const prefRows = [
-      { user_id: 'u1', daily_report: true },
-      { user_id: 'u2', daily_report: false },
+      { user_id: 'u1', enabled: true },
+      { user_id: 'u2', enabled: false },
       // u3 has no row → defaults to true (still receives)
     ];
 

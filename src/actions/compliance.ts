@@ -1,6 +1,6 @@
 'use server';
 
-import { and, desc, eq, inArray, lte } from 'drizzle-orm';
+import { and, desc, eq, inArray, lt } from 'drizzle-orm';
 import { headers } from 'next/headers';
 import { z } from 'zod';
 
@@ -228,7 +228,7 @@ export async function listGdprHistory(
         inArray(auditLog.action, GDPR_HISTORY_ACTIONS),
       ];
       if (input.before) {
-        baseConditions.push(lte(auditLog.created_at, new Date(input.before)));
+        baseConditions.push(lt(auditLog.created_at, new Date(input.before)));
       }
 
       const entries = await tx

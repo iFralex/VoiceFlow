@@ -91,7 +91,6 @@ export async function runRpoSnapshot(clientOverride?: RpoClient): Promise<RpoSna
   for (;;) {
     const phones = await fetchCandidatePhones(cursor, cutoff);
     if (phones.length === 0) break;
-    cursor = phones[phones.length - 1] ?? null;
 
     try {
       const priorBlocked = await fetchPriorBlockedMap(phones);
@@ -127,6 +126,7 @@ export async function runRpoSnapshot(clientOverride?: RpoClient): Promise<RpoSna
       totalChecked += phones.length;
       totalBlocked += blockedNow.length;
       totalContactsUpdated += chunkContactsUpdated;
+      cursor = phones[phones.length - 1] ?? null;
       chunks++;
     } catch (err) {
       console.error('[rpo-snapshot] chunk failed', {
@@ -135,6 +135,7 @@ export async function runRpoSnapshot(clientOverride?: RpoClient): Promise<RpoSna
         error: err instanceof Error ? err.message : String(err),
       });
       errors++;
+      break;
     }
 
     if (phones.length < CHUNK_SIZE) break;

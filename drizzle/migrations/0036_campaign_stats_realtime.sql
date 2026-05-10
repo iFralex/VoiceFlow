@@ -3,8 +3,14 @@
 -- campaign_stats rows to keep the active-campaigns row in sync without a
 -- full-page revalidation.
 --
+-- REPLICA IDENTITY FULL is required so that UPDATE events on non-PK columns
+-- (e.g. org_id) can be filtered client-side by the Realtime server. Without
+-- it, filtered subscriptions on org_id silently receive no UPDATE events.
+--
 -- Wrapped in a DO block so this is a no-op on plain-Postgres environments
 -- (e.g. the integration-test Docker DB) where the publication does not exist.
+ALTER TABLE campaign_stats REPLICA IDENTITY FULL;
+
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'supabase_realtime') THEN
