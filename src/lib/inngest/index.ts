@@ -62,11 +62,13 @@ export { processContactsImport } from './contacts/import';
 export {
   CALL_COMPLETED_EVENT,
   CALL_CLASSIFY_EVENT,
+  CALL_QUALIFIED_LEAD_EVENT,
   QUALITY_OUTCOME_MISMATCH_EVENT,
 } from './voice/events';
 export type {
   CallCompletedData,
   CallClassifyData,
+  CallQualifiedLeadData,
   QualityOutcomeMismatchData,
 } from './voice/events';
 export {
@@ -86,3 +88,12 @@ export {
 export { CAMPAIGN_CONTACT_OPTED_OUT_EVENT } from './compliance/events';
 export type { CampaignContactOptedOutData } from './compliance/events';
 export { complianceOptOutRegisteredHandler } from './compliance/optout-handler';
+export { AUTH_SUSPICIOUS_LOGIN_EVENT } from './notifications/events';
+export type { AuthSuspiciousLoginData } from './notifications/events';
+export {
+  appointmentBookedEmailHandler,
+  qualifiedLeadEmailHandler,
+  lowBalanceEmailHandler,
+  campaignCompletedEmailHandler,
+  suspiciousLoginEmailHandler,
+} from './notifications/email';

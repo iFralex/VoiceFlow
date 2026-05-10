@@ -138,14 +138,14 @@ export async function sendSuspiciousLoginEmail(params: {
 
 ### Task 11: Inngest event consumers wiring all email triggers
 
-- [ ] Create `src/lib/inngest/notifications/email.ts` with one function per event:
+- [x] Create `src/lib/inngest/notifications/email.ts` with one function per event:
   - `appointment/booked` → `sendAppointmentBookedEmail`
   - `call/qualified-lead` (emitted from plan 08 when `outcome='interested'`) → `sendQualifiedLeadEmail`
   - `credit/low-balance` (from plan 05) → `sendLowBalanceEmail`
   - `campaign/completed` (from plan 09) → `sendCampaignCompletedEmail`
   - `auth/suspicious-login` → `sendSuspiciousLoginEmail`
-- [ ] Each function uses `step.run` with retries (5 attempts, exponential backoff)
-- [ ] Mark completed
+- [x] Each function uses `step.run` with retries (5 attempts, exponential backoff)
+- [x] Mark completed
 
 ### Task 12: Outbound webhook subscriptions service
 

@@ -9,6 +9,7 @@
 
 export const CALL_COMPLETED_EVENT = 'call/completed' as const;
 export const CALL_CLASSIFY_EVENT = 'call/classify' as const;
+export const CALL_QUALIFIED_LEAD_EVENT = 'call/qualified-lead' as const;
 
 export interface CallCompletedData {
   callId: string;
@@ -19,6 +20,11 @@ export interface CallCompletedData {
 }
 
 export interface CallClassifyData {
+  callId: string;
+  orgId: string;
+}
+
+export interface CallQualifiedLeadData {
   callId: string;
   orgId: string;
 }
