@@ -24,9 +24,9 @@ Phase 1 is bootstrap: alerting must be loud enough to catch real issues but quie
 
 ### Task 1: Sentry setup
 
-- [ ] Install `@sentry/nextjs`; run `pnpm dlx @sentry/wizard@latest -i nextjs --skip-connect` and accept config
-- [ ] Configure `sentry.client.config.ts`, `sentry.server.config.ts`, `sentry.edge.config.ts` with `dsn` from env, traces sample rate 0.1 in production, 1.0 in staging
-- [ ] Configure `beforeSend` filter to scrub PII per spec §15.2:
+- [x] Install `@sentry/nextjs`; run `pnpm dlx @sentry/wizard@latest -i nextjs --skip-connect` and accept config
+- [x] Configure `sentry.client.config.ts`, `sentry.server.config.ts`, `sentry.edge.config.ts` with `dsn` from env, traces sample rate 0.1 in production, 1.0 in staging
+- [x] Configure `beforeSend` filter to scrub PII per spec §15.2:
 
 ```typescript
 beforeSend(event, hint) {
@@ -39,9 +39,9 @@ beforeSend(event, hint) {
 }
 ```
 
-- [ ] Configure user context: attach `userId` and `orgId` from auth context but NOT email
-- [ ] Source maps uploaded automatically on Vercel build via `withSentryConfig`
-- [ ] Mark completed
+- [x] Configure user context: attach `userId` and `orgId` from auth context but NOT email
+- [x] Source maps uploaded automatically on Vercel build via `withSentryConfig`
+- [x] Mark completed
 
 ### Task 2: Axiom logging
 
