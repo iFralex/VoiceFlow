@@ -21,6 +21,7 @@ vi.mock('@/lib/env', () => ({
   },
 }));
 
+import { sendEmail } from '@/lib/email';
 import {
   buildDailyReportData,
   computeYesterdayRange,
@@ -148,9 +149,7 @@ describe('runDailyReport', () => {
       },
     ];
     deps.listRecipients.mockResolvedValueOnce(recipients);
-    const mailer = vi.fn<
-      (params: { to: string; subject: string; html: string; text?: string }) => Promise<void>
-    >(async () => undefined);
+    const mailer = vi.fn(async (_params: Parameters<typeof sendEmail>[0]) => undefined);
 
     const result = await runDailyReport({
       now: new Date('2026-05-09T08:00:00Z'),

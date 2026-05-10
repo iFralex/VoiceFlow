@@ -260,6 +260,13 @@
       "when": 1777800275520,
       "tag": "0036_campaign_stats_realtime",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1777800275521,
+      "tag": "0037_email_log",
+      "breakpoints": true
     }
   ]
 }

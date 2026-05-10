@@ -23,12 +23,12 @@ Resend is the email provider (spec §4); transactional templates use React Email
 
 ### Task 1: Resend client setup
 
-- [ ] Install `resend` SDK
-- [ ] Create `src/lib/email/client.ts` exporting a singleton Resend client
-- [ ] Configure sending domain in Resend (DNS: SPF, DKIM, DMARC); document in `docs/runbooks/email-domain-setup.md`
-- [ ] Default `from` address from env (`EMAIL_FROM_ADDRESS`, e.g. `noreply@VoiceFlow.it`)
-- [ ] Implement `sendEmail({ to, subject, react, tags })` wrapper persisting send attempts to a small `email_log` table for traceability (migration `0019_email_log.sql`)
-- [ ] Mark completed
+- [x] Install `resend` SDK
+- [x] Create `src/lib/email/client.ts` exporting a singleton Resend client
+- [x] Configure sending domain in Resend (DNS: SPF, DKIM, DMARC); document in `docs/runbooks/email-domain-setup.md`
+- [x] Default `from` address from env (`EMAIL_FROM_ADDRESS`, e.g. `noreply@VoiceFlow.it`)
+- [x] Implement `sendEmail({ to, subject, react, tags })` wrapper persisting send attempts to a small `email_log` table for traceability (migration `0037_email_log.sql`)
+- [x] Mark completed
 
 ### Task 2: Email layout and components
 

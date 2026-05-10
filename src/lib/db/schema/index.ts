@@ -25,3 +25,4 @@ export * from './voice_catalogue';
 export * from './campaign_stats';
 export * from './system_flags';
 export * from './user_notification_preferences';
+export * from './email_log';
