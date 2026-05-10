@@ -56,12 +56,12 @@ Resend is the email provider (spec §4); transactional templates use React Email
 
 ### Task 5: Email — low balance
 
-- [ ] Author `src/lib/email/templates/low-balance.tsx`:
+- [x] Author `src/lib/email/templates/low-balance.tsx`:
   - subject: "Credito basso — restano [N] minuti"
   - body: current remaining minutes, average daily consumption (last 7d), estimated days remaining
   - CTA "Ricarica ora" → `/credit/topup`
-- [ ] Sent at most once per day per org (idempotency in dispatcher)
-- [ ] Mark completed
+- [x] Sent at most once per day per org (idempotency in dispatcher)
+- [x] Mark completed
 
 ### Task 6: Email — campaign completed
 
