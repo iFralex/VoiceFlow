@@ -32,10 +32,10 @@ Resend is the email provider (spec §4); transactional templates use React Email
 
 ### Task 2: Email layout and components
 
-- [ ] Create `src/lib/email/templates/_layout.tsx` providing a consistent header (logo, brand colour), footer (legal links, unsubscribe), and shared spacing/typography
-- [ ] Create reusable components: `<KpiCell>`, `<DataTable>`, `<CtaButton>`, `<Alert>` so individual templates stay short
-- [ ] All copy in Italian by default; English variant switched on `users.locale='en'`
-- [ ] Mark completed
+- [x] Create `src/lib/email/templates/_layout.tsx` providing a consistent header (logo, brand colour), footer (legal links, unsubscribe), and shared spacing/typography
+- [x] Create reusable components: `<KpiCell>`, `<DataTable>`, `<CtaButton>`, `<Alert>` so individual templates stay short
+- [x] All copy in Italian by default; English variant switched on `users.locale='en'`
+- [x] Mark completed
 
 ### Task 3: Email — appointment booked
 
