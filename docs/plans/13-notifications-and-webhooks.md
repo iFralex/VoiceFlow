@@ -74,14 +74,14 @@ Resend is the email provider (spec §4); transactional templates use React Email
 
 ### Task 7: Email — weekly summary
 
-- [ ] Author `src/lib/email/templates/weekly-summary.tsx`:
+- [x] Author `src/lib/email/templates/weekly-summary.tsx`:
   - subject: "Il tuo riepilogo settimanale — [date range]"
   - aggregate KPIs across all campaigns of the past week
   - top performers (by appointments fissati)
   - alerts/issues from the week
-- [ ] Sent every Monday at 08:00 Europe/Rome via cron `/api/cron/weekly-summary` (add to `vercel.json`)
-- [ ] Default OFF in user notification preferences (opt-in)
-- [ ] Mark completed
+- [x] Sent every Monday at 08:00 Europe/Rome via cron `/api/cron/weekly-summary` (add to `vercel.json`)
+- [x] Default OFF in user notification preferences (opt-in)
+- [x] Mark completed
 
 ### Task 8: Email — member invite
 

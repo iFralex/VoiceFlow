@@ -10,6 +10,7 @@
     { "path": "/api/cron/aggregate-campaigns", "schedule": "*/5 * * * *" },
     { "path": "/api/cron/credit-reconciliation", "schedule": "0 3 * * *" },
     { "path": "/api/cron/rpo-snapshot", "schedule": "30 4 * * *" },
-    { "path": "/api/cron/aiact-audit", "schedule": "0 6 1 * *" }
+    { "path": "/api/cron/aiact-audit", "schedule": "0 6 1 * *" },
+    { "path": "/api/cron/weekly-summary", "schedule": "0 7 * * 1" }
   ]
 }
