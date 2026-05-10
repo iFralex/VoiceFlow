@@ -149,8 +149,8 @@ export async function sendSuspiciousLoginEmail(params: {
 
 ### Task 12: Outbound webhook subscriptions service
 
-- [ ] Tables already created in plan 02 (`webhooks_outgoing`, `webhook_deliveries`)
-- [ ] Create `src/lib/services/webhooks_outgoing.ts`:
+- [x] Tables already created in plan 02 (`webhooks_outgoing`, `webhook_deliveries`)
+- [x] Create `src/lib/services/webhooks_outgoing.ts`:
 
 ```typescript
 export async function createWebhook(
@@ -185,9 +185,9 @@ export async function replayDelivery(
 ): Promise<void>;
 ```
 
-- [ ] Secret stored as raw string column in `webhooks_outgoing.secret` (encrypted at rest by Postgres; viewed only by holder); revealed exactly once at creation/rotation
-- [ ] Allowed event types listed in `src/lib/services/webhooks_outgoing/events.ts`: `call.completed`, `call.failed`, `appointment.booked`, `campaign.completed`, `contact.opted_out`, `lead.qualified`
-- [ ] Mark completed
+- [x] Secret stored as raw string column in `webhooks_outgoing.secret` (encrypted at rest by Postgres; viewed only by holder); revealed exactly once at creation/rotation
+- [x] Allowed event types listed in `src/lib/services/webhooks_outgoing/events.ts`: `call.completed`, `call.failed`, `appointment.booked`, `campaign.completed`, `contact.opted_out`, `lead.qualified`
+- [x] Mark completed
 
 ### Task 13: Outbound webhook delivery engine
 
