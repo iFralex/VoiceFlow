@@ -450,6 +450,9 @@ export async function recordCallStarted(
  * balance, and emits a `call/completed` Inngest event for artifact persistence
  * (Task 9) and outcome classification (Task 11).
  */
+// Statuses that map to the `call.failed` webhook event type.
+const FAILED_CALL_STATUSES: Array<Call['status']> = ['no_answer', 'busy', 'failed'];
+
 export async function recordCallEnded(
   callId: string,
   args: {
@@ -461,7 +464,7 @@ export async function recordCallEnded(
 ): Promise<void> {
   const [row] = await withSystemContext((tx) =>
     tx
-      .select({ org_id: calls.org_id, metadata: calls.metadata })
+      .select({ org_id: calls.org_id, metadata: calls.metadata, outcome: calls.outcome })
       .from(calls)
       .where(eq(calls.id, callId))
       .limit(1),
@@ -538,6 +541,42 @@ export async function recordCallEnded(
     },
     id: `call-completed-${callId}`,
   });
+
+  // Fan out to outbound webhook subscribers.
+  const webhookEventType = FAILED_CALL_STATUSES.includes(terminalStatus)
+    ? 'call.failed'
+    : 'call.completed';
+  await sendInngestEvent({
+    name: 'webhook/emit',
+    data: {
+      orgId,
+      eventType: webhookEventType,
+      payload: {
+        callId,
+        orgId,
+        durationSeconds: args.durationSeconds,
+        endedReason: args.endedReason,
+        status: terminalStatus,
+      },
+      dedupKey: callId,
+    },
+    id: `webhook-emit-${webhookEventType}-${callId}`,
+  });
+
+  // If a tool already set outcome='interested' before the call ended, emit lead.qualified.
+  // The classifier path is handled separately in classifyCallHandler.
+  if (row.outcome === 'interested') {
+    await sendInngestEvent({
+      name: 'webhook/emit',
+      data: {
+        orgId,
+        eventType: 'lead.qualified',
+        payload: { callId, orgId },
+        dedupKey: callId,
+      },
+      id: `webhook-emit-lead-qualified-${callId}`,
+    });
+  }
 }
 
 /**

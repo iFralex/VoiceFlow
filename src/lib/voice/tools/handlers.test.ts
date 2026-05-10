@@ -144,9 +144,13 @@ describe('dispatchToolSideEffect', () => {
       const updatedSet = mockTx._updatedSets[0] as Record<string, unknown>;
       expect(updatedSet.outcome).toBe('appointment_booked');
 
-      expect(result.inngestEvents).toHaveLength(1);
-      expect(result.inngestEvents[0]!.name).toBe('appointment/booked');
-      expect(result.inngestEvents[0]!.id).toBe(`appointment-booked-${CALL_ID}`);
+      expect(result.inngestEvents).toHaveLength(2);
+      const appointmentEvent = result.inngestEvents.find((e) => e.name === 'appointment/booked');
+      expect(appointmentEvent).toBeDefined();
+      expect(appointmentEvent!.id).toBe(`appointment-booked-${CALL_ID}`);
+      const webhookEmitEvent = result.inngestEvents.find((e) => e.name === 'webhook/emit');
+      expect(webhookEmitEvent).toBeDefined();
+      expect((webhookEmitEvent!.data as Record<string, unknown>).eventType).toBe('appointment.booked');
     });
 
     it('is idempotent: skips insert when appointment already exists', async () => {

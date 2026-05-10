@@ -99,3 +99,5 @@ export {
 } from './notifications/email';
 export { webhookDeliverHandler } from './notifications/webhook-deliver';
 export type { WebhookDeliverData } from './notifications/webhook-deliver';
+export { webhookEmitFanoutHandler } from './notifications/webhook-fanout';
+export type { WebhookEmitData } from './notifications/webhook-fanout';

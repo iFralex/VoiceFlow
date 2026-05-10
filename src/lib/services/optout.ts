@@ -42,7 +42,7 @@ import type { DbTx } from '@/lib/db/context';
 import { withOrgContext } from '@/lib/db/context';
 import { contacts, optOutRegistry, optOutSourceEnum } from '@/lib/db/schema';
 import type { InngestEventPayload } from '@/lib/inngest/client';
-import { sendInngestEvents } from '@/lib/inngest/client';
+import { sendInngestEvent, sendInngestEvents } from '@/lib/inngest/client';
 
 export type OptOutSource = (typeof optOutSourceEnum.enumValues)[number];
 
@@ -202,6 +202,16 @@ export async function markOptOut(
   if (events.length > 0) {
     await sendInngestEvents(events);
   }
+  await sendInngestEvent({
+    name: 'webhook/emit',
+    data: {
+      orgId,
+      eventType: 'contact.opted_out',
+      payload: { phoneE164, source },
+      dedupKey: `${orgId}-${phoneE164}`,
+    },
+    id: `webhook-emit-contact-opted-out-${orgId}-${encodeURIComponent(phoneE164)}`,
+  });
 }
 
 /**

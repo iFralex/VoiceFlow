@@ -30,6 +30,8 @@ import type { TranscriptSegment } from '@/lib/voice/types';
 import type { CallClassifyData } from './events';
 import { QUALITY_DISCLOSURE_MISSING_EVENT, QUALITY_OUTCOME_MISMATCH_EVENT } from './events';
 
+const WEBHOOK_EMIT_EVENT = 'webhook/emit' as const;
+
 // ─── Public API ───────────────────────────────────────────────────────────────
 
 /**
@@ -157,4 +159,20 @@ export async function classifyCallHandler(data: CallClassifyData): Promise<void>
         ),
       );
   });
+
+  // Fan out lead.qualified webhook when classifier determines the caller is interested.
+  // Uses the same dedup ID as the recordCallEnded path so only one delivery occurs
+  // regardless of which path sets the 'interested' outcome.
+  if (result.outcome === 'interested') {
+    await sendInngestEvent({
+      name: WEBHOOK_EMIT_EVENT,
+      data: {
+        orgId,
+        eventType: 'lead.qualified',
+        payload: { callId, orgId },
+        dedupKey: callId,
+      },
+      id: `webhook-emit-lead-qualified-${callId}`,
+    });
+  }
 }

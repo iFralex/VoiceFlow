@@ -223,14 +223,14 @@ const headers = {
 
 ### Task 14: Webhook event emission from domain layer
 
-- [ ] In each domain service that produces a relevant event, add a single line emitting an Inngest `webhook/emit` event with `(orgId, eventType, payload)`
-- [ ] A meta-function `webhook/emit-fanout` resolves all subscriptions matching the event type and fans out one `webhook/deliver` per subscription
-- [ ] Examples:
+- [x] In each domain service that produces a relevant event, add a single line emitting an Inngest `webhook/emit` event with `(orgId, eventType, payload)`
+- [x] A meta-function `webhook/emit-fanout` resolves all subscriptions matching the event type and fans out one `webhook/deliver` per subscription
+- [x] Examples:
   - `markOptOut` (plan 11) emits `contact.opted_out`
   - `recordCallEnded` (plan 08) emits `call.completed` (or `call.failed`) and `lead.qualified` if outcome=interested
   - `bookAppointment` tool handler (plan 08) emits `appointment.booked`
   - `markCampaignCompleted` (plan 09) emits `campaign.completed`
-- [ ] Mark completed
+- [x] Mark completed
 
 ### Task 15: Webhook subscriptions UI
 

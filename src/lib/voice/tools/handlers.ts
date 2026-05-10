@@ -136,6 +136,16 @@ async function runBookAppointment(
         data: { callId, orgId, appointmentId },
         id: `appointment-booked-${callId}`,
       },
+      {
+        name: 'webhook/emit',
+        data: {
+          orgId,
+          eventType: 'appointment.booked',
+          payload: { callId, orgId, appointmentId },
+          dedupKey: callId,
+        },
+        id: `webhook-emit-appointment-booked-${callId}`,
+      },
     ],
   };
 }

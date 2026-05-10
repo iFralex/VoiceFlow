@@ -583,6 +583,8 @@ export async function markCampaignCompleted(
   orgId: string,
   campaignId: string,
 ): Promise<void> {
+  let didComplete = false;
+
   await withOrgContext(orgId, async (tx) => {
     const [updated] = await tx
       .update(campaigns)
@@ -603,6 +605,8 @@ export async function markCampaignCompleted(
 
     if (!updated) return; // already completed or cancelled — idempotent no-op
 
+    didComplete = true;
+
     await recordAudit(tx, {
       orgId,
       actorType: 'system',
@@ -614,6 +618,19 @@ export async function markCampaignCompleted(
 
   // Release unused credit reservation
   await releaseReservation(orgId, campaignId);
+
+  if (didComplete) {
+    await sendInngestEvent({
+      name: 'webhook/emit',
+      data: {
+        orgId,
+        eventType: 'campaign.completed',
+        payload: { orgId, campaignId },
+        dedupKey: campaignId,
+      },
+      id: `webhook-emit-campaign-completed-${campaignId}`,
+    });
+  }
 }
 
 /**
