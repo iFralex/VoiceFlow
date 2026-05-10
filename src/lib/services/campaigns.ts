@@ -10,6 +10,7 @@ import {
   contacts,
 } from '@/lib/db/schema';
 import type { Campaign } from '@/lib/db/schema';
+import { CAMPAIGN_COMPLETED_EVENT } from '@/lib/inngest/campaigns/events';
 import { sendInngestEvent } from '@/lib/inngest/client';
 import { getVoiceProviderByName } from '@/lib/voice/factory';
 
@@ -641,6 +642,8 @@ export async function markCampaignCompletedEmpty(
   orgId: string,
   campaignId: string,
 ): Promise<void> {
+  let didComplete = false;
+
   await withOrgContext(orgId, async (tx) => {
     const [updated] = await tx
       .update(campaigns)
@@ -660,6 +663,8 @@ export async function markCampaignCompletedEmpty(
 
     if (!updated) return;
 
+    didComplete = true;
+
     await recordAudit(tx, {
       orgId,
       actorType: 'system',
@@ -671,6 +676,24 @@ export async function markCampaignCompletedEmpty(
   });
 
   await releaseReservation(orgId, campaignId);
+
+  if (didComplete) {
+    await sendInngestEvent({
+      name: 'webhook/emit',
+      data: {
+        orgId,
+        eventType: 'campaign.completed',
+        payload: { orgId, campaignId },
+        dedupKey: campaignId,
+      },
+      id: `webhook-emit-campaign-completed-${campaignId}`,
+    });
+    await sendInngestEvent({
+      name: CAMPAIGN_COMPLETED_EVENT,
+      data: { campaignId, orgId },
+      id: `campaign-completed-${campaignId}`,
+    });
+  }
 }
 
 /**

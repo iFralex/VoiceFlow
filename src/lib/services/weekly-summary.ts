@@ -11,6 +11,7 @@ import {
   users,
 } from '@/lib/db/schema';
 import { sendEmail } from '@/lib/email';
+import { hasRecentEmailSentForRef } from '@/lib/email/idempotency';
 import {
   type WeeklySummaryAlert,
   type WeeklySummaryLocale,
@@ -482,7 +483,19 @@ async function dispatchOne(
     appUrl: buildAbsoluteUrl('/'),
   });
 
-  await mailer({ to: recipient.email, subject, html, text });
+  if (await hasRecentEmailSentForRef('weekly-summary', recipient.userId, 168)) return;
+
+  await mailer({
+    to: recipient.email,
+    subject,
+    html,
+    text,
+    tags: [
+      { name: 'template', value: 'weekly-summary' },
+      { name: 'org_id', value: data.orgId },
+      { name: 'ref_id', value: recipient.userId },
+    ],
+  });
 }
 
 function buildAbsoluteUrl(path: string): string {

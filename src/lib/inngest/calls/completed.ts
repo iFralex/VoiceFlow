@@ -21,7 +21,7 @@
 import { and, eq, sql } from 'drizzle-orm';
 
 import { withOrgContext, withSystemContext } from '@/lib/db/context';
-import { calls, campaigns } from '@/lib/db/schema';
+import { appointments, calls, campaigns } from '@/lib/db/schema';
 import { checkAndFinaliseCampaignCompletion } from '@/lib/inngest/campaigns/completed';
 import { CAMPAIGN_DISPATCH_CALL_EVENT } from '@/lib/inngest/campaigns/events';
 import { sendInngestEvent } from '@/lib/inngest/client';
@@ -149,7 +149,6 @@ export async function emitOutcomeEvents(callId: string): Promise<void> {
       .select({
         org_id: calls.org_id,
         contact_id: calls.contact_id,
-        campaign_id: calls.campaign_id,
         outcome: calls.outcome,
       })
       .from(calls)
@@ -159,14 +158,19 @@ export async function emitOutcomeEvents(callId: string): Promise<void> {
 
   if (!row?.outcome) return; // no outcome yet — classification pending
 
-  const { org_id: orgId, contact_id: contactId, campaign_id: campaignId, outcome } = row;
+  const { org_id: orgId, contact_id: contactId, outcome } = row;
 
   if (outcome === 'appointment_booked') {
-    await sendInngestEvent({
-      name: APPOINTMENT_BOOKED_EVENT,
-      data: { callId, orgId, campaignId, contactId },
-      id: `appointment-booked-${callId}`,
-    });
+    const [apt] = await withSystemContext((tx) =>
+      tx.select({ id: appointments.id }).from(appointments).where(eq(appointments.call_id, callId)).limit(1),
+    );
+    if (apt) {
+      await sendInngestEvent({
+        name: APPOINTMENT_BOOKED_EVENT,
+        data: { callId, orgId, appointmentId: apt.id },
+        id: `appointment-booked-${callId}`,
+      });
+    }
   }
 
   if (outcome === 'do_not_call') {
