@@ -256,14 +256,14 @@ const headers = {
 
 ### Task 18: Integration tests
 
-- [ ] Test: each email template renders without error, contains expected key strings, respects locale
-- [ ] Test: dedupe rule prevents duplicate appointment-booked emails when event arrives twice
-- [ ] Test: low-balance email sent at most once/day per org
-- [ ] Test: webhook delivery retries with correct backoff
-- [ ] Test: webhook deactivated after 6 consecutive failures
-- [ ] Test: HMAC signature can be verified by the canonical sample receiver code (Node.js)
-- [ ] Test: notification preferences toggle respected
-- [ ] Mark completed
+- [x] Test: each email template renders without error, contains expected key strings, respects locale
+- [x] Test: dedupe rule prevents duplicate appointment-booked emails when event arrives twice
+- [x] Test: low-balance email sent at most once/day per org
+- [x] Test: webhook delivery retries with correct backoff
+- [x] Test: webhook deactivated after 6 consecutive failures
+- [x] Test: HMAC signature can be verified by the canonical sample receiver code (Node.js)
+- [x] Test: notification preferences toggle respected
+- [x] Mark completed
 
 ### Task 19: Definition of Done
 
