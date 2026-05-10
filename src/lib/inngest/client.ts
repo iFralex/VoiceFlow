@@ -5,6 +5,8 @@ export interface InngestEventPayload {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: Record<string, any>;
   id?: string;
+  /** Unix timestamp in milliseconds; if in the future, Inngest delays processing until then. */
+  ts?: number;
 }
 
 /**
@@ -24,7 +26,7 @@ export async function sendInngestEvent(event: InngestEventPayload): Promise<void
   const response = await fetch(`${baseUrl}/e/${eventKey}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify([{ name: event.name, data: event.data, ...(event.id ? { id: event.id } : {}) }]),
+    body: JSON.stringify([{ name: event.name, data: event.data, ...(event.id ? { id: event.id } : {}), ...(event.ts !== undefined ? { ts: event.ts } : {}) }]),
   });
 
   if (!response.ok) {

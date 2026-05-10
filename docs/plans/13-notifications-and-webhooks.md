@@ -191,7 +191,7 @@ export async function replayDelivery(
 
 ### Task 13: Outbound webhook delivery engine
 
-- [ ] Create Inngest function `src/lib/inngest/notifications/webhook-deliver.ts` triggered by event `webhook/deliver`:
+- [x] Create Inngest function `src/lib/inngest/notifications/webhook-deliver.ts` triggered by event `webhook/deliver`:
   - inputs: `webhookId`, `eventType`, `payload`
   - render canonical envelope:
 
@@ -214,12 +214,12 @@ const headers = {
 };
 ```
 
-- [ ] POST to `webhook.url` with 10s timeout
-- [ ] Persist attempt in `webhook_deliveries` regardless of outcome
-- [ ] On non-2xx or timeout: increment `webhook.failure_count`; schedule retry with exponential backoff: 1m, 5m, 15m, 1h, 6h, 24h (6 attempts max)
-- [ ] After 6 failures: mark webhook `inactive=true`, send "Webhook disabilitato" email to org owner
-- [ ] On success: reset `failure_count` and update `last_delivery_at`
-- [ ] Mark completed
+- [x] POST to `webhook.url` with 10s timeout
+- [x] Persist attempt in `webhook_deliveries` regardless of outcome
+- [x] On non-2xx or timeout: increment `webhook.failure_count`; schedule retry with exponential backoff: 1m, 5m, 15m, 1h, 6h, 24h (6 attempts max)
+- [x] After 6 failures: mark webhook `inactive=true`, send "Webhook disabilitato" email to org owner
+- [x] On success: reset `failure_count` and update `last_delivery_at`
+- [x] Mark completed
 
 ### Task 14: Webhook event emission from domain layer
 

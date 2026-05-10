@@ -97,3 +97,5 @@ export {
   campaignCompletedEmailHandler,
   suspiciousLoginEmailHandler,
 } from './notifications/email';
+export { webhookDeliverHandler } from './notifications/webhook-deliver';
+export type { WebhookDeliverData } from './notifications/webhook-deliver';
