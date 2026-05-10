@@ -48,11 +48,11 @@ Resend is the email provider (spec §4); transactional templates use React Email
 
 ### Task 4: Email — qualified lead
 
-- [ ] Author `src/lib/email/templates/qualified-lead.tsx`:
+- [x] Author `src/lib/email/templates/qualified-lead.tsx`:
   - subject: "Nuovo lead qualificato — [contact_name]"
   - body: contact details, AI summary (1–2 sentences from transcript), recommended next action
   - CTA "Richiama il contatto" with click-to-call `tel:` link
-- [ ] Mark completed
+- [x] Mark completed
 
 ### Task 5: Email — low balance
 
