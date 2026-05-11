@@ -24,6 +24,7 @@ import {
 import { recordAudit } from '@/lib/db/audit';
 import { withSystemContext } from '@/lib/db/context';
 import { env } from '@/lib/env';
+import { FLAGS, isFlagEnabled, shutdownPostHog } from '@/lib/feature-flags';
 
 const DEFAULT_WINDOW_DAYS = 31;
 
@@ -88,8 +89,18 @@ export async function GET(request: Request): Promise<Response> {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const result = await runAiActAuditCron();
-  return NextResponse.json({ ok: true, ...result });
+  const enabled = await isFlagEnabled('system', FLAGS.COMPLIANCE_AIACT_MONTHLY_AUDIT, true);
+  if (!enabled) {
+    await shutdownPostHog();
+    return NextResponse.json({ ok: true, skipped: 'flag_disabled' });
+  }
+
+  try {
+    const result = await runAiActAuditCron();
+    return NextResponse.json({ ok: true, ...result });
+  } finally {
+    await shutdownPostHog();
+  }
 }
 
 export const dynamic = 'force-dynamic';

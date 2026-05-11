@@ -95,7 +95,9 @@ export async function getOperationsDashboardData(): Promise<OperationsDashboardD
 
     const cliHealth: CliPoolHealth = { active: 0, cooling_down: 0, retired: 0 };
     for (const row of cliRows) {
-      cliHealth[row.status] = Number(row.cnt);
+      if (row.status in cliHealth) {
+        cliHealth[row.status as keyof CliPoolHealth] = Number(row.cnt);
+      }
     }
 
     const [stripeRow] = await tx

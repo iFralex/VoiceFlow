@@ -1,4 +1,4 @@
-import { and, eq, gte, isNull, lt } from 'drizzle-orm';
+import { and, desc, eq, gte, isNull, lt } from 'drizzle-orm';
 
 import { withSystemContext } from '@/lib/db/context';
 import { calls } from '@/lib/db/schema/calls';
@@ -81,7 +81,7 @@ export async function sampleCallsForQa(date: Date): Promise<number> {
     keyed.sort((a, b) => a.k - b.k);
     const sampled = keyed.slice(0, sampleSize).map((x) => x.c);
 
-    await tx
+    const inserted = await tx
       .insert(qaReviews)
       .values(
         sampled.map((c) => ({
@@ -91,9 +91,10 @@ export async function sampleCallsForQa(date: Date): Promise<number> {
           status: 'pending_review' as const,
         })),
       )
-      .onConflictDoNothing();
+      .onConflictDoNothing()
+      .returning({ id: qaReviews.id });
 
-    return sampled.length;
+    return inserted.length;
   });
 }
 
@@ -120,7 +121,7 @@ export async function listQaReviews(filter: QaReviewStatus | 'all'): Promise<QaR
       .from(qaReviews)
       .innerJoin(calls, eq(calls.id, qaReviews.call_id))
       .where(filter === 'all' ? undefined : eq(qaReviews.status, filter))
-      .orderBy(qaReviews.sampled_at)
+      .orderBy(desc(qaReviews.sampled_at))
       .limit(200);
 
     return rows.map((r) => ({

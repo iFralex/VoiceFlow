@@ -35,6 +35,7 @@ vi.mock('@/lib/db/schema/calls', () => ({
 // ── mock drizzle-orm helpers ───────────────────────────────────────────────────
 vi.mock('drizzle-orm', () => ({
   and: vi.fn((...args: unknown[]) => ({ and: args })),
+  desc: vi.fn((col: unknown) => ({ desc: col })),
   eq: vi.fn((col: unknown, val: unknown) => ({ eq: [col, val] })),
   gte: vi.fn((col: unknown, val: unknown) => ({ gte: [col, val] })),
   lt: vi.fn((col: unknown, val: unknown) => ({ lt: [col, val] })),
@@ -59,7 +60,12 @@ const mockTx = {
   insert: vi.fn(() => ({
     values: vi.fn((rows: unknown[]) => {
       _insertedValues.push(...rows);
-      return Promise.resolve([]);
+      const inserted = rows.map((_, i) => ({ id: BigInt(i) }));
+      return {
+        onConflictDoNothing: vi.fn(() => ({
+          returning: vi.fn(() => Promise.resolve(inserted)),
+        })),
+      };
     }),
   })),
   update: vi.fn(() => ({
@@ -87,7 +93,12 @@ beforeEach(() => {
   mockTx.insert.mockReturnValue({
     values: vi.fn((rows: unknown[]) => {
       _insertedValues.push(...rows);
-      return Promise.resolve([]);
+      const inserted = rows.map((_, i) => ({ id: BigInt(i) }));
+      return {
+        onConflictDoNothing: vi.fn(() => ({
+          returning: vi.fn(() => Promise.resolve(inserted)),
+        })),
+      };
     }),
   });
 });

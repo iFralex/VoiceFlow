@@ -1,6 +1,9 @@
 {
   "buildCommand": "pnpm build",
   "outputDirectory": ".next",
+  "functions": {
+    "src/app/api/cron/backup/route.ts": { "maxDuration": 300 }
+  },
   "crons": [
     { "path": "/api/cron/daily-report", "schedule": "0 19 * * *" },
     { "path": "/api/cron/retention-purge", "schedule": "0 3 * * *" },
