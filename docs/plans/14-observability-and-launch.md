@@ -255,7 +255,7 @@ async function write(level: string, message: string, ctx: Record<string, unknown
 
 ### Task 18: Founder operations dashboard
 
-- [ ] Create `/admin/operations` (founder-only) consolidating:
+- [x] Create `/admin/operations` (founder-only) consolidating:
   - active orgs count, MRR-equivalent (sum of credit consumed last 30d × per-minute pricing)
   - active campaigns count
   - 24h call volume + outcome breakdown
@@ -264,8 +264,8 @@ async function write(level: string, message: string, ctx: Record<string, unknown
   - Stripe payment volume last 30d
   - failed webhook deliveries last 24h
   - GDPR requests last 30d
-- [ ] All read via existing tables; no new schema needed
-- [ ] Mark completed
+- [x] All read via existing tables; no new schema needed
+- [x] Mark completed
 
 ### Task 19: Final go-live procedure
 
