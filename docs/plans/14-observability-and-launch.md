@@ -141,12 +141,12 @@ async function write(level: string, message: string, ctx: Record<string, unknown
 
 ### Task 9: Runbook — webhook replay
 
-- [ ] Author `docs/runbooks/webhook-replay.md`:
+- [x] Author `docs/runbooks/webhook-replay.md`:
   - locating the failed delivery in the Stripe/Vapi dashboard
   - using the admin replay endpoint (or the Stripe CLI for Stripe events)
   - verifying idempotency via `webhook_events` table
   - escalation if replay fails repeatedly
-- [ ] Mark completed
+- [x] Mark completed
 
 ### Task 10: Runbook — manual credit adjustment
 
