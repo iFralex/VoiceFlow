@@ -128,7 +128,7 @@ async function write(level: string, message: string, ctx: Record<string, unknown
 
 ### Task 8: Runbook — credential rotation
 
-- [ ] Author `docs/runbooks/credential-rotation.md` covering:
+- [x] Author `docs/runbooks/credential-rotation.md` covering:
   - Stripe API keys (every 12 months)
   - Vapi/Retell API keys (every 6 months)
   - Supabase service-role keys (annual, with care)
@@ -136,8 +136,8 @@ async function write(level: string, message: string, ctx: Record<string, unknown
   - SBC trunk passwords (every 6 months)
   - Internal HMAC secrets (annual)
   - PAT regeneration policy for users
-- [ ] Each section includes: where to rotate, where to update env vars (Vercel + 1Password), verification step, rollback path
-- [ ] Mark completed
+- [x] Each section includes: where to rotate, where to update env vars (Vercel + 1Password), verification step, rollback path
+- [x] Mark completed
 
 ### Task 9: Runbook — webhook replay
 

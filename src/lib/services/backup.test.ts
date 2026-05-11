@@ -18,14 +18,14 @@ vi.mock('@/lib/observability/logger', () => ({
 
 // Mock postgres client
 vi.mock('postgres', () => {
-  const sql = vi.fn() as unknown as ReturnType<typeof import('postgres').default>;
+  const sql = vi.fn() as unknown as ReturnType<typeof import('postgres')>;
   // sql tagged template returns empty array by default
   const proxy = new Proxy(vi.fn().mockResolvedValue([]) as unknown as typeof sql, {
     get(target, prop) {
       if (prop === 'end') return vi.fn().mockResolvedValue(undefined);
       // sql(tableName) identity for table name interpolation
       if (prop === 'toString') return () => 'sql';
-      return (target as Record<string, unknown>)[prop as string];
+      return (target as unknown as Record<string, unknown>)[prop as string];
     },
     apply(_target, _this, args) {
       // Tagged template call: sql`SELECT ...`
