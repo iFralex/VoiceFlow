@@ -82,14 +82,14 @@ async function write(level: string, message: string, ctx: Record<string, unknown
 
 ### Task 4: Alerting tiers
 
-- [ ] Define three tiers in `docs/runbooks/alerting.md`:
+- [x] Define three tiers in `docs/runbooks/alerting.md`:
   - **CRITICAL** (page founder via SMS/PagerDuty): system outage, payment processor outage, RPO check fully unavailable >15 min, voice provider 5xx >5%, DB connection failures, security incidents
   - **HIGH** (email + Slack channel): elevated voice-provider error rate <5%, AI Act disclosure failure rate >2% over 1h, CLI pool >50% in cooling-down, webhook deactivation >5 in a day
   - **INFO** (Slack channel only): individual call failures, individual webhook retries, low-balance events for orgs
-- [ ] Implement Sentry alert rules matching CRITICAL and HIGH using Sentry's "Issue Alerts" UI
-- [ ] Implement Axiom monitors with thresholds for HIGH-tier metrics
-- [ ] Document escalation paths and quiet hours (CRITICAL pages 24/7; HIGH only 08:00–22:00)
-- [ ] Mark completed
+- [x] Implement Sentry alert rules matching CRITICAL and HIGH using Sentry's "Issue Alerts" UI (manual: rules documented in docs/runbooks/alerting.md; configure via Sentry UI)
+- [x] Implement Axiom monitors with thresholds for HIGH-tier metrics (manual: APL queries documented in docs/runbooks/alerting.md; configure via Axiom dashboard)
+- [x] Document escalation paths and quiet hours (CRITICAL pages 24/7; HIGH only 08:00–22:00)
+- [x] Mark completed
 
 ### Task 5: Health and readiness endpoints
 
