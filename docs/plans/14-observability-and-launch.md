@@ -179,7 +179,7 @@ async function write(level: string, message: string, ctx: Record<string, unknown
 
 ### Task 13: Smoke test e2e — launch-readiness
 
-- [ ] Playwright `e2e/launch-smoke.spec.ts` running against production-equivalent staging:
+- [x] Playwright `e2e/launch-smoke.spec.ts` running against production-equivalent staging:
   - sign up via magic link with a fresh email
   - create org through onboarding (with DPA acceptance)
   - top up credit via Stripe test card
@@ -192,9 +192,9 @@ async function write(level: string, message: string, ctx: Record<string, unknown
   - export campaign results CSV
   - run GDPR export for the test contact
   - run GDPR erasure for the test contact
-- [ ] Run this suite as the "launch gate" check; document expected runtime ~10 minutes
-- [ ] Schedule weekly via cron (existing `/api/cron/sbc-smoke-test` extended)
-- [ ] Mark completed
+- [x] Run this suite as the "launch gate" check; document expected runtime ~10 minutes
+- [x] Schedule weekly via cron (existing `/api/cron/sbc-smoke-test` extended)
+- [x] Mark completed
 
 ### Task 14: Pre-launch checklist
 

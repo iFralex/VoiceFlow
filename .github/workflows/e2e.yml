@@ -5,6 +5,10 @@ on:
   schedule:
     # Nightly at 02:00 UTC
     - cron: '0 2 * * *'
+    # Weekly launch-smoke gate — Mondays at 04:00 UTC
+    # Triggers the launch-smoke job with SKIP_E2E_LAUNCH_SMOKE=false.
+    # Must be green for 3 consecutive runs before go-live (see docs/runbooks/launch-checklist.md).
+    - cron: '0 4 * * 1'
 
 jobs:
   e2e:
@@ -50,6 +54,74 @@ jobs:
         run: pnpm test:e2e
         env:
           SKIP_ENV_VALIDATION: true
+
+  launch-smoke:
+    name: Launch Smoke Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Only run on the weekly Monday schedule, not on PRs or nightly runs.
+    if: github.event_name == 'schedule' && github.event.schedule == '0 4 * * 1'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Build application
+        run: pnpm build
+        env:
+          SKIP_ENV_VALIDATION: true
+
+      - name: Run launch smoke test
+        run: pnpm test:e2e e2e/launch-smoke.spec.ts
+        env:
+          SKIP_ENV_VALIDATION: true
+          SKIP_E2E_LAUNCH_SMOKE: false
+          E2E_TEST_PHONE: ${{ secrets.E2E_TEST_PHONE }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY_TEST }}
+          STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET_TEST }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: launch-smoke-report
+          path: playwright-report/
+          retention-days: 30
+
+      - name: Upload Playwright traces
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: launch-smoke-traces
+          path: test-results/
+          retention-days: 14
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
