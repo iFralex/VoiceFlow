@@ -76,9 +76,9 @@ async function write(level: string, message: string, ctx: Record<string, unknown
 
 ### Task 3: Replace ad-hoc logs with structured logger
 
-- [ ] Sweep `src/` for `console.log`, `console.error`; replace with `logger.info`/`logger.error` carrying structured context
-- [ ] ESLint rule `no-console` upgraded from warn to error (with `allow: ['warn']` reserved for known-safe edges)
-- [ ] Mark completed
+- [x] Sweep `src/` for `console.log`, `console.error`; replace with `logger.info`/`logger.error` carrying structured context
+- [x] ESLint rule `no-console` upgraded from warn to error (with `allow: ['warn']` reserved for known-safe edges)
+- [x] Mark completed
 
 ### Task 4: Alerting tiers
 

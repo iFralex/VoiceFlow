@@ -19,6 +19,7 @@ import {
   renderWeeklySummaryEmail,
 } from '@/lib/email/templates/weekly-summary';
 import { env } from '@/lib/env';
+import { logger } from '@/lib/observability/logger';
 import { filterRecipientsByPreference } from '@/lib/services/notification-preferences';
 
 const REPORT_TIMEZONE = 'Europe/Rome';
@@ -158,9 +159,9 @@ export async function runWeeklySummary(
           sent++;
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
-          console.error('[weekly-summary] recipient failed', {
-            orgId: org.id,
-            userId: recipient.userId,
+          await logger.error('[weekly-summary] recipient failed', {
+            org_id: org.id,
+            user_id: recipient.userId,
             error: msg,
           });
         }
@@ -182,7 +183,7 @@ export async function runWeeklySummary(
       });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      console.error('[weekly-summary] org failed', { orgId: org.id, error: message });
+      await logger.error('[weekly-summary] org failed', { org_id: org.id, error: message });
       outcomes.push({
         orgId: org.id,
         orgName: org.name,

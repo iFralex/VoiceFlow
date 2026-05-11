@@ -7,6 +7,7 @@ import { recordAudit } from '@/lib/db/audit';
 import { withSystemContext } from '@/lib/db/context';
 import { creditLedger, payments } from '@/lib/db/schema';
 import { env } from '@/lib/env';
+import { logger } from '@/lib/observability/logger';
 import { topUp } from '@/lib/services/credit';
 import { stripe } from '@/lib/stripe/client';
 
@@ -114,7 +115,7 @@ export async function reconcilePendingPayments(): Promise<ReconcileResult> {
       }
       // If 'open', leave it — may still complete via webhook
     } catch (err) {
-      console.error('[credit-reconciliation] Error reconciling payment', {
+      await logger.error('[credit-reconciliation] Error reconciling payment', {
         paymentId: payment.id,
         error: err instanceof Error ? err.message : String(err),
       });
@@ -196,7 +197,7 @@ export async function runLedgerSanityCheck(): Promise<SanityResult> {
 
       if (discrepancyCents > 0) {
         const severity = discrepancyCents > DISCREPANCY_ALERT_CENTS ? 'ALERT' : 'INFO';
-        console.error(`[credit-reconciliation] ${severity} ledger discrepancy`, {
+        await logger.error(`[credit-reconciliation] ${severity} ledger discrepancy`, {
           org_id,
           totalDelta,
           expectedDelta,
@@ -212,7 +213,7 @@ export async function runLedgerSanityCheck(): Promise<SanityResult> {
 
       orgsChecked++;
     } catch (err) {
-      console.error('[credit-reconciliation] Error during sanity check for org', {
+      await logger.error('[credit-reconciliation] Error during sanity check for org', {
         org_id,
         error: err instanceof Error ? err.message : String(err),
       });

@@ -18,6 +18,7 @@ import { TEMPLATE_DEFINITIONS } from '@/lib/db/seed/script_templates';
 import { env } from '@/lib/env';
 import { sendInngestEvent } from '@/lib/inngest/client';
 import { CALL_CLASSIFY_EVENT, CALL_COMPLETED_EVENT, CALL_QUALIFIED_LEAD_EVENT } from '@/lib/inngest/voice/events';
+import { logger } from '@/lib/observability/logger';
 import { computeCallCost, computePerMinuteCents } from '@/lib/services/billing-rules';
 import { chargeForCall } from '@/lib/services/credit';
 import {
@@ -355,7 +356,7 @@ export async function dispatchCall(orgId: string, callId: string): Promise<void>
         const reason = err instanceof Error ? err.message : 'createCall_failed';
         await recordSbcDispatchFailure(reason);
       } catch (trackErr) {
-        console.error('[dispatch] Failed to record SBC dispatch failure', trackErr);
+        void logger.error('[dispatch] Failed to record SBC dispatch failure', { error: trackErr instanceof Error ? trackErr.message : String(trackErr) });
       }
     }
     throw err;
@@ -367,7 +368,9 @@ export async function dispatchCall(orgId: string, callId: string): Promise<void>
     try {
       await recordSbcDispatchSuccess();
     } catch (trackErr) {
-      console.error('[dispatch] Failed to record SBC dispatch success', trackErr);
+      void logger.error('[dispatch] Failed to record SBC dispatch success', {
+        error: trackErr instanceof Error ? trackErr.message : String(trackErr),
+      });
     }
   }
 

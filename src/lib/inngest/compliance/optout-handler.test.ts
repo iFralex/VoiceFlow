@@ -38,6 +38,14 @@ vi.mock('@/lib/voice/factory', () => ({
   getVoiceProviderByName: mockGetVoiceProviderByName,
 }));
 
+vi.mock('@/lib/observability/logger', () => ({
+  logger: {
+    info: vi.fn().mockResolvedValue(undefined),
+    warn: vi.fn().mockResolvedValue(undefined),
+    error: vi.fn().mockResolvedValue(undefined),
+  },
+}));
+
 vi.mock('@/lib/db/schema', () => ({
   contacts: {
     id: 'c_id',
@@ -62,6 +70,8 @@ vi.mock('drizzle-orm', () => ({
 }));
 
 // ─── Module under test ───────────────────────────────────────────────────────
+
+import { logger } from '@/lib/observability/logger';
 
 import { CAMPAIGN_CONTACT_OPTED_OUT_EVENT } from './events';
 import { complianceOptOutRegisteredHandler } from './optout-handler';
@@ -460,7 +470,8 @@ describe('complianceOptOutRegisteredHandler', () => {
   });
 
   it('finalisation failures are logged and swallowed', async () => {
-    const consoleErrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const loggerErrSpy = vi.mocked(logger.error);
+    loggerErrSpy.mockClear();
     mockCheckAndFinaliseCampaignCompletion.mockRejectedValueOnce(
       new Error('boom'),
     );
@@ -488,7 +499,6 @@ describe('complianceOptOutRegisteredHandler', () => {
       }),
     ).resolves.toBeUndefined();
 
-    expect(consoleErrSpy).toHaveBeenCalled();
-    consoleErrSpy.mockRestore();
+    expect(loggerErrSpy).toHaveBeenCalled();
   });
 });

@@ -15,6 +15,7 @@ import { timingSafeEqual } from 'crypto';
 import { NextResponse } from 'next/server';
 
 import { env } from '@/lib/env';
+import { logger } from '@/lib/observability/logger';
 import { runWatchdog } from '@/lib/services/cli_watchdog';
 import { clearStaleSbcUnhealthyFlag } from '@/lib/services/system_flags';
 
@@ -44,7 +45,9 @@ export async function GET(request: Request): Promise<Response> {
   try {
     sbcFlagCleared = await clearStaleSbcUnhealthyFlag();
   } catch (err) {
-    console.error('[cli-watchdog] Failed to clear stale SBC flag', err);
+    void logger.error('[cli-watchdog] Failed to clear stale SBC flag', {
+      error: err instanceof Error ? err.message : String(err),
+    });
   }
 
   return NextResponse.json({ ok: true, sbcFlagCleared, ...result });

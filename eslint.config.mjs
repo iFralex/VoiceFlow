@@ -36,8 +36,8 @@ const config = [
       'prefer-const': 'error',
       eqeqeq: ['error', 'always', { null: 'ignore' }],
 
-      // Console: only allow warn and error
-      'no-console': ['warn', { allow: ['warn', 'error'] }],
+      // Console: structured logger must be used; only console.warn allowed for edge cases
+      'no-console': ['error', { allow: ['warn'] }],
 
       // Forbid raw SVG file imports — use @/components/ui/icon instead
       'no-restricted-imports': [
@@ -86,6 +86,25 @@ const config = [
             'Use dbForRequest() from @/lib/db/client instead of the bare db in (app)/ server code. Direct db usage bypasses RLS org context.',
         },
       ],
+    },
+  },
+  // ─── CLI scripts: console is fine (no Axiom context available) ───────────
+  {
+    files: [
+      'src/lib/db/migrate.ts',
+      'src/lib/db/seed.ts',
+      'src/lib/db/seed/index.ts',
+      'scripts/**/*.ts',
+    ],
+    rules: {
+      'no-console': 'off',
+    },
+  },
+  // ─── The logger implementation itself uses console.log internally ─────────
+  {
+    files: ['src/lib/observability/logger.ts'],
+    rules: {
+      'no-console': 'off',
     },
   },
   {

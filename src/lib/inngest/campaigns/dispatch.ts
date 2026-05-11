@@ -6,6 +6,7 @@ import { recordAudit } from '@/lib/db/audit';
 import { withOrgContext, withSystemContext } from '@/lib/db/context';
 import { calls, contacts, phoneNumbers, rpoSnapshots } from '@/lib/db/schema';
 import { sendInngestEvent, sendInngestEvents } from '@/lib/inngest/client';
+import { logger } from '@/lib/observability/logger';
 import type { InngestEventPayload } from '@/lib/inngest/client';
 import { CREDIT_LOW_BALANCE_EVENT } from '@/lib/inngest/handlers/credit';
 import {
@@ -214,7 +215,10 @@ export async function onDispatchFailure(data: CampaignDispatchCallData): Promise
 
   // Degradation check is best-effort — alert failures must never propagate
   await checkProviderDegradation(orgId, campaignId).catch((e: unknown) => {
-    console.error('[dispatch] Provider degradation check failed for campaign', campaignId, e);
+    void logger.error('[dispatch] Provider degradation check failed', {
+      campaign_id: campaignId,
+      error: e instanceof Error ? e.message : String(e),
+    });
   });
 }
 
