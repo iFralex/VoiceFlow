@@ -150,12 +150,12 @@ async function write(level: string, message: string, ctx: Record<string, unknown
 
 ### Task 10: Runbook — manual credit adjustment
 
-- [ ] Author `docs/runbooks/credit-adjustment.md` documenting plan 05's `/api/admin/credit-adjustment` endpoint:
+- [x] Author `docs/runbooks/credit-adjustment.md` documenting plan 05's `/api/admin/credit-adjustment` endpoint:
   - approval flow (founder writes a brief in a Notion / shared doc)
   - executing the adjustment
   - confirming on the org's credit page
   - communication template to the dealer
-- [ ] Mark completed
+- [x] Mark completed
 
 ### Task 11: Runbook — GDPR erasure
 
