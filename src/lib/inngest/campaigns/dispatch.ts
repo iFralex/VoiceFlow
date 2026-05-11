@@ -573,7 +573,6 @@ export async function verifyRpoCompliance(
     result = await rpoClient.singleCheck(phoneE164);
   } catch (e) {
     void logger.warn('[dispatch] RPO singleCheck failed; falling back to snapshot', {
-      phone_e164: phoneE164,
       error: e instanceof Error ? e.message : String(e),
     });
     const stale = await fetchRpoSnapshotState(phoneE164);

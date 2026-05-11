@@ -11,6 +11,10 @@ Sentry.init({
       /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g,
       '[redacted-email]',
     );
+    text = text.replace(
+      /("(?:first_name|last_name|firstName|lastName|full_name|nome|cognome)"\s*:\s*)"[^"]*"/g,
+      '$1"[redacted-name]"',
+    );
     return JSON.parse(text) as typeof event;
   },
 });
