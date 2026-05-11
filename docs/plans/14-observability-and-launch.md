@@ -198,7 +198,7 @@ async function write(level: string, message: string, ctx: Record<string, unknown
 
 ### Task 14: Pre-launch checklist
 
-- [ ] Author `docs/runbooks/launch-checklist.md` enumerating every item that must be true before the first paying customer:
+- [x] Author `docs/runbooks/launch-checklist.md` enumerating every item that must be true before the first paying customer:
   - all 14 plans merged
   - Vercel production env vars filled (cross-check against `.env.example`)
   - Supabase production project provisioned with PITR
@@ -213,8 +213,8 @@ async function write(level: string, message: string, ctx: Record<string, unknown
   - Founder has documented runbooks accessible
   - Launch smoke test green for 3 consecutive runs
   - Legal review of privacy/DPA/terms complete
-- [ ] Each item is a checkbox in the runbook; founder ticks them off as the launch sign-off ritual
-- [ ] Mark completed
+- [x] Each item is a checkbox in the runbook; founder ticks them off as the launch sign-off ritual
+- [x] Mark completed
 
 ### Task 15: Customer-facing status page
 
