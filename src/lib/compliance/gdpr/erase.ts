@@ -44,6 +44,7 @@ import { calls, contacts } from '@/lib/db/schema';
 import type { Contact } from '@/lib/db/schema';
 import { sendInngestEvents } from '@/lib/inngest/client';
 import type { InngestEventPayload } from '@/lib/inngest/client';
+import { logger } from '@/lib/observability/logger';
 import { markOptOutInTx } from '@/lib/services/optout';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { CALL_MEDIA_BUCKET } from '@/lib/voice/persistence';
@@ -177,7 +178,7 @@ async function purgeStorageObjects(
       .from(CALL_MEDIA_BUCKET)
       .remove(recordingPaths);
     if (error) {
-      console.error('[gdpr.erase] recording delete failed:', error.message);
+      void logger.error('[gdpr.erase] recording delete failed', { error: error.message });
       outcome.storageErrors += recordingPaths.length;
     } else {
       outcome.recordingsDeleted = data?.length ?? recordingPaths.length;
@@ -189,7 +190,7 @@ async function purgeStorageObjects(
       .from(CALL_MEDIA_BUCKET)
       .remove(transcriptPaths);
     if (error) {
-      console.error('[gdpr.erase] transcript delete failed:', error.message);
+      void logger.error('[gdpr.erase] transcript delete failed', { error: error.message });
       outcome.storageErrors += transcriptPaths.length;
     } else {
       outcome.transcriptsDeleted = data?.length ?? transcriptPaths.length;

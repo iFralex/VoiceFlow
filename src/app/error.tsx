@@ -12,8 +12,10 @@ export default function Error({
   const t = useTranslations('errors');
 
   if (process.env.NODE_ENV !== 'production') {
+    // eslint-disable-next-line no-console
     console.error(error);
   } else if (error.digest) {
+    // eslint-disable-next-line no-console
     console.error('Error digest:', error.digest);
   }
   return (

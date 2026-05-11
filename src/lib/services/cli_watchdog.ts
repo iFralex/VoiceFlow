@@ -43,6 +43,7 @@ import { calls, cliCooldownHistory, optOutRegistry, phoneNumbers } from '@/lib/d
 // the watchdog only needs the event names and the publish helper.
 import { sendInngestEvents, type InngestEventPayload } from '@/lib/inngest/client';
 import { CLI_COOLING_DOWN_EVENT, CLI_RETIRED_EVENT } from '@/lib/inngest/handlers/cli';
+import { logger } from '@/lib/observability/logger';
 
 // ── Tunables ────────────────────────────────────────────────────────────────
 
@@ -424,7 +425,7 @@ export async function runWatchdog(options: RunWatchdogOptions = {}): Promise<Wat
       await sendInngestEvents(result.events);
     } catch (err) {
       // Best-effort: the audit trail is still in cli_cooldown_history.
-      console.error('Failed to publish CLI watchdog events', err);
+      void logger.error('Failed to publish CLI watchdog events', { error: err instanceof Error ? err.message : String(err) });
     }
   }
 

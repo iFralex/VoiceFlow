@@ -35,6 +35,7 @@ import {
   SBC_SMOKE_TEST_FAILED_EVENT,
   type SbcSmokeTestFailedData,
 } from '@/lib/inngest/handlers/cli';
+import { logger } from '@/lib/observability/logger';
 import { VoiceProviderError } from '@/lib/voice/errors';
 import { VapiAdapter } from '@/lib/voice/vapi/adapter';
 
@@ -157,7 +158,7 @@ async function emitFailure(
   } catch (err) {
     // Best-effort: the cron route also logs the result, so an Inngest outage
     // never masks the original failure.
-    console.error('[sbc-smoke-test] Failed to emit alert event', err);
+    void logger.error('[sbc-smoke-test] Failed to emit alert event', { error: err instanceof Error ? err.message : String(err) });
   }
 }
 

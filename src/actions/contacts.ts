@@ -8,6 +8,7 @@ import { getAuthContext, requireCapability } from '@/lib/auth/context';
 import { recordAudit } from '@/lib/db/audit';
 import { withOrgContext } from '@/lib/db/context';
 import { sendInngestEvent } from '@/lib/inngest/client';
+import { logger } from '@/lib/observability/logger';
 import {
   CONTACTS_EXPORT_REQUESTED,
   CONTACTS_IMPORT_REQUESTED,
@@ -429,7 +430,7 @@ export async function exportContactsCsv(
       .upload(path, csv, { contentType: 'text/csv', upsert: true });
 
     if (uploadError) {
-      console.error('[exportContactsCsv] upload failed:', uploadError.message);
+      void logger.error('[exportContactsCsv] upload failed', { error: uploadError.message });
       return { ok: false, message: 'export_upload_failed' };
     }
 

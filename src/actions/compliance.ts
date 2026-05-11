@@ -18,6 +18,7 @@ import {
 import { withSystemContext } from '@/lib/db/context';
 import { auditLog, users } from '@/lib/db/schema';
 import { sendEmail } from '@/lib/email';
+import { logger } from '@/lib/observability/logger';
 import type { ActionResult } from '@/lib/utils/action-toast';
 
 const requestSubjectExportSchema = z.object({
@@ -98,7 +99,7 @@ export async function requestSubjectExport(
           html,
         });
       } catch (e) {
-        console.error('[requestSubjectExport] email send failed:', e);
+        void logger.error('[requestSubjectExport] email send failed', { error: e instanceof Error ? e.message : String(e) });
       }
     }
 

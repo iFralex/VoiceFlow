@@ -12,6 +12,7 @@ import {
 import type { Campaign } from '@/lib/db/schema';
 import { CAMPAIGN_COMPLETED_EVENT } from '@/lib/inngest/campaigns/events';
 import { sendInngestEvent } from '@/lib/inngest/client';
+import { logger } from '@/lib/observability/logger';
 import { getVoiceProviderByName } from '@/lib/voice/factory';
 
 import { computePerMinuteCents } from './billing-rules';
@@ -432,10 +433,9 @@ export async function cancelCampaign(
     try {
       await getVoiceProviderByName(call.provider).cancelCall(call.provider_call_id);
     } catch (err) {
-      console.error(
-        `[cancelCampaign] Failed to terminate provider call ${call.provider_call_id}:`,
-        err,
-      );
+      void logger.error(`[cancelCampaign] Failed to terminate provider call ${call.provider_call_id}`, {
+        error: err instanceof Error ? err.message : String(err),
+      });
     }
   }
 
@@ -446,10 +446,10 @@ export async function cancelCampaign(
   try {
     await releaseReservation(orgId, campaignId);
   } catch (err) {
-    console.error(
-      `[cancelCampaign] Failed to release reservation for campaign ${campaignId}:`,
-      err,
-    );
+    void logger.error(`[cancelCampaign] Failed to release reservation for campaign ${campaignId}`, {
+      campaign_id: campaignId,
+      error: err instanceof Error ? err.message : String(err),
+    });
   }
 
   // Write final stats snapshot so the detail page shows post-cancel KPIs
@@ -458,10 +458,10 @@ export async function cancelCampaign(
   try {
     await aggregateOneCampaign(campaignId, orgId);
   } catch (err) {
-    console.error(
-      `[cancelCampaign] Failed to aggregate final stats for campaign ${campaignId}:`,
-      err,
-    );
+    void logger.error(`[cancelCampaign] Failed to aggregate final stats for campaign ${campaignId}`, {
+      campaign_id: campaignId,
+      error: err instanceof Error ? err.message : String(err),
+    });
   }
 }
 

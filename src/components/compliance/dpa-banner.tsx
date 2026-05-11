@@ -1,6 +1,7 @@
 import { headers } from 'next/headers';
 
 import { getDpaStatus } from '@/lib/compliance/dpa';
+import { logger } from '@/lib/observability/logger';
 
 import { DpaBannerClient } from './dpa-banner-client';
 
@@ -26,7 +27,7 @@ export async function DpaBanner() {
   try {
     status = await getDpaStatus(orgId);
   } catch (err) {
-    console.error('[dpa-banner] failed to resolve status', err);
+    void logger.error('[dpa-banner] failed to resolve status', { error: err instanceof Error ? err.message : String(err) });
     return null;
   }
   if (status.state === 'current') return null;

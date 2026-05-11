@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 
+import { logger } from '@/lib/observability/logger';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 
 /**
@@ -25,7 +26,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const { error } = await supabase.auth.exchangeCodeForSession(code);
 
   if (error) {
-    console.error('[auth/callback] exchangeCodeForSession error:', error.message);
+    void logger.error('[auth/callback] exchangeCodeForSession error', { error: error.message });
     return NextResponse.redirect(`${origin}/login?error=auth_error`);
   }
 

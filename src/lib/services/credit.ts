@@ -6,6 +6,7 @@ import { withOrgContext, withSystemContext } from '@/lib/db/context';
 import { auditLog, calls, creditEntryTypeEnum, creditLedger, creditPackages, payments } from '@/lib/db/schema';
 import { env } from '@/lib/env';
 import { sendInngestEvent } from '@/lib/inngest/client';
+import { logger } from '@/lib/observability/logger';
 import { CREDIT_LOW_BALANCE_EVENT } from '@/lib/inngest/handlers/credit';
 
 // ─── Internal helpers ──────────────────────────────────────────────────────────
@@ -411,7 +412,7 @@ export async function chargeForCall(
   // the ledger write. Fire-and-forget with error suppression.
   if (newBalance !== undefined) {
     await maybeEmitLowBalanceAlert(orgId, newBalance).catch((e: unknown) => {
-      console.error('[credit] Low-balance alert failed for org', orgId, e);
+      void logger.error('[credit] Low-balance alert failed for org', { org_id: orgId, error: e instanceof Error ? e.message : String(e) });
     });
   }
 }

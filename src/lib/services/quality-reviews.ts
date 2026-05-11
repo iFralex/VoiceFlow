@@ -81,14 +81,17 @@ export async function sampleCallsForQa(date: Date): Promise<number> {
     keyed.sort((a, b) => a.k - b.k);
     const sampled = keyed.slice(0, sampleSize).map((x) => x.c);
 
-    await tx.insert(qaReviews).values(
-      sampled.map((c) => ({
-        call_id: c.id,
-        org_id: c.org_id,
-        campaign_id: c.campaign_id ?? null,
-        status: 'pending_review' as const,
-      })),
-    );
+    await tx
+      .insert(qaReviews)
+      .values(
+        sampled.map((c) => ({
+          call_id: c.id,
+          org_id: c.org_id,
+          campaign_id: c.campaign_id ?? null,
+          status: 'pending_review' as const,
+        })),
+      )
+      .onConflictDoNothing();
 
     return sampled.length;
   });

@@ -38,6 +38,7 @@ import { recordAudit } from '@/lib/db/audit';
 import { withSystemContext } from '@/lib/db/context';
 import { calls, contacts, organizations } from '@/lib/db/schema';
 import { env } from '@/lib/env';
+import { logger } from '@/lib/observability/logger';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { CALL_MEDIA_BUCKET } from '@/lib/voice/persistence';
 
@@ -111,8 +112,8 @@ export async function runRetentionPurge(now: Date = new Date()): Promise<Retenti
       totalContactsHardDeleted += r.contactsHardDeleted;
       orgsProcessed++;
     } catch (err) {
-      console.error('[retention-purge] org failed', {
-        orgId,
+      void logger.error('[retention-purge] org failed', {
+        org_id: orgId,
         error: err instanceof Error ? err.message : String(err),
       });
       errors++;
@@ -356,7 +357,7 @@ async function deleteStorageObjects(paths: string[]): Promise<boolean> {
   if (paths.length === 0) return true;
   const { error } = await supabaseAdmin.storage.from(CALL_MEDIA_BUCKET).remove(paths);
   if (error) {
-    console.error('[retention-purge] storage delete failed', {
+    void logger.error('[retention-purge] storage delete failed', {
       count: paths.length,
       error: error.message,
     });
@@ -441,8 +442,8 @@ async function hardDeleteSoftDeletedContacts(
   if (allPaths.length > 0) {
     const { error } = await supabaseAdmin.storage.from(CALL_MEDIA_BUCKET).remove(allPaths);
     if (error) {
-      console.error('[retention-purge] cascade storage purge failed', {
-        orgId,
+      void logger.error('[retention-purge] cascade storage purge failed', {
+        org_id: orgId,
         count: allPaths.length,
         error: error.message,
       });

@@ -2,6 +2,7 @@ import { eq, sql } from 'drizzle-orm';
 
 import { withSystemContext } from '@/lib/db/context';
 import { calls, campaignStats, campaigns } from '@/lib/db/schema';
+import { logger } from '@/lib/observability/logger';
 
 /**
  * Recomputes and upserts `campaign_stats` for a single campaign.
@@ -114,8 +115,8 @@ export async function aggregateActiveCampaigns(): Promise<{
       await aggregateOneCampaign(campaign.id, campaign.org_id);
       processed++;
     } catch (err) {
-      console.error('[aggregate-campaigns] Error aggregating campaign', {
-        campaignId: campaign.id,
+      void logger.error('[aggregate-campaigns] Error aggregating campaign', {
+        campaign_id: campaign.id,
         error: err instanceof Error ? err.message : String(err),
       });
       errors++;
