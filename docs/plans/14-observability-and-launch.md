@@ -101,18 +101,18 @@ async function write(level: string, message: string, ctx: Record<string, unknown
 
 ### Task 6: Feature flags
 
-- [ ] Sign up for PostHog (free tier sufficient for MVP) — alternative: Statsig
-- [ ] Install `posthog-node` and `posthog-js`
-- [ ] Create `src/lib/feature-flags/client.ts` exposing `isFlagEnabled(orgId: string, flagKey: string): Promise<boolean>` server-side and a hook `useFlag(flagKey)` client-side
-- [ ] Initial flags:
+- [x] Sign up for PostHog (free tier sufficient for MVP) — alternative: Statsig [manual: founder must create PostHog account and set NEXT_PUBLIC_POSTHOG_KEY]
+- [x] Install `posthog-node` and `posthog-js`
+- [x] Create `src/lib/feature-flags/client.ts` exposing `isFlagEnabled(orgId: string, flagKey: string): Promise<boolean>` server-side and a hook `useFlag(flagKey)` client-side
+- [x] Initial flags:
   - `voice.proprietary-stack` (Phase 2 canary; default off)
   - `internal.test_call` (gates the test-call endpoint from plan 08; default on for staging only)
   - `dashboard.cmd-k-search` (default on; quick kill switch if heavy)
   - `compliance.aiact-monthly-audit` (default on)
   - `email.weekly-summary` (default on; gate to disable Mondays if overrun)
   - `internal.disclosure-failures-page` (default off in production until QA process is mature)
-- [ ] Document flag-flip procedure in `docs/runbooks/feature-flags.md`
-- [ ] Mark completed
+- [x] Document flag-flip procedure in `docs/runbooks/feature-flags.md`
+- [x] Mark completed
 
 ### Task 7: Backup verification and DR drill
 
