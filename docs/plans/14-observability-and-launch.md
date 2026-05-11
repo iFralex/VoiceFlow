@@ -159,13 +159,13 @@ async function write(level: string, message: string, ctx: Record<string, unknown
 
 ### Task 11: Runbook — GDPR erasure
 
-- [ ] Author `docs/runbooks/gdpr-erasure.md`:
+- [x] Author `docs/runbooks/gdpr-erasure.md`:
   - intake (where the request comes from: in-app, email, postal)
   - identity verification of the requestor
   - executing the erasure via the `/settings/compliance` page
   - 30-day grace period and final hard purge
   - communication template (confirmation email to requestor)
-- [ ] Mark completed
+- [x] Mark completed
 
 ### Task 12: Runbook — Twilio/Vapi incident
 
