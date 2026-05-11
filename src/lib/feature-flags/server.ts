@@ -46,4 +46,5 @@ export async function isFlagEnabled(
  */
 export async function shutdownPostHog(): Promise<void> {
   await _client?.shutdown();
+  _client = null;
 }

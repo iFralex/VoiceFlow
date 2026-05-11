@@ -64,11 +64,10 @@ async function cancelAtProvider(call: CandidateCall): Promise<void> {
     const provider = getVoiceProviderByName(call.provider);
     await provider.cancelCall(call.provider_call_id);
   } catch (e) {
-    console.warn(
-      `[opt-out-propagation] provider cancelCall failed for call ${call.id}: ${
-        e instanceof Error ? e.message : String(e)
-      }`,
-    );
+    void logger.warn('[opt-out-propagation] provider cancelCall failed', {
+      call_id: call.id,
+      error: e instanceof Error ? e.message : String(e),
+    });
   }
 }
 

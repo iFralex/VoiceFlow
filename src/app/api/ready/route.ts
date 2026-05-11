@@ -43,7 +43,7 @@ async function checkVapi(): Promise<CheckResult> {
       headers: { Authorization: `Bearer ${env.VAPI_API_KEY}` },
       signal: AbortSignal.timeout(5000),
     });
-    if (!res.ok && res.status >= 500) {
+    if (!res.ok) {
       return { ok: false, error: `HTTP ${res.status}` };
     }
     return { ok: true, latencyMs: Date.now() - t0 };

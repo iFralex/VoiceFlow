@@ -21,9 +21,10 @@ export async function sendEmail(params: SendEmailParams): Promise<void> {
   const apiKey = env.RESEND_API_KEY;
   const fromAddress = env.EMAIL_FROM_ADDRESS;
   if (!apiKey || !fromAddress) {
-    console.warn(
-      `[email] sendEmail skipped — RESEND_API_KEY or EMAIL_FROM_ADDRESS missing (to=${params.to}, subject="${params.subject}")`,
-    );
+    void logger.warn('[email] sendEmail skipped — RESEND_API_KEY or EMAIL_FROM_ADDRESS missing', {
+      to: params.to,
+      subject: params.subject,
+    });
     return;
   }
 

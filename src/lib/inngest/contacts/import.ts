@@ -175,9 +175,9 @@ async function performBatchRpoCheck(
   try {
     rpoClient = getRpoClient();
   } catch (e) {
-    console.warn(
-      `[contacts/import] RPO client unavailable; skipping batch RPO check: ${e instanceof Error ? e.message : String(e)}`,
-    );
+    void logger.warn('[contacts/import] RPO client unavailable; skipping batch RPO check', {
+      error: e instanceof Error ? e.message : String(e),
+    });
     return { checked: 0, blocked: 0, clear: 0, errors: 1, skipped: true };
   }
 
@@ -214,9 +214,9 @@ async function performBatchRpoCheck(
     try {
       result = await rpoClient.bulkCheck(chunk);
     } catch (e) {
-      console.warn(
-        `[contacts/import] RPO bulkCheck failed for chunk; dispatch-time safety net will cover: ${e instanceof Error ? e.message : String(e)}`,
-      );
+      void logger.warn('[contacts/import] RPO bulkCheck failed for chunk; dispatch-time safety net will cover', {
+        error: e instanceof Error ? e.message : String(e),
+      });
       errors += 1;
       continue;
     }

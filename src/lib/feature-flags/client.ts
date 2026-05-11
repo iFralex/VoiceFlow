@@ -15,19 +15,20 @@ import type { FlagKey } from './flags';
  * NEXT_PUBLIC_POSTHOG_KEY the hook always returns `defaultValue`.
  */
 export function useFlag(flagKey: FlagKey, defaultValue = false): boolean {
-  const [enabled, setEnabled] = useState<boolean>(defaultValue);
+  const [enabled, setEnabled] = useState<boolean>(() => {
+    try {
+      return posthog.isFeatureEnabled(flagKey) ?? defaultValue;
+    } catch {
+      return defaultValue;
+    }
+  });
 
   useEffect(() => {
-    // posthog.isFeatureEnabled returns undefined before flags load
-    const value = posthog.isFeatureEnabled(flagKey);
-    if (value !== undefined) {
-      setEnabled(value);
-    }
-
     // Re-evaluate once flags are loaded from the PostHog network
-    posthog.onFeatureFlags(() => {
+    const unsubscribe = posthog.onFeatureFlags(() => {
       setEnabled(posthog.isFeatureEnabled(flagKey) ?? defaultValue);
     });
+    return unsubscribe;
   }, [flagKey, defaultValue]);
 
   return enabled;

@@ -28,6 +28,8 @@ function isPublicPath(pathname: string): boolean {
     pathname === '/api/ready' ||
     pathname === '/admin/cli-pool' ||
     pathname === '/admin/disclosure-failures' ||
+    pathname === '/admin/quality' ||
+    pathname === '/admin/operations' ||
     pathname === '/dev/webhook-test' ||
     pathname.startsWith('/_kitchen-sink')
   );

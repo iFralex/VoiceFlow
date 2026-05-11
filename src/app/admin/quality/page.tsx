@@ -137,7 +137,6 @@ export default async function QualityAdminPage({ searchParams }: PageProps) {
 
   return (
     <main style={{ padding: '2rem', fontFamily: 'monospace', maxWidth: 1500, margin: '0 auto' }}>
-      <meta name="referrer" content="no-referrer" />
       <h1 style={{ marginBottom: '0.5rem' }}>Call quality monitoring</h1>
       <p style={{ color: '#666', marginBottom: '1.5rem' }}>
         1% sample of completed calls for human QA review per spec §15.5.
