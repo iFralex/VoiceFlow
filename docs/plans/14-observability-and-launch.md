@@ -269,14 +269,14 @@ async function write(level: string, message: string, ctx: Record<string, unknown
 
 ### Task 19: Final go-live procedure
 
-- [ ] Author `docs/runbooks/go-live.md`:
+- [x] Author `docs/runbooks/go-live.md`:
   - day -7: complete pre-launch checklist
   - day -3: invite first 3 pilot dealers; manual onboarding call
   - day -1: confirm all alerts wired; confirm founder phone number on Sentry/PagerDuty
   - day 0: enable production traffic; tail logs for 4h; founder available on-call 24h
   - day +1, +3, +7: pilot review checkpoints with each dealer
   - day +14: review pilot data, decide on broader launch
-- [ ] Mark completed
+- [x] Mark completed
 
 ### Task 20: Definition of Done
 
