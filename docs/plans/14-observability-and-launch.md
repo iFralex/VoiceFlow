@@ -93,11 +93,11 @@ async function write(level: string, message: string, ctx: Record<string, unknown
 
 ### Task 5: Health and readiness endpoints
 
-- [ ] Create `src/app/api/health/route.ts` returning `{ status: "ok" }` cheaply (no DB)
-- [ ] Create `src/app/api/ready/route.ts` checking: DB SELECT 1, Stripe API ping, Vapi API ping, Resend ping; aggregates and returns 200 if all green, 503 otherwise
-- [ ] Document in `docs/operations.md` how to use these endpoints (Vercel internal monitoring, uptime services)
-- [ ] Set up an external uptime monitor (Uptime Robot or Better Stack) hitting `/api/ready` every 5 min from EU; alert on 2 consecutive failures
-- [ ] Mark completed
+- [x] Create `src/app/api/health/route.ts` returning `{ status: "ok" }` cheaply (no DB)
+- [x] Create `src/app/api/ready/route.ts` checking: DB SELECT 1, Stripe API ping, Vapi API ping, Resend ping; aggregates and returns 200 if all green, 503 otherwise
+- [x] Document in `docs/operations.md` how to use these endpoints (Vercel internal monitoring, uptime services)
+- [x] Set up an external uptime monitor (Uptime Robot or Better Stack) hitting `/api/ready` every 5 min from EU; alert on 2 consecutive failures [manual: configuration steps documented in docs/operations.md]
+- [x] Mark completed
 
 ### Task 6: Feature flags
 
