@@ -169,13 +169,13 @@ async function write(level: string, message: string, ctx: Record<string, unknown
 
 ### Task 12: Runbook — Twilio/Vapi incident
 
-- [ ] Author `docs/runbooks/voice-provider-incident.md`:
+- [x] Author `docs/runbooks/voice-provider-incident.md`:
   - detection (alerts, dashboard observation)
   - immediate triage (check provider status pages, error rate trend)
   - mitigation: switch `VOICE_PROVIDER` to `retell` if Vapi outage; or flip SBC fallback to Twilio if SBC down
   - communication: status email template to active-campaign customers; in-app banner template
   - post-incident: blameless review template
-- [ ] Mark completed
+- [x] Mark completed
 
 ### Task 13: Smoke test e2e — launch-readiness
 
