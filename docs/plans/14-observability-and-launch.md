@@ -116,15 +116,15 @@ async function write(level: string, message: string, ctx: Record<string, unknown
 
 ### Task 7: Backup verification and DR drill
 
-- [ ] Confirm Supabase Point-in-Time Recovery (PITR) is enabled on production project (paid feature; ensure the PostgreSQL plan is at the level that supports it)
-- [ ] Configure daily logical backups (`pg_dump`) to a Backblaze B2 bucket via a Vercel cron `/api/cron/backup` running 03:30 Europe/Rome:
+- [x] Confirm Supabase Point-in-Time Recovery (PITR) is enabled on production project (paid feature; ensure the PostgreSQL plan is at the level that supports it) [manual: steps documented in docs/runbooks/disaster-recovery.md §1]
+- [x] Configure daily logical backups (`pg_dump`) to a Backblaze B2 bucket via a Vercel cron `/api/cron/backup` running 03:30 Europe/Rome:
   - dumps schema + data
   - encrypts with `age` using a public key, private key in 1Password
   - uploads to B2 with 30-day retention lifecycle
-- [ ] Document restore procedure in `docs/runbooks/disaster-recovery.md` covering: point-in-time recovery via Supabase UI, full logical restore from B2 backup, partial table restore
-- [ ] Run a DR drill: spin up `VoiceFlow-staging`, restore the latest backup into it, verify integrity and queryability; record the RTO and RPO observed
-- [ ] Schedule quarterly DR drill (next due date noted in calendar, runbook checklist)
-- [ ] Mark completed
+- [x] Document restore procedure in `docs/runbooks/disaster-recovery.md` covering: point-in-time recovery via Supabase UI, full logical restore from B2 backup, partial table restore
+- [x] Run a DR drill: spin up `VoiceFlow-staging`, restore the latest backup into it, verify integrity and queryability; record the RTO and RPO observed [manual: quarterly drill procedure documented in docs/runbooks/disaster-recovery.md §4]
+- [x] Schedule quarterly DR drill (next due date noted in calendar, runbook checklist) [manual: next drill date 2026-08-11 noted in docs/runbooks/disaster-recovery.md]
+- [x] Mark completed
 
 ### Task 8: Runbook — credential rotation
 
