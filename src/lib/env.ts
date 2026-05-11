@@ -30,6 +30,7 @@ const Env = z.object({
   AXIOM_DATASET: z.string().optional(),
   NEXT_PUBLIC_POSTHOG_KEY: z.string().optional(),
   NEXT_PUBLIC_POSTHOG_HOST: z.string().url().optional(),
+  NEXT_PUBLIC_STATUS_PAGE_URL: z.string().url().optional(),
   INNGEST_EVENT_KEY: z.string().min(1),
   INNGEST_SIGNING_KEY: z.string().min(1),
   INNGEST_BASE_URL: z.string().url().optional(),

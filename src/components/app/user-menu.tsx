@@ -150,6 +150,23 @@ export function UserMenu({ user }: UserMenuProps) {
           </DropdownMenuSubContent>
         </DropdownMenuSub>
 
+        {process.env.NEXT_PUBLIC_STATUS_PAGE_URL && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <a
+                href={process.env.NEXT_PUBLIC_STATUS_PAGE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-testid="user-menu-status"
+              >
+                <Icons.CheckCircle2 className="mr-2" />
+                {t('status_page')}
+              </a>
+            </DropdownMenuItem>
+          </>
+        )}
+
         <DropdownMenuSeparator />
 
         {/* Sign out */}

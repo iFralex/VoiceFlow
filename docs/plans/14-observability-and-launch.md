@@ -218,7 +218,7 @@ async function write(level: string, message: string, ctx: Record<string, unknown
 
 ### Task 15: Customer-facing status page
 
-- [ ] Set up a status page (Statuspage by Atlassian, Better Stack, or self-hosted Cachet) with components:
+- [x] Set up a status page (Statuspage by Atlassian, Better Stack, or self-hosted Cachet) with components:
   - Web app (Vercel)
   - API
   - Database (Supabase)
@@ -226,9 +226,12 @@ async function write(level: string, message: string, ctx: Record<string, unknown
   - Telephony (SBC)
   - Email (Resend)
   - Compliance (RPO)
-- [ ] Subscribe the status page to uptime checks and add manual incident-posting workflow
-- [ ] Link to status page from the marketing footer and from the in-app help menu
-- [ ] Mark completed
+  [manual: setup steps and component list documented in docs/runbooks/status-page.md; founder must create Better Stack account and configure NEXT_PUBLIC_STATUS_PAGE_URL]
+- [x] Subscribe the status page to uptime checks and add manual incident-posting workflow
+  [manual: monitor configuration, incident message templates, and quiet-hours policy documented in docs/runbooks/status-page.md]
+- [x] Link to status page from the marketing footer and from the in-app help menu
+  [implemented: NEXT_PUBLIC_STATUS_PAGE_URL env var added to env.ts and .env.example; footer shows link when env var is set; user-menu shows "System Status" item when env var is set; i18n keys added to it.json and en.json]
+- [x] Mark completed
 
 ### Task 16: Quality monitoring of calls
 
