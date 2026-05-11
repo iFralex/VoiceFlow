@@ -235,14 +235,14 @@ async function write(level: string, message: string, ctx: Record<string, unknown
 
 ### Task 16: Quality monitoring of calls
 
-- [ ] Create `/admin/quality` (founder-only) page surfacing per spec §15.5:
+- [x] Create `/admin/quality` (founder-only) page surfacing per spec §15.5:
   - sample 1% of completed calls per day for human review
   - QA checklist: disclosure verified, transcript readable, outcome correctly classified, no offensive language, no privacy leak
   - status fields: pending review, ok, needs improvement (with note)
   - link to recording player and transcript for each
-- [ ] Reviews persisted in `qa_reviews` table (migration `0020_qa_reviews.sql`)
-- [ ] Aggregate weekly stats surfaced on the same page
-- [ ] Mark completed
+- [x] Reviews persisted in `qa_reviews` table (migration `0038_qa_reviews.sql`)
+- [x] Aggregate weekly stats surfaced on the same page
+- [x] Mark completed
 
 ### Task 17: Phase 2 readiness scaffolding
 

@@ -267,6 +267,13 @@
       "when": 1777800275521,
       "tag": "0037_email_log",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1777800275522,
+      "tag": "0038_qa_reviews",
+      "breakpoints": true
     }
   ]
 }
