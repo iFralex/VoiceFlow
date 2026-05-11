@@ -159,7 +159,7 @@ export async function runWeeklySummary(
           sent++;
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
-          await logger.error('[weekly-summary] recipient failed', {
+          void logger.error('[weekly-summary] recipient failed', {
             org_id: org.id,
             user_id: recipient.userId,
             error: msg,
@@ -183,7 +183,7 @@ export async function runWeeklySummary(
       });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      await logger.error('[weekly-summary] org failed', { org_id: org.id, error: message });
+      void logger.error('[weekly-summary] org failed', { org_id: org.id, error: message });
       outcomes.push({
         orgId: org.id,
         orgName: org.name,

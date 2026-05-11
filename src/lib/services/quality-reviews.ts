@@ -117,7 +117,8 @@ export async function listQaReviews(filter: QaReviewStatus | 'all'): Promise<QaR
       .from(qaReviews)
       .innerJoin(calls, eq(calls.id, qaReviews.call_id))
       .where(filter === 'all' ? undefined : eq(qaReviews.status, filter))
-      .orderBy(qaReviews.sampled_at);
+      .orderBy(qaReviews.sampled_at)
+      .limit(200);
 
     return rows.map((r) => ({
       id: r.id,
@@ -147,7 +148,7 @@ export async function updateQaReview(params: {
   reviewedBy: string | null;
 }): Promise<{ ok: boolean }> {
   return withSystemContext(async (tx) => {
-    await tx
+    const updated = await tx
       .update(qaReviews)
       .set({
         status: params.status,
@@ -156,9 +157,10 @@ export async function updateQaReview(params: {
         reviewed_by: params.reviewedBy,
         reviewed_at: new Date(),
       })
-      .where(eq(qaReviews.id, params.reviewId));
+      .where(eq(qaReviews.id, params.reviewId))
+      .returning({ id: qaReviews.id });
 
-    return { ok: true };
+    return { ok: updated.length > 0 };
   });
 }
 

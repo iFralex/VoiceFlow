@@ -1,5 +1,7 @@
 import { Axiom } from '@axiomhq/js';
+
 import { env } from '@/lib/env';
+
 import { getRequestContext } from './request-context';
 
 const axiom = env.AXIOM_TOKEN ? new Axiom({ token: env.AXIOM_TOKEN }) : null;
@@ -19,9 +21,9 @@ async function write(level: string, message: string, ctx: LogContext = {}): Prom
     level,
     message,
     ts: new Date().toISOString(),
-    org_id: ctx.org_id ?? reqCtx?.orgId,
-    user_id: ctx.user_id ?? reqCtx?.userId,
-    request_id: ctx.request_id ?? reqCtx?.requestId,
+    org_id: reqCtx?.orgId,
+    user_id: reqCtx?.userId,
+    request_id: reqCtx?.requestId,
     ...ctx,
   };
 

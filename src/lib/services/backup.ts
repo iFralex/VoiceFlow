@@ -67,6 +67,7 @@ const BACKUP_TABLES = [
   'system_flags',
   'user_notification_preferences',
   'email_log',
+  'qa_reviews',
 ] as const;
 
 export interface BackupResult {

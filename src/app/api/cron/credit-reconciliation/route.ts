@@ -115,7 +115,7 @@ export async function reconcilePendingPayments(): Promise<ReconcileResult> {
       }
       // If 'open', leave it — may still complete via webhook
     } catch (err) {
-      await logger.error('[credit-reconciliation] Error reconciling payment', {
+      void logger.error('[credit-reconciliation] Error reconciling payment', {
         paymentId: payment.id,
         error: err instanceof Error ? err.message : String(err),
       });
@@ -197,7 +197,7 @@ export async function runLedgerSanityCheck(): Promise<SanityResult> {
 
       if (discrepancyCents > 0) {
         const severity = discrepancyCents > DISCREPANCY_ALERT_CENTS ? 'ALERT' : 'INFO';
-        await logger.error(`[credit-reconciliation] ${severity} ledger discrepancy`, {
+        void logger.error(`[credit-reconciliation] ${severity} ledger discrepancy`, {
           org_id,
           totalDelta,
           expectedDelta,
@@ -213,7 +213,7 @@ export async function runLedgerSanityCheck(): Promise<SanityResult> {
 
       orgsChecked++;
     } catch (err) {
-      await logger.error('[credit-reconciliation] Error during sanity check for org', {
+      void logger.error('[credit-reconciliation] Error during sanity check for org', {
         org_id,
         error: err instanceof Error ? err.message : String(err),
       });

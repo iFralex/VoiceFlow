@@ -36,7 +36,7 @@ await withSystemContext(async (tx) => {
 });
 ```
 
-System-owned tables (`script_templates`, `voice_catalogue`, `credit_packages`, `phone_numbers`, `system_flags`, `cli_cooldown_history`, `email_log`) have no RLS and must be queried via `withSystemContext`, never `withOrgContext`. Note: the idempotency helpers in `src/lib/email/idempotency.ts` use the bare `db` client directly for `email_log` queries — this is intentional (system table, no RLS needed).
+System-owned tables (`script_templates`, `voice_catalogue`, `credit_packages`, `phone_numbers`, `system_flags`, `cli_cooldown_history`, `email_log`, `qa_reviews`) have no RLS and must be queried via `withSystemContext`, never `withOrgContext`. Note: the idempotency helpers in `src/lib/email/idempotency.ts` use the bare `db` client directly for `email_log` queries — this is intentional (system table, no RLS needed).
 
 Inside `(app)/` Server Components and Server Actions, use `dbForRequest()` which auto-resolves the org from middleware headers:
 
@@ -190,13 +190,53 @@ For destructive actions, wrap the trigger in `<ConfirmDialog>` from `@/component
 ## Library Layer Architecture
 
 `src/lib/` is a three-layer architecture (see `src/lib/README.md`):
-- **Adapters** (`db/`, `supabase/`, `stripe/`, `email/`, `inngest/`, `voice/`, `storage/`, `compliance/`, `auth/`) — wrap external SDKs
+- **Adapters** (`db/`, `supabase/`, `stripe/`, `email/`, `inngest/`, `voice/`, `storage/`, `compliance/`, `auth/`, `observability/`, `feature-flags/`) — wrap external SDKs
 - **Services** (`services/`) — orchestrate multiple adapters; never called by adapters
 - **Utils** (`utils/`) — pure functions, no side effects, usable at any layer
 
 Rules:
 1. Route handlers and Server Actions import from adapters and services, never directly from external SDKs.
 2. `utils/` has no side effects and no imports from adapters.
+
+## Observability
+
+All structured logging goes through `logger` from `@/lib/observability`. Never use `console.log` / `console.error` directly — the `no-console` ESLint rule is set to `error`.
+
+```ts
+import { logger } from '@/lib/observability';
+
+void logger.info('call completed', { org_id, call_id });
+void logger.warn('low balance', { org_id, balance_cents });
+void logger.error('provider call failed', { org_id, call_id, error: err.message });
+```
+
+Use `void logger.*` (fire-and-forget) unless you specifically need to wait for Axiom to flush before the function returns. The logger never throws — Axiom errors are silently swallowed so they never crash a request.
+
+The logger ships events to Axiom when `AXIOM_TOKEN` and `AXIOM_DATASET` are set; in non-production it also emits to `console.log`. Log entries are auto-enriched with `request_id`, `org_id`, and `user_id` from `AsyncLocalStorage` when available. Pass explicit fields in `ctx` to add or override those values.
+
+**Sentry errors:** The Sentry SDK is wired in `sentry.*.config.ts`. PII scrubbing (strips email, phone, names) is applied by default per spec §15.2. Use `setSentryUser(userId, orgId)` / `clearSentryUser()` from `@/lib/observability` to attach user context to error reports.
+
+## Feature Flags
+
+Feature flags are managed via PostHog. Add new flag keys to `src/lib/feature-flags/flags.ts` before using them.
+
+**Server-side** (Server Components, Server Actions, cron routes):
+```ts
+import { isFlagEnabled, FLAGS } from '@/lib/feature-flags';
+
+const enabled = await isFlagEnabled(orgId, FLAGS.VOICE_PROPRIETARY_STACK);
+```
+
+**Client-side** (Client Components):
+```ts
+import { useFlag } from '@/lib/feature-flags/client';
+
+const enabled = useFlag(FLAGS.DASHBOARD_CMD_K_SEARCH);
+```
+
+`useFlag` is NOT exported from the barrel `@/lib/feature-flags` — import it directly from `@/lib/feature-flags/client`. Both fall back to `false` (or a specified `defaultValue`) when PostHog is not configured or the network call fails.
+
+In long-lived server contexts (cron routes), call `shutdownPostHog()` from `@/lib/feature-flags` before returning to flush the PostHog client.
 
 ## Theme
 
