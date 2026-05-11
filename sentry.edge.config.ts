@@ -6,7 +6,7 @@ Sentry.init({
   debug: false,
   beforeSend(event) {
     let text = JSON.stringify(event);
-    text = text.replace(/\+39[0-9]{6,12}/g, '[redacted-phone]');
+    text = text.replace(/\+[1-9][0-9]{6,14}/g, '[redacted-phone]');
     text = text.replace(
       /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g,
       '[redacted-email]',

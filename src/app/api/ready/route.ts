@@ -19,8 +19,8 @@ async function checkDb(): Promise<CheckResult> {
       await tx.execute(sql`SELECT 1`);
     });
     return { ok: true, latencyMs: Date.now() - t0 };
-  } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+  } catch {
+    return { ok: false, error: 'check failed' };
   }
 }
 
@@ -29,8 +29,8 @@ async function checkStripe(): Promise<CheckResult> {
   try {
     await stripe.balance.retrieve();
     return { ok: true, latencyMs: Date.now() - t0 };
-  } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+  } catch {
+    return { ok: false, error: 'check failed' };
   }
 }
 
@@ -44,11 +44,11 @@ async function checkVapi(): Promise<CheckResult> {
       signal: AbortSignal.timeout(5000),
     });
     if (!res.ok) {
-      return { ok: false, error: `HTTP ${res.status}` };
+      return { ok: false, error: 'check failed' };
     }
     return { ok: true, latencyMs: Date.now() - t0 };
-  } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+  } catch {
+    return { ok: false, error: 'check failed' };
   }
 }
 
@@ -58,8 +58,8 @@ async function checkResend(): Promise<CheckResult> {
     const client = getResendClient();
     await client.domains.list();
     return { ok: true, latencyMs: Date.now() - t0 };
-  } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+  } catch {
+    return { ok: false, error: 'check failed' };
   }
 }
 

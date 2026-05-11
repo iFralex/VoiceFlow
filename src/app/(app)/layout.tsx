@@ -1,6 +1,7 @@
 import { cookies, headers } from 'next/headers';
 import { Suspense, type ReactNode } from 'react';
 
+import { SentryUserSync } from '@/components/app/sentry-user-sync';
 import { Shell } from '@/components/app/shell';
 import { DpaBanner } from '@/components/compliance/dpa-banner';
 import { ListPageSkeleton } from '@/components/ui/page-skeleton';
@@ -22,6 +23,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <>
+      {userId && orgId && <SentryUserSync userId={userId} orgId={orgId} />}
       <Shell orgs={orgs} activeOrgId={activeOrgId}>
         <Suspense fallback={null}>
           <DpaBanner />

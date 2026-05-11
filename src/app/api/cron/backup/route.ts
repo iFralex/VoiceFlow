@@ -32,6 +32,9 @@ export async function GET(request: Request): Promise<Response> {
   }
 
   const result = await runDatabaseBackup();
+  if (!result.ok && result.error !== 'backup_not_configured') {
+    return NextResponse.json(result, { status: 500 });
+  }
   return NextResponse.json(result);
 }
 
