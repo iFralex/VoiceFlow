@@ -246,12 +246,12 @@ async function write(level: string, message: string, ctx: Record<string, unknown
 
 ### Task 17: Phase 2 readiness scaffolding
 
-- [ ] Although Phase 2 (proprietary voice stack) is post-launch work, drop placeholders that make the future migration cheap:
+- [x] Although Phase 2 (proprietary voice stack) is post-launch work, drop placeholders that make the future migration cheap:
   - `VOICE_PROVIDER` env supports `proprietary` value (factory throws explanatory error in Phase 1)
   - `voice_catalogue.provider` enum already includes `proprietary`
   - feature flag `voice.proprietary-stack` already created (Task 6)
-- [ ] Document Phase 2 acceptance criteria in `docs/architecture-decisions/0004-phase-2-voice.md` referencing spec §17
-- [ ] Mark completed
+- [x] Document Phase 2 acceptance criteria in `docs/architecture-decisions/0004-phase-2-voice.md` referencing spec §17
+- [x] Mark completed
 
 ### Task 18: Founder operations dashboard
 
