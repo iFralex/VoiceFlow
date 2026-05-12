@@ -13,6 +13,7 @@ import {
   type CampaignExportRequestedData,
 } from '@/lib/inngest/campaigns/events';
 import { sendInngestEvent } from '@/lib/inngest/client';
+import { logger } from '@/lib/observability/logger';
 import {
   campaignResultsToCsv,
   collectCampaignResultsForExport,
@@ -359,7 +360,7 @@ export async function exportCampaignResults(
       .upload(path, csv, { contentType: 'text/csv', upsert: true });
 
     if (uploadError) {
-      console.error('[exportCampaignResults] upload failed:', uploadError.message);
+      void logger.error('[exportCampaignResults] upload failed', { error: uploadError.message });
       return { ok: false, message: 'export_upload_failed' };
     }
 

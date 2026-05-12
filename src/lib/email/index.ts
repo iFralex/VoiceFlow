@@ -3,6 +3,7 @@ import type { ReactElement } from 'react';
 import { db } from '@/lib/db/client';
 import { emailLog } from '@/lib/db/schema/email_log';
 import { env } from '@/lib/env';
+import { logger } from '@/lib/observability/logger';
 
 import { getResendClient } from './client';
 
@@ -20,9 +21,10 @@ export async function sendEmail(params: SendEmailParams): Promise<void> {
   const apiKey = env.RESEND_API_KEY;
   const fromAddress = env.EMAIL_FROM_ADDRESS;
   if (!apiKey || !fromAddress) {
-    console.warn(
-      `[email] sendEmail skipped — RESEND_API_KEY or EMAIL_FROM_ADDRESS missing (to=${params.to}, subject="${params.subject}")`,
-    );
+    void logger.warn('[email] sendEmail skipped — RESEND_API_KEY or EMAIL_FROM_ADDRESS missing', {
+      to: params.to,
+      subject: params.subject,
+    });
     return;
   }
 
@@ -54,7 +56,7 @@ export async function sendEmail(params: SendEmailParams): Promise<void> {
       tags: params.tags ?? null,
       error: error ? error.message : null,
     })
-    .catch((e: unknown) => console.error('[email] email_log insert failed:', e));
+    .catch((e: unknown) => void logger.error('[email] email_log insert failed', { error: e instanceof Error ? e.message : String(e) }));
 
   if (error) {
     throw new Error(`Resend send failed: ${error.message}`);

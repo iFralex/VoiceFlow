@@ -33,6 +33,7 @@ import { and, eq, inArray } from 'drizzle-orm';
 import { recordAudit } from '@/lib/db/audit';
 import { withOrgContext } from '@/lib/db/context';
 import { calls, contacts } from '@/lib/db/schema';
+import { logger } from '@/lib/observability/logger';
 import type { ComplianceOptOutRegisteredData } from '@/lib/services/optout';
 import { getVoiceProviderByName } from '@/lib/voice/factory';
 
@@ -63,11 +64,10 @@ async function cancelAtProvider(call: CandidateCall): Promise<void> {
     const provider = getVoiceProviderByName(call.provider);
     await provider.cancelCall(call.provider_call_id);
   } catch (e) {
-    console.warn(
-      `[opt-out-propagation] provider cancelCall failed for call ${call.id}: ${
-        e instanceof Error ? e.message : String(e)
-      }`,
-    );
+    void logger.warn('[opt-out-propagation] provider cancelCall failed', {
+      call_id: call.id,
+      error: e instanceof Error ? e.message : String(e),
+    });
   }
 }
 
@@ -228,10 +228,10 @@ export async function complianceOptOutRegisteredHandler(
   await Promise.all(
     Array.from(callsByCampaign.keys()).map((campaignId) =>
       checkAndFinaliseCampaignCompletion(orgId, campaignId).catch((e: unknown) => {
-        console.error(
-          `[opt-out-propagation] finalisation check failed for campaign ${campaignId}:`,
-          e,
-        );
+        void logger.error('[opt-out-propagation] finalisation check failed', {
+          campaign_id: campaignId,
+          error: e instanceof Error ? e.message : String(e),
+        });
       }),
     ),
   );

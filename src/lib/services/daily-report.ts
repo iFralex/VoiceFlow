@@ -33,6 +33,7 @@ import {
   renderDailyReportEmail,
 } from '@/lib/email/templates/daily-report';
 import { env } from '@/lib/env';
+import { logger } from '@/lib/observability/logger';
 import { filterRecipientsByPreference } from '@/lib/services/notification-preferences';
 
 const REPORT_TIMEZONE = 'Europe/Rome';
@@ -183,7 +184,7 @@ export async function runDailyReport(
           sent++;
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
-          console.error('[daily-report] recipient failed', { orgId: org.id, userId: recipient.userId, error: msg });
+          void logger.error('[daily-report] recipient failed', { org_id: org.id, user_id: recipient.userId, error: msg });
         }
       }
 
@@ -203,7 +204,7 @@ export async function runDailyReport(
       });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      console.error('[daily-report] org failed', { orgId: org.id, error: message });
+      void logger.error('[daily-report] org failed', { org_id: org.id, error: message });
       outcomes.push({
         orgId: org.id,
         orgName: org.name,

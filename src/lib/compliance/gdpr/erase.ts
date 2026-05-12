@@ -14,7 +14,10 @@
  *   3. Replace the `calls.metadata` JSONB on every call referencing the
  *      contact with a tombstone (`{ gdpr_erasure: true, erased_at }`) so
  *      transcript snippets, raw outcome text, etc. cannot leak post-erasure.
- *   4. Insert an `audit_log` entry with action `compliance.gdpr_erasure`
+ *   4. Delete all `qa_reviews` rows for those calls (the `note` field may
+ *      contain PII; the ON DELETE CASCADE would not fire because calls are
+ *      tombstoned, not deleted).
+ *   5. Insert an `audit_log` entry with action `compliance.gdpr_erasure`
  *      capturing the byUserId, reason, identifier and the totals.
  *
  * The DB writes run inside a single `withOrgContext` transaction so they
@@ -35,15 +38,16 @@
  * deletes and scrubs.
  */
 
-import { and, eq, isNull, or } from 'drizzle-orm';
+import { and, eq, inArray, isNull, or } from 'drizzle-orm';
 
 import { recordAudit } from '@/lib/db/audit';
 import type { DbTx } from '@/lib/db/context';
 import { withOrgContext } from '@/lib/db/context';
-import { calls, contacts } from '@/lib/db/schema';
+import { calls, contacts, qaReviews } from '@/lib/db/schema';
 import type { Contact } from '@/lib/db/schema';
 import { sendInngestEvents } from '@/lib/inngest/client';
 import type { InngestEventPayload } from '@/lib/inngest/client';
+import { logger } from '@/lib/observability/logger';
 import { markOptOutInTx } from '@/lib/services/optout';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { CALL_MEDIA_BUCKET } from '@/lib/voice/persistence';
@@ -177,7 +181,7 @@ async function purgeStorageObjects(
       .from(CALL_MEDIA_BUCKET)
       .remove(recordingPaths);
     if (error) {
-      console.error('[gdpr.erase] recording delete failed:', error.message);
+      void logger.error('[gdpr.erase] recording delete failed', { error: error.message });
       outcome.storageErrors += recordingPaths.length;
     } else {
       outcome.recordingsDeleted = data?.length ?? recordingPaths.length;
@@ -189,7 +193,7 @@ async function purgeStorageObjects(
       .from(CALL_MEDIA_BUCKET)
       .remove(transcriptPaths);
     if (error) {
-      console.error('[gdpr.erase] transcript delete failed:', error.message);
+      void logger.error('[gdpr.erase] transcript delete failed', { error: error.message });
       outcome.storageErrors += transcriptPaths.length;
     } else {
       outcome.transcriptsDeleted = data?.length ?? transcriptPaths.length;
@@ -266,7 +270,16 @@ export async function eraseSubject(
         .where(and(eq(calls.org_id, orgId), eq(calls.contact_id, contact.id)));
     }
 
-    // 3. Record the org-wide opt-out via the standard service. Reuses its
+    // 3. Delete qa_reviews rows for erased calls. qa_reviews may contain PII
+    //    in the `note` field and must be removed alongside call data.
+    //    The call_id FK has ON DELETE CASCADE but calls are tombstoned, not
+    //    deleted, so we delete qa_reviews explicitly here.
+    if (callRows.length > 0) {
+      const callIds = callRows.map((c) => c.id);
+      await tx.delete(qaReviews).where(inArray(qaReviews.call_id, callIds));
+    }
+
+    // 4. Record the org-wide opt-out via the standard service. Reuses its
     //    audit + event mechanics — we do NOT duplicate that here.
     const optOutEvents = await markOptOutInTx(tx, {
       orgId,
@@ -278,7 +291,7 @@ export async function eraseSubject(
       metadata: { contactId: contact.id, gdprErasure: true },
     });
 
-    // 4. Audit the erasure itself. The opt_out.recorded entry above covers
+    // 5. Audit the erasure itself. The opt_out.recorded entry above covers
     //    the registry side; this entry covers the contact-level scrub.
     await recordAudit(tx, {
       orgId,

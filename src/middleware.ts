@@ -24,8 +24,12 @@ function isPublicPath(pathname: string): boolean {
     pathname.startsWith('/api/webhooks/') ||
     pathname.startsWith('/api/cron/') ||
     pathname.startsWith('/api/admin/') ||
+    pathname === '/api/health' ||
+    pathname === '/api/ready' ||
     pathname === '/admin/cli-pool' ||
     pathname === '/admin/disclosure-failures' ||
+    pathname === '/admin/quality' ||
+    pathname === '/admin/operations' ||
     pathname === '/dev/webhook-test' ||
     pathname.startsWith('/_kitchen-sink')
   );
@@ -117,6 +121,7 @@ async function tryPatAuth(
  *
  * Headers set for downstream Server Components and Server Actions:
  *   x-locale      — 'it' | 'en' (resolved from the locale cookie)
+ *   x-request-id  — UUID v4 for tracing; preserved from caller or generated fresh
  *   x-user-id     — Supabase auth user UUID
  *   x-org-id      — active organisation UUID
  *   x-member-role — 'owner' | 'admin' | 'operator' | 'viewer'
@@ -125,11 +130,14 @@ async function tryPatAuth(
 export async function middleware(request: NextRequest): Promise<NextResponse> {
   const locale = request.cookies.get('locale')?.value === 'en' ? 'en' : 'it';
   const { pathname } = request.nextUrl;
+  // Preserve a caller-supplied request ID or generate a new one for tracing.
+  const requestId = request.headers.get('x-request-id') ?? crypto.randomUUID();
 
   // ── Public paths ──────────────────────────────────────────────────────────
   if (isPublicPath(pathname)) {
     const reqHeaders = new Headers(request.headers);
     reqHeaders.set('x-locale', locale);
+    reqHeaders.set('x-request-id', requestId);
     return NextResponse.next({ request: { headers: reqHeaders } });
   }
 
@@ -142,6 +150,7 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
       if (identity) {
         const reqHeaders = new Headers(request.headers);
         reqHeaders.set('x-locale', locale);
+        reqHeaders.set('x-request-id', requestId);
         reqHeaders.set('x-user-id', identity.userId);
         reqHeaders.set('x-org-id', identity.orgId);
         reqHeaders.set('x-member-role', identity.role);
@@ -236,6 +245,7 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
     // Already on onboarding — allow through with user identity only
     const reqHeaders = new Headers(request.headers);
     reqHeaders.set('x-locale', locale);
+    reqHeaders.set('x-request-id', requestId);
     reqHeaders.set('x-user-id', user.id);
     const res = NextResponse.next({ request: { headers: reqHeaders } });
     supabaseResponse.cookies.getAll().forEach(({ name, value, ...opts }) =>
@@ -257,6 +267,7 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
   // ── Inject identity headers for Server Components and Server Actions ───────
   const reqHeaders = new Headers(request.headers);
   reqHeaders.set('x-locale', locale);
+  reqHeaders.set('x-request-id', requestId);
   reqHeaders.set('x-user-id', user.id);
   reqHeaders.set('x-org-id', activeMembership.org_id);
   reqHeaders.set('x-member-role', activeMembership.role);

@@ -26,3 +26,4 @@ export * from './campaign_stats';
 export * from './system_flags';
 export * from './user_notification_preferences';
 export * from './email_log';
+export * from './qa_reviews';

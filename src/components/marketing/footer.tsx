@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 
 const CURRENT_YEAR = new Date().getFullYear();
+const STATUS_PAGE_URL = process.env.NEXT_PUBLIC_STATUS_PAGE_URL;
 
 export function MarketingFooter() {
   const t = useTranslations('common');
@@ -26,7 +27,7 @@ export function MarketingFooter() {
           {t('marketing_copyright', { year: CURRENT_YEAR })}
         </p>
 
-        {/* Legal links */}
+        {/* Legal + status links */}
         <nav aria-label={t('marketing_legal_nav_label')} className="flex flex-wrap justify-center gap-4 md:justify-end">
           {legalLinks.map(({ href, labelKey }) => (
             <Link
@@ -37,6 +38,17 @@ export function MarketingFooter() {
               {t(labelKey)}
             </Link>
           ))}
+          {STATUS_PAGE_URL && (
+            <a
+              href={STATUS_PAGE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+              data-testid="footer-status-link"
+            >
+              {t('marketing_status')}
+            </a>
+          )}
         </nav>
       </div>
     </footer>

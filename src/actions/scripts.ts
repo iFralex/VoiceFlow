@@ -4,6 +4,7 @@ import { z } from 'zod';
 
 import { getAuthContext, requireCapability } from '@/lib/auth/context';
 import { env } from '@/lib/env';
+import { logger } from '@/lib/observability/logger';
 import {
   createScript as createScriptService,
   deleteScript as deleteScriptService,
@@ -208,7 +209,7 @@ export async function previewVoiceSampleAction(
 
     return { ok: true, audioDataUrl: dataUrl };
   } catch (e) {
-    console.error('[previewVoiceSampleAction]', e);
+    void logger.error('[previewVoiceSampleAction]', { error: e instanceof Error ? e.message : String(e) });
     return { ok: false, status: 'error', message: 'Errore durante la sintesi vocale.' };
   }
 }

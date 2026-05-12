@@ -1,5 +1,6 @@
 import path from 'path';
 
+import { withSentryConfig } from '@sentry/nextjs';
 import type { NextConfig } from 'next';
 
 import './src/lib/env';
@@ -27,4 +28,15 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  ...(process.env.SENTRY_ORG && { org: process.env.SENTRY_ORG }),
+  ...(process.env.SENTRY_PROJECT && { project: process.env.SENTRY_PROJECT }),
+  ...(process.env.SENTRY_AUTH_TOKEN && { authToken: process.env.SENTRY_AUTH_TOKEN }),
+  silent: !process.env.CI,
+  widenClientFileUpload: true,
+  sourcemaps: {
+    filesToDeleteAfterUpload: ['.next/static/**/*.map'],
+  },
+  disableLogger: true,
+  automaticVercelMonitors: true,
+});

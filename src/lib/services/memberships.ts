@@ -6,6 +6,7 @@ import { withOrgContext, withSystemContext } from '@/lib/db/context';
 import { memberships, organizations, users } from '@/lib/db/schema';
 import type { Membership, User } from '@/lib/db/schema';
 import { sendEmail } from '@/lib/email';
+import { logger } from '@/lib/observability/logger';
 import { renderMemberInviteEmail } from '@/lib/email/templates/member-invite';
 import { env } from '@/lib/env';
 import { supabaseAdmin } from '@/lib/supabase/admin';
@@ -220,7 +221,7 @@ export async function inviteMember(
     if (emailData) {
       emailData.membershipId = membership.id;
       void sendInviteEmail(emailData).catch((e: unknown) =>
-        console.error('[memberships] sendInviteEmail failed:', e),
+        void logger.error('[memberships] sendInviteEmail failed', { error: e instanceof Error ? e.message : String(e) }),
       );
     }
 

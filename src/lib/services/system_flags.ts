@@ -17,6 +17,7 @@ import { eq, sql } from 'drizzle-orm';
 
 import { type DbTx, withSystemContext } from '@/lib/db/context';
 import { systemFlags } from '@/lib/db/schema';
+import { logger } from '@/lib/observability/logger';
 
 // ── Tunables ────────────────────────────────────────────────────────────────
 
@@ -314,7 +315,7 @@ export async function isSbcUnhealthy(options: SbcHealthOptions = {}): Promise<bo
         const cleared = await clearStaleSbcUnhealthyFlag(options);
         if (cleared) return false;
       } catch (err) {
-        console.error('[system_flags] Lazy stale-flag clear failed', err);
+        void logger.error('[system_flags] Lazy stale-flag clear failed', { error: err instanceof Error ? err.message : String(err) });
       }
     }
   }

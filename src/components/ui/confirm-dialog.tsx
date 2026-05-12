@@ -68,6 +68,7 @@ export function ConfirmDialog({
       await onConfirm();
       setOpen(false);
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error('ConfirmDialog: onConfirm threw an error', err);
       const message = err instanceof Error ? err.message : t('error_generic');
       toast.error(message);

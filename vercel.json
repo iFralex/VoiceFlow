@@ -1,6 +1,9 @@
 {
   "buildCommand": "pnpm build",
   "outputDirectory": ".next",
+  "functions": {
+    "src/app/api/cron/backup/route.ts": { "maxDuration": 300 }
+  },
   "crons": [
     { "path": "/api/cron/daily-report", "schedule": "0 19 * * *" },
     { "path": "/api/cron/retention-purge", "schedule": "0 3 * * *" },
@@ -11,6 +14,7 @@
     { "path": "/api/cron/credit-reconciliation", "schedule": "0 3 * * *" },
     { "path": "/api/cron/rpo-snapshot", "schedule": "30 4 * * *" },
     { "path": "/api/cron/aiact-audit", "schedule": "0 6 1 * *" },
-    { "path": "/api/cron/weekly-summary", "schedule": "0 7 * * 1" }
+    { "path": "/api/cron/weekly-summary", "schedule": "0 7 * * 1" },
+    { "path": "/api/cron/backup", "schedule": "30 2 * * *" }
   ]
 }

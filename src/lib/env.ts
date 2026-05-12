@@ -22,13 +22,19 @@ const Env = z.object({
   EMAIL_REPLY_TO: z.string().email().optional(),
   SUPPORT_EMAIL_ADDRESS: z.string().email().optional(),
   SENTRY_DSN: z.string().url().optional(),
+  NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
   SENTRY_AUTH_TOKEN: z.string().optional(),
+  SENTRY_ORG: z.string().optional(),
+  SENTRY_PROJECT: z.string().optional(),
   AXIOM_TOKEN: z.string().optional(),
   AXIOM_DATASET: z.string().optional(),
+  NEXT_PUBLIC_POSTHOG_KEY: z.string().optional(),
+  NEXT_PUBLIC_POSTHOG_HOST: z.string().url().optional(),
+  NEXT_PUBLIC_STATUS_PAGE_URL: z.string().url().optional(),
   INNGEST_EVENT_KEY: z.string().min(1),
   INNGEST_SIGNING_KEY: z.string().min(1),
   INNGEST_BASE_URL: z.string().url().optional(),
-  VOICE_PROVIDER: z.enum(['vapi', 'retell']).default('vapi'),
+  VOICE_PROVIDER: z.enum(['vapi', 'retell', 'proprietary']).default('vapi'),
   VAPI_API_KEY: z.string().min(1).optional(),
   VAPI_ASSISTANT_ID: z.string().min(1).optional(),
   VAPI_WEBHOOK_SECRET: z.string().min(1).optional(),
@@ -55,6 +61,12 @@ const Env = z.object({
   CLI_DAILY_CAP_DEFAULT: z.coerce.number().int().positive().default(100),
   CLI_HOURLY_CAP_DEFAULT: z.coerce.number().int().positive().default(30),
   SBC_SMOKE_TEST_NUMBER: z.string().regex(/^\+\d{8,15}$/).optional(),
+  // Backup (optional — cron skips gracefully when absent)
+  BACKUP_B2_KEY_ID: z.string().optional(),
+  BACKUP_B2_APP_KEY: z.string().optional(),
+  BACKUP_B2_BUCKET_ID: z.string().optional(),
+  // Hex-encoded 32-byte (256-bit) key for AES-256-GCM backup encryption
+  BACKUP_ENCRYPTION_KEY: z.string().regex(/^[0-9a-fA-F]{64}$/).optional(),
 });
 
 // Convert empty strings to undefined so optional validators don't reject blank env vars

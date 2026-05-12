@@ -29,6 +29,7 @@ import { withSystemContext } from '@/lib/db/context';
 import { contacts, optOutRegistry, rpoSnapshots } from '@/lib/db/schema';
 import { env } from '@/lib/env';
 import { sendInngestEvents } from '@/lib/inngest/client';
+import { logger } from '@/lib/observability/logger';
 import {
   COMPLIANCE_OPT_OUT_REGISTERED_EVENT,
   type ComplianceOptOutRegisteredData,
@@ -129,7 +130,7 @@ export async function runRpoSnapshot(clientOverride?: RpoClient): Promise<RpoSna
       cursor = phones[phones.length - 1] ?? null;
       chunks++;
     } catch (err) {
-      console.error('[rpo-snapshot] chunk failed', {
+      void logger.error('[rpo-snapshot] chunk failed', {
         cursor,
         chunkSize: phones.length,
         error: err instanceof Error ? err.message : String(err),
