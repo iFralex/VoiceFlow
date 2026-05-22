@@ -9,7 +9,7 @@ import { creditLedger, payments } from '@/lib/db/schema';
 import { env } from '@/lib/env';
 import { logger } from '@/lib/observability/logger';
 import { topUp } from '@/lib/services/credit';
-import { stripe } from '@/lib/stripe/client';
+import { getStripe } from '@/lib/stripe/client';
 
 // ---------------------------------------------------------------------------
 // Auth
@@ -53,7 +53,7 @@ export async function reconcilePendingPayments(): Promise<ReconcileResult> {
 
   for (const payment of stuckPayments) {
     try {
-      const session = await stripe.checkout.sessions.retrieve(payment.stripe_session_id);
+      const session = await getStripe().checkout.sessions.retrieve(payment.stripe_session_id);
 
       if (session.status === 'complete') {
         const paymentIntentId =
@@ -68,7 +68,7 @@ export async function reconcilePendingPayments(): Promise<ReconcileResult> {
           const invoiceId =
             typeof session.invoice === 'string' ? session.invoice : session.invoice.id;
           try {
-            const invoice = await stripe.invoices.retrieve(invoiceId);
+            const invoice = await getStripe().invoices.retrieve(invoiceId);
             invoiceUrl = invoice.hosted_invoice_url ?? null;
           } catch {
             // Non-fatal — continue without invoice URL

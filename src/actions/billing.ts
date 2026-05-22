@@ -9,7 +9,7 @@ import { creditPackages, payments } from '@/lib/db/schema';
 import { env } from '@/lib/env';
 import { getBalance, getBalanceWithBreakdown, getLedgerHistory } from '@/lib/services/credit';
 import type { LedgerEntryType, PackagePool } from '@/lib/services/credit';
-import { getOrCreateCustomerForOrg, stripe } from '@/lib/stripe';
+import { getOrCreateCustomerForOrg, getStripe } from '@/lib/stripe';
 import type { ActionResult } from '@/lib/utils/action-toast';
 
 const createTopupSessionSchema = z.object({
@@ -47,7 +47,7 @@ export async function createTopupSession(
   // Pre-generate the payments row ID so we can include it in Stripe metadata
   const paymentsId = crypto.randomUUID();
 
-  const session = await stripe.checkout.sessions.create({
+  const session = await getStripe().checkout.sessions.create({
     mode: 'payment',
     customer: stripeCustomerId,
     line_items: [{ price: pkg.stripe_price_id, quantity: 1 }],
@@ -210,7 +210,7 @@ export async function createBillingPortalSession(): Promise<ActionResult & { url
 
   const stripeCustomerId = await getOrCreateCustomerForOrg(orgId);
 
-  const session = await stripe.billingPortal.sessions.create({
+  const session = await getStripe().billingPortal.sessions.create({
     customer: stripeCustomerId,
     return_url: `${env.NEXT_PUBLIC_APP_URL}/settings/organization`,
   });

@@ -5,13 +5,17 @@ import { withOrgContext, withSystemContext } from '@/lib/db/context';
 import { organizations } from '@/lib/db/schema/organizations';
 import { env } from '@/lib/env';
 
+let _stripe: Stripe | undefined;
+
 /**
- * Singleton Stripe client with pinned API version.
+ * Returns the Stripe client singleton with a pinned API version.
+ * Lazy so the instance is only created on first call, not at module load time.
  * Only use in server-side code (Server Actions, Route Handlers, Services).
  */
-export const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
-  apiVersion: '2026-04-22.dahlia',
-});
+export function getStripe(): Stripe {
+  _stripe ??= new Stripe(env.STRIPE_SECRET_KEY, { apiVersion: '2026-04-22.dahlia' });
+  return _stripe;
+}
 
 /**
  * Returns the Stripe Customer ID for an org, creating one if it doesn't exist yet.
@@ -42,7 +46,7 @@ export async function getOrCreateCustomerForOrg(orgId: string): Promise<string> 
   }
 
   // Create a new Stripe Customer
-  const customer = await stripe.customers.create({
+  const customer = await getStripe().customers.create({
     name: org.legal_name ?? org.name,
     metadata: {
       org_id: orgId,

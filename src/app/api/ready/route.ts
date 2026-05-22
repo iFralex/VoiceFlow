@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 import { withSystemContext } from '@/lib/db/context';
 import { getResendClient } from '@/lib/email/client';
 import { env } from '@/lib/env';
-import { stripe } from '@/lib/stripe/client';
+import { getStripe } from '@/lib/stripe/client';
 
 interface CheckResult {
   ok: boolean;
@@ -27,7 +27,7 @@ async function checkDb(): Promise<CheckResult> {
 async function checkStripe(): Promise<CheckResult> {
   const t0 = Date.now();
   try {
-    await stripe.balance.retrieve();
+    await getStripe().balance.retrieve();
     return { ok: true, latencyMs: Date.now() - t0 };
   } catch {
     return { ok: false, error: 'check failed' };

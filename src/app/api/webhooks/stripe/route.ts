@@ -7,7 +7,7 @@ import { withSystemContext } from '@/lib/db/context';
 import { organizations, payments, webhookEvents } from '@/lib/db/schema';
 import { env } from '@/lib/env';
 import { adjust, refundCall, topUp } from '@/lib/services/credit';
-import { stripe } from '@/lib/stripe/client';
+import { getStripe } from '@/lib/stripe/client';
 import { verifyStripeWebhook } from '@/lib/stripe/verify';
 
 // ---------------------------------------------------------------------------
@@ -32,7 +32,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session):
   if (session.invoice) {
     const invoiceId = typeof session.invoice === 'string' ? session.invoice : session.invoice.id;
     try {
-      const invoice = await stripe.invoices.retrieve(invoiceId);
+      const invoice = await getStripe().invoices.retrieve(invoiceId);
       invoiceUrl = invoice.hosted_invoice_url ?? null;
     } catch {
       // Non-fatal — continue without invoice URL; the URL can be back-filled later
@@ -98,7 +98,10 @@ async function handleCheckoutSessionExpired(session: Stripe.Checkout.Session): P
 
 async function handlePaymentIntentFailed(pi: Stripe.PaymentIntent): Promise<void> {
   // The payment row uses stripe_session_id as its key. Look up the session via Stripe API.
-  const sessionsList = await stripe.checkout.sessions.list({ payment_intent: pi.id, limit: 1 });
+  const sessionsList = await getStripe().checkout.sessions.list({
+    payment_intent: pi.id,
+    limit: 1,
+  });
   const stripeSession = sessionsList.data[0];
   if (!stripeSession) return; // Not a top-up payment intent
 

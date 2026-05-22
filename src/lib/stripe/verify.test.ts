@@ -12,9 +12,9 @@ const { mockConstructEvent } = vi.hoisted(() => {
 });
 
 vi.mock('./client', () => ({
-  stripe: {
+  getStripe: () => ({
     webhooks: { constructEvent: mockConstructEvent },
-  },
+  }),
 }));
 
 // ---------------------------------------------------------------------------

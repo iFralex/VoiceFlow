@@ -1,6 +1,6 @@
 import type Stripe from 'stripe';
 
-import { stripe } from './client';
+import { getStripe } from './client';
 
 /**
  * Verifies a Stripe webhook signature and returns the parsed event.
@@ -20,5 +20,5 @@ export function verifyStripeWebhook(
   secret: string,
   tolerance?: number,
 ): Stripe.Event {
-  return stripe.webhooks.constructEvent(rawBody, signature, secret, tolerance);
+  return getStripe().webhooks.constructEvent(rawBody, signature, secret, tolerance);
 }
