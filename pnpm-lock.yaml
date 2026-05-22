@@ -11,6 +11,9 @@ importers:
       '@axiomhq/js':
         specifier: ^1.6.1
         version: 1.6.1
+      '@date-fns/tz':
+        specifier: ^1.2.0
+        version: 1.4.1
       '@hookform/resolvers':
         specifier: ^5.0.0
         version: 5.2.2(react-hook-form@7.75.0(react@19.2.5))
