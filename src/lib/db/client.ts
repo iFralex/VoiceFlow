@@ -1,6 +1,5 @@
 import { sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
-import { headers } from 'next/headers';
 import postgres from 'postgres';
 
 import { env } from '@/lib/env';
@@ -26,6 +25,7 @@ export async function dbForRequest(): Promise<{
   orgId: string;
   withOrgContext: <T>(fn: (tx: DbTx) => Promise<T>) => Promise<T>;
 }> {
+  const { headers } = await import('next/headers');
   const h = await headers();
   const orgId = h.get('x-org-id');
   if (!orgId) {

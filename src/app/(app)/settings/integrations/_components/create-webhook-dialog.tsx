@@ -28,7 +28,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { ALLOWED_EVENT_TYPES } from '@/lib/services/webhooks_outgoing';
+import { ALLOWED_EVENT_TYPES } from '@/lib/services/webhooks_outgoing/events';
 import { toastResult } from '@/lib/utils/action-toast';
 
 const createSchema = z.object({

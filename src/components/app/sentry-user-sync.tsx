@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 
-import { clearSentryUser, setSentryUser } from '@/lib/observability';
+import { clearSentryUser, setSentryUser } from '@/lib/observability/sentry';
 
 export function SentryUserSync({ userId, orgId }: { userId: string; orgId: string }) {
   useEffect(() => {
