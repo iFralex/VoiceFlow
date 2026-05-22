@@ -64,9 +64,11 @@ vi.mock('@/lib/voice/cli/picker', () => ({
 }));
 
 vi.mock('node:fs', () => ({
-  readFileSync: vi.fn().mockReturnValue(
-    'Buongiorno, sono {{salesperson_first_name}}, un assistente vocale automatico per {{dealership_name}}, concessionario {{brand}}.',
-  ),
+  readFileSync: vi
+    .fn()
+    .mockReturnValue(
+      'Buongiorno, sono {{salesperson_first_name}}, un assistente vocale automatico per {{dealership_name}}, concessionario {{brand}}.',
+    ),
 }));
 
 vi.mock('@/lib/env', () => ({
@@ -276,11 +278,11 @@ describe('createPendingCall', () => {
 describe('dispatchCall', () => {
   function queueDispatchSelectResults() {
     selectResultQueue.push(
-      [fakeCall],      // call
-      [fakeCampaign],  // campaign
-      [fakeScript],    // script
-      [fakeTemplate],  // template
-      [fakeContact],   // contact
+      [fakeCall], // call
+      [fakeCampaign], // campaign
+      [fakeScript], // script
+      [fakeTemplate], // template
+      [fakeContact], // contact
       // CLI selection is delegated to pickCliForOrg (mocked above), so no
       // phone-number SELECT is queued here.
     );
@@ -319,11 +321,7 @@ describe('dispatchCall', () => {
     expect((callArgs.endCallFunctions as unknown[]).length).toBeGreaterThan(0);
     expect(callArgs.metadata).toMatchObject({ orgId: ORG_ID, callId: CALL_ID });
 
-    expect(mockPickCliForOrg).toHaveBeenCalledWith(
-      ORG_ID,
-      '+393331234567',
-      expect.any(Object),
-    );
+    expect(mockPickCliForOrg).toHaveBeenCalledWith(ORG_ID, '+393331234567', expect.any(Object));
 
     expect(mockRecordAudit).toHaveBeenCalledWith(
       mockTx,
@@ -426,9 +424,7 @@ describe('dispatchCall', () => {
     const { dispatchCall } = await import('./calls');
     await expect(dispatchCall(ORG_ID, CALL_ID)).rejects.toThrow(sentinel);
 
-    expect(mockRecordSbcDispatchFailure).toHaveBeenCalledWith(
-      'vapi 502: trunk down',
-    );
+    expect(mockRecordSbcDispatchFailure).toHaveBeenCalledWith('vapi 502: trunk down');
   });
 
   it('records an SBC dispatch success when createCall succeeds from a voiped CLI', async () => {
@@ -469,11 +465,9 @@ describe('dispatchCall', () => {
     const { dispatchCall } = await import('./calls');
     await dispatchCall(ORG_ID, CALL_ID);
 
-    expect(mockPickCliForOrg).toHaveBeenCalledWith(
-      ORG_ID,
-      '+393331234567',
-      { providers: ['twilio'] },
-    );
+    expect(mockPickCliForOrg).toHaveBeenCalledWith(ORG_ID, '+393331234567', {
+      providers: ['twilio'],
+    });
     // The selected fromNumber is the Twilio CLI's Vapi phoneNumberId.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const callArgs = (mockCreateCall.mock.calls[0] as any[])[0] as Record<string, unknown>;
@@ -559,7 +553,10 @@ describe('recordCallEnded', () => {
     await recordCallEnded(CALL_ID, { durationSeconds: 10, endedReason: 'voicemail' });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const setArgs = (mockTx.update.mock.results[0] as any).value.set.mock.calls[0][0] as Record<string, unknown>;
+    const setArgs = (mockTx.update.mock.results[0] as any).value.set.mock.calls[0][0] as Record<
+      string,
+      unknown
+    >;
     expect(setArgs.status).toBe('voicemail');
   });
 
@@ -570,7 +567,10 @@ describe('recordCallEnded', () => {
     await recordCallEnded(CALL_ID, { durationSeconds: 5, endedReason: 'voicemail' });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const setArgs = (mockTx.update.mock.results[0] as any).value.set.mock.calls[0][0] as Record<string, unknown>;
+    const setArgs = (mockTx.update.mock.results[0] as any).value.set.mock.calls[0][0] as Record<
+      string,
+      unknown
+    >;
     expect(setArgs.status).toBe('voicemail');
     expect(setArgs.outcome).toBe('voicemail_no_message');
   });
@@ -582,7 +582,10 @@ describe('recordCallEnded', () => {
     await recordCallEnded(CALL_ID, { durationSeconds: 15, endedReason: 'voicemail' });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const setArgs = (mockTx.update.mock.results[0] as any).value.set.mock.calls[0][0] as Record<string, unknown>;
+    const setArgs = (mockTx.update.mock.results[0] as any).value.set.mock.calls[0][0] as Record<
+      string,
+      unknown
+    >;
     expect(setArgs.status).toBe('voicemail');
     expect(setArgs.outcome).toBe('voicemail_left');
   });
@@ -594,7 +597,10 @@ describe('recordCallEnded', () => {
     await recordCallEnded(CALL_ID, { durationSeconds: 90, endedReason: 'assistant-ended-call' });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const setArgs = (mockTx.update.mock.results[0] as any).value.set.mock.calls[0][0] as Record<string, unknown>;
+    const setArgs = (mockTx.update.mock.results[0] as any).value.set.mock.calls[0][0] as Record<
+      string,
+      unknown
+    >;
     expect(setArgs).not.toHaveProperty('outcome');
   });
 
@@ -605,7 +611,10 @@ describe('recordCallEnded', () => {
     await recordCallEnded(CALL_ID, { durationSeconds: 5, endedReason: 'no-answer' });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const setArgs = (mockTx.update.mock.results[0] as any).value.set.mock.calls[0][0] as Record<string, unknown>;
+    const setArgs = (mockTx.update.mock.results[0] as any).value.set.mock.calls[0][0] as Record<
+      string,
+      unknown
+    >;
     expect(setArgs.status).toBe('no_answer');
   });
 
@@ -670,7 +679,10 @@ describe('classifyAndFinaliseCall', () => {
     await classifyAndFinaliseCall(CALL_ID);
 
     expect(mockSendInngestEvent).toHaveBeenCalledWith(
-      expect.objectContaining({ name: CALL_CLASSIFY_EVENT, data: expect.objectContaining({ callId: CALL_ID }) }),
+      expect.objectContaining({
+        name: CALL_CLASSIFY_EVENT,
+        data: expect.objectContaining({ callId: CALL_ID }),
+      }),
     );
   });
 

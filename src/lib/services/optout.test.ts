@@ -2,17 +2,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // ─── Hoisted mocks ───────────────────────────────────────────────────────────
 
-const {
-  mockWithOrgContext,
-  mockRecordAudit,
-  mockSendInngestEvents,
-  mockSendInngestEvent,
-} = vi.hoisted(() => ({
-  mockWithOrgContext: vi.fn(),
-  mockRecordAudit: vi.fn().mockResolvedValue(undefined),
-  mockSendInngestEvents: vi.fn().mockResolvedValue(undefined),
-  mockSendInngestEvent: vi.fn().mockResolvedValue(undefined),
-}));
+const { mockWithOrgContext, mockRecordAudit, mockSendInngestEvents, mockSendInngestEvent } =
+  vi.hoisted(() => ({
+    mockWithOrgContext: vi.fn(),
+    mockRecordAudit: vi.fn().mockResolvedValue(undefined),
+    mockSendInngestEvents: vi.fn().mockResolvedValue(undefined),
+    mockSendInngestEvent: vi.fn().mockResolvedValue(undefined),
+  }));
 
 vi.mock('@/lib/db/context', () => ({
   withOrgContext: mockWithOrgContext,
@@ -383,9 +379,7 @@ describe('bulkMarkOptOut', () => {
       return fn(tx);
     });
 
-    const phones = Array.from({ length: 1200 }, (_, i) =>
-      `+39333${String(i).padStart(7, '0')}`,
-    );
+    const phones = Array.from({ length: 1200 }, (_, i) => `+39333${String(i).padStart(7, '0')}`);
     await bulkMarkOptOut('org-1', phones, 'dealer_input');
 
     // 500 + 500 + 200 = 3 batches

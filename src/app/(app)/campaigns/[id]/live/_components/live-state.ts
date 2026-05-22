@@ -1,7 +1,4 @@
-import type {
-  CampaignLiveCallRow,
-  CampaignLiveSnapshot,
-} from '@/lib/services/campaign-live';
+import type { CampaignLiveCallRow, CampaignLiveSnapshot } from '@/lib/services/campaign-live';
 
 export type CallRecord = CampaignLiveCallRow;
 
@@ -15,18 +12,10 @@ export type CampaignLiveState = {
   callsById: Record<string, CallRecord>;
 };
 
-const TERMINAL_STATUSES = new Set([
-  'completed',
-  'failed',
-  'no_answer',
-  'voicemail',
-  'busy',
-]);
+const TERMINAL_STATUSES = new Set(['completed', 'failed', 'no_answer', 'voicemail', 'busy']);
 const ACTIVE_STATUSES = new Set(['dialing', 'in_progress']);
 
-export function initialStateFromSnapshot(
-  snapshot: CampaignLiveSnapshot,
-): CampaignLiveState {
+export function initialStateFromSnapshot(snapshot: CampaignLiveSnapshot): CampaignLiveState {
   const callsById: Record<string, CallRecord> = {};
   for (const c of snapshot.recentCalls) {
     callsById[c.id] = c;
@@ -56,27 +45,15 @@ export function callRecordFromRealtimeRow(
 ): CallRecord {
   return {
     id: String(row['id']),
-    contactName:
-      fallback.contactName ?? (row['from_number'] as string | null) ?? '',
+    contactName: fallback.contactName ?? (row['from_number'] as string | null) ?? '',
     phoneE164: fallback.phoneE164 ?? null,
     status: row['status'] as CallRecord['status'],
     outcome: (row['outcome'] as CallRecord['outcome']) ?? null,
-    startedAtIso:
-      typeof row['started_at'] === 'string'
-        ? (row['started_at'] as string)
-        : null,
-    endedAtIso:
-      typeof row['ended_at'] === 'string'
-        ? (row['ended_at'] as string)
-        : null,
-    costCents:
-      typeof row['cost_cents'] === 'number'
-        ? (row['cost_cents'] as number)
-        : null,
+    startedAtIso: typeof row['started_at'] === 'string' ? (row['started_at'] as string) : null,
+    endedAtIso: typeof row['ended_at'] === 'string' ? (row['ended_at'] as string) : null,
+    costCents: typeof row['cost_cents'] === 'number' ? (row['cost_cents'] as number) : null,
     billableSeconds:
-      typeof row['billable_seconds'] === 'number'
-        ? (row['billable_seconds'] as number)
-        : null,
+      typeof row['billable_seconds'] === 'number' ? (row['billable_seconds'] as number) : null,
   };
 }
 
@@ -130,15 +107,9 @@ export function applyCall(
     else if (wasActive && !isActive) dInProgress = -1;
 
     // Appointment outcome flips
-    if (
-      prev.outcome !== 'appointment_booked' &&
-      next.outcome === 'appointment_booked'
-    ) {
+    if (prev.outcome !== 'appointment_booked' && next.outcome === 'appointment_booked') {
       dAppointments = 1;
-    } else if (
-      prev.outcome === 'appointment_booked' &&
-      next.outcome !== 'appointment_booked'
-    ) {
+    } else if (prev.outcome === 'appointment_booked' && next.outcome !== 'appointment_booked') {
       dAppointments = -1;
     }
 
@@ -162,10 +133,7 @@ export function applyCall(
  * Sort calls for display: active calls first (dialing/in_progress), then by
  * started_at desc (most recently active first), then by id for stability.
  */
-export function sortCallsForDisplay(
-  calls: CallRecord[],
-  limit?: number,
-): CallRecord[] {
+export function sortCallsForDisplay(calls: CallRecord[], limit?: number): CallRecord[] {
   const sorted = [...calls].sort((a, b) => {
     const aActive = ACTIVE_STATUSES.has(a.status) ? 0 : 1;
     const bActive = ACTIVE_STATUSES.has(b.status) ? 0 : 1;

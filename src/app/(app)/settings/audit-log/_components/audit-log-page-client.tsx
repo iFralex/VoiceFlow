@@ -3,7 +3,11 @@
 import { useTranslations } from 'next-intl';
 import { useCallback, useState, useTransition } from 'react';
 
-import { exportAuditLogCsv, listAuditLogEntries, type SerializedAuditLogEntry } from '@/actions/audit_log';
+import {
+  exportAuditLogCsv,
+  listAuditLogEntries,
+  type SerializedAuditLogEntry,
+} from '@/actions/audit_log';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
@@ -82,19 +86,22 @@ export function AuditLogPageClient({
   const [pending, startTransition] = useTransition();
   const [exporting, startExport] = useTransition();
 
-  const reload = useCallback((next: FilterState) => {
-    startTransition(async () => {
-      const payload = buildFiltersPayload(next);
-      const r = await listAuditLogEntries({ filters: payload, limit: pageSize });
-      if (r.ok && r.data) {
-        setEntries(r.data.entries);
-        setCursor(r.data.nextCursor);
-        setAppliedFilters(next);
-      } else if (!r.ok) {
-        toastResult({ ok: false, message: r.message });
-      }
-    });
-  }, [pageSize]);
+  const reload = useCallback(
+    (next: FilterState) => {
+      startTransition(async () => {
+        const payload = buildFiltersPayload(next);
+        const r = await listAuditLogEntries({ filters: payload, limit: pageSize });
+        if (r.ok && r.data) {
+          setEntries(r.data.entries);
+          setCursor(r.data.nextCursor);
+          setAppliedFilters(next);
+        } else if (!r.ok) {
+          toastResult({ ok: false, message: r.message });
+        }
+      });
+    },
+    [pageSize],
+  );
 
   function handleApplyFilters() {
     reload(filters);
@@ -153,14 +160,14 @@ export function AuditLogPageClient({
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
-        <p className="text-sm text-muted-foreground">{t('description')}</p>
+        <p className="text-muted-foreground text-sm">{t('description')}</p>
       </div>
 
-      <section className="rounded-lg border p-4 space-y-3">
+      <section className="space-y-3 rounded-lg border p-4">
         <h2 className="text-sm font-semibold">{t('filters_title')}</h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <div className="space-y-1">
-            <label className="text-xs font-medium text-muted-foreground" htmlFor="audit-action">
+            <label className="text-muted-foreground text-xs font-medium" htmlFor="audit-action">
               {t('filter_action_label')}
             </label>
             <Input
@@ -172,7 +179,7 @@ export function AuditLogPageClient({
             />
           </div>
           <div className="space-y-1">
-            <label className="text-xs font-medium text-muted-foreground" htmlFor="audit-from">
+            <label className="text-muted-foreground text-xs font-medium" htmlFor="audit-from">
               {t('filter_from_label')}
             </label>
             <Input
@@ -184,7 +191,7 @@ export function AuditLogPageClient({
             />
           </div>
           <div className="space-y-1">
-            <label className="text-xs font-medium text-muted-foreground" htmlFor="audit-to">
+            <label className="text-muted-foreground text-xs font-medium" htmlFor="audit-to">
               {t('filter_to_label')}
             </label>
             <Input
@@ -196,7 +203,7 @@ export function AuditLogPageClient({
             />
           </div>
           <div className="space-y-1">
-            <label className="text-xs font-medium text-muted-foreground" htmlFor="audit-actor">
+            <label className="text-muted-foreground text-xs font-medium" htmlFor="audit-actor">
               {t('filter_actor_label')}
             </label>
             <Input
@@ -233,7 +240,7 @@ export function AuditLogPageClient({
         {entries.length === 0 ? (
           <EmptyState title={t('empty_title')} description={t('empty_description')} />
         ) : (
-          <div className="rounded-md border overflow-x-auto">
+          <div className="overflow-x-auto rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -249,10 +256,10 @@ export function AuditLogPageClient({
                   const isExpanded = expandedId === entry.id;
                   return (
                     <TableRow key={entry.id} data-testid="audit-log-row">
-                      <TableCell className="whitespace-nowrap font-mono text-xs">
+                      <TableCell className="font-mono text-xs whitespace-nowrap">
                         {new Date(entry.createdAt).toLocaleString()}
                       </TableCell>
-                      <TableCell className="whitespace-nowrap text-sm">
+                      <TableCell className="text-sm whitespace-nowrap">
                         {actorLabel(entry, t)}
                       </TableCell>
                       <TableCell className="font-mono text-xs">{entry.action}</TableCell>
@@ -271,13 +278,13 @@ export function AuditLogPageClient({
                               {isExpanded ? t('details_hide') : t('details_show')}
                             </Button>
                             {isExpanded && (
-                              <pre className="max-w-md whitespace-pre-wrap break-all rounded bg-muted/50 p-2 font-mono text-[11px] text-muted-foreground">
+                              <pre className="bg-muted/50 text-muted-foreground max-w-md rounded p-2 font-mono text-[11px] break-all whitespace-pre-wrap">
                                 {JSON.stringify(entry.metadata, null, 2)}
                               </pre>
                             )}
                           </div>
                         ) : (
-                          <span className="text-xs text-muted-foreground">—</span>
+                          <span className="text-muted-foreground text-xs">—</span>
                         )}
                       </TableCell>
                     </TableRow>
@@ -300,10 +307,7 @@ export function AuditLogPageClient({
   );
 }
 
-function actorLabel(
-  entry: SerializedAuditLogEntry,
-  t: (key: string) => string,
-): string {
+function actorLabel(entry: SerializedAuditLogEntry, t: (key: string) => string): string {
   if (entry.actorType === 'system') return t('actor_system');
   if (entry.actorType === 'webhook') return t('actor_webhook');
   return entry.actorEmail ?? entry.actorUserId ?? t('actor_unknown');

@@ -230,9 +230,7 @@ describe('contacts CSV import pipeline — integration', () => {
     expect(result.invalidRows).toHaveLength(INVALID);
 
     for (const invalid of result.invalidRows) {
-      const hasPhoneError = invalid.errors.some((e) =>
-        e.includes('Numero di telefono non valido'),
-      );
+      const hasPhoneError = invalid.errors.some((e) => e.includes('Numero di telefono non valido'));
       expect(hasPhoneError).toBe(true);
       // Verify the raw value is preserved for the errors artifact
       expect(invalid.raw['telefono']).toMatch(/^NOT_A_PHONE_/);
@@ -260,9 +258,7 @@ describe('contacts CSV import pipeline — integration', () => {
     const { getDownloadUrl } = await import('@/lib/storage/signed');
 
     // Path belongs to OTHER_ORG — caller is in TEST_ORG → must be rejected
-    await expect(
-      getDownloadUrl(`${OTHER_ORG}/exports/contacts-test.csv`, 300),
-    ).rejects.toThrow(
+    await expect(getDownloadUrl(`${OTHER_ORG}/exports/contacts-test.csv`, 300)).rejects.toThrow(
       `Forbidden: path belongs to org '${OTHER_ORG}', caller is in org '${CALLER_ORG}'`,
     );
   });
@@ -273,44 +269,41 @@ describe('contacts CSV import pipeline — integration', () => {
    * Importing a do-not-call list via markOptOut (or direct insert) must only
    * write to opt_out_registry — no rows should appear in the contacts table.
    */
-  it.skipIf(skipWhenNoDb)(
-    'opt-out registry import does not create contact rows',
-    async () => {
-      const DNC_PHONES = ['+393330001000', '+393330001001', '+393330001002'];
+  it.skipIf(skipWhenNoDb)('opt-out registry import does not create contact rows', async () => {
+    const DNC_PHONES = ['+393330001000', '+393330001001', '+393330001002'];
 
-      await withTestDb(async (tx) => {
-        await seedOrg(tx);
+    await withTestDb(async (tx) => {
+      await seedOrg(tx);
 
-        // Insert opt-out entries directly (mirrors what markOptOut does)
-        await tx.insert(optOutRegistry).values(
-          DNC_PHONES.map((phone_e164) => ({
-            org_id: TEST_ORG,
-            phone_e164,
-            source: 'dealer_input' as const,
-          })),
-        );
+      // Insert opt-out entries directly (mirrors what markOptOut does)
+      await tx.insert(optOutRegistry).values(
+        DNC_PHONES.map((phone_e164) => ({
+          org_id: TEST_ORG,
+          phone_e164,
+          source: 'dealer_input' as const,
+        })),
+      );
 
-        // Opt-out registry should have exactly the entries we inserted
-        const optOutRows = await tx
-          .select()
-          .from(optOutRegistry)
-          .where(eq(optOutRegistry.org_id, TEST_ORG));
+      // Opt-out registry should have exactly the entries we inserted
+      const optOutRows = await tx
+        .select()
+        .from(optOutRegistry)
+        .where(eq(optOutRegistry.org_id, TEST_ORG));
 
-        expect(optOutRows).toHaveLength(DNC_PHONES.length);
-        for (const row of optOutRows) {
-          expect(DNC_PHONES).toContain(row.phone_e164);
-        }
+      expect(optOutRows).toHaveLength(DNC_PHONES.length);
+      for (const row of optOutRows) {
+        expect(DNC_PHONES).toContain(row.phone_e164);
+      }
 
-        // No contact rows should exist for this org
-        const [contactCount] = await tx
-          .select({ total: count() })
-          .from(contacts)
-          .where(eq(contacts.org_id, TEST_ORG));
+      // No contact rows should exist for this org
+      const [contactCount] = await tx
+        .select({ total: count() })
+        .from(contacts)
+        .where(eq(contacts.org_id, TEST_ORG));
 
-        expect(contactCount!.total).toBe(0);
-      });
-    },
-  );
+      expect(contactCount!.total).toBe(0);
+    });
+  });
 
   /**
    * Test 6: The partial unique index on (org_id, phone_e164) WHERE deleted_at IS NULL
@@ -342,10 +335,7 @@ describe('contacts CSV import pipeline — integration', () => {
         expect(first).toBeDefined();
 
         // 2. Soft-delete it (mirrors softDeleteContact)
-        await tx
-          .update(contacts)
-          .set({ deleted_at: new Date() })
-          .where(eq(contacts.id, first!.id));
+        await tx.update(contacts).set({ deleted_at: new Date() }).where(eq(contacts.id, first!.id));
 
         // 3. Re-insert the same phone — the partial index only covers
         //    rows WHERE deleted_at IS NULL, so this must succeed
@@ -366,9 +356,7 @@ describe('contacts CSV import pipeline — integration', () => {
         const allRows = await tx
           .select()
           .from(contacts)
-          .where(
-            and(eq(contacts.org_id, TEST_ORG), eq(contacts.phone_e164, PHONE)),
-          );
+          .where(and(eq(contacts.org_id, TEST_ORG), eq(contacts.phone_e164, PHONE)));
 
         expect(allRows).toHaveLength(2);
 

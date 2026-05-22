@@ -96,10 +96,7 @@ export async function getUploadUrl(path: string): Promise<string> {
  * @param path       Storage object path, e.g. `recordings/<org_id>/<call_id>.mp3`
  * @param ttlSeconds Seconds until the signed URL expires
  */
-export async function getCallMediaDownloadUrl(
-  path: string,
-  ttlSeconds: number,
-): Promise<string> {
+export async function getCallMediaDownloadUrl(path: string, ttlSeconds: number): Promise<string> {
   const segments = path.split('/');
   const kind = segments[0];
   const pathOrgId = segments[1];
@@ -112,9 +109,7 @@ export async function getCallMediaDownloadUrl(
 
   const { orgId } = await getAuthContext();
   if (orgId !== pathOrgId) {
-    throw new Error(
-      `Forbidden: path belongs to org '${pathOrgId}', caller is in org '${orgId}'`,
-    );
+    throw new Error(`Forbidden: path belongs to org '${pathOrgId}', caller is in org '${orgId}'`);
   }
 
   const { data, error } = await supabaseAdmin.storage

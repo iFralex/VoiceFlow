@@ -1,7 +1,7 @@
 export const transferToHumanAgentJsonSchema = {
   name: 'transfer_to_human_agent',
   description:
-    'Invoca questo strumento per trasferire la chiamata a un operatore umano. Usa quando il contatto lo richiede esplicitamente o quando la situazione supera le capacità dell\'assistente automatico.',
+    "Invoca questo strumento per trasferire la chiamata a un operatore umano. Usa quando il contatto lo richiede esplicitamente o quando la situazione supera le capacità dell'assistente automatico.",
   parameters: {
     $schema: 'http://json-schema.org/draft-07/schema#',
     type: 'object',

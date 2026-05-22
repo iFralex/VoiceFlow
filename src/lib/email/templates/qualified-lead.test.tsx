@@ -1,13 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  type QualifiedLeadEmailProps,
-  renderQualifiedLeadEmail,
-} from './qualified-lead';
+import { type QualifiedLeadEmailProps, renderQualifiedLeadEmail } from './qualified-lead';
 
-function buildProps(
-  overrides: Partial<QualifiedLeadEmailProps> = {},
-): QualifiedLeadEmailProps {
+function buildProps(overrides: Partial<QualifiedLeadEmailProps> = {}): QualifiedLeadEmailProps {
   return {
     locale: 'it',
     recipientName: 'Mario Rossi',
@@ -96,9 +91,7 @@ describe('renderQualifiedLeadEmail', () => {
   });
 
   it('falls back to org name when recipient name is blank', async () => {
-    const result = await renderQualifiedLeadEmail(
-      buildProps({ recipientName: '   ' }),
-    );
+    const result = await renderQualifiedLeadEmail(buildProps({ recipientName: '   ' }));
 
     expect(result.html).toContain('Ciao Acme Auto');
   });

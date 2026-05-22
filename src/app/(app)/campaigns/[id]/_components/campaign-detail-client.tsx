@@ -144,9 +144,7 @@ function TypedCancelDialog({
           <AlertDialogDescription>{t('cancel_confirm_desc')}</AlertDialogDescription>
         </AlertDialogHeader>
         <div className="py-2">
-          <p className="mb-2 text-sm text-muted-foreground">
-            {t('cancel_typed_confirm_hint')}
-          </p>
+          <p className="text-muted-foreground mb-2 text-sm">{t('cancel_typed_confirm_hint')}</p>
           <Input
             value={typedName}
             onChange={(e) => setTypedName(e.target.value)}
@@ -177,20 +175,12 @@ function TypedCancelDialog({
 // KPI Card
 // ---------------------------------------------------------------------------
 
-function KpiCard({
-  label,
-  value,
-  subtitle,
-}: {
-  label: string;
-  value: string;
-  subtitle?: string;
-}) {
+function KpiCard({ label, value, subtitle }: { label: string; value: string; subtitle?: string }) {
   return (
-    <div className="flex flex-col gap-1 rounded-lg border bg-card p-4">
-      <span className="text-xs text-muted-foreground">{label}</span>
+    <div className="bg-card flex flex-col gap-1 rounded-lg border p-4">
+      <span className="text-muted-foreground text-xs">{label}</span>
       <span className="text-2xl font-semibold tabular-nums">{value}</span>
-      {subtitle && <span className="text-xs text-muted-foreground">{subtitle}</span>}
+      {subtitle && <span className="text-muted-foreground text-xs">{subtitle}</span>}
     </div>
   );
 }
@@ -199,11 +189,7 @@ function KpiCard({
 // Main client component
 // ---------------------------------------------------------------------------
 
-export function CampaignDetailClient({
-  campaign,
-}: {
-  campaign: SerializedCampaignDetail;
-}) {
+export function CampaignDetailClient({ campaign }: { campaign: SerializedCampaignDetail }) {
   const t = useTranslations('campaigns');
   const router = useRouter();
   const [pending, setPending] = React.useState(false);
@@ -295,7 +281,7 @@ export function CampaignDetailClient({
         <div className="flex flex-col gap-1">
           <Link
             href="/campaigns"
-            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm"
           >
             <ArrowLeft className="size-3" />
             {t('back_to_campaigns')}
@@ -303,7 +289,7 @@ export function CampaignDetailClient({
           <h1 className="text-2xl font-semibold tracking-tight">{campaign.name}</h1>
           <div className="flex items-center gap-2">
             <StatusBadge status={campaign.status} />
-            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+            <span className="text-muted-foreground flex items-center gap-1 text-xs">
               <Clock className="size-3" />
               {t('detail_status_since', { date: formatDate(statusSinceIso) })}
             </span>
@@ -389,9 +375,7 @@ export function CampaignDetailClient({
 
           {canExport && (
             <Button variant="outline" size="sm" asChild>
-              <Link href={`/campaigns/${campaign.id}/results`}>
-                {t('action_export')}
-              </Link>
+              <Link href={`/campaigns/${campaign.id}/results`}>{t('action_export')}</Link>
             </Button>
           )}
         </div>
@@ -427,34 +411,34 @@ export function CampaignDetailClient({
       {/* Script and contact list refs + campaign settings */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {/* Script */}
-        <div className="rounded-lg border bg-card p-4">
-          <h3 className="mb-2 text-sm font-medium text-muted-foreground">
+        <div className="bg-card rounded-lg border p-4">
+          <h3 className="text-muted-foreground mb-2 text-sm font-medium">
             {t('detail_script_label')}
           </h3>
           <Link
             href={`/scripts/${campaign.scriptId}`}
-            className="font-medium text-foreground hover:underline"
+            className="text-foreground font-medium hover:underline"
           >
             {campaign.scriptName}
           </Link>
         </div>
 
         {/* Contact list */}
-        <div className="rounded-lg border bg-card p-4">
-          <h3 className="mb-2 text-sm font-medium text-muted-foreground">
+        <div className="bg-card rounded-lg border p-4">
+          <h3 className="text-muted-foreground mb-2 text-sm font-medium">
             {t('detail_list_label')}
           </h3>
           <Link
             href={`/contacts?list=${campaign.contactListId}`}
-            className="font-medium text-foreground hover:underline"
+            className="text-foreground font-medium hover:underline"
           >
             {campaign.contactListName}
           </Link>
         </div>
 
         {/* Campaign settings */}
-        <div className="rounded-lg border bg-card p-4">
-          <h3 className="mb-2 text-sm font-medium text-muted-foreground">
+        <div className="bg-card rounded-lg border p-4">
+          <h3 className="text-muted-foreground mb-2 text-sm font-medium">
             {t('detail_settings_label')}
           </h3>
           <dl className="space-y-1 text-sm">

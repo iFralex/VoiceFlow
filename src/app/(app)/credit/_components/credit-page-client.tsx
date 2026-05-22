@@ -8,7 +8,13 @@ import { exportLedgerCsv, getLedgerPage } from '@/actions/billing';
 import type { LedgerPageResult } from '@/actions/billing';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import type { LedgerEntryType } from '@/lib/services/credit';
 import { cn } from '@/lib/utils';
 
@@ -93,12 +99,7 @@ export function CreditPageClient({
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   const fetchPage = useCallback(
-    (
-      nextPage: number,
-      type: LedgerEntryType | 'all',
-      from: string,
-      to: string,
-    ) => {
+    (nextPage: number, type: LedgerEntryType | 'all', from: string, to: string) => {
       startFetch(async () => {
         const result = await getLedgerPage({
           page: nextPage,
@@ -173,12 +174,12 @@ export function CreditPageClient({
       </div>
 
       {/* ── Balance card ── */}
-      <div className="rounded-xl border bg-card p-6 shadow-sm">
-        <p className="text-sm text-muted-foreground">{t('credit_balance_label')}</p>
+      <div className="bg-card rounded-xl border p-6 shadow-sm">
+        <p className="text-muted-foreground text-sm">{t('credit_balance_label')}</p>
         <p className="mt-2 text-5xl font-bold tracking-tight">
           {t('balance_minutes', { minutes: remainingMinutes.toLocaleString('it-IT') })}
         </p>
-        <p className="mt-1 text-lg text-muted-foreground">
+        <p className="text-muted-foreground mt-1 text-lg">
           {t('balance_cents', { euros: (balanceCents / 100).toFixed(2).replace('.', ',') })}
         </p>
       </div>
@@ -191,29 +192,27 @@ export function CreditPageClient({
             {pools.map((pool, i) => (
               <li
                 key={i}
-                className="flex items-center justify-between rounded-lg border bg-card px-4 py-3 text-sm"
+                className="bg-card flex items-center justify-between rounded-lg border px-4 py-3 text-sm"
               >
                 <div>
                   <span className="font-medium">{pool.packageName}</span>
-                  <span className="ml-2 text-muted-foreground">
+                  <span className="text-muted-foreground ml-2">
                     — {pool.includedMinutes.toLocaleString('it-IT')} min
                   </span>
                 </div>
-                <div className="text-right text-muted-foreground">
+                <div className="text-muted-foreground text-right">
                   <span>{t('pool_purchased_on', { date: formatDateOnly(pool.purchasedAt) })}</span>
                   {pool.invoiceUrl && (
                     <a
                       href={pool.invoiceUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="ml-3 text-primary underline underline-offset-2"
+                      className="text-primary ml-3 underline underline-offset-2"
                     >
                       {formatEuros(pool.priceCents)}
                     </a>
                   )}
-                  {!pool.invoiceUrl && (
-                    <span className="ml-3">{formatEuros(pool.priceCents)}</span>
-                  )}
+                  {!pool.invoiceUrl && <span className="ml-3">{formatEuros(pool.priceCents)}</span>}
                 </div>
               </li>
             ))}
@@ -247,7 +246,7 @@ export function CreditPageClient({
 
             {/* Date from */}
             <div className="flex items-center gap-1">
-              <label className="text-xs text-muted-foreground">{t('filter_date_from')}</label>
+              <label className="text-muted-foreground text-xs">{t('filter_date_from')}</label>
               <Input
                 type="date"
                 value={dateFrom}
@@ -258,7 +257,7 @@ export function CreditPageClient({
 
             {/* Date to */}
             <div className="flex items-center gap-1">
-              <label className="text-xs text-muted-foreground">{t('filter_date_to')}</label>
+              <label className="text-muted-foreground text-xs">{t('filter_date_to')}</label>
               <Input
                 type="date"
                 value={dateTo}
@@ -268,12 +267,7 @@ export function CreditPageClient({
             </div>
 
             {/* CSV export */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleExportCsv}
-              disabled={isExporting}
-            >
+            <Button variant="outline" size="sm" onClick={handleExportCsv} disabled={isExporting}>
               {t('export_csv')}
             </Button>
           </div>
@@ -282,13 +276,13 @@ export function CreditPageClient({
         {/* Table */}
         <div
           className={cn(
-            'overflow-x-auto rounded-lg border bg-card',
+            'bg-card overflow-x-auto rounded-lg border',
             isFetching && 'opacity-60 transition-opacity',
           )}
         >
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b bg-muted/40">
+              <tr className="bg-muted/40 border-b">
                 <th className="px-4 py-3 text-left font-medium">{t('ledger_col_type')}</th>
                 <th className="px-4 py-3 text-left font-medium">{t('ledger_col_description')}</th>
                 <th className="px-4 py-3 text-right font-medium">{t('ledger_col_delta')}</th>
@@ -300,16 +294,13 @@ export function CreditPageClient({
             <tbody>
               {entries.length === 0 && (
                 <tr>
-                  <td
-                    colSpan={6}
-                    className="px-4 py-8 text-center text-muted-foreground"
-                  >
+                  <td colSpan={6} className="text-muted-foreground px-4 py-8 text-center">
                     {t('ledger_no_entries')}
                   </td>
                 </tr>
               )}
               {entries.map((entry) => (
-                <tr key={entry.id} className="border-b last:border-0 hover:bg-muted/20">
+                <tr key={entry.id} className="hover:bg-muted/20 border-b last:border-0">
                   <td className="px-4 py-3">
                     <span
                       className={cn(
@@ -320,7 +311,7 @@ export function CreditPageClient({
                       {t(`filter_type_${entry.entry_type}` as Parameters<typeof t>[0])}
                     </span>
                   </td>
-                  <td className="max-w-xs truncate px-4 py-3 text-muted-foreground">
+                  <td className="text-muted-foreground max-w-xs truncate px-4 py-3">
                     {entry.description ?? '—'}
                   </td>
                   <td
@@ -334,10 +325,10 @@ export function CreditPageClient({
                     {entry.delta_cents > 0 ? '+' : ''}
                     {formatEuros(entry.delta_cents)}
                   </td>
-                  <td className="px-4 py-3 text-right font-mono tabular-nums text-muted-foreground">
+                  <td className="text-muted-foreground px-4 py-3 text-right font-mono tabular-nums">
                     {formatEuros(entry.balance_after_cents)}
                   </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-right text-muted-foreground">
+                  <td className="text-muted-foreground px-4 py-3 text-right whitespace-nowrap">
                     {formatDate(entry.created_at)}
                   </td>
                   <td className="px-4 py-3 text-right">
@@ -346,7 +337,7 @@ export function CreditPageClient({
                         href={entry.invoice_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs text-primary underline underline-offset-2"
+                        className="text-primary text-xs underline underline-offset-2"
                       >
                         {t('invoice_link')}
                       </a>
@@ -360,7 +351,7 @@ export function CreditPageClient({
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="mt-3 flex items-center justify-between text-sm text-muted-foreground">
+          <div className="text-muted-foreground mt-3 flex items-center justify-between text-sm">
             <span>{t('ledger_count', { count: total })}</span>
             <div className="flex items-center gap-2">
               <Button

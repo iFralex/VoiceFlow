@@ -139,9 +139,7 @@ export default async function OperationsDashboardPage({ searchParams }: PageProp
         </h2>
         <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
           <div>
-            <h3 style={{ fontSize: '0.9rem', marginBottom: '0.5rem', color: '#555' }}>
-              By status
-            </h3>
+            <h3 style={{ fontSize: '0.9rem', marginBottom: '0.5rem', color: '#555' }}>By status</h3>
             {callStatusKeys.length === 0 ? (
               <p style={{ color: '#999' }}>No calls in last 24h.</p>
             ) : (
@@ -150,7 +148,9 @@ export default async function OperationsDashboardPage({ searchParams }: PageProp
                   {callStatusKeys.map((s) => (
                     <tr key={s} style={{ borderBottom: '1px solid #f0f0f0' }}>
                       <td style={{ padding: '3px 8px 3px 0' }}>{s}</td>
-                      <td style={{ padding: '3px 0 3px 8px', textAlign: 'right', fontWeight: 'bold' }}>
+                      <td
+                        style={{ padding: '3px 0 3px 8px', textAlign: 'right', fontWeight: 'bold' }}
+                      >
                         {data.callVolume24h.byStatus[s]}
                       </td>
                       <td style={{ padding: '3px 0 3px 8px', color: '#666' }}>
@@ -175,7 +175,9 @@ export default async function OperationsDashboardPage({ searchParams }: PageProp
                   {callOutcomeKeys.map((o) => (
                     <tr key={o} style={{ borderBottom: '1px solid #f0f0f0' }}>
                       <td style={{ padding: '3px 8px 3px 0' }}>{o}</td>
-                      <td style={{ padding: '3px 0 3px 8px', textAlign: 'right', fontWeight: 'bold' }}>
+                      <td
+                        style={{ padding: '3px 0 3px 8px', textAlign: 'right', fontWeight: 'bold' }}
+                      >
                         {data.callVolume24h.byOutcome[o]}
                       </td>
                       <td style={{ padding: '3px 0 3px 8px', color: '#666' }}>

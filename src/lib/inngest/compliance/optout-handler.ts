@@ -173,10 +173,7 @@ export async function complianceOptOutRegisteredHandler(
   //    campaign engine can recompute remaining and finalise where needed.
   //    Inbound IVR rows have campaign_id=null and therefore produce no event.
   const flippedSet = new Set(flippedIds);
-  const callsByCampaign = new Map<
-    string,
-    { contactId: string; pending: number; active: number }
-  >();
+  const callsByCampaign = new Map<string, { contactId: string; pending: number; active: number }>();
 
   for (const c of candidateCalls) {
     if (!flippedSet.has(c.id) || c.campaign_id === null) continue;

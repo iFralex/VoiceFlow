@@ -154,9 +154,9 @@ This runbook enumerates every condition that must be verified before the first p
 
 This checklist must be fully ticked before any paying customer is onboarded. If any item cannot be ticked, document the reason and the mitigation in a note below before proceeding.
 
-**Signed off by:** ___________________________________
+**Signed off by:** **\*\***\*\*\*\***\*\***\_\_\_**\*\***\*\*\*\***\*\***
 
-**Date:** ___________________________________
+**Date:** **\*\***\*\*\*\***\*\***\_\_\_**\*\***\*\*\*\***\*\***
 
 **Notes (outstanding items and mitigations):**
 

@@ -5,15 +5,15 @@
 VoiceFlow exposes a public status page so customers can monitor service health without
 contacting support. The page tracks the following components:
 
-| Component | What it represents |
-|-----------|-------------------|
-| Web app (Vercel) | Dashboard and API availability |
-| API | REST and webhook endpoints |
-| Database (Supabase) | Postgres read/write |
-| Voice service (Vapi / Retell) | Outbound call processing |
-| Telephony (SBC) | PSTN trunk and CLI pool |
-| Email (Resend) | Transactional email delivery |
-| Compliance (RPO) | RPO intermediary integration |
+| Component                     | What it represents             |
+| ----------------------------- | ------------------------------ |
+| Web app (Vercel)              | Dashboard and API availability |
+| API                           | REST and webhook endpoints     |
+| Database (Supabase)           | Postgres read/write            |
+| Voice service (Vapi / Retell) | Outbound call processing       |
+| Telephony (SBC)               | PSTN trunk and CLI pool        |
+| Email (Resend)                | Transactional email delivery   |
+| Compliance (RPO)              | RPO intermediary integration   |
 
 ## Recommended provider: Better Stack
 
@@ -33,14 +33,14 @@ monitors, incident management, and a hosted status page.
 
 ### Monitor configuration
 
-| Monitor | URL / check | Method | Alert threshold |
-|---------|-------------|--------|-----------------|
-| Web app | `$NEXT_PUBLIC_APP_URL/api/health` | HTTP GET 200 | 2 consecutive failures |
-| API ready | `$NEXT_PUBLIC_APP_URL/api/ready` | HTTP GET 200 | 2 consecutive failures |
-| Voice (Vapi) | `https://api.vapi.ai` (TCP or HTTP) | TCP 443 | 2 consecutive failures |
-| SBC | SBC trunk IP:5060 | TCP | 2 consecutive failures |
-| Email (Resend) | `https://api.resend.com` | TCP 443 | 2 consecutive failures |
-| Supabase | `$SUPABASE_URL` (TCP 443) | TCP | 2 consecutive failures |
+| Monitor        | URL / check                         | Method       | Alert threshold        |
+| -------------- | ----------------------------------- | ------------ | ---------------------- |
+| Web app        | `$NEXT_PUBLIC_APP_URL/api/health`   | HTTP GET 200 | 2 consecutive failures |
+| API ready      | `$NEXT_PUBLIC_APP_URL/api/ready`    | HTTP GET 200 | 2 consecutive failures |
+| Voice (Vapi)   | `https://api.vapi.ai` (TCP or HTTP) | TCP 443      | 2 consecutive failures |
+| SBC            | SBC trunk IP:5060                   | TCP          | 2 consecutive failures |
+| Email (Resend) | `https://api.resend.com`            | TCP 443      | 2 consecutive failures |
+| Supabase       | `$SUPABASE_URL` (TCP 443)           | TCP          | 2 consecutive failures |
 
 Check interval: **5 minutes** from at least one EU region.
 
@@ -70,13 +70,16 @@ Use this when an issue is detected before automated monitors catch it:
 ### Incident message templates
 
 **Investigating:**
+
 > We are aware of an issue affecting [component] and are currently investigating.
 > Updates will be posted every 30 minutes.
 
 **Identified:**
+
 > The root cause has been identified: [brief description]. We are working on a fix.
 
 **Resolved:**
+
 > [Component] has been restored. The issue was caused by [brief cause]. No customer
 > data was affected. We apologize for the inconvenience.
 

@@ -12,9 +12,13 @@ const ALLOWED_CONTENT_TYPES = ['text/csv', 'application/vnd.ms-excel', 'text/pla
 
 const BodySchema = z.object({
   filename: z.string().min(1).max(255),
-  sizeBytes: z.number().int().positive().max(MAX_SIZE_BYTES, {
-    message: `File size must not exceed ${MAX_SIZE_BYTES} bytes (50 MB)`,
-  }),
+  sizeBytes: z
+    .number()
+    .int()
+    .positive()
+    .max(MAX_SIZE_BYTES, {
+      message: `File size must not exceed ${MAX_SIZE_BYTES} bytes (50 MB)`,
+    }),
   contentType: z.enum(ALLOWED_CONTENT_TYPES),
 });
 
@@ -62,8 +66,9 @@ export async function POST(request: Request): Promise<Response> {
   // Generate signed upload URL (service-role bypasses RLS)
   // Note: Supabase JS v2 createSignedUploadUrl does not expose a TTL option;
   // the default expiry for upload URLs is 1 hour (Supabase platform default).
-  const { data: signedData, error: storageError } =
-    await supabaseAdmin.storage.from(BUCKET).createSignedUploadUrl(storagePath, {
+  const { data: signedData, error: storageError } = await supabaseAdmin.storage
+    .from(BUCKET)
+    .createSignedUploadUrl(storagePath, {
       upsert: false,
     });
 

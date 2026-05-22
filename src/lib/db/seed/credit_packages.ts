@@ -1,9 +1,7 @@
 import stripeProductsJson from '../../stripe/products.json';
 import { NewCreditPackage } from '../schema/credit_packages';
 
-const stripePriceMap = new Map(
-  stripeProductsJson.packages.map((p) => [p.slug, p.stripe_price_id]),
-);
+const stripePriceMap = new Map(stripeProductsJson.packages.map((p) => [p.slug, p.stripe_price_id]));
 
 export const creditPackageSeedData: NewCreditPackage[] = [
   {

@@ -59,7 +59,7 @@ const STRINGS: Record<MemberInviteLocale, Strings> = {
     valueProp:
       'Con VoiceFlow il tuo team può avviare campagne di chiamata automatizzate, qualificare lead e fissare appuntamenti — tutto in modo semplice e misurabile.',
     ctaAccept: 'Accetta invito',
-    ctaNote: "Cliccando il pulsante verrai reindirizzato alla pagina di accesso.",
+    ctaNote: 'Cliccando il pulsante verrai reindirizzato alla pagina di accesso.',
     footerSent: (org) =>
       `Hai ricevuto questa email perché ${org} ti ha invitato su VoiceFlow. Se non ti aspettavi questo invito, puoi ignorare questo messaggio.`,
   },

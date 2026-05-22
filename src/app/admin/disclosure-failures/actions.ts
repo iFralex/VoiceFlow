@@ -4,10 +4,7 @@ import { timingSafeEqual } from 'crypto';
 
 import { revalidatePath } from 'next/cache';
 
-import {
-  isDisclosureTriageStatus,
-  updateDisclosureTriage,
-} from '@/lib/compliance/aiact/triage';
+import { isDisclosureTriageStatus, updateDisclosureTriage } from '@/lib/compliance/aiact/triage';
 import { env } from '@/lib/env';
 
 const MAX_NOTE_LENGTH = 2000;
@@ -77,8 +74,6 @@ export async function triageDisclosureFailureAction(
  * type contract; the underlying handler still records audit log entries on
  * success and silently no-ops on validation failure (the page re-renders).
  */
-export async function triageDisclosureFailureFormAction(
-  formData: FormData,
-): Promise<void> {
+export async function triageDisclosureFailureFormAction(formData: FormData): Promise<void> {
   await triageDisclosureFailureAction(formData);
 }

@@ -35,9 +35,7 @@ function resetMockTx() {
 }
 
 vi.mock('@/lib/db/context', () => ({
-  withOrgContext: vi.fn(
-    (_orgId: string, fn: (tx: unknown) => Promise<unknown>) => fn(mockTx),
-  ),
+  withOrgContext: vi.fn((_orgId: string, fn: (tx: unknown) => Promise<unknown>) => fn(mockTx)),
   withSystemContext: vi.fn((fn: (tx: unknown) => Promise<unknown>) => fn(mockTx)),
 }));
 

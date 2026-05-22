@@ -66,11 +66,7 @@ const ROLE_CAPABILITIES: Record<MemberRole, ReadonlySet<Capability>> = {
   ]),
 
   // viewer: read-only across all domains
-  viewer: new Set<Capability>([
-    'billing.view',
-    'campaigns.view',
-    'audit.view',
-  ]),
+  viewer: new Set<Capability>(['billing.view', 'campaigns.view', 'audit.view']),
 };
 
 // ─── Public API ───────────────────────────────────────────────────────────────

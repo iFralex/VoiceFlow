@@ -29,11 +29,7 @@ import { withSystemContext } from '@/lib/db/context';
 import { calls, campaigns, scriptTemplates, scripts } from '@/lib/db/schema';
 import { TEMPLATE_DEFINITIONS } from '@/lib/db/seed/script_templates';
 import { DISCLOSURE_PHRASE } from '@/lib/voice/disclosure';
-import {
-  AI_ACT_PREAMBLE_IT,
-  assembleSystemPrompt,
-  interpolate,
-} from '@/lib/voice/prompt/preamble';
+import { AI_ACT_PREAMBLE_IT, assembleSystemPrompt, interpolate } from '@/lib/voice/prompt/preamble';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -103,10 +99,7 @@ function readFirstMessageTemplate(templateSlug: string): string | null {
   }
 }
 
-function coerceVars(
-  vars: unknown,
-  schema: unknown,
-): Record<string, string> {
+function coerceVars(vars: unknown, schema: unknown): Record<string, string> {
   const result: Record<string, string> = {};
   if (vars && typeof vars === 'object') {
     for (const [key, value] of Object.entries(vars as Record<string, unknown>)) {
@@ -117,8 +110,7 @@ function coerceVars(
       }
     }
   }
-  const props =
-    (schema as { properties?: Record<string, unknown> } | null)?.properties ?? {};
+  const props = (schema as { properties?: Record<string, unknown> } | null)?.properties ?? {};
   for (const key of Object.keys(props)) {
     if (!(key in result)) result[key] = '';
   }
@@ -168,9 +160,7 @@ async function fetchSample(
  * Returns aggregate counters plus per-call samples. Pure: no side effects on
  * the database; the cron route persists the result to `audit_log` separately.
  */
-export async function runAiActConformanceAudit(
-  opts: AiActAuditOptions,
-): Promise<AiActAuditResult> {
+export async function runAiActConformanceAudit(opts: AiActAuditOptions): Promise<AiActAuditResult> {
   const sampleSize = opts.sampleSize ?? DEFAULT_AUDIT_SAMPLE_SIZE;
   const rows = await fetchSample(opts.windowStart, opts.windowEnd, sampleSize);
 
@@ -195,17 +185,13 @@ export async function runAiActConformanceAudit(
       l1 = systemPrompt.startsWith(preamblePrefix);
       if (!l1) failureReasons.push('layer1: preamble missing or altered');
     } catch (err) {
-      failureReasons.push(
-        `layer1: ${err instanceof Error ? err.message : 'reassembly failed'}`,
-      );
+      failureReasons.push(`layer1: ${err instanceof Error ? err.message : 'reassembly failed'}`);
     }
 
     let l2 = false;
     const firstMessageTemplate = readFirstMessageTemplate(row.templateSlug);
     if (firstMessageTemplate === null) {
-      failureReasons.push(
-        `layer2: first-message template missing for slug ${row.templateSlug}`,
-      );
+      failureReasons.push(`layer2: first-message template missing for slug ${row.templateSlug}`);
     } else {
       try {
         const firstMessage = interpolate(firstMessageTemplate, stringVars);

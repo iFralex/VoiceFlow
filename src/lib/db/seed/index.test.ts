@@ -58,7 +58,9 @@ describe('seed/index', () => {
 
       await seedScriptTemplates();
 
-      const [conflictArg] = chain.onConflictDoUpdate.mock.calls[0] as [{ target: unknown; set: unknown }];
+      const [conflictArg] = chain.onConflictDoUpdate.mock.calls[0] as [
+        { target: unknown; set: unknown },
+      ];
       expect(conflictArg).toHaveProperty('target');
       expect(conflictArg).toHaveProperty('set');
     });
@@ -72,7 +74,9 @@ describe('seed/index', () => {
       await bumpScriptTemplate('lead-reactivation');
 
       expect(db.insert).toHaveBeenCalledOnce();
-      const [insertedRows] = chain.values.mock.calls[0] as [Array<{ slug: string; version: number }>];
+      const [insertedRows] = chain.values.mock.calls[0] as [
+        Array<{ slug: string; version: number }>,
+      ];
       expect(insertedRows).toHaveLength(1);
       expect(insertedRows[0]!.slug).toBe('lead-reactivation');
       // Bumped version = base (1) + 1 = 2
@@ -85,7 +89,9 @@ describe('seed/index', () => {
 
       await bumpScriptTemplate('csi-survey');
 
-      const [conflictArg] = chain.onConflictDoUpdate.mock.calls[0] as [{ target: unknown; set: unknown }];
+      const [conflictArg] = chain.onConflictDoUpdate.mock.calls[0] as [
+        { target: unknown; set: unknown },
+      ];
       expect(conflictArg).toHaveProperty('target');
       expect(conflictArg).toHaveProperty('set');
     });
@@ -115,7 +121,9 @@ describe('seed/index', () => {
 
       await seedCreditPackages();
 
-      const [conflictArg] = chain.onConflictDoUpdate.mock.calls[0] as [{ target: unknown; set: unknown }];
+      const [conflictArg] = chain.onConflictDoUpdate.mock.calls[0] as [
+        { target: unknown; set: unknown },
+      ];
       expect(conflictArg).toHaveProperty('target');
       expect(conflictArg).toHaveProperty('set');
     });
@@ -174,9 +182,7 @@ describe('seed/index', () => {
       const chunks = expr?.queryChunks ?? [];
       const flat = chunks
         .map((c) =>
-          typeof c === 'string'
-            ? c
-            : (c as { value?: string[] }).value?.join(' ') ?? '',
+          typeof c === 'string' ? c : ((c as { value?: string[] }).value?.join(' ') ?? ''),
         )
         .join(' ');
       expect(flat.toUpperCase()).toContain('COALESCE');

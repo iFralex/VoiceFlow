@@ -15,9 +15,7 @@ vi.mock('@/actions/calls', () => ({
   reportCallIssueAction: (...args: unknown[]) => mockReportCallIssueAction(...args),
 }));
 
-import type {
-  SerializedCallDetail,
-} from '@/app/(app)/calls/[id]/_components/call-detail-client';
+import type { SerializedCallDetail } from '@/app/(app)/calls/[id]/_components/call-detail-client';
 import { CallDetailClient } from '@/app/(app)/calls/[id]/_components/call-detail-client';
 
 beforeAll(() => {
@@ -142,9 +140,7 @@ describe('CallDetailClient', () => {
   });
 
   it('hides destructive actions when capabilities are missing', () => {
-    render(
-      <CallDetailClient call={makeCall({ canRefund: false, canReport: false })} />,
-    );
+    render(<CallDetailClient call={makeCall({ canRefund: false, canReport: false })} />);
     expect(screen.queryByText('Rimborsa chiamata')).toBeNull();
     expect(screen.queryByText('Segnala problema')).toBeNull();
   });
@@ -160,9 +156,7 @@ describe('CallDetailClient', () => {
     const user = userEvent.setup();
     render(<CallDetailClient call={makeCall()} />);
     await user.click(screen.getByRole('tab', { name: 'Audit' }));
-    const auditEntries = document.querySelectorAll(
-      '[data-slot="call-audit-entry"]',
-    );
+    const auditEntries = document.querySelectorAll('[data-slot="call-audit-entry"]');
     expect(auditEntries.length).toBe(1);
     expect(auditEntries[0]?.getAttribute('data-action')).toBe('call.ended');
   });
@@ -171,8 +165,6 @@ describe('CallDetailClient', () => {
     const user = userEvent.setup();
     render(<CallDetailClient call={makeCall({ auditEntries: null })} />);
     await user.click(screen.getByRole('tab', { name: 'Audit' }));
-    expect(
-      screen.getByText(/Non hai i permessi per visualizzare l'audit log/),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Non hai i permessi per visualizzare l'audit log/)).toBeInTheDocument();
   });
 });

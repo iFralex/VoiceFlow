@@ -87,11 +87,7 @@ vi.mock('drizzle-orm', () => ({
   lte: (col: unknown, val: unknown) => ({ type: 'lte', col, val }),
 }));
 
-import {
-  listGdprHistory,
-  requestSubjectErasure,
-  requestSubjectExport,
-} from './compliance';
+import { listGdprHistory, requestSubjectErasure, requestSubjectExport } from './compliance';
 
 const ORG_ID = 'aaaaaaaa-aaaa-4aaa-8aaa-000000000001';
 const USER_ID = 'user-1';
@@ -138,7 +134,9 @@ describe('requestSubjectExport', () => {
   });
 
   it('requires the compliance.export capability', async () => {
-    mockRequireCapability.mockRejectedValueOnce(new Error("Forbidden: role 'viewer' does not have capability 'compliance.export'"));
+    mockRequireCapability.mockRejectedValueOnce(
+      new Error("Forbidden: role 'viewer' does not have capability 'compliance.export'"),
+    );
     const r = await requestSubjectExport({ identifier: '+393331234567' });
     expect(r.ok).toBe(false);
     expect(r.message).toMatch(/Forbidden/);
@@ -206,12 +204,16 @@ describe('requestSubjectErasure', () => {
   });
 
   it('rejects empty inputs', async () => {
-    const r = await requestSubjectErasure({ identifier: '', confirmPhone: '+393331234567', reason: 'x' });
+    const r = await requestSubjectErasure({
+      identifier: '',
+      confirmPhone: '+393331234567',
+      reason: 'x',
+    });
     expect(r.ok).toBe(false);
   });
 
   it('requires the compliance.erase capability', async () => {
-    mockRequireCapability.mockRejectedValueOnce(new Error("Forbidden"));
+    mockRequireCapability.mockRejectedValueOnce(new Error('Forbidden'));
     const r = await requestSubjectErasure({
       identifier: '+393331234567',
       confirmPhone: '+393331234567',

@@ -162,7 +162,11 @@ export async function emitOutcomeEvents(callId: string): Promise<void> {
 
   if (outcome === 'appointment_booked') {
     const [apt] = await withSystemContext((tx) =>
-      tx.select({ id: appointments.id }).from(appointments).where(eq(appointments.call_id, callId)).limit(1),
+      tx
+        .select({ id: appointments.id })
+        .from(appointments)
+        .where(eq(appointments.call_id, callId))
+        .limit(1),
     );
     if (apt) {
       await sendInngestEvent({

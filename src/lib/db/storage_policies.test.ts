@@ -6,10 +6,7 @@ import { describe, expect, it } from 'vitest';
 const BUCKETS = ['recordings', 'transcripts', 'csv-uploads', 'exports'];
 const OPS = ['select', 'insert', 'update', 'delete'];
 
-const migrationPath = join(
-  process.cwd(),
-  'drizzle/migrations/0004_storage_policies.sql',
-);
+const migrationPath = join(process.cwd(), 'drizzle/migrations/0004_storage_policies.sql');
 
 let sql: string;
 
@@ -33,9 +30,7 @@ describe('migration 0004_storage_policies.sql', () => {
   });
 
   it('compares first path segment to app.current_org_id GUC', () => {
-    expect(getMigration()).toContain(
-      "current_setting('app.current_org_id', true)",
-    );
+    expect(getMigration()).toContain("current_setting('app.current_org_id', true)");
     expect(getMigration()).toContain('(storage.foldername(name))[1]');
   });
 

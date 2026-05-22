@@ -34,10 +34,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import type {
-  CampaignCallOutcome,
-  CampaignResultRow,
-} from '@/lib/services/campaign-results';
+import type { CampaignCallOutcome, CampaignResultRow } from '@/lib/services/campaign-results';
 import { toastResult } from '@/lib/utils/action-toast';
 import { cn } from '@/lib/utils/index';
 
@@ -61,7 +58,13 @@ export interface CampaignResultsClientProps {
   total: number;
   page: number;
   pageSize: number;
-  sort: 'started_desc' | 'started_asc' | 'duration_desc' | 'duration_asc' | 'cost_desc' | 'cost_asc';
+  sort:
+    | 'started_desc'
+    | 'started_asc'
+    | 'duration_desc'
+    | 'duration_asc'
+    | 'cost_desc'
+    | 'cost_asc';
   outcomes: CampaignCallOutcome[];
   durationMinSeconds: number | null;
   durationMaxSeconds: number | null;
@@ -100,7 +103,10 @@ function formatDateTime(iso: string | null): string {
 }
 
 // Maps outcomes to status-token CSS variables consistent with StatusBadge.
-const OUTCOME_TOKEN: Record<CampaignCallOutcome, 'success' | 'info' | 'warning' | 'danger' | 'neutral'> = {
+const OUTCOME_TOKEN: Record<
+  CampaignCallOutcome,
+  'success' | 'info' | 'warning' | 'danger' | 'neutral'
+> = {
   interested: 'success',
   appointment_booked: 'info',
   callback_requested: 'info',
@@ -114,8 +120,7 @@ const OUTCOME_TOKEN: Record<CampaignCallOutcome, 'success' | 'info' | 'warning' 
 const OUTCOME_TOKEN_CLASS: Record<string, string> = {
   success:
     'bg-[hsl(var(--status-success)/0.12)] text-[hsl(var(--status-success))] border-[hsl(var(--status-success)/0.3)]',
-  info:
-    'bg-[hsl(var(--status-info)/0.12)] text-[hsl(var(--status-info))] border-[hsl(var(--status-info)/0.3)]',
+  info: 'bg-[hsl(var(--status-info)/0.12)] text-[hsl(var(--status-info))] border-[hsl(var(--status-info)/0.3)]',
   warning:
     'bg-[hsl(var(--status-warning)/0.12)] text-[hsl(var(--status-warning))] border-[hsl(var(--status-warning)/0.3)]',
   danger:
@@ -251,9 +256,7 @@ export function CampaignResultsClient({
         result.ok
           ? {
               ok: true,
-              message: result.deferred
-                ? t('results_export_deferred')
-                : t('results_export_ready'),
+              message: result.deferred ? t('results_export_deferred') : t('results_export_ready'),
             }
           : result,
       );
@@ -284,14 +287,14 @@ export function CampaignResultsClient({
       <div className="flex flex-col gap-2">
         <Link
           href={`/campaigns/${campaignId}`}
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+          className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm"
         >
           <ArrowLeft className="size-3" />
           {t('back_to_campaigns')}
         </Link>
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl font-semibold tracking-tight">{campaignName}</h1>
-          <p className="text-sm text-muted-foreground">{t('results_subtitle')}</p>
+          <p className="text-muted-foreground text-sm">{t('results_subtitle')}</p>
         </div>
       </div>
 
@@ -303,7 +306,7 @@ export function CampaignResultsClient({
             <Button variant="outline" size="sm" className="h-8">
               {t('results_filter_outcome')}
               {outcomes.length > 0 && (
-                <span className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] text-primary-foreground">
+                <span className="bg-primary text-primary-foreground ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px]">
                   {outcomes.length}
                 </span>
               )}
@@ -326,9 +329,7 @@ export function CampaignResultsClient({
 
         {/* Duration range */}
         <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">
-            {t('results_filter_duration')}
-          </span>
+          <span className="text-muted-foreground text-xs">{t('results_filter_duration')}</span>
           <Input
             type="number"
             min={0}
@@ -342,7 +343,7 @@ export function CampaignResultsClient({
               applyFilter({ durationMin: raw === '' ? null : raw });
             }}
           />
-          <span className="text-xs text-muted-foreground">–</span>
+          <span className="text-muted-foreground text-xs">–</span>
           <Input
             type="number"
             min={0}
@@ -360,9 +361,7 @@ export function CampaignResultsClient({
 
         {/* Date range */}
         <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">
-            {t('results_filter_date')}
-          </span>
+          <span className="text-muted-foreground text-xs">{t('results_filter_date')}</span>
           <Input
             type="date"
             className="h-8 w-36"
@@ -373,7 +372,7 @@ export function CampaignResultsClient({
               applyFilter({ dateFrom: raw === '' ? null : raw });
             }}
           />
-          <span className="text-xs text-muted-foreground">–</span>
+          <span className="text-muted-foreground text-xs">–</span>
           <Input
             type="date"
             className="h-8 w-36"
@@ -447,7 +446,7 @@ export function CampaignResultsClient({
           <TableBody>
             {rows.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="h-24 text-center text-muted-foreground">
+                <TableCell colSpan={9} className="text-muted-foreground h-24 text-center">
                   {hasActiveFilter ? t('results_empty_filtered') : t('results_empty')}
                 </TableCell>
               </TableRow>
@@ -480,13 +479,13 @@ export function CampaignResultsClient({
                   <TableCell className="text-right tabular-nums">
                     {formatCents(r.costCents)}
                   </TableCell>
-                  <TableCell className="whitespace-nowrap text-xs">
+                  <TableCell className="text-xs whitespace-nowrap">
                     {formatDateTime(r.startedAtIso ?? r.createdAtIso)}
                   </TableCell>
                   <TableCell className="text-right">
                     <Link
                       href={`/calls/${r.id}`}
-                      className="text-xs font-medium text-primary hover:underline"
+                      className="text-primary text-xs font-medium hover:underline"
                     >
                       {t('results_action_detail')}
                     </Link>
@@ -500,10 +499,8 @@ export function CampaignResultsClient({
 
       {/* Pagination */}
       {total > 0 && (
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span>
-            {tt('total_rows', { total })}
-          </span>
+        <div className="text-muted-foreground flex items-center justify-between text-xs">
+          <span>{tt('total_rows', { total })}</span>
           <div className="flex items-center gap-2">
             <Button
               variant="outline"

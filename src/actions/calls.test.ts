@@ -31,8 +31,8 @@ const {
     insert: vi.fn(),
   };
 
-  const mockWithOrgContext = vi.fn(
-    async (_orgId: string, fn: (tx: unknown) => Promise<unknown>) => fn(mockTx),
+  const mockWithOrgContext = vi.fn(async (_orgId: string, fn: (tx: unknown) => Promise<unknown>) =>
+    fn(mockTx),
   );
   const mockGetAuthContext = vi.fn().mockResolvedValue({
     orgId: 'org-1',

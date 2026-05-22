@@ -7,7 +7,14 @@ import { useTransition } from 'react';
 
 import { deleteScriptAction } from '@/actions/scripts';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { EmptyState } from '@/components/ui/empty-state';
 import { toastResult } from '@/lib/utils/action-toast';
@@ -42,13 +49,7 @@ function formatDate(iso: string): string {
 
 // ─── Sub-component: script table row ─────────────────────────────────────────
 
-function ScriptRow({
-  script,
-  onDeleted,
-}: {
-  script: SerializedScript;
-  onDeleted: () => void;
-}) {
+function ScriptRow({ script, onDeleted }: { script: SerializedScript; onDeleted: () => void }) {
   const t = useTranslations('scripts');
   const [isPending, startTransition] = useTransition();
 
@@ -61,14 +62,14 @@ function ScriptRow({
   }
 
   return (
-    <tr className="border-b last:border-0 hover:bg-muted/30">
+    <tr className="hover:bg-muted/30 border-b last:border-0">
       <td className="px-4 py-3 font-medium">{script.name}</td>
       <td className="px-4 py-3">
-        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+        <span className="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-xs font-medium">
           {script.template_name}
         </span>
       </td>
-      <td className="px-4 py-3 text-muted-foreground">{formatDate(script.updated_at)}</td>
+      <td className="text-muted-foreground px-4 py-3">{formatDate(script.updated_at)}</td>
       <td className="px-4 py-3 text-right">
         <div className="flex items-center justify-end gap-2">
           <Button asChild variant="ghost" size="sm">
@@ -119,14 +120,14 @@ export function ScriptsPageClient({ templateCards, scripts }: Props) {
                 <CardDescription>{tpl.description}</CardDescription>
               </CardHeader>
               <CardContent className="flex-1">
-                <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                <p className="text-muted-foreground mb-2 text-xs font-medium tracking-wide uppercase">
                   {t('required_fields')}
                 </p>
                 <div className="flex flex-wrap gap-1">
                   {tpl.requiredFields.map((field) => (
                     <span
                       key={field}
-                      className="rounded bg-muted px-2 py-0.5 font-mono text-xs text-muted-foreground"
+                      className="bg-muted text-muted-foreground rounded px-2 py-0.5 font-mono text-xs"
                     >
                       {field}
                     </span>
@@ -154,7 +155,7 @@ export function ScriptsPageClient({ templateCards, scripts }: Props) {
           <div className="rounded-md border">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b bg-muted/50">
+                <tr className="bg-muted/50 border-b">
                   <th className="px-4 py-3 text-left font-medium">{t('col_name')}</th>
                   <th className="px-4 py-3 text-left font-medium">{t('col_template')}</th>
                   <th className="px-4 py-3 text-left font-medium">{t('col_updated')}</th>
@@ -163,11 +164,7 @@ export function ScriptsPageClient({ templateCards, scripts }: Props) {
               </thead>
               <tbody>
                 {scripts.map((script) => (
-                  <ScriptRow
-                    key={script.id}
-                    script={script}
-                    onDeleted={() => router.refresh()}
-                  />
+                  <ScriptRow key={script.id} script={script} onDeleted={() => router.refresh()} />
                 ))}
               </tbody>
             </table>

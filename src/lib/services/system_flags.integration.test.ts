@@ -121,16 +121,13 @@ describe('system_flags service (integration)', () => {
             now: new Date(t0.getTime() + i * 1000),
           });
         }
-        const persisted = await getFlag<Record<string, unknown>>(
-          SBC_UNHEALTHY_FLAG_KEY,
-          { tx: asProdTx(tx) },
-        );
+        const persisted = await getFlag<Record<string, unknown>>(SBC_UNHEALTHY_FLAG_KEY, {
+          tx: asProdTx(tx),
+        });
         expect(persisted).not.toBeNull();
         expect(persisted!['unhealthy']).toBe(true);
         expect(persisted!['reason']).toBe('vapi 502');
-        expect(
-          await isSbcUnhealthy({ tx: asProdTx(tx) }),
-        ).toBe(true);
+        expect(await isSbcUnhealthy({ tx: asProdTx(tx) })).toBe(true);
       });
     },
   );
@@ -156,9 +153,7 @@ describe('system_flags service (integration)', () => {
 
         expect(await isSbcUnhealthy({ tx: asProdTx(tx) })).toBe(false);
         // The row is fully cleared (deleted) — getFlag returns null.
-        expect(
-          await getFlag(SBC_UNHEALTHY_FLAG_KEY, { tx: asProdTx(tx) }),
-        ).toBeNull();
+        expect(await getFlag(SBC_UNHEALTHY_FLAG_KEY, { tx: asProdTx(tx) })).toBeNull();
       });
     },
   );
@@ -180,9 +175,7 @@ describe('system_flags service (integration)', () => {
           now: stale,
         });
         expect(cleared).toBe(true);
-        expect(
-          await getFlag(SBC_UNHEALTHY_FLAG_KEY, { tx: asProdTx(tx) }),
-        ).toBeNull();
+        expect(await getFlag(SBC_UNHEALTHY_FLAG_KEY, { tx: asProdTx(tx) })).toBeNull();
       });
     },
   );
@@ -208,22 +201,19 @@ describe('system_flags service (integration)', () => {
 });
 
 describe('pickCliForOrg + SBC fallback (integration)', () => {
-  it.skipIf(skipWhenNoDb)(
-    'returns Twilio when the providers filter is set to twilio',
-    async () => {
-      await withTestDb(async (tx) => {
-        await seedOrg(tx);
-        await seedMixedPool(tx);
+  it.skipIf(skipWhenNoDb)('returns Twilio when the providers filter is set to twilio', async () => {
+    await withTestDb(async (tx) => {
+      await seedOrg(tx);
+      await seedMixedPool(tx);
 
-        const picked = await pickCliForOrg(ORG, undefined, {
-          tx: asProdTx(tx),
-          providers: ['twilio'],
-        });
-        expect(picked.provider).toBe('twilio');
-        expect(picked.phoneE164).toBe('+390277770011');
+      const picked = await pickCliForOrg(ORG, undefined, {
+        tx: asProdTx(tx),
+        providers: ['twilio'],
       });
-    },
-  );
+      expect(picked.provider).toBe('twilio');
+      expect(picked.phoneE164).toBe('+390277770011');
+    });
+  });
 
   it.skipIf(skipWhenNoDb)(
     'returns Voiped when no providers filter is supplied (default behaviour)',

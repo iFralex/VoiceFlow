@@ -47,11 +47,11 @@ transfer_target_phone: +390212345678
 
 ## Troubleshooting
 
-| Symptom | Likely cause |
-|---|---|
-| Transfer destination never rings | `transfer_target_phone` missing or invalid format |
-| `transferred_to_agent` is `true` but phone never rang | Vapi could not reach the destination (check number + Vapi logs) |
-| AI says it will transfer but call drops | `transfer_target_phone` not set; Vapi has no destination to bridge to |
+| Symptom                                               | Likely cause                                                          |
+| ----------------------------------------------------- | --------------------------------------------------------------------- |
+| Transfer destination never rings                      | `transfer_target_phone` missing or invalid format                     |
+| `transferred_to_agent` is `true` but phone never rang | Vapi could not reach the destination (check number + Vapi logs)       |
+| AI says it will transfer but call drops               | `transfer_target_phone` not set; Vapi has no destination to bridge to |
 
 For Vapi-level diagnostics open the [Vapi dashboard](https://dashboard.vapi.ai)
 → **Calls** → select the call → **Logs** to inspect transfer events.

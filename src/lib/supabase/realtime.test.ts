@@ -15,10 +15,7 @@ import {
 // Migration file tests
 // ============================================================
 
-const migrationPath = join(
-  process.cwd(),
-  'drizzle/migrations/0005_realtime_publication.sql',
-);
+const migrationPath = join(process.cwd(), 'drizzle/migrations/0005_realtime_publication.sql');
 
 function getMigration(): string {
   return readFileSync(migrationPath, 'utf-8');

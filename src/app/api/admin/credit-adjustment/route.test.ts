@@ -29,10 +29,7 @@ import { POST } from './route';
 // Helpers
 // ---------------------------------------------------------------------------
 
-function makeRequest(
-  body: unknown,
-  headers: Record<string, string> = {},
-): Request {
+function makeRequest(body: unknown, headers: Record<string, string> = {}): Request {
   return new Request('http://localhost/api/admin/credit-adjustment', {
     method: 'POST',
     headers: {
@@ -140,13 +137,9 @@ describe('POST /api/admin/credit-adjustment', () => {
       makeRequest({ ...VALID_BODY, deltaCents: -200 }, { 'x-admin-token': VALID_TOKEN }),
     );
     expect(res.status).toBe(200);
-    expect(mockAdjust).toHaveBeenCalledWith(
-      VALID_BODY.orgId,
-      'system',
-      -200,
-      VALID_BODY.reason,
-      { actorType: 'system' },
-    );
+    expect(mockAdjust).toHaveBeenCalledWith(VALID_BODY.orgId, 'system', -200, VALID_BODY.reason, {
+      actorType: 'system',
+    });
   });
 
   it('returns 500 when adjust throws', async () => {

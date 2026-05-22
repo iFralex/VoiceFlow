@@ -18,7 +18,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { toastResult } from '@/lib/utils/action-toast';
 
@@ -66,7 +73,13 @@ export function CreatePatDialog() {
   }
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose(); else setOpen(true); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        if (!v) handleClose();
+        else setOpen(true);
+      }}
+    >
       <DialogTrigger asChild>
         <Button size="sm">{t('create_token')}</Button>
       </DialogTrigger>
@@ -79,10 +92,16 @@ export function CreatePatDialog() {
 
         {newToken ? (
           <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">{t('token_created_description')}</p>
-            <div className="flex items-center gap-2 rounded-md border bg-muted px-3 py-2">
-              <code className="flex-1 break-all text-xs">{newToken}</code>
-              <Button type="button" variant="ghost" size="icon" onClick={copyToken} aria-label={t('copy_token')}>
+            <p className="text-muted-foreground text-sm">{t('token_created_description')}</p>
+            <div className="bg-muted flex items-center gap-2 rounded-md border px-3 py-2">
+              <code className="flex-1 text-xs break-all">{newToken}</code>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={copyToken}
+                aria-label={t('copy_token')}
+              >
                 <Copy className="h-4 w-4" />
               </Button>
             </div>
@@ -107,12 +126,7 @@ export function CreatePatDialog() {
                 )}
               />
               <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleClose}
-                  disabled={isPending}
-                >
+                <Button type="button" variant="outline" onClick={handleClose} disabled={isPending}>
                   {tc('cancel')}
                 </Button>
                 <Button type="submit" disabled={isPending}>

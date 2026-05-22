@@ -5,7 +5,12 @@ import type { TranscriptSegment } from './types';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function seg(speaker: 'agent' | 'caller', text: string, startMs: number, endMs: number): TranscriptSegment {
+function seg(
+  speaker: 'agent' | 'caller',
+  text: string,
+  startMs: number,
+  endMs: number,
+): TranscriptSegment {
   return { speaker, text, startMs, endMs };
 }
 
@@ -14,16 +19,19 @@ function seg(speaker: 'agent' | 'caller', text: string, startMs: number, endMs: 
 describe('checkDisclosure', () => {
   it('returns true when the disclosure phrase is present within 30 seconds', () => {
     const segments = [
-      seg('agent', 'Buongiorno, sono un assistente vocale automatico della concessionaria.', 0, 5000),
+      seg(
+        'agent',
+        'Buongiorno, sono un assistente vocale automatico della concessionaria.',
+        0,
+        5000,
+      ),
       seg('caller', 'Ciao.', 5100, 6000),
     ];
     expect(checkDisclosure(segments)).toBe(true);
   });
 
   it('returns true when the phrase is in mixed case', () => {
-    const segments = [
-      seg('agent', 'Sono un ASSISTENTE VOCALE AUTOMATICO.', 0, 3000),
-    ];
+    const segments = [seg('agent', 'Sono un ASSISTENTE VOCALE AUTOMATICO.', 0, 3000)];
     expect(checkDisclosure(segments)).toBe(true);
   });
 
@@ -72,9 +80,7 @@ describe('checkDisclosure', () => {
   });
 
   it('does not match a partial phrase', () => {
-    const segments = [
-      seg('agent', 'assistente vocale della banca.', 0, 3000),
-    ];
+    const segments = [seg('agent', 'assistente vocale della banca.', 0, 3000)];
     expect(checkDisclosure(segments)).toBe(false);
   });
 

@@ -25,7 +25,10 @@ describe('sendInngestEvent', () => {
   it('POSTs to inn.gs with the event key by default', async () => {
     const { sendInngestEvent } = await import('./client');
 
-    await sendInngestEvent({ name: 'credit/low-balance', data: { orgId: 'org-1', balanceCents: 10 } });
+    await sendInngestEvent({
+      name: 'credit/low-balance',
+      data: { orgId: 'org-1', balanceCents: 10 },
+    });
 
     expect(mockFetch).toHaveBeenCalledOnce();
     const [url, opts] = mockFetch.mock.calls[0] as [string, RequestInit];
@@ -75,9 +78,9 @@ describe('sendInngestEvent', () => {
     mockFetch.mockResolvedValue({ ok: false, status: 500, statusText: 'Internal Server Error' });
     const { sendInngestEvent } = await import('./client');
 
-    await expect(
-      sendInngestEvent({ name: 'credit/low-balance', data: {} }),
-    ).rejects.toThrow('Inngest event send failed: 500 Internal Server Error');
+    await expect(sendInngestEvent({ name: 'credit/low-balance', data: {} })).rejects.toThrow(
+      'Inngest event send failed: 500 Internal Server Error',
+    );
   });
 
   it('propagates fetch errors (e.g. network unavailable)', async () => {

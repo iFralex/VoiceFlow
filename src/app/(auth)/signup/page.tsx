@@ -10,7 +10,14 @@ import { z } from 'zod';
 
 import { signInWithMagicLink } from '@/actions/auth';
 import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { toastResult } from '@/lib/utils/action-toast';
 
@@ -50,7 +57,7 @@ export default function SignupPage() {
     <div className="w-full max-w-sm space-y-6">
       <div className="space-y-1 text-center">
         <h1 className="text-2xl font-semibold tracking-tight">{t('signup_title')}</h1>
-        <p className="text-sm text-muted-foreground">{t('signup_description')}</p>
+        <p className="text-muted-foreground text-sm">{t('signup_description')}</p>
       </div>
 
       <Form {...form}>
@@ -80,11 +87,11 @@ export default function SignupPage() {
         </form>
       </Form>
 
-      <p className="text-center text-sm text-muted-foreground">
+      <p className="text-muted-foreground text-center text-sm">
         {t('already_have_account')}{' '}
         <Link
           href="/login"
-          className="font-medium text-foreground underline-offset-4 hover:underline"
+          className="text-foreground font-medium underline-offset-4 hover:underline"
         >
           {t('sign_in')}
         </Link>

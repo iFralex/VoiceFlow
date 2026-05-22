@@ -37,10 +37,9 @@ vi.mock('drizzle-orm', () => ({
   and: (...args: unknown[]) => ({ type: 'and', args: args.filter((a) => a !== undefined) }),
   gte: (col: unknown, val: unknown) => ({ type: 'gte', col, val }),
   lte: (col: unknown, val: unknown) => ({ type: 'lte', col, val }),
-  sql: Object.assign(
-    (strings: TemplateStringsArray) => ({ type: 'sql', text: strings.join('') }),
-    { raw: (s: string) => s },
-  ),
+  sql: Object.assign((strings: TemplateStringsArray) => ({ type: 'sql', text: strings.join('') }), {
+    raw: (s: string) => s,
+  }),
 }));
 
 // ---------------------------------------------------------------------------
@@ -95,8 +94,8 @@ function buildTx(rows: SampleRow[]): unknown {
 }
 
 function queueRows(rows: SampleRow[]): void {
-  mockWithSystemContext.mockImplementationOnce(
-    async (fn: (tx: unknown) => Promise<unknown>) => fn(buildTx(rows)),
+  mockWithSystemContext.mockImplementationOnce(async (fn: (tx: unknown) => Promise<unknown>) =>
+    fn(buildTx(rows)),
   );
 }
 
@@ -111,7 +110,8 @@ const CAR_RENEWAL_VARS = {
   appointment_lead_days: '5',
 };
 
-const VALID_TEMPLATE_BODY = 'Sei {{salesperson_first_name}} di {{dealership_name}}. Parli del modello {{current_vehicle_model}}.';
+const VALID_TEMPLATE_BODY =
+  'Sei {{salesperson_first_name}} di {{dealership_name}}. Parli del modello {{current_vehicle_model}}.';
 
 const VALID_VARIABLE_SCHEMA = {
   properties: {
@@ -206,9 +206,7 @@ describe('runAiActConformanceAudit', () => {
     expect(sample.layer3Passed).toBeNull();
     // Not-applicable does NOT push a failure reason: the call has not been
     // classified yet, so its layer-3 status is unknown rather than failed.
-    expect(
-      sample.failureReasons.some((r) => r.startsWith('layer3')),
-    ).toBe(false);
+    expect(sample.failureReasons.some((r) => r.startsWith('layer3'))).toBe(false);
   });
 
   it('reports layer3 as failed when disclosure_verified=false', async () => {
@@ -223,9 +221,7 @@ describe('runAiActConformanceAudit', () => {
     expect(result.layer3NotApplicable).toBe(0);
     const sample = result.samples[0]!;
     expect(sample.layer3Passed).toBe(false);
-    expect(
-      sample.failureReasons.some((r) => r.startsWith('layer3')),
-    ).toBe(true);
+    expect(sample.failureReasons.some((r) => r.startsWith('layer3'))).toBe(true);
   });
 
   it('fails layer1 when the canonical preamble would be missing', async () => {
@@ -249,9 +245,7 @@ describe('runAiActConformanceAudit', () => {
 
     const sample = result.samples[0]!;
     expect(sample.layer1Passed).toBe(false);
-    expect(
-      sample.failureReasons.some((r) => r.startsWith('layer1')),
-    ).toBe(true);
+    expect(sample.failureReasons.some((r) => r.startsWith('layer1'))).toBe(true);
   });
 
   it('fails layer2 when the template slug has no first-message file on disk', async () => {
@@ -264,11 +258,9 @@ describe('runAiActConformanceAudit', () => {
 
     const sample = result.samples[0]!;
     expect(sample.layer2Passed).toBe(false);
-    expect(
-      sample.failureReasons.some((r) =>
-        r.includes('first-message template missing'),
-      ),
-    ).toBe(true);
+    expect(sample.failureReasons.some((r) => r.includes('first-message template missing'))).toBe(
+      true,
+    );
   });
 
   it('aggregates counters across a mixed sample', async () => {

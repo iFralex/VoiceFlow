@@ -48,7 +48,10 @@ interface UpdateRecorder {
   whereArg?: unknown;
 }
 
-function buildTx(existingRow: Record<string, unknown> | null, captured: { updates: UpdateRecorder[] }) {
+function buildTx(
+  existingRow: Record<string, unknown> | null,
+  captured: { updates: UpdateRecorder[] },
+) {
   return {
     select: vi.fn(() => ({
       from: vi.fn(() => ({
@@ -115,12 +118,7 @@ describe('setLegalHold', () => {
     const newUntil = new Date('2027-06-01T00:00:00.000Z');
 
     mockWithSystemContext.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) =>
-      fn(
-        buildTx(
-          { id: CONTACT_ID, org_id: ORG_ID, legal_hold_until: previous },
-          captured,
-        ),
-      ),
+      fn(buildTx({ id: CONTACT_ID, org_id: ORG_ID, legal_hold_until: previous }, captured)),
     );
 
     const result = await setLegalHold({
@@ -160,12 +158,7 @@ describe('setLegalHold', () => {
     const previous = new Date('2026-12-01T00:00:00.000Z');
 
     mockWithSystemContext.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) =>
-      fn(
-        buildTx(
-          { id: CONTACT_ID, org_id: ORG_ID, legal_hold_until: previous },
-          captured,
-        ),
-      ),
+      fn(buildTx({ id: CONTACT_ID, org_id: ORG_ID, legal_hold_until: previous }, captured)),
     );
 
     const result = await setLegalHold({

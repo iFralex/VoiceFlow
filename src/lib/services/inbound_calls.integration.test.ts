@@ -86,8 +86,22 @@ async function seedTwoOrgsCallingNumber(tx: TestDbTx) {
   });
 
   await tx.insert(scripts).values([
-    { id: SCRIPT_A, org_id: ORG_A, template_id: TEMPLATE_ID, name: 'Script A', variables: {}, voice_id: null },
-    { id: SCRIPT_B, org_id: ORG_B, template_id: TEMPLATE_ID, name: 'Script B', variables: {}, voice_id: null },
+    {
+      id: SCRIPT_A,
+      org_id: ORG_A,
+      template_id: TEMPLATE_ID,
+      name: 'Script A',
+      variables: {},
+      voice_id: null,
+    },
+    {
+      id: SCRIPT_B,
+      org_id: ORG_B,
+      template_id: TEMPLATE_ID,
+      name: 'Script B',
+      variables: {},
+      voice_id: null,
+    },
   ]);
 
   await tx.insert(contactLists).values([
@@ -96,13 +110,39 @@ async function seedTwoOrgsCallingNumber(tx: TestDbTx) {
   ]);
 
   await tx.insert(contacts).values([
-    { id: CONTACT_A, org_id: ORG_A, contact_list_id: LIST_A, phone_e164: TARGET_PHONE, consent_basis: 'consent' },
-    { id: CONTACT_B, org_id: ORG_B, contact_list_id: LIST_B, phone_e164: TARGET_PHONE, consent_basis: 'consent' },
+    {
+      id: CONTACT_A,
+      org_id: ORG_A,
+      contact_list_id: LIST_A,
+      phone_e164: TARGET_PHONE,
+      consent_basis: 'consent',
+    },
+    {
+      id: CONTACT_B,
+      org_id: ORG_B,
+      contact_list_id: LIST_B,
+      phone_e164: TARGET_PHONE,
+      consent_basis: 'consent',
+    },
   ]);
 
   await tx.insert(campaigns).values([
-    { id: CAMPAIGN_A, org_id: ORG_A, contact_list_id: LIST_A, script_id: SCRIPT_A, name: 'Campaign A', status: 'draft' },
-    { id: CAMPAIGN_B, org_id: ORG_B, contact_list_id: LIST_B, script_id: SCRIPT_B, name: 'Campaign B', status: 'draft' },
+    {
+      id: CAMPAIGN_A,
+      org_id: ORG_A,
+      contact_list_id: LIST_A,
+      script_id: SCRIPT_A,
+      name: 'Campaign A',
+      status: 'draft',
+    },
+    {
+      id: CAMPAIGN_B,
+      org_id: ORG_B,
+      contact_list_id: LIST_B,
+      script_id: SCRIPT_B,
+      name: 'Campaign B',
+      status: 'draft',
+    },
   ]);
 }
 
@@ -138,7 +178,9 @@ describe('recordInboundOptout integration', () => {
       // Wire withSystemContext / withOrgContext to the same test tx (no nested
       // transactions in postgres-js). Service-side withOrgContext sets the GUC,
       // so we mirror that here and clear it afterwards.
-      vi.mocked(withSystemContext).mockImplementation((fn) => fn(tx as unknown as Parameters<typeof fn>[0]));
+      vi.mocked(withSystemContext).mockImplementation((fn) =>
+        fn(tx as unknown as Parameters<typeof fn>[0]),
+      );
       vi.mocked(withOrgContext).mockImplementation(async (orgId, fn) => {
         await setOrgContext(tx, orgId as string);
         try {
@@ -180,40 +222,47 @@ describe('recordInboundOptout integration', () => {
     });
   });
 
-  it.skipIf(skipWhenNoDb)('is idempotent on the unique (org_id, phone_e164) constraint', async () => {
-    await withTestDb(async (tx) => {
-      await seedTwoOrgsCallingNumber(tx);
-      await insertOutboundCalls(tx, new Date(Date.now() - 60 * 1000));
+  it.skipIf(skipWhenNoDb)(
+    'is idempotent on the unique (org_id, phone_e164) constraint',
+    async () => {
+      await withTestDb(async (tx) => {
+        await seedTwoOrgsCallingNumber(tx);
+        await insertOutboundCalls(tx, new Date(Date.now() - 60 * 1000));
 
-      vi.mocked(withSystemContext).mockImplementation((fn) => fn(tx as unknown as Parameters<typeof fn>[0]));
-      vi.mocked(withOrgContext).mockImplementation(async (orgId, fn) => {
-        await setOrgContext(tx, orgId as string);
-        try {
-          return await fn(tx as unknown as Parameters<typeof fn>[0]);
-        } finally {
-          await clearOrgContext(tx);
-        }
+        vi.mocked(withSystemContext).mockImplementation((fn) =>
+          fn(tx as unknown as Parameters<typeof fn>[0]),
+        );
+        vi.mocked(withOrgContext).mockImplementation(async (orgId, fn) => {
+          await setOrgContext(tx, orgId as string);
+          try {
+            return await fn(tx as unknown as Parameters<typeof fn>[0]);
+          } finally {
+            await clearOrgContext(tx);
+          }
+        });
+
+        // Double invocation — second call should not raise on the unique constraint.
+        await recordInboundOptout({ providerCallId: 'vapi-1', callerNumber: TARGET_PHONE });
+        await recordInboundOptout({ providerCallId: 'vapi-2', callerNumber: TARGET_PHONE });
+
+        await clearOrgContext(tx);
+        const optOutRows = await tx
+          .select()
+          .from(optOutRegistry)
+          .where(eq(optOutRegistry.phone_e164, TARGET_PHONE));
+        expect(optOutRows.length).toBe(2);
       });
-
-      // Double invocation — second call should not raise on the unique constraint.
-      await recordInboundOptout({ providerCallId: 'vapi-1', callerNumber: TARGET_PHONE });
-      await recordInboundOptout({ providerCallId: 'vapi-2', callerNumber: TARGET_PHONE });
-
-      await clearOrgContext(tx);
-      const optOutRows = await tx
-        .select()
-        .from(optOutRegistry)
-        .where(eq(optOutRegistry.phone_e164, TARGET_PHONE));
-      expect(optOutRows.length).toBe(2);
-    });
-  });
+    },
+  );
 
   it.skipIf(skipWhenNoDb)('writes nothing when no recent outbound caller exists', async () => {
     await withTestDb(async (tx) => {
       await seedTwoOrgsCallingNumber(tx);
       // No outbound calls inserted.
 
-      vi.mocked(withSystemContext).mockImplementation((fn) => fn(tx as unknown as Parameters<typeof fn>[0]));
+      vi.mocked(withSystemContext).mockImplementation((fn) =>
+        fn(tx as unknown as Parameters<typeof fn>[0]),
+      );
       vi.mocked(withOrgContext).mockImplementation(async (orgId, fn) => {
         await setOrgContext(tx, orgId as string);
         try {

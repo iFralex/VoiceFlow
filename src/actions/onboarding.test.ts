@@ -218,7 +218,11 @@ describe('createOrganizationAndOnboard', () => {
 
   it('returns vat_invalid when createOrganization throws invalid_vat_number', async () => {
     mockCreateOrganization.mockRejectedValue(new Error('invalid_vat_number'));
-    const result = await createOrganizationAndOnboard({ name: 'My Org', vatNumber: '00000000000', dpaAccepted: true });
+    const result = await createOrganizationAndOnboard({
+      name: 'My Org',
+      vatNumber: '00000000000',
+      dpaAccepted: true,
+    });
     expect(result).toEqual({ ok: false, message: 'vat_invalid' });
   });
 

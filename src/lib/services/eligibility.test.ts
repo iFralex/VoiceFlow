@@ -35,9 +35,7 @@ function resetMockTx() {
 }
 
 vi.mock('@/lib/db/context', () => ({
-  withOrgContext: vi.fn((_orgId: string, fn: (tx: unknown) => Promise<unknown>) =>
-    fn(mockTx),
-  ),
+  withOrgContext: vi.fn((_orgId: string, fn: (tx: unknown) => Promise<unknown>) => fn(mockTx)),
 }));
 
 // ─── Import under test ────────────────────────────────────────────────────────
@@ -69,9 +67,9 @@ describe('findEligibleContactsForCampaign', () => {
   it('returns eligible contacts on first launch (attemptNumber=1)', async () => {
     selectResults = [
       [{ contact_list_id: LIST_ID }], // campaign
-      [],                              // recent terminal calls (none)
-      [CONTACT],                       // eligible contacts
-      [],                              // call count rows (no previous calls)
+      [], // recent terminal calls (none)
+      [CONTACT], // eligible contacts
+      [], // call count rows (no previous calls)
     ];
 
     const { findEligibleContactsForCampaign } = await import('./eligibility');
@@ -89,8 +87,8 @@ describe('findEligibleContactsForCampaign', () => {
   it('returns attemptNumber=2 when one previous call exists', async () => {
     selectResults = [
       [{ contact_list_id: LIST_ID }],
-      [],                              // no recent terminal calls
-      [CONTACT],                       // eligible contacts
+      [], // no recent terminal calls
+      [CONTACT], // eligible contacts
       [{ contact_id: 'contact-1', cnt: 1 }], // 1 previous call
     ];
 
@@ -120,8 +118,8 @@ describe('findEligibleContactsForCampaign', () => {
   it('returns empty array when no contacts pass the eligibility filter', async () => {
     selectResults = [
       [{ contact_list_id: LIST_ID }],
-      [],       // no recent terminal calls
-      [],       // no eligible contacts (all filtered by SQL conditions)
+      [], // no recent terminal calls
+      [], // no eligible contacts (all filtered by SQL conditions)
     ];
 
     const { findEligibleContactsForCampaign } = await import('./eligibility');
@@ -136,9 +134,9 @@ describe('findEligibleContactsForCampaign', () => {
     const contact2 = { id: 'contact-2', phone_e164: '+39099999999' };
     selectResults = [
       [{ contact_list_id: LIST_ID }],
-      [],                   // no recent terminal calls
-      [CONTACT, contact2],  // two eligible contacts
-      [],                   // no previous calls → both at attempt 1
+      [], // no recent terminal calls
+      [CONTACT, contact2], // two eligible contacts
+      [], // no previous calls → both at attempt 1
     ];
 
     const { findEligibleContactsForCampaign } = await import('./eligibility');

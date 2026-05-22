@@ -7,13 +7,7 @@ import { useState, useTransition } from 'react';
 import { listDeliveriesAction, replayDeliveryAction } from '@/actions/webhooks';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { toastResult } from '@/lib/utils/action-toast';
 
 interface SerializedDelivery {
@@ -36,7 +30,8 @@ function DeliveryRow({ delivery }: DeliveryRowProps) {
   const [expanded, setExpanded] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  const isSuccess = delivery.status_code !== null && delivery.status_code >= 200 && delivery.status_code < 300;
+  const isSuccess =
+    delivery.status_code !== null && delivery.status_code >= 200 && delivery.status_code < 300;
 
   function handleReplay() {
     startTransition(async () => {
@@ -49,7 +44,7 @@ function DeliveryRow({ delivery }: DeliveryRowProps) {
     <div className="border-b last:border-0">
       <button
         type="button"
-        className="flex w-full items-center gap-2 px-4 py-3 text-left hover:bg-muted/50"
+        className="hover:bg-muted/50 flex w-full items-center gap-2 px-4 py-3 text-left"
         onClick={() => setExpanded((v) => !v)}
       >
         <span className="text-muted-foreground">
@@ -67,41 +62,36 @@ function DeliveryRow({ delivery }: DeliveryRowProps) {
         >
           {delivery.status_code ?? t('delivery_no_response')}
         </span>
-        <span className="text-xs text-muted-foreground">
-          {delivery.delivered_at
-            ? new Date(delivery.delivered_at).toLocaleString('it-IT')
-            : '—'}
+        <span className="text-muted-foreground text-xs">
+          {delivery.delivered_at ? new Date(delivery.delivered_at).toLocaleString('it-IT') : '—'}
         </span>
       </button>
 
       {expanded && (
-        <div className="space-y-3 bg-muted/30 px-4 pb-4">
+        <div className="bg-muted/30 space-y-3 px-4 pb-4">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">
+            <span className="text-muted-foreground text-xs">
               {t('delivery_attempt')} #{delivery.attempt}
             </span>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={isPending}
-              onClick={handleReplay}
-            >
+            <Button size="sm" variant="outline" disabled={isPending} onClick={handleReplay}>
               <RotateCcw className="mr-1 h-3 w-3" />
               {t('replay')}
             </Button>
           </div>
 
           <div>
-            <p className="mb-1 text-xs font-medium text-muted-foreground">{t('delivery_payload')}</p>
-            <pre className="max-h-40 overflow-auto rounded bg-muted p-2 text-xs">
+            <p className="text-muted-foreground mb-1 text-xs font-medium">
+              {t('delivery_payload')}
+            </p>
+            <pre className="bg-muted max-h-40 overflow-auto rounded p-2 text-xs">
               {JSON.stringify(delivery.payload, null, 2)}
             </pre>
           </div>
 
           {delivery.error && (
             <div>
-              <p className="mb-1 text-xs font-medium text-destructive">{t('delivery_error')}</p>
-              <pre className="max-h-20 overflow-auto rounded bg-destructive/10 p-2 text-xs text-destructive">
+              <p className="text-destructive mb-1 text-xs font-medium">{t('delivery_error')}</p>
+              <pre className="bg-destructive/10 text-destructive max-h-20 overflow-auto rounded p-2 text-xs">
                 {delivery.error}
               </pre>
             </div>
@@ -166,14 +156,14 @@ export function WebhookDeliveriesDrawer({ webhookId, webhookUrl }: Props) {
           {t('view_deliveries')}
         </Button>
       </SheetTrigger>
-      <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
+      <SheetContent className="w-full overflow-y-auto sm:max-w-2xl">
         <SheetHeader className="mb-4">
           <SheetTitle>{t('deliveries_title')}</SheetTitle>
-          <p className="text-xs text-muted-foreground break-all">{webhookUrl}</p>
+          <p className="text-muted-foreground text-xs break-all">{webhookUrl}</p>
         </SheetHeader>
 
         {isLoading && deliveries.length === 0 ? (
-          <div className="flex justify-center py-8 text-sm text-muted-foreground">
+          <div className="text-muted-foreground flex justify-center py-8 text-sm">
             {t('loading_deliveries')}
           </div>
         ) : deliveries.length === 0 && hasLoaded ? (

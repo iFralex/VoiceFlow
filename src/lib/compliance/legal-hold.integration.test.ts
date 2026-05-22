@@ -32,7 +32,9 @@ const skipWhenNoDb = !process.env['TEST_DATABASE_URL'];
  * Seeds an org + contact list and returns the list id. The caller then
  * inserts contacts directly in the test transaction.
  */
-async function seedOrgWithList(tx: Parameters<Parameters<typeof withTestDb>[0]>[0]): Promise<string> {
+async function seedOrgWithList(
+  tx: Parameters<Parameters<typeof withTestDb>[0]>[0],
+): Promise<string> {
   await tx.insert(organizations).values({
     id: TEST_ORG,
     name: 'Legal Hold Org',
@@ -53,29 +55,26 @@ async function seedOrgWithList(tx: Parameters<Parameters<typeof withTestDb>[0]>[
 }
 
 describe('legal hold integration', () => {
-  it.skipIf(skipWhenNoDb)(
-    'persists legal_hold_until on contacts and reads it back',
-    async () => {
-      await withTestDb(async (tx) => {
-        const listId = await seedOrgWithList(tx);
-        const until = new Date('2030-01-01T00:00:00.000Z');
+  it.skipIf(skipWhenNoDb)('persists legal_hold_until on contacts and reads it back', async () => {
+    await withTestDb(async (tx) => {
+      const listId = await seedOrgWithList(tx);
+      const until = new Date('2030-01-01T00:00:00.000Z');
 
-        const inserted = await tx
-          .insert(contacts)
-          .values({
-            org_id: TEST_ORG,
-            contact_list_id: listId,
-            phone_e164: '+393331110001',
-            consent_basis: 'consent',
-            legal_hold_until: until,
-          })
-          .returning({ id: contacts.id, legal_hold_until: contacts.legal_hold_until });
+      const inserted = await tx
+        .insert(contacts)
+        .values({
+          org_id: TEST_ORG,
+          contact_list_id: listId,
+          phone_e164: '+393331110001',
+          consent_basis: 'consent',
+          legal_hold_until: until,
+        })
+        .returning({ id: contacts.id, legal_hold_until: contacts.legal_hold_until });
 
-        expect(inserted).toHaveLength(1);
-        expect(inserted[0]!.legal_hold_until?.toISOString()).toBe(until.toISOString());
-      });
-    },
-  );
+      expect(inserted).toHaveLength(1);
+      expect(inserted[0]!.legal_hold_until?.toISOString()).toBe(until.toISOString());
+    });
+  });
 
   it.skipIf(skipWhenNoDb)(
     'fetchHeldContactIds-style query returns only contacts with active future holds',
@@ -164,7 +163,11 @@ describe('legal hold integration', () => {
               legal_hold_until: new Date('2025-01-01T00:00:00.000Z'),
             },
           ])
-          .returning({ id: contacts.id, phone: contacts.phone_e164, hold: contacts.legal_hold_until });
+          .returning({
+            id: contacts.id,
+            phone: contacts.phone_e164,
+            hold: contacts.legal_hold_until,
+          });
 
         // Resolve the held set (the route fetches it once per org).
         const heldRows = await tx
@@ -199,46 +202,41 @@ describe('legal hold integration', () => {
         expect(candidatePhones).toEqual(['+393331110010', '+393331110012']);
 
         // Sanity: the held contact survived selection.
-        const heldContactPhone = inserted.find(
-          (c) => c.id === heldIds[0],
-        )!.phone;
+        const heldContactPhone = inserted.find((c) => c.id === heldIds[0])!.phone;
         expect(candidatePhones).not.toContain(heldContactPhone);
       });
     },
   );
 
-  it.skipIf(skipWhenNoDb)(
-    'releases retention skip once legal_hold_until has passed',
-    async () => {
-      await withTestDb(async (tx) => {
-        const listId = await seedOrgWithList(tx);
-        // "now" is past the contact's legal_hold_until — hold has expired.
-        const now = new Date('2026-05-08T03:00:00.000Z');
+  it.skipIf(skipWhenNoDb)('releases retention skip once legal_hold_until has passed', async () => {
+    await withTestDb(async (tx) => {
+      const listId = await seedOrgWithList(tx);
+      // "now" is past the contact's legal_hold_until — hold has expired.
+      const now = new Date('2026-05-08T03:00:00.000Z');
 
-        await tx.insert(contacts).values({
-          org_id: TEST_ORG,
-          contact_list_id: listId,
-          phone_e164: '+393331110020',
-          consent_basis: 'consent',
-          legal_hold_until: new Date('2024-01-01T00:00:00.000Z'),
-        });
-
-        const heldRows = await tx
-          .select({ id: contacts.id })
-          .from(contacts)
-          .where(
-            and(
-              eq(contacts.org_id, TEST_ORG),
-              isNotNull(contacts.legal_hold_until),
-              gt(contacts.legal_hold_until, now),
-            ),
-          );
-
-        // Past timestamps don't appear in the held set, so retention resumes.
-        expect(heldRows).toHaveLength(0);
+      await tx.insert(contacts).values({
+        org_id: TEST_ORG,
+        contact_list_id: listId,
+        phone_e164: '+393331110020',
+        consent_basis: 'consent',
+        legal_hold_until: new Date('2024-01-01T00:00:00.000Z'),
       });
-    },
-  );
+
+      const heldRows = await tx
+        .select({ id: contacts.id })
+        .from(contacts)
+        .where(
+          and(
+            eq(contacts.org_id, TEST_ORG),
+            isNotNull(contacts.legal_hold_until),
+            gt(contacts.legal_hold_until, now),
+          ),
+        );
+
+      // Past timestamps don't appear in the held set, so retention resumes.
+      expect(heldRows).toHaveLength(0);
+    });
+  });
 
   it.skipIf(skipWhenNoDb)(
     'partial index on legal_hold_until is used when scanning held contacts (smoke test)',
@@ -258,12 +256,7 @@ describe('legal hold integration', () => {
         const indexes = await tx
           .select({ name: contacts.id })
           .from(contacts)
-          .where(
-            and(
-              eq(contacts.org_id, TEST_ORG),
-              isNull(contacts.legal_hold_until),
-            ),
-          );
+          .where(and(eq(contacts.org_id, TEST_ORG), isNull(contacts.legal_hold_until)));
         // Just verify the query plans cleanly (no runtime error from missing column).
         expect(Array.isArray(indexes)).toBe(true);
       });

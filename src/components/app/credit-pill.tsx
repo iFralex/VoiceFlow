@@ -33,8 +33,10 @@ function getStatusTier(remainingMinutes: number): StatusTier {
 }
 
 const STATUS_CLASSES: Record<StatusTier, string> = {
-  green: 'text-[hsl(var(--status-success))] bg-[hsl(var(--status-success))]/10 hover:bg-[hsl(var(--status-success))]/20',
-  amber: 'text-[hsl(var(--status-warning))] bg-[hsl(var(--status-warning))]/10 hover:bg-[hsl(var(--status-warning))]/20',
+  green:
+    'text-[hsl(var(--status-success))] bg-[hsl(var(--status-success))]/10 hover:bg-[hsl(var(--status-success))]/20',
+  amber:
+    'text-[hsl(var(--status-warning))] bg-[hsl(var(--status-warning))]/10 hover:bg-[hsl(var(--status-warning))]/20',
   red: 'text-[hsl(var(--status-danger))] bg-[hsl(var(--status-danger))]/10 hover:bg-[hsl(var(--status-danger))]/20',
 };
 
@@ -65,21 +67,21 @@ export function CreditPill({ balance, className }: CreditPillProps) {
 
       <PopoverContent align="end" className="w-64 p-0" data-testid="credit-popover">
         <div className="px-4 py-3">
-          <p className="text-xs font-medium text-muted-foreground">{t('credit_balance_label')}</p>
+          <p className="text-muted-foreground text-xs font-medium">{t('credit_balance_label')}</p>
           <p className="mt-1 text-2xl font-semibold tabular-nums">{remainingMinutes} min</p>
         </div>
 
         <Separator />
 
-        <div className="px-4 py-3 space-y-1.5 text-sm">
+        <div className="space-y-1.5 px-4 py-3 text-sm">
           {reservedMinutes > 0 && (
-            <div className="flex justify-between text-muted-foreground">
+            <div className="text-muted-foreground flex justify-between">
               <span>{t('reserved_active_calls')}</span>
               <span className="tabular-nums">{reservedMinutes} min</span>
             </div>
           )}
           {totalMinutes !== undefined && (
-            <div className="flex justify-between text-muted-foreground">
+            <div className="text-muted-foreground flex justify-between">
               <span>{t('total_purchased')}</span>
               <span className="tabular-nums">{totalMinutes} min</span>
             </div>

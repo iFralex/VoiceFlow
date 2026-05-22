@@ -66,7 +66,12 @@ const BASE_DATA = { callId: CALL_ID, orgId: ORG_ID };
 // Segments include the AI Act disclosure phrase so tests that check for
 // no-disclosure-event still pass by default (checkDisclosure is mocked).
 const SEGMENTS = [
-  { speaker: 'agent', text: 'Sono un assistente vocale automatico della concessionaria.', startMs: 0, endMs: 3000 },
+  {
+    speaker: 'agent',
+    text: 'Sono un assistente vocale automatico della concessionaria.',
+    startMs: 0,
+    endMs: 3000,
+  },
   { speaker: 'caller', text: 'Non sono interessato.', startMs: 3100, endMs: 4000 },
 ];
 
@@ -103,7 +108,9 @@ describe('classifyCallHandler', () => {
     // Second select: re-read — still no outcome
     mockSelect
       .mockReturnValueOnce(
-        makeSelectChain([{ outcome: null, transcript_path: `transcripts/${ORG_ID}/${CALL_ID}.json` }]),
+        makeSelectChain([
+          { outcome: null, transcript_path: `transcripts/${ORG_ID}/${CALL_ID}.json` },
+        ]),
       )
       .mockReturnValueOnce(makeSelectChain([{ outcome: null }]));
 
@@ -135,7 +142,9 @@ describe('classifyCallHandler', () => {
     // First select: call already has a tool-driven outcome
     // Disclosure check still runs (regulatory requirement), but classifier is skipped.
     mockSelect.mockReturnValueOnce(
-      makeSelectChain([{ outcome: 'appointment_booked', transcript_path: `transcripts/${ORG_ID}/${CALL_ID}.json` }]),
+      makeSelectChain([
+        { outcome: 'appointment_booked', transcript_path: `transcripts/${ORG_ID}/${CALL_ID}.json` },
+      ]),
     );
 
     mockDownload.mockResolvedValue({
@@ -160,7 +169,9 @@ describe('classifyCallHandler', () => {
     // Second select: tool outcome was set to same value
     mockSelect
       .mockReturnValueOnce(
-        makeSelectChain([{ outcome: null, transcript_path: `transcripts/${ORG_ID}/${CALL_ID}.json` }]),
+        makeSelectChain([
+          { outcome: null, transcript_path: `transcripts/${ORG_ID}/${CALL_ID}.json` },
+        ]),
       )
       .mockReturnValueOnce(makeSelectChain([{ outcome: 'not_interested' }]));
 
@@ -190,7 +201,9 @@ describe('classifyCallHandler', () => {
     // Second select: tool outcome appeared concurrently (different from classifier)
     mockSelect
       .mockReturnValueOnce(
-        makeSelectChain([{ outcome: null, transcript_path: `transcripts/${ORG_ID}/${CALL_ID}.json` }]),
+        makeSelectChain([
+          { outcome: null, transcript_path: `transcripts/${ORG_ID}/${CALL_ID}.json` },
+        ]),
       )
       .mockReturnValueOnce(makeSelectChain([{ outcome: 'appointment_booked' }]));
 
@@ -239,7 +252,9 @@ describe('classifyCallHandler', () => {
   it('returns early when re-read call not found (second select)', async () => {
     mockSelect
       .mockReturnValueOnce(
-        makeSelectChain([{ outcome: null, transcript_path: `transcripts/${ORG_ID}/${CALL_ID}.json` }]),
+        makeSelectChain([
+          { outcome: null, transcript_path: `transcripts/${ORG_ID}/${CALL_ID}.json` },
+        ]),
       )
       .mockReturnValueOnce(makeSelectChain([]));
 
@@ -263,9 +278,7 @@ describe('classifyCallHandler', () => {
   });
 
   it('throws when transcript_path is missing', async () => {
-    mockSelect.mockReturnValueOnce(
-      makeSelectChain([{ outcome: null, transcript_path: null }]),
-    );
+    mockSelect.mockReturnValueOnce(makeSelectChain([{ outcome: null, transcript_path: null }]));
 
     await expect(classifyCallHandler(BASE_DATA)).rejects.toThrow(
       `Call ${CALL_ID} has no transcript_path`,
@@ -274,7 +287,9 @@ describe('classifyCallHandler', () => {
 
   it('throws when storage download fails', async () => {
     mockSelect.mockReturnValueOnce(
-      makeSelectChain([{ outcome: null, transcript_path: `transcripts/${ORG_ID}/${CALL_ID}.json` }]),
+      makeSelectChain([
+        { outcome: null, transcript_path: `transcripts/${ORG_ID}/${CALL_ID}.json` },
+      ]),
     );
 
     mockDownload.mockResolvedValue({
@@ -295,7 +310,9 @@ describe('classifyCallHandler', () => {
 
     mockSelect
       .mockReturnValueOnce(
-        makeSelectChain([{ outcome: null, transcript_path: `transcripts/${ORG_ID}/${CALL_ID}.json` }]),
+        makeSelectChain([
+          { outcome: null, transcript_path: `transcripts/${ORG_ID}/${CALL_ID}.json` },
+        ]),
       )
       .mockReturnValueOnce(makeSelectChain([{ outcome: null }]));
 
@@ -318,7 +335,9 @@ describe('classifyCallHandler', () => {
   it('formats outcome_confidence as 2 decimal places', async () => {
     mockSelect
       .mockReturnValueOnce(
-        makeSelectChain([{ outcome: null, transcript_path: `transcripts/${ORG_ID}/${CALL_ID}.json` }]),
+        makeSelectChain([
+          { outcome: null, transcript_path: `transcripts/${ORG_ID}/${CALL_ID}.json` },
+        ]),
       )
       .mockReturnValueOnce(makeSelectChain([{ outcome: null }]));
 
@@ -348,7 +367,9 @@ describe('classifyCallHandler', () => {
 
       mockSelect
         .mockReturnValueOnce(
-          makeSelectChain([{ outcome: null, transcript_path: `transcripts/${ORG_ID}/${CALL_ID}.json` }]),
+          makeSelectChain([
+            { outcome: null, transcript_path: `transcripts/${ORG_ID}/${CALL_ID}.json` },
+          ]),
         )
         .mockReturnValueOnce(makeSelectChain([{ outcome: null }]));
 
@@ -388,7 +409,9 @@ describe('classifyCallHandler', () => {
 
       mockSelect
         .mockReturnValueOnce(
-          makeSelectChain([{ outcome: null, transcript_path: `transcripts/${ORG_ID}/${CALL_ID}.json` }]),
+          makeSelectChain([
+            { outcome: null, transcript_path: `transcripts/${ORG_ID}/${CALL_ID}.json` },
+          ]),
         )
         .mockReturnValueOnce(makeSelectChain([{ outcome: null }]));
 
@@ -418,7 +441,9 @@ describe('classifyCallHandler', () => {
 
       mockSelect
         .mockReturnValueOnce(
-          makeSelectChain([{ outcome: null, transcript_path: `transcripts/${ORG_ID}/${CALL_ID}.json` }]),
+          makeSelectChain([
+            { outcome: null, transcript_path: `transcripts/${ORG_ID}/${CALL_ID}.json` },
+          ]),
         )
         .mockReturnValueOnce(makeSelectChain([{ outcome: 'appointment_booked' }]));
 
@@ -446,7 +471,9 @@ describe('classifyCallHandler', () => {
     it('passes the parsed transcript segments to checkDisclosure', async () => {
       mockSelect
         .mockReturnValueOnce(
-          makeSelectChain([{ outcome: null, transcript_path: `transcripts/${ORG_ID}/${CALL_ID}.json` }]),
+          makeSelectChain([
+            { outcome: null, transcript_path: `transcripts/${ORG_ID}/${CALL_ID}.json` },
+          ]),
         )
         .mockReturnValueOnce(makeSelectChain([{ outcome: null }]));
 

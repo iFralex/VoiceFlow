@@ -27,7 +27,9 @@ function serializeList(list: Awaited<ReturnType<typeof getContactList>>): Serial
   };
 }
 
-function serializeContact(c: Awaited<ReturnType<typeof listContacts>>['items'][number]): SerializedContact {
+function serializeContact(
+  c: Awaited<ReturnType<typeof listContacts>>['items'][number],
+): SerializedContact {
   return {
     id: c.id,
     phone_e164: c.phone_e164,
@@ -45,8 +47,7 @@ export default async function ListDetailPage({ params, searchParams }: Props) {
   const sp = await searchParams;
 
   const search = typeof sp.search === 'string' ? sp.search : undefined;
-  const optOut =
-    sp.optOut === 'true' ? true : sp.optOut === 'false' ? false : undefined;
+  const optOut = sp.optOut === 'true' ? true : sp.optOut === 'false' ? false : undefined;
   const RPO_STATUSES: RpoStatus[] = ['clear', 'blocked', 'unchecked'];
   const rpoStatus =
     typeof sp.rpoStatus === 'string' && RPO_STATUSES.includes(sp.rpoStatus as RpoStatus)
@@ -61,18 +62,18 @@ export default async function ListDetailPage({ params, searchParams }: Props) {
   if (list.import_status === 'completed') {
     const result = await listContacts(
       orgId,
-      { listId: id, ...(search !== undefined ? { search } : {}), ...(optOut !== undefined ? { optOut } : {}), ...(rpoStatus !== undefined ? { rpoStatus } : {}) },
+      {
+        listId: id,
+        ...(search !== undefined ? { search } : {}),
+        ...(optOut !== undefined ? { optOut } : {}),
+        ...(rpoStatus !== undefined ? { rpoStatus } : {}),
+      },
       { limit: 500 },
     );
     contacts = result.items.map(serializeContact);
   }
 
   return (
-    <ListDetailClient
-      list={serializeList(list)}
-      contacts={contacts}
-      listId={id}
-      orgId={orgId}
-    />
+    <ListDetailClient list={serializeList(list)} contacts={contacts} listId={id} orgId={orgId} />
   );
 }

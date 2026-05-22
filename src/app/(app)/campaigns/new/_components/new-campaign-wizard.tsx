@@ -7,13 +7,7 @@ import { useTransition, useState } from 'react';
 
 import { createCampaignAction } from '@/actions/campaigns';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -78,13 +72,7 @@ function formatEuros(cents: number): string {
 
 // ─── Step indicator ───────────────────────────────────────────────────────────
 
-function StepIndicator({
-  current,
-  t,
-}: {
-  current: WizardStep;
-  t: (key: string) => string;
-}) {
+function StepIndicator({ current, t }: { current: WizardStep; t: (key: string) => string }) {
   const steps: { key: WizardStep; label: string }[] = [
     { key: 'script', label: t('step_script') },
     { key: 'contact_list', label: t('step_contact_list') },
@@ -112,7 +100,7 @@ function StepIndicator({
           >
             {s.label}
           </span>
-          {i < steps.length - 1 && <div className="mx-2 h-px w-8 bg-border" />}
+          {i < steps.length - 1 && <div className="bg-border mx-2 h-px w-8" />}
         </div>
       ))}
     </div>
@@ -135,13 +123,9 @@ export function NewCampaignWizard({
 
   // Wizard state
   const [step, setStep] = useState<WizardStep>(
-    initialScriptId && scripts.some((s) => s.id === initialScriptId)
-      ? 'contact_list'
-      : 'script',
+    initialScriptId && scripts.some((s) => s.id === initialScriptId) ? 'contact_list' : 'script',
   );
-  const [selectedScriptId, setSelectedScriptId] = useState<string | null>(
-    initialScriptId ?? null,
-  );
+  const [selectedScriptId, setSelectedScriptId] = useState<string | null>(initialScriptId ?? null);
   const [selectedListId, setSelectedListId] = useState<string | null>(null);
 
   // Schedule step form state
@@ -187,9 +171,7 @@ export function NewCampaignWizard({
 
     startTransition(async () => {
       // Convert datetime-local value to ISO string (treats input as local time)
-      const scheduledStartISO = scheduledStart
-        ? new Date(scheduledStart).toISOString()
-        : undefined;
+      const scheduledStartISO = scheduledStart ? new Date(scheduledStart).toISOString() : undefined;
 
       const result = await createCampaignAction({
         name: campaignName.trim(),
@@ -215,8 +197,7 @@ export function NewCampaignWizard({
     });
   }
 
-  const isScheduledInFuture =
-    scheduledStart.length > 0 && new Date(scheduledStart) > new Date();
+  const isScheduledInFuture = scheduledStart.length > 0 && new Date(scheduledStart) > new Date();
 
   // ── Step 1: Script selection ───────────────────────────────────────────────
 
@@ -244,7 +225,7 @@ export function NewCampaignWizard({
               <Card key={script.id} className="flex flex-col">
                 <CardHeader>
                   <CardTitle className="text-base">{script.name}</CardTitle>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     {t('script_template_label')}: {script.template_name}
                   </p>
                 </CardHeader>
@@ -283,8 +264,9 @@ export function NewCampaignWizard({
         <StepIndicator current="contact_list" t={t} />
 
         {selectedScript && (
-          <p className="text-sm text-muted-foreground">
-            {t('selected_script_label')}: <span className="font-medium text-foreground">{selectedScript.name}</span>
+          <p className="text-muted-foreground text-sm">
+            {t('selected_script_label')}:{' '}
+            <span className="text-foreground font-medium">{selectedScript.name}</span>
           </p>
         )}
 
@@ -300,7 +282,7 @@ export function NewCampaignWizard({
               <Card key={list.id} className="flex flex-col">
                 <CardHeader>
                   <CardTitle className="text-base">{list.name}</CardTitle>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     {t('valid_contacts_count', { count: list.valid_count })}
                   </p>
                 </CardHeader>
@@ -378,7 +360,7 @@ export function NewCampaignWizard({
                   placeholder={t('field_name_placeholder')}
                   maxLength={200}
                 />
-                {nameError && <p className="text-xs text-destructive">{nameError}</p>}
+                {nameError && <p className="text-destructive text-xs">{nameError}</p>}
               </div>
 
               {/* Scheduled start */}
@@ -390,7 +372,7 @@ export function NewCampaignWizard({
                   value={scheduledStart}
                   onChange={(e) => setScheduledStart(e.target.value)}
                 />
-                <p className="text-xs text-muted-foreground">{t('field_scheduled_start_hint')}</p>
+                <p className="text-muted-foreground text-xs">{t('field_scheduled_start_hint')}</p>
               </div>
 
               {/* Time window */}
@@ -398,7 +380,7 @@ export function NewCampaignWizard({
                 <Label>{t('field_time_window_label')}</Label>
                 <div className="flex items-center gap-3">
                   <div className="flex-1 space-y-1">
-                    <Label htmlFor="tw-start" className="text-xs text-muted-foreground">
+                    <Label htmlFor="tw-start" className="text-muted-foreground text-xs">
                       {t('field_time_window_start_label')}
                     </Label>
                     <Input
@@ -410,9 +392,9 @@ export function NewCampaignWizard({
                       onChange={(e) => handleTimeWindowStartChange(e.target.value)}
                     />
                   </div>
-                  <span className="mt-5 text-muted-foreground">–</span>
+                  <span className="text-muted-foreground mt-5">–</span>
                   <div className="flex-1 space-y-1">
-                    <Label htmlFor="tw-end" className="text-xs text-muted-foreground">
+                    <Label htmlFor="tw-end" className="text-muted-foreground text-xs">
                       {t('field_time_window_end_label')}
                     </Label>
                     <Input
@@ -441,16 +423,23 @@ export function NewCampaignWizard({
                     if (!isNaN(val)) setConcurrencyLimit(Math.min(20, Math.max(1, val)));
                   }}
                 />
-                <p className="text-xs text-muted-foreground">{t('field_concurrency_hint')}</p>
+                <p className="text-muted-foreground text-xs">{t('field_concurrency_hint')}</p>
               </div>
             </CardContent>
             <CardFooter className="flex justify-end gap-3 border-t pt-4">
               {isScheduledInFuture ? (
                 <>
-                  <Button variant="outline" onClick={() => handleSubmit(false)} disabled={isPending}>
+                  <Button
+                    variant="outline"
+                    onClick={() => handleSubmit(false)}
+                    disabled={isPending}
+                  >
                     {isPending ? t('btn_submitting') : t('btn_save_scheduled')}
                   </Button>
-                  <Button onClick={() => handleSubmit(true)} disabled={isPending || !hasSufficientCredit}>
+                  <Button
+                    onClick={() => handleSubmit(true)}
+                    disabled={isPending || !hasSufficientCredit}
+                  >
                     {isPending ? t('btn_submitting') : t('btn_launch')}
                   </Button>
                 </>
@@ -494,13 +483,14 @@ export function NewCampaignWizard({
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">{t('credit_balance_label')}</span>
                   <span className={`font-medium ${!hasSufficientCredit ? 'text-destructive' : ''}`}>
-                    {formatEuros(balanceCents)}
-                    {' '}
-                    <span className="text-xs text-muted-foreground">({remainingMinutes} min)</span>
+                    {formatEuros(balanceCents)}{' '}
+                    <span className="text-muted-foreground text-xs">({remainingMinutes} min)</span>
                   </span>
                 </div>
                 {!hasSufficientCredit && (
-                  <p className="mt-2 text-xs text-destructive">{t('credit_insufficient_warning')}</p>
+                  <p className="text-destructive mt-2 text-xs">
+                    {t('credit_insufficient_warning')}
+                  </p>
                 )}
               </div>
             </CardContent>

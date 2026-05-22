@@ -29,8 +29,7 @@ const LAYOUT_STRINGS: Record<EmailLocale, LayoutStrings> = {
     footerSupport: 'Supporto',
   },
   en: {
-    footerSent: (org) =>
-      `You received this email because you are a member of ${org}.`,
+    footerSent: (org) => `You received this email because you are a member of ${org}.`,
     footerPreferences: 'Manage notification preferences',
     footerSupport: 'Support',
   },
@@ -119,9 +118,7 @@ type DataTableProps = {
 
 export function DataTable({ columns, children, emptyText }: DataTableProps) {
   if (!children) {
-    return emptyText ? (
-      <Text style={layoutStyles.muted}>{emptyText}</Text>
-    ) : null;
+    return emptyText ? <Text style={layoutStyles.muted}>{emptyText}</Text> : null;
   }
   return (
     <table cellPadding={0} cellSpacing={0} style={layoutStyles.table}>

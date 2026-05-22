@@ -27,9 +27,7 @@ describe('interpolate', () => {
   });
 
   it('throws when the variables map is empty but template has placeholders', () => {
-    expect(() => interpolate('{{x}} e {{y}}', {})).toThrow(
-      /Missing variable "x"/,
-    );
+    expect(() => interpolate('{{x}} e {{y}}', {})).toThrow(/Missing variable "x"/);
   });
 
   it('returns the template unchanged when there are no placeholders', () => {
@@ -130,31 +128,28 @@ describe('assembleSystemPrompt', () => {
 });
 
 describe('verifyComplianceOrThrow', () => {
-  const validFirstMessage =
-    'Buongiorno, sono Luca, un assistente vocale automatico per AutoRoma.';
+  const validFirstMessage = 'Buongiorno, sono Luca, un assistente vocale automatico per AutoRoma.';
 
   it('passes when systemPrompt starts with the AI Act preamble and firstMessage contains the disclosure', () => {
     const systemPrompt = assembleSystemPrompt({
       templateBody: 'Sei {{name}} di {{company}}.',
       variables: { name: 'Luca', company: 'AutoRoma' },
     });
-    expect(() =>
-      verifyComplianceOrThrow(systemPrompt, validFirstMessage),
-    ).not.toThrow();
+    expect(() => verifyComplianceOrThrow(systemPrompt, validFirstMessage)).not.toThrow();
   });
 
   it('throws ComplianceVerificationError when systemPrompt does not start with the preamble', () => {
     const tampered = 'Ciao, sono un bot.\n\n' + AI_ACT_PREAMBLE_IT;
-    expect(() =>
-      verifyComplianceOrThrow(tampered, validFirstMessage),
-    ).toThrow(ComplianceVerificationError);
+    expect(() => verifyComplianceOrThrow(tampered, validFirstMessage)).toThrow(
+      ComplianceVerificationError,
+    );
   });
 
   it('error message mentions "AI Act" preamble when systemPrompt check fails', () => {
     const tampered = 'Testo qualsiasi senza preamble.';
-    expect(() =>
-      verifyComplianceOrThrow(tampered, validFirstMessage),
-    ).toThrow(/AI Act transparency preamble/);
+    expect(() => verifyComplianceOrThrow(tampered, validFirstMessage)).toThrow(
+      /AI Act transparency preamble/,
+    );
   });
 
   it('throws ComplianceVerificationError when firstMessage lacks the disclosure phrase', () => {
@@ -163,9 +158,9 @@ describe('verifyComplianceOrThrow', () => {
       variables: { name: 'Luca', company: 'AutoRoma' },
     });
     const noDisclosure = 'Buongiorno, sono Luca di AutoRoma.';
-    expect(() =>
-      verifyComplianceOrThrow(systemPrompt, noDisclosure),
-    ).toThrow(ComplianceVerificationError);
+    expect(() => verifyComplianceOrThrow(systemPrompt, noDisclosure)).toThrow(
+      ComplianceVerificationError,
+    );
   });
 
   it('error message mentions the missing phrase when firstMessage check fails', () => {
@@ -173,9 +168,9 @@ describe('verifyComplianceOrThrow', () => {
       templateBody: 'Sei {{name}} di {{company}}.',
       variables: { name: 'Luca', company: 'AutoRoma' },
     });
-    expect(() =>
-      verifyComplianceOrThrow(systemPrompt, 'Ciao, sono il tuo assistente.'),
-    ).toThrow(/assistente vocale automatico/);
+    expect(() => verifyComplianceOrThrow(systemPrompt, 'Ciao, sono il tuo assistente.')).toThrow(
+      /assistente vocale automatico/,
+    );
   });
 
   it('disclosure phrase check is case-insensitive', () => {
@@ -184,11 +179,8 @@ describe('verifyComplianceOrThrow', () => {
       variables: { name: 'Luca', company: 'AutoRoma' },
     });
     // Mixed-case variation should still pass
-    const mixedCase =
-      'Buongiorno, sono ASSISTENTE VOCALE AUTOMATICO per AutoRoma.';
-    expect(() =>
-      verifyComplianceOrThrow(systemPrompt, mixedCase),
-    ).not.toThrow();
+    const mixedCase = 'Buongiorno, sono ASSISTENTE VOCALE AUTOMATICO per AutoRoma.';
+    expect(() => verifyComplianceOrThrow(systemPrompt, mixedCase)).not.toThrow();
   });
 
   it('ComplianceVerificationError has the correct name', () => {

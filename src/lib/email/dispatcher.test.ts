@@ -28,9 +28,11 @@ vi.mock('@/lib/services/weekly-summary', () => ({
     topCampaigns: [],
     alerts: [],
   }),
-  getWeeklySummaryRecipients: vi.fn().mockResolvedValue([
-    { userId: 'user-1', email: 'owner@example.com', fullName: 'Owner', locale: 'it' },
-  ]),
+  getWeeklySummaryRecipients: vi
+    .fn()
+    .mockResolvedValue([
+      { userId: 'user-1', email: 'owner@example.com', fullName: 'Owner', locale: 'it' },
+    ]),
 }));
 
 // Mock DB context to avoid real DB connections
@@ -52,7 +54,9 @@ const mockQueryChain = {
 
 // Self-referential chain
 Object.keys(mockQueryChain).forEach((key) => {
-  (mockQueryChain as Record<string, ReturnType<typeof vi.fn>>)[key]?.mockReturnValue(mockQueryChain);
+  (mockQueryChain as Record<string, ReturnType<typeof vi.fn>>)[key]?.mockReturnValue(
+    mockQueryChain,
+  );
 });
 
 vi.mock('@/lib/email/templates/member-invite', () => ({

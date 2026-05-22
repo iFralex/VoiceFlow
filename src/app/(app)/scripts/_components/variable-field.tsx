@@ -52,17 +52,15 @@ export function VariableField({
   const label = (
     <Label htmlFor={`field-${fieldKey}`} className="flex items-center gap-1">
       {fieldKey.replace(/_/g, ' ')}
-      {!isRequired && (
-        <span className="text-xs text-muted-foreground">{t('optional_label')}</span>
-      )}
+      {!isRequired && <span className="text-muted-foreground text-xs">{t('optional_label')}</span>}
     </Label>
   );
 
   const hint = prop.description ? (
-    <p className="text-xs text-muted-foreground">{prop.description}</p>
+    <p className="text-muted-foreground text-xs">{prop.description}</p>
   ) : null;
 
-  const errorEl = error ? <p className="text-xs text-destructive">{error}</p> : null;
+  const errorEl = error ? <p className="text-destructive text-xs">{error}</p> : null;
 
   // Array type: repeatable rows
   if (prop.type === 'array') {
@@ -99,12 +97,7 @@ export function VariableField({
             )}
           </div>
         ))}
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => onChange([...arr, ''])}
-        >
+        <Button type="button" variant="outline" size="sm" onClick={() => onChange([...arr, ''])}>
           {t('add_slot')}
         </Button>
         {errorEl}
@@ -118,10 +111,7 @@ export function VariableField({
       <div className="space-y-2">
         {label}
         {hint}
-        <Select
-          value={typeof value === 'string' ? value : ''}
-          onValueChange={(v) => onChange(v)}
-        >
+        <Select value={typeof value === 'string' ? value : ''} onValueChange={(v) => onChange(v)}>
           <SelectTrigger id={`field-${fieldKey}`}>
             <SelectValue placeholder="—" />
           </SelectTrigger>

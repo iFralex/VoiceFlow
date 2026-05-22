@@ -22,6 +22,7 @@ Covers DNS configuration for the sending domain used by VoiceFlow transactional 
 Add the following records to the domain's DNS zone. Exact values are shown in the Resend dashboard.
 
 **SPF (TXT record)**
+
 ```
 Name:  @  (or blank, represents root domain)
 Type:  TXT
@@ -30,24 +31,29 @@ TTL:   3600
 ```
 
 **DKIM (CNAME records — Resend provides 3)**
+
 ```
 Name:  resend._domainkey
 Type:  CNAME
 Value: <value from Resend dashboard>
 TTL:   3600
 ```
+
 Repeat for the other two DKIM records Resend provides.
 
 **DMARC (TXT record)**
+
 ```
 Name:  _dmarc
 Type:  TXT
 Value: v=DMARC1; p=quarantine; rua=mailto:dmarc-reports@voiceflow.it; adkim=s; aspf=s
 TTL:   3600
 ```
+
 Adjust `rua` to a monitored mailbox that receives DMARC aggregate reports.
 
 **Return-Path (MX record for bounce handling — optional but recommended)**
+
 ```
 Name:  bounces
 Type:  MX
@@ -73,6 +79,7 @@ EMAIL_REPLY_TO=support@voiceflow.it   # optional
 ### 5. Test
 
 Send a test email from the Resend dashboard or via the API:
+
 ```bash
 curl -X POST 'https://api.resend.com/emails' \
   -H 'Authorization: Bearer re_xxxxxxxxxxxx' \

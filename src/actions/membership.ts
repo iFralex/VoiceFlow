@@ -4,11 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 
 import { getAuthContext } from '@/lib/auth/context';
-import {
-  inviteMember,
-  removeMember,
-  updateMemberRole,
-} from '@/lib/services/memberships';
+import { inviteMember, removeMember, updateMemberRole } from '@/lib/services/memberships';
 import type { ActionResult } from '@/lib/utils/action-toast';
 import type { MemberRole } from '@/types';
 
@@ -88,4 +84,3 @@ export async function removeMemberAction(input: { membershipId: string }): Promi
     return { ok: false, message };
   }
 }
-

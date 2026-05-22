@@ -1,14 +1,7 @@
 import { and, desc, eq, isNotNull } from 'drizzle-orm';
 
 import { withOrgContext } from '@/lib/db/context';
-import {
-  appointments,
-  calls,
-  campaignStats,
-  campaigns,
-  contacts,
-  scripts,
-} from '@/lib/db/schema';
+import { appointments, calls, campaignStats, campaigns, contacts, scripts } from '@/lib/db/schema';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -86,12 +79,7 @@ export async function getCampaignPrintReport(
     const [statsRow] = await tx
       .select()
       .from(campaignStats)
-      .where(
-        and(
-          eq(campaignStats.campaign_id, campaignId),
-          eq(campaignStats.org_id, orgId),
-        ),
-      );
+      .where(and(eq(campaignStats.campaign_id, campaignId), eq(campaignStats.org_id, orgId)));
 
     const apptRows = await tx
       .select({

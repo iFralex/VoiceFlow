@@ -115,10 +115,7 @@ function makeRequest(
  *  1. webhookEvents insert with onConflictDoNothing → returning
  *  2. authSignins direct insert (optional, defaults to no-op)
  */
-function setupInsertSequence(
-  webhookResult: unknown[],
-  authSigninResult: unknown[] = [],
-): void {
+function setupInsertSequence(webhookResult: unknown[], authSigninResult: unknown[] = []): void {
   mockInsert
     .mockReturnValueOnce({
       values: vi.fn(() => ({
@@ -156,9 +153,8 @@ describe('POST /api/webhooks/supabase-auth', () => {
   beforeEach(() => {
     vi.resetAllMocks();
     // Re-establish withSystemContext implementation after reset clears it
-    mockWithSystemContext.mockImplementation(
-      async (fn: (tx: unknown) => Promise<unknown>) =>
-        fn({ insert: mockInsert, select: mockSelect }),
+    mockWithSystemContext.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) =>
+      fn({ insert: mockInsert, select: mockSelect }),
     );
   });
 

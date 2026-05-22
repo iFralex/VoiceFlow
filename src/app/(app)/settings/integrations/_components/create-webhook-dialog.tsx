@@ -79,7 +79,13 @@ export function CreateWebhookDialog() {
   }
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose(); else setOpen(true); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        if (!v) handleClose();
+        else setOpen(true);
+      }}
+    >
       <DialogTrigger asChild>
         <Button size="sm">{t('create_webhook')}</Button>
       </DialogTrigger>
@@ -92,9 +98,9 @@ export function CreateWebhookDialog() {
 
         {secret ? (
           <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">{t('webhook_secret_description')}</p>
-            <div className="flex items-center gap-2 rounded-md border bg-muted px-3 py-2">
-              <code className="flex-1 break-all text-xs">{secret}</code>
+            <p className="text-muted-foreground text-sm">{t('webhook_secret_description')}</p>
+            <div className="bg-muted flex items-center gap-2 rounded-md border px-3 py-2">
+              <code className="flex-1 text-xs break-all">{secret}</code>
               <Button
                 type="button"
                 variant="ghost"
@@ -119,11 +125,7 @@ export function CreateWebhookDialog() {
                   <FormItem>
                     <FormLabel>{t('url_label')}</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder={t('url_placeholder')}
-                        autoFocus
-                        {...field}
-                      />
+                      <Input placeholder={t('url_placeholder')} autoFocus {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -170,12 +172,7 @@ export function CreateWebhookDialog() {
               />
 
               <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleClose}
-                  disabled={isPending}
-                >
+                <Button type="button" variant="outline" onClick={handleClose} disabled={isPending}>
                   {tc('cancel')}
                 </Button>
                 <Button type="submit" disabled={isPending}>

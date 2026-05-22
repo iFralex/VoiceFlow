@@ -2,14 +2,7 @@ import { and, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm';
 
 import { recordAudit } from '@/lib/db/audit';
 import { type DbTx, withOrgContext, withSystemContext } from '@/lib/db/context';
-import {
-  appointments,
-  calls,
-  campaigns,
-  memberships,
-  organizations,
-  users,
-} from '@/lib/db/schema';
+import { appointments, calls, campaigns, memberships, organizations, users } from '@/lib/db/schema';
 import { sendEmail } from '@/lib/email';
 import { hasRecentEmailSentForRef } from '@/lib/email/idempotency';
 import {
@@ -403,20 +396,13 @@ async function fetchActiveOrgs(range: WeeklySummaryRange): Promise<ActiveOrgRow[
     const rows = await tx
       .select({ id: organizations.id, name: organizations.name })
       .from(organizations)
-      .where(
-        and(
-          inArray(organizations.id, ids),
-          sql`${organizations.deleted_at} IS NULL`,
-        ),
-      )
+      .where(and(inArray(organizations.id, ids), sql`${organizations.deleted_at} IS NULL`))
       .orderBy(organizations.id);
     return rows;
   });
 }
 
-export async function getWeeklySummaryRecipients(
-  orgId: string,
-): Promise<WeeklySummaryRecipient[]> {
+export async function getWeeklySummaryRecipients(orgId: string): Promise<WeeklySummaryRecipient[]> {
   return withSystemContext(async (tx) => {
     const rows = await tx
       .select({
@@ -633,10 +619,7 @@ interface RateLimiter {
   acquire(): Promise<void>;
 }
 
-function createRateLimiter(
-  perSecond: number,
-  sleep: (ms: number) => Promise<void>,
-): RateLimiter {
+function createRateLimiter(perSecond: number, sleep: (ms: number) => Promise<void>): RateLimiter {
   if (perSecond <= 0) {
     return { acquire: async () => undefined };
   }

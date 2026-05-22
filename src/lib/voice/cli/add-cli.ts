@@ -18,8 +18,7 @@ const PROVIDERS = phoneProviderEnum.enumValues;
 type PhoneProvider = (typeof PROVIDERS)[number];
 
 const E164_REGEX = /^\+\d{8,15}$/;
-const UUID_REGEX =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export interface AddCliInput {
   e164: string;
@@ -68,9 +67,7 @@ export function parseAddCliArgs(argv: readonly string[]): AddCliInput {
 
   const e164 = required(flags, '--e164');
   if (!E164_REGEX.test(e164)) {
-    throw new AddCliArgsError(
-      `--e164 must be E.164 format (e.g. "+390212345678"); got "${e164}"`,
-    );
+    throw new AddCliArgsError(`--e164 must be E.164 format (e.g. "+390212345678"); got "${e164}"`);
   }
 
   const providerRaw = required(flags, '--provider');
@@ -97,9 +94,7 @@ export function parseAddCliArgs(argv: readonly string[]): AddCliInput {
   let orgId: string | null = null;
   if (orgIdRaw && orgIdRaw.trim() !== '') {
     if (!UUID_REGEX.test(orgIdRaw.trim())) {
-      throw new AddCliArgsError(
-        `--org-id must be a UUID; got "${orgIdRaw}"`,
-      );
+      throw new AddCliArgsError(`--org-id must be a UUID; got "${orgIdRaw}"`);
     }
     orgId = orgIdRaw.trim().toLowerCase();
   }
@@ -116,10 +111,7 @@ export function parseAddCliArgs(argv: readonly string[]): AddCliInput {
  * migrate) instead — silently overwriting an existing CLI's metadata is risky
  * (it would also reset state the watchdog cares about).
  */
-export async function addCli(
-  input: AddCliInput,
-  tx?: DbTx,
-): Promise<InsertedCli> {
+export async function addCli(input: AddCliInput, tx?: DbTx): Promise<InsertedCli> {
   const work = async (t: DbTx): Promise<InsertedCli> => {
     const [row] = await t
       .insert(phoneNumbers)

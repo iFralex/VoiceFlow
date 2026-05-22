@@ -22,9 +22,7 @@ export const cliCooldownHistory = pgTable(
     spam_score: numeric('spam_score').notNull(),
     reason: text('reason').notNull().default('spam_score_exceeded'),
   },
-  (t) => [
-    index('cli_cooldown_history_phone_started_idx').on(t.phone_number_id, t.started_at),
-  ],
+  (t) => [index('cli_cooldown_history_phone_started_idx').on(t.phone_number_id, t.started_at)],
 );
 
 export type CliCooldownHistoryEntry = typeof cliCooldownHistory.$inferSelect;

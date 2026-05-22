@@ -67,10 +67,7 @@ vi.mock('@/lib/supabase/realtime', () => ({
 }));
 
 // Import after mocks so the module picks them up.
-import {
-  ActiveCampaignsLive,
-  __test__,
-} from './active-campaigns-live';
+import { ActiveCampaignsLive, __test__ } from './active-campaigns-live';
 
 // ─── Test data ────────────────────────────────────────────────────────────────
 
@@ -191,18 +188,14 @@ describe('applyCampaignPayload', () => {
 
 describe('ActiveCampaignsLive', () => {
   it('renders the initial campaigns', () => {
-    render(
-      <ActiveCampaignsLive orgId="org-1" initialCampaigns={[baseCampaign]} />,
-    );
+    render(<ActiveCampaignsLive orgId="org-1" initialCampaigns={[baseCampaign]} />);
     expect(screen.getByText('Riattivazione Lead')).toBeInTheDocument();
     // 25 of 100 = 25%
     expect(screen.getByText('25%')).toBeInTheDocument();
   });
 
   it('updates the progress bar when a campaign_stats payload arrives', () => {
-    render(
-      <ActiveCampaignsLive orgId="org-1" initialCampaigns={[baseCampaign]} />,
-    );
+    render(<ActiveCampaignsLive orgId="org-1" initialCampaigns={[baseCampaign]} />);
 
     expect(captures.campaign_stats).not.toBeNull();
     act(() => {
@@ -226,9 +219,7 @@ describe('ActiveCampaignsLive', () => {
   });
 
   it('does NOT call router.refresh on the initial SUBSCRIBED status', () => {
-    render(
-      <ActiveCampaignsLive orgId="org-1" initialCampaigns={[baseCampaign]} />,
-    );
+    render(<ActiveCampaignsLive orgId="org-1" initialCampaigns={[baseCampaign]} />);
     act(() => {
       captures.campaign_stats!.setStatus('SUBSCRIBED');
     });
@@ -236,9 +227,7 @@ describe('ActiveCampaignsLive', () => {
   });
 
   it('forces a server-side revalidate after the channel reconnects', () => {
-    render(
-      <ActiveCampaignsLive orgId="org-1" initialCampaigns={[baseCampaign]} />,
-    );
+    render(<ActiveCampaignsLive orgId="org-1" initialCampaigns={[baseCampaign]} />);
 
     // Channel drops, then recovers.
     act(() => {
@@ -253,9 +242,7 @@ describe('ActiveCampaignsLive', () => {
   });
 
   it('calls router.refresh when the browser fires the online event', () => {
-    render(
-      <ActiveCampaignsLive orgId="org-1" initialCampaigns={[baseCampaign]} />,
-    );
+    render(<ActiveCampaignsLive orgId="org-1" initialCampaigns={[baseCampaign]} />);
     act(() => {
       window.dispatchEvent(new Event('online'));
     });
@@ -263,9 +250,7 @@ describe('ActiveCampaignsLive', () => {
   });
 
   it('drops a campaign whose status flips to terminal', () => {
-    render(
-      <ActiveCampaignsLive orgId="org-1" initialCampaigns={[baseCampaign]} />,
-    );
+    render(<ActiveCampaignsLive orgId="org-1" initialCampaigns={[baseCampaign]} />);
     act(() => {
       captures.campaigns!.emit({
         eventType: 'UPDATE',

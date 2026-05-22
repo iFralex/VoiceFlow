@@ -126,7 +126,11 @@ async function resolveSubject(
   identifier: string,
 ): Promise<ResolvedSubject | null> {
   const lookupConditions = [
-    and(eq(contacts.org_id, orgId), eq(contacts.phone_e164, identifier), isNull(contacts.deleted_at)),
+    and(
+      eq(contacts.org_id, orgId),
+      eq(contacts.phone_e164, identifier),
+      isNull(contacts.deleted_at),
+    ),
   ];
   if (looksLikeEmail(identifier)) {
     lookupConditions.push(
@@ -213,9 +217,7 @@ async function purgeStorageObjects(
  * @throws {SubjectNotFoundError} if no live contact in `orgId` matches.
  * @throws {SubjectErasureConfirmationError} if `confirmPhone` does not match.
  */
-export async function eraseSubject(
-  params: EraseSubjectParams,
-): Promise<EraseSubjectResult> {
+export async function eraseSubject(params: EraseSubjectParams): Promise<EraseSubjectResult> {
   const { orgId, byUserId, identifier, reason, confirmPhone } = params;
 
   const erasedAt = new Date();

@@ -20,10 +20,7 @@ export function parsePeriod(raw: string | string[] | undefined): DashboardPeriod
   }
 }
 
-export function resolvePeriodRange(
-  period: DashboardPeriod,
-  now: Date = new Date(),
-): PeriodRange {
+export function resolvePeriodRange(period: DashboardPeriod, now: Date = new Date()): PeriodRange {
   const end = new Date(now);
   const start = new Date(now);
   start.setHours(0, 0, 0, 0);

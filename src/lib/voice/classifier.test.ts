@@ -18,7 +18,12 @@ import type { TranscriptSegment } from './types';
 const SEGMENTS: TranscriptSegment[] = [
   { speaker: 'agent', text: 'Buongiorno, parlo con Mario Rossi?', startMs: 0, endMs: 2000 },
   { speaker: 'caller', text: 'Sì, sono io.', startMs: 2100, endMs: 3500 },
-  { speaker: 'agent', text: 'La chiamo da parte della concessionaria ABC.', startMs: 3600, endMs: 6000 },
+  {
+    speaker: 'agent',
+    text: 'La chiamo da parte della concessionaria ABC.',
+    startMs: 3600,
+    endMs: 6000,
+  },
   { speaker: 'caller', text: 'Grazie, ma non sono interessato.', startMs: 6100, endMs: 8000 },
 ];
 
@@ -53,7 +58,11 @@ describe('classifyTranscript', () => {
   });
 
   it('returns the classification from OpenAI', async () => {
-    const apiResult = { outcome: 'not_interested', confidence: 0.92, reasoning: 'Caller explicitly said not interested.' };
+    const apiResult = {
+      outcome: 'not_interested',
+      confidence: 0.92,
+      reasoning: 'Caller explicitly said not interested.',
+    };
     vi.mocked(fetch).mockResolvedValue({
       ok: true,
       json: async () => makeOpenAIResponse(apiResult),
@@ -67,7 +76,11 @@ describe('classifyTranscript', () => {
   });
 
   it('sends request to correct OpenAI endpoint', async () => {
-    const apiResult = { outcome: 'interested', confidence: 0.8, reasoning: 'Caller asked for more info.' };
+    const apiResult = {
+      outcome: 'interested',
+      confidence: 0.8,
+      reasoning: 'Caller asked for more info.',
+    };
     vi.mocked(fetch).mockResolvedValue({
       ok: true,
       json: async () => makeOpenAIResponse(apiResult),
@@ -89,7 +102,8 @@ describe('classifyTranscript', () => {
   it('includes transcript text in the request body', async () => {
     vi.mocked(fetch).mockResolvedValue({
       ok: true,
-      json: async () => makeOpenAIResponse({ outcome: 'not_interested', confidence: 0.9, reasoning: 'test' }),
+      json: async () =>
+        makeOpenAIResponse({ outcome: 'not_interested', confidence: 0.9, reasoning: 'test' }),
     } as Response);
 
     await classifyTranscript(SEGMENTS);
@@ -105,7 +119,8 @@ describe('classifyTranscript', () => {
   it('uses gpt-4o-mini model', async () => {
     vi.mocked(fetch).mockResolvedValue({
       ok: true,
-      json: async () => makeOpenAIResponse({ outcome: 'not_interested', confidence: 0.8, reasoning: 'test' }),
+      json: async () =>
+        makeOpenAIResponse({ outcome: 'not_interested', confidence: 0.8, reasoning: 'test' }),
     } as Response);
 
     await classifyTranscript(SEGMENTS);
@@ -118,7 +133,12 @@ describe('classifyTranscript', () => {
   it('uses structured output response_format', async () => {
     vi.mocked(fetch).mockResolvedValue({
       ok: true,
-      json: async () => makeOpenAIResponse({ outcome: 'interested', confidence: 0.75, reasoning: 'Caller curious.' }),
+      json: async () =>
+        makeOpenAIResponse({
+          outcome: 'interested',
+          confidence: 0.75,
+          reasoning: 'Caller curious.',
+        }),
     } as Response);
 
     await classifyTranscript(SEGMENTS);
@@ -134,7 +154,8 @@ describe('classifyTranscript', () => {
   it('handles empty transcript gracefully', async () => {
     vi.mocked(fetch).mockResolvedValue({
       ok: true,
-      json: async () => makeOpenAIResponse({ outcome: 'voicemail_left', confidence: 0.6, reasoning: 'No speech.' }),
+      json: async () =>
+        makeOpenAIResponse({ outcome: 'voicemail_left', confidence: 0.6, reasoning: 'No speech.' }),
     } as Response);
 
     const result = await classifyTranscript([]);
@@ -149,7 +170,12 @@ describe('classifyTranscript', () => {
   it('clamps confidence above 1.0 to 1.0', async () => {
     vi.mocked(fetch).mockResolvedValue({
       ok: true,
-      json: async () => makeOpenAIResponse({ outcome: 'not_interested', confidence: 1.5, reasoning: 'over-confident' }),
+      json: async () =>
+        makeOpenAIResponse({
+          outcome: 'not_interested',
+          confidence: 1.5,
+          reasoning: 'over-confident',
+        }),
     } as Response);
 
     const result = await classifyTranscript(SEGMENTS);
@@ -159,7 +185,8 @@ describe('classifyTranscript', () => {
   it('clamps confidence below 0.0 to 0.0', async () => {
     vi.mocked(fetch).mockResolvedValue({
       ok: true,
-      json: async () => makeOpenAIResponse({ outcome: 'not_interested', confidence: -0.3, reasoning: 'negative' }),
+      json: async () =>
+        makeOpenAIResponse({ outcome: 'not_interested', confidence: -0.3, reasoning: 'negative' }),
     } as Response);
 
     const result = await classifyTranscript(SEGMENTS);
@@ -182,7 +209,9 @@ describe('classifyTranscript', () => {
       json: async () => ({ choices: [{ message: { content: null } }] }),
     } as Response);
 
-    await expect(classifyTranscript(SEGMENTS)).rejects.toThrow('Empty response content from OpenAI');
+    await expect(classifyTranscript(SEGMENTS)).rejects.toThrow(
+      'Empty response content from OpenAI',
+    );
   });
 
   it('throws when OPENAI_API_KEY is not configured', async () => {
@@ -192,7 +221,9 @@ describe('classifyTranscript', () => {
     (env as Record<string, unknown>)['OPENAI_API_KEY'] = undefined;
 
     try {
-      await expect(classifyTranscript(SEGMENTS)).rejects.toThrow('OPENAI_API_KEY is not configured');
+      await expect(classifyTranscript(SEGMENTS)).rejects.toThrow(
+        'OPENAI_API_KEY is not configured',
+      );
     } finally {
       (env as Record<string, unknown>)['OPENAI_API_KEY'] = saved;
     }

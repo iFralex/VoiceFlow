@@ -239,9 +239,7 @@ describe('RetellAdapter', () => {
           {
             role: 'agent',
             content: 'Ciao!',
-            words: [
-              { word: 'Ciao!', start: 1.0, end: 2.0 },
-            ],
+            words: [{ word: 'Ciao!', start: 1.0, end: 2.0 }],
           },
           {
             role: 'user',
@@ -287,9 +285,7 @@ describe('RetellAdapter', () => {
       const callResponse = {
         call_id: TEST_CALL_ID,
         call_status: 'ended',
-        transcript_object: [
-          { role: 'agent', content: 'Buongiorno.', words: [] },
-        ],
+        transcript_object: [{ role: 'agent', content: 'Buongiorno.', words: [] }],
       };
       vi.stubGlobal(
         'fetch',

@@ -42,7 +42,9 @@ describe('DataTableEmpty', () => {
     const el = container.querySelector('[data-slot="data-table-empty"]')!;
     expect(el).toBeInTheDocument();
     expect(within(el as HTMLElement).getByText('Nessun risultato')).toBeInTheDocument();
-    expect(within(el as HTMLElement).getByText('Non ci sono dati da mostrare.')).toBeInTheDocument();
+    expect(
+      within(el as HTMLElement).getByText('Non ci sono dati da mostrare.'),
+    ).toBeInTheDocument();
   });
 
   it('renders custom title and description', () => {
@@ -66,10 +68,7 @@ describe('DataTableEmpty', () => {
     const { container } = render(
       <table>
         <tbody>
-          <DataTableEmpty
-            columnCount={3}
-            action={<button>Aggiungi</button>}
-          />
+          <DataTableEmpty columnCount={3} action={<button>Aggiungi</button>} />
         </tbody>
       </table>,
     );
@@ -191,9 +190,7 @@ describe('DataTable', () => {
   });
 
   it('renders loading state when isLoading=true', () => {
-    const { container } = render(
-      <DataTable columns={COLUMNS} data={[]} isLoading />,
-    );
+    const { container } = render(<DataTable columns={COLUMNS} data={[]} isLoading />);
     const skeletons = container.querySelectorAll('[data-slot="data-table-skeleton-row"]');
     expect(skeletons.length).toBeGreaterThan(0);
     expect(container.querySelector('[data-slot="data-table-empty"]')).not.toBeInTheDocument();
@@ -236,16 +233,14 @@ describe('DataTable', () => {
     const { container } = render(
       <DataTable columns={COLUMNS} data={DATA} showPagination={false} />,
     );
-    expect(within(container as HTMLElement).queryByLabelText('Prima pagina')).not.toBeInTheDocument();
+    expect(
+      within(container as HTMLElement).queryByLabelText('Prima pagina'),
+    ).not.toBeInTheDocument();
   });
 
   it('renders toolbar slot', () => {
     const { container } = render(
-      <DataTable
-        columns={COLUMNS}
-        data={DATA}
-        toolbar={<input placeholder="Cerca contatti" />}
-      />,
+      <DataTable columns={COLUMNS} data={DATA} toolbar={<input placeholder="Cerca contatti" />} />,
     );
     expect(
       within(container as HTMLElement).getByPlaceholderText('Cerca contatti'),

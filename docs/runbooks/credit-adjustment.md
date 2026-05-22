@@ -40,10 +40,10 @@ POST /api/admin/credit-adjustment
 
 ### Headers
 
-| Header         | Value                                   |
-|----------------|-----------------------------------------|
-| Content-Type   | application/json                        |
-| x-admin-token  | Value of `INTERNAL_ADMIN_TOKEN` env var |
+| Header        | Value                                   |
+| ------------- | --------------------------------------- |
+| Content-Type  | application/json                        |
+| x-admin-token | Value of `INTERNAL_ADMIN_TOKEN` env var |
 
 ### Body
 
@@ -157,6 +157,7 @@ Ciao [Nome],
 ti scrivo per informarti che abbiamo applicato un aggiustamento manuale al credito del tuo account VoxAuto.
 
 **Dettaglio:**
+
 - Organizzazione: [nome org]
 - Importo: [+€XX.XX / −€XX.XX]
 - Motivazione: [breve spiegazione — es. "credito di cortesia a seguito di un disservizio il 10/05/2026"]
@@ -173,6 +174,7 @@ VoxAuto
 ---
 
 **Notes on timing:**
+
 - Send the communication within **1 business hour** of the adjustment for amounts > €50.
 - For small goodwill credits (< €20), sending by end of day is sufficient.
 - For debits, always send proactively — never wait for the dealer to notice.
@@ -181,9 +183,9 @@ VoxAuto
 
 ## 8. Escalation
 
-| Situation | Action |
-|-----------|--------|
-| Endpoint returns 500 | Check Sentry for the error; do not retry blindly |
+| Situation                               | Action                                                                                                            |
+| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Endpoint returns 500                    | Check Sentry for the error; do not retry blindly                                                                  |
 | Balance still wrong after confirmed 200 | Check `credit_ledger` table directly; call may have applied but response was lost — do NOT retry without checking |
-| Dealer disputes the adjustment | Open a Notion escalation entry; freeze further adjustments until resolved |
-| Amount > €1,000 | Requires written approval from two founders before execution |
+| Dealer disputes the adjustment          | Open a Notion escalation entry; freeze further adjustments until resolved                                         |
+| Amount > €1,000                         | Requires written approval from two founders before execution                                                      |

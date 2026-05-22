@@ -3,10 +3,7 @@
 import { z } from 'zod';
 
 import { getAuthContext, hasCapability } from '@/lib/auth/context';
-import {
-  searchPalette,
-  type PaletteSearchResults,
-} from '@/lib/services/search';
+import { searchPalette, type PaletteSearchResults } from '@/lib/services/search';
 
 const searchSchema = z.object({
   query: z.string().min(1).max(100),

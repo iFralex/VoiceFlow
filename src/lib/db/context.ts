@@ -14,10 +14,7 @@ export type DbTx = Parameters<Parameters<typeof db.transaction>[0]>[0];
  * The GUC is automatically cleared when the transaction ends (committed or
  * rolled back), enforcing per-request org isolation per spec §7.3.
  */
-export async function withOrgContext<T>(
-  orgId: string,
-  fn: (tx: DbTx) => Promise<T>,
-): Promise<T> {
+export async function withOrgContext<T>(orgId: string, fn: (tx: DbTx) => Promise<T>): Promise<T> {
   return db.transaction(async (tx) => {
     await tx.execute(sql`SELECT set_config('app.current_org_id', ${orgId}, true)`);
     return fn(tx);

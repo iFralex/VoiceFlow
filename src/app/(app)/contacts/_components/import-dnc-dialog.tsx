@@ -94,7 +94,7 @@ export function ImportDncDialog() {
               type="file"
               accept=".csv,.txt,text/csv,text/plain"
               onChange={handleFileChange}
-              className="block w-full text-sm text-muted-foreground file:mr-4 file:rounded-md file:border file:border-input file:bg-background file:px-3 file:py-1.5 file:text-sm file:font-medium"
+              className="text-muted-foreground file:border-input file:bg-background block w-full text-sm file:mr-4 file:rounded-md file:border file:px-3 file:py-1.5 file:text-sm file:font-medium"
             />
           </div>
 

@@ -1,7 +1,7 @@
 export const submitSurveyResponseJsonSchema = {
   name: 'submit_survey_response',
   description:
-    'Invoca questo strumento per registrare le risposte del contatto al questionario CSI. Chiamare al termine dell\'intervista con tutte le risposte raccolte.',
+    "Invoca questo strumento per registrare le risposte del contatto al questionario CSI. Chiamare al termine dell'intervista con tutte le risposte raccolte.",
   parameters: {
     $schema: 'http://json-schema.org/draft-07/schema#',
     type: 'object',
@@ -23,7 +23,7 @@ export const submitSurveyResponseJsonSchema = {
         type: 'integer',
         minimum: 1,
         maximum: 10,
-        description: 'Valutazione dell\'esperienza di consegna su scala 1–10 (opzionale)',
+        description: "Valutazione dell'esperienza di consegna su scala 1–10 (opzionale)",
       },
       service_quality_score: {
         type: 'integer',

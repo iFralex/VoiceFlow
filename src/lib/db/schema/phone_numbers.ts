@@ -1,5 +1,15 @@
 import { sql } from 'drizzle-orm';
-import { index, integer, numeric, pgEnum, pgTable, text, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
+import {
+  index,
+  integer,
+  numeric,
+  pgEnum,
+  pgTable,
+  text,
+  timestamp,
+  unique,
+  uuid,
+} from 'drizzle-orm/pg-core';
 
 import { organizations } from './organizations';
 

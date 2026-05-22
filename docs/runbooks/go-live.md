@@ -202,15 +202,15 @@ Goal: formally close the pilot phase and decide on public launch.
 
 ## Escalation Contacts
 
-| Role | Contact | Hours |
-|------|---------|-------|
-| Founder / Platform Owner | See 1Password → Emergency Contacts | 24/7 for CRITICAL |
-| Voice Provider (Vapi) | https://vapi.ai/support | Business hours; status at status.vapi.ai |
-| Voice Provider (Retell) | https://retell.ai/support | Business hours |
-| SBC Provider | See 1Password → SBC Provider | See contract SLA |
-| Supabase | https://supabase.com/dashboard/support | Enterprise plan; 24/7 SLA |
-| Stripe | https://dashboard.stripe.com/support | Business hours; status at status.stripe.com |
-| Resend | https://resend.com/help | Business hours; status at resend.statuspage.io |
+| Role                     | Contact                                | Hours                                          |
+| ------------------------ | -------------------------------------- | ---------------------------------------------- |
+| Founder / Platform Owner | See 1Password → Emergency Contacts     | 24/7 for CRITICAL                              |
+| Voice Provider (Vapi)    | https://vapi.ai/support                | Business hours; status at status.vapi.ai       |
+| Voice Provider (Retell)  | https://retell.ai/support              | Business hours                                 |
+| SBC Provider             | See 1Password → SBC Provider           | See contract SLA                               |
+| Supabase                 | https://supabase.com/dashboard/support | Enterprise plan; 24/7 SLA                      |
+| Stripe                   | https://dashboard.stripe.com/support   | Business hours; status at status.stripe.com    |
+| Resend                   | https://resend.com/help                | Business hours; status at resend.statuspage.io |
 
 ---
 

@@ -39,7 +39,11 @@ export default async function RootLayout({
   >;
 
   return (
-    <html lang={locale} className={`h-full ${inter.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
+    <html
+      lang={locale}
+      className={`h-full ${inter.variable} ${jetbrainsMono.variable}`}
+      suppressHydrationWarning
+    >
       <body className="flex min-h-full flex-col">
         <Providers>
           <NextIntlClientProvider locale={locale} messages={messages}>

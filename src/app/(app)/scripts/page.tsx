@@ -14,8 +14,9 @@ export default async function ScriptsPage() {
 
   const templateCards: TemplateCard[] = TEMPLATE_DEFINITIONS.map((def) => {
     const schema = def.variableSchema as { required?: string[] };
-    const descKey =
-      `template_${def.slug.replace(/-/g, '_')}_desc` as Parameters<typeof tScripts>[0];
+    const descKey = `template_${def.slug.replace(/-/g, '_')}_desc` as Parameters<
+      typeof tScripts
+    >[0];
     return {
       slug: def.slug,
       name: def.name,

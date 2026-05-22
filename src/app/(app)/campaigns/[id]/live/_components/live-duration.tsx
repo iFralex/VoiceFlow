@@ -16,11 +16,13 @@ export function LiveDuration({ startedAtIso }: { startedAtIso: string | null }) 
   }, [startedAtIso]);
 
   if (!startedAtIso) {
-    return <span className="tabular-nums text-muted-foreground">—</span>;
+    return <span className="text-muted-foreground tabular-nums">—</span>;
   }
   const startMs = new Date(startedAtIso).getTime();
   const elapsedSec = Math.max(0, Math.floor((now - startMs) / 1000));
-  const mm = Math.floor(elapsedSec / 60).toString().padStart(2, '0');
+  const mm = Math.floor(elapsedSec / 60)
+    .toString()
+    .padStart(2, '0');
   const ss = (elapsedSec % 60).toString().padStart(2, '0');
   return <span className="tabular-nums">{`${mm}:${ss}`}</span>;
 }

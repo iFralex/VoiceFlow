@@ -9,10 +9,7 @@ export function KpiCardSkeleton({ className }: { className?: string }) {
   return (
     <div
       data-slot="kpi-card-skeleton"
-      className={cn(
-        'flex flex-col gap-2 rounded-lg border border-border bg-card p-4',
-        className,
-      )}
+      className={cn('border-border bg-card flex flex-col gap-2 rounded-lg border p-4', className)}
     >
       <Skeleton className="h-3 w-24" />
       <Skeleton className="h-7 w-16" />
@@ -22,13 +19,7 @@ export function KpiCardSkeleton({ className }: { className?: string }) {
 }
 
 /** A row of KPI cards (default 4). */
-export function KpiRowSkeleton({
-  count = 4,
-  className,
-}: {
-  count?: number;
-  className?: string;
-}) {
+export function KpiRowSkeleton({ count = 4, className }: { count?: number; className?: string }) {
   return (
     <div
       data-slot="kpi-row-skeleton"
@@ -50,10 +41,7 @@ export function ListPageSkeleton({
   className?: string;
 }) {
   return (
-    <div
-      data-slot="list-page-skeleton"
-      className={cn('flex flex-col gap-4', className)}
-    >
+    <div data-slot="list-page-skeleton" className={cn('flex flex-col gap-4', className)}>
       {/* toolbar */}
       <div className="flex items-center gap-2">
         <Skeleton className="h-8 w-56" />
@@ -61,11 +49,11 @@ export function ListPageSkeleton({
         <Skeleton className="h-8 w-24" />
       </div>
       {/* rows */}
-      <div className="rounded-lg border border-border">
+      <div className="border-border rounded-lg border">
         {Array.from({ length: rowCount }).map((_, i) => (
           <div
             key={i}
-            className="flex items-center gap-3 border-b border-border px-4 py-3 last:border-b-0"
+            className="border-border flex items-center gap-3 border-b px-4 py-3 last:border-b-0"
           >
             <Skeleton className="h-4 w-4 shrink-0" />
             <Skeleton className="h-4 w-40" />
@@ -89,10 +77,7 @@ export function ListPageSkeleton({
 /** Skeleton for a detail/show page: header + body sections. */
 export function DetailPageSkeleton({ className }: { className?: string }) {
   return (
-    <div
-      data-slot="detail-page-skeleton"
-      className={cn('flex flex-col gap-6', className)}
-    >
+    <div data-slot="detail-page-skeleton" className={cn('flex flex-col gap-6', className)}>
       {/* page header */}
       <div className="flex items-start gap-4">
         <div className="flex flex-col gap-2">
@@ -106,13 +91,13 @@ export function DetailPageSkeleton({ className }: { className?: string }) {
       </div>
       {/* body cards */}
       <div className="grid gap-4 lg:grid-cols-3">
-        <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4 lg:col-span-2">
+        <div className="border-border bg-card flex flex-col gap-3 rounded-lg border p-4 lg:col-span-2">
           <Skeleton className="h-4 w-32" />
           <Skeleton className="h-4 w-full" />
           <Skeleton className="h-4 w-5/6" />
           <Skeleton className="h-4 w-4/6" />
         </div>
-        <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
+        <div className="border-border bg-card flex flex-col gap-3 rounded-lg border p-4">
           <Skeleton className="h-4 w-24" />
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="flex items-center justify-between">

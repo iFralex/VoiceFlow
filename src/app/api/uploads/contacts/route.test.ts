@@ -4,24 +4,20 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 // Hoisted mocks
 // ---------------------------------------------------------------------------
 
-const {
-  mockGetAuthContext,
-  mockHasCapability,
-  mockCreateSignedUploadUrl,
-  mockCreateContactList,
-} = vi.hoisted(() => {
-  const mockGetAuthContext = vi.fn();
-  const mockHasCapability = vi.fn();
-  const mockCreateSignedUploadUrl = vi.fn();
-  const mockCreateContactList = vi.fn();
+const { mockGetAuthContext, mockHasCapability, mockCreateSignedUploadUrl, mockCreateContactList } =
+  vi.hoisted(() => {
+    const mockGetAuthContext = vi.fn();
+    const mockHasCapability = vi.fn();
+    const mockCreateSignedUploadUrl = vi.fn();
+    const mockCreateContactList = vi.fn();
 
-  return {
-    mockGetAuthContext,
-    mockHasCapability,
-    mockCreateSignedUploadUrl,
-    mockCreateContactList,
-  };
-});
+    return {
+      mockGetAuthContext,
+      mockHasCapability,
+      mockCreateSignedUploadUrl,
+      mockCreateContactList,
+    };
+  });
 
 vi.mock('@/lib/auth/context', () => ({
   getAuthContext: mockGetAuthContext,
@@ -71,8 +67,17 @@ const VALID_BODY = {
 };
 
 const MOCK_AUTH = { userId: USER_ID, orgId: ORG_ID, role: 'operator' as const };
-const MOCK_SIGNED = { signedUrl: 'https://storage.example.com/signed-url', token: 'tok123', path: 'path' };
-const MOCK_LIST = { id: LIST_ID, name: 'contacts.csv', source: 'csv-upload', import_status: 'pending' };
+const MOCK_SIGNED = {
+  signedUrl: 'https://storage.example.com/signed-url',
+  token: 'tok123',
+  path: 'path',
+};
+const MOCK_LIST = {
+  id: LIST_ID,
+  name: 'contacts.csv',
+  source: 'csv-upload',
+  import_status: 'pending',
+};
 
 // ---------------------------------------------------------------------------
 // Tests

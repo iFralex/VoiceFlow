@@ -82,9 +82,7 @@ describe('GET /api/cron/cli-daily-reset', () => {
   });
 
   it('returns 200 with reset count on a valid request', async () => {
-    mockUpdate.mockImplementationOnce(
-      makeUpdateChain([{ id: 'p1' }, { id: 'p2' }, { id: 'p3' }]),
-    );
+    mockUpdate.mockImplementationOnce(makeUpdateChain([{ id: 'p1' }, { id: 'p2' }, { id: 'p3' }]));
 
     const res = await GET(makeRequest(CRON_SECRET));
     expect(res.status).toBe(200);

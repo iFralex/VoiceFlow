@@ -104,7 +104,15 @@
    (phone numbers, timestamps, currency, codes)
    ───────────────────────────────────────────── */
 @utility font-mono-tabular {
-  font-family: var(--font-mono, ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace);
+  font-family: var(
+    --font-mono,
+    ui-monospace,
+    'Cascadia Code',
+    'Source Code Pro',
+    Menlo,
+    Consolas,
+    monospace
+  );
   font-feature-settings: 'tnum';
   font-variant-numeric: tabular-nums;
 }
@@ -134,12 +142,36 @@
   }
 
   /* Tight typography scale for data-dense layouts */
-  h1 { font-size: 1.5rem;   line-height: 2rem;    font-weight: 700; }
-  h2 { font-size: 1.25rem;  line-height: 1.75rem; font-weight: 600; }
-  h3 { font-size: 1.125rem; line-height: 1.75rem; font-weight: 600; }
-  h4 { font-size: 1rem;     line-height: 1.5rem;  font-weight: 600; }
-  h5 { font-size: 0.875rem; line-height: 1.25rem; font-weight: 600; }
-  h6 { font-size: 0.75rem;  line-height: 1rem;    font-weight: 600; }
+  h1 {
+    font-size: 1.5rem;
+    line-height: 2rem;
+    font-weight: 700;
+  }
+  h2 {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+    font-weight: 600;
+  }
+  h3 {
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+    font-weight: 600;
+  }
+  h4 {
+    font-size: 1rem;
+    line-height: 1.5rem;
+    font-weight: 600;
+  }
+  h5 {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-weight: 600;
+  }
+  h6 {
+    font-size: 0.75rem;
+    line-height: 1rem;
+    font-weight: 600;
+  }
 
   /* Default anchor style */
   a {
@@ -197,4 +229,3 @@
     margin: 1.5cm;
   }
 }
-

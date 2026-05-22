@@ -60,10 +60,18 @@ beforeEach(() => {
 describe('ComplianceSettingsClient', () => {
   it('renders the page title and section headings', () => {
     render(<ComplianceSettingsClient canErase={true} initialHistory={[]} />);
-    expect(screen.getByRole('heading', { level: 1, name: /Compliance e GDPR/i })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 2, name: /Diritti dell'interessato/i })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 2, name: /Storico richieste GDPR/i })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 2, name: /^Documentazione$/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { level: 1, name: /Compliance e GDPR/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { level: 2, name: /Diritti dell'interessato/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { level: 2, name: /Storico richieste GDPR/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { level: 2, name: /^Documentazione$/i }),
+    ).toBeInTheDocument();
   });
 
   it('hides the erase button when the role lacks compliance.erase', () => {
@@ -145,7 +153,9 @@ describe('ComplianceSettingsClient', () => {
     const eraseBtn = screen.getByRole('button', { name: /Cancella dati/i });
     await user.click(eraseBtn);
 
-    expect(await screen.findByRole('heading', { name: /Conferma cancellazione GDPR/i })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: /Conferma cancellazione GDPR/i }),
+    ).toBeInTheDocument();
   });
 
   it('renders documentation links pointing at /legal/*', () => {

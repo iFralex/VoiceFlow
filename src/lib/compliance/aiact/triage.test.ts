@@ -135,8 +135,8 @@ describe('listDisclosureFailures', () => {
   });
 
   it('returns mapped rows with default triage status pending when not yet set', async () => {
-    mockWithSystemContext.mockImplementationOnce(
-      async (fn: (tx: unknown) => Promise<unknown>) => fn(buildListTx([makeRow()])),
+    mockWithSystemContext.mockImplementationOnce(async (fn: (tx: unknown) => Promise<unknown>) =>
+      fn(buildListTx([makeRow()])),
     );
 
     const rows = await listDisclosureFailures();
@@ -156,21 +156,20 @@ describe('listDisclosureFailures', () => {
   });
 
   it('parses existing triage metadata correctly', async () => {
-    mockWithSystemContext.mockImplementationOnce(
-      async (fn: (tx: unknown) => Promise<unknown>) =>
-        fn(
-          buildListTx([
-            makeRow({
-              metadata: {
-                disclosure_verified: false,
-                disclosure_triage_status: 'refunded',
-                disclosure_triage_note: 'Refunded — call abc',
-                disclosure_triaged_at: '2026-05-02T08:30:00.000Z',
-                disclosure_triaged_by: 'founder@voxauto.it',
-              },
-            }),
-          ]),
-        ),
+    mockWithSystemContext.mockImplementationOnce(async (fn: (tx: unknown) => Promise<unknown>) =>
+      fn(
+        buildListTx([
+          makeRow({
+            metadata: {
+              disclosure_verified: false,
+              disclosure_triage_status: 'refunded',
+              disclosure_triage_note: 'Refunded — call abc',
+              disclosure_triaged_at: '2026-05-02T08:30:00.000Z',
+              disclosure_triaged_by: 'founder@voxauto.it',
+            },
+          }),
+        ]),
+      ),
     );
 
     const [row] = await listDisclosureFailures();
@@ -183,18 +182,17 @@ describe('listDisclosureFailures', () => {
   });
 
   it('falls back to pending when disclosure_triage_status is malformed', async () => {
-    mockWithSystemContext.mockImplementationOnce(
-      async (fn: (tx: unknown) => Promise<unknown>) =>
-        fn(
-          buildListTx([
-            makeRow({
-              metadata: {
-                disclosure_verified: false,
-                disclosure_triage_status: 'archived',
-              },
-            }),
-          ]),
-        ),
+    mockWithSystemContext.mockImplementationOnce(async (fn: (tx: unknown) => Promise<unknown>) =>
+      fn(
+        buildListTx([
+          makeRow({
+            metadata: {
+              disclosure_verified: false,
+              disclosure_triage_status: 'archived',
+            },
+          }),
+        ]),
+      ),
     );
 
     const [row] = await listDisclosureFailures();
@@ -204,20 +202,19 @@ describe('listDisclosureFailures', () => {
   it('passes status filter to SQL WHERE and returns only matching rows', async () => {
     // The SQL WHERE clause filters to pending rows only; the mock simulates the
     // database returning just the two matching rows (c1 and c3).
-    mockWithSystemContext.mockImplementationOnce(
-      async (fn: (tx: unknown) => Promise<unknown>) =>
-        fn(
-          buildListTx([
-            makeRow({
-              id: 'c1',
-              metadata: { disclosure_verified: false, disclosure_triage_status: 'pending' },
-            }),
-            makeRow({
-              id: 'c3',
-              metadata: { disclosure_verified: false, disclosure_triage_status: 'pending' },
-            }),
-          ]),
-        ),
+    mockWithSystemContext.mockImplementationOnce(async (fn: (tx: unknown) => Promise<unknown>) =>
+      fn(
+        buildListTx([
+          makeRow({
+            id: 'c1',
+            metadata: { disclosure_verified: false, disclosure_triage_status: 'pending' },
+          }),
+          makeRow({
+            id: 'c3',
+            metadata: { disclosure_verified: false, disclosure_triage_status: 'pending' },
+          }),
+        ]),
+      ),
     );
 
     const rows = await listDisclosureFailures({ status: 'pending' });
@@ -240,16 +237,16 @@ describe('updateDisclosureTriage', () => {
       select: vi.fn(() => ({
         from: vi.fn(() => ({
           where: vi.fn(() => ({
-            limit: vi.fn().mockResolvedValue([
-              { org_id: ORG_ID, metadata: { disclosure_verified: false } },
-            ]),
+            limit: vi
+              .fn()
+              .mockResolvedValue([{ org_id: ORG_ID, metadata: { disclosure_verified: false } }]),
           })),
         })),
       })),
       update: vi.fn(() => updateChain),
     };
-    mockWithSystemContext.mockImplementationOnce(
-      async (fn: (tx: unknown) => Promise<unknown>) => fn(tx),
+    mockWithSystemContext.mockImplementationOnce(async (fn: (tx: unknown) => Promise<unknown>) =>
+      fn(tx),
     );
 
     const result = await updateDisclosureTriage({
@@ -291,8 +288,8 @@ describe('updateDisclosureTriage', () => {
       })),
       update: vi.fn(),
     };
-    mockWithSystemContext.mockImplementationOnce(
-      async (fn: (tx: unknown) => Promise<unknown>) => fn(tx),
+    mockWithSystemContext.mockImplementationOnce(async (fn: (tx: unknown) => Promise<unknown>) =>
+      fn(tx),
     );
 
     const result = await updateDisclosureTriage({
@@ -310,16 +307,16 @@ describe('updateDisclosureTriage', () => {
       select: vi.fn(() => ({
         from: vi.fn(() => ({
           where: vi.fn(() => ({
-            limit: vi.fn().mockResolvedValue([
-              { org_id: ORG_ID, metadata: { disclosure_verified: true } },
-            ]),
+            limit: vi
+              .fn()
+              .mockResolvedValue([{ org_id: ORG_ID, metadata: { disclosure_verified: true } }]),
           })),
         })),
       })),
       update: vi.fn(),
     };
-    mockWithSystemContext.mockImplementationOnce(
-      async (fn: (tx: unknown) => Promise<unknown>) => fn(tx),
+    mockWithSystemContext.mockImplementationOnce(async (fn: (tx: unknown) => Promise<unknown>) =>
+      fn(tx),
     );
 
     const result = await updateDisclosureTriage({
@@ -342,16 +339,16 @@ describe('updateDisclosureTriage', () => {
       select: vi.fn(() => ({
         from: vi.fn(() => ({
           where: vi.fn(() => ({
-            limit: vi.fn().mockResolvedValue([
-              { org_id: ORG_ID, metadata: { disclosure_verified: false } },
-            ]),
+            limit: vi
+              .fn()
+              .mockResolvedValue([{ org_id: ORG_ID, metadata: { disclosure_verified: false } }]),
           })),
         })),
       })),
       update: vi.fn(() => updateChain),
     };
-    mockWithSystemContext.mockImplementationOnce(
-      async (fn: (tx: unknown) => Promise<unknown>) => fn(tx),
+    mockWithSystemContext.mockImplementationOnce(async (fn: (tx: unknown) => Promise<unknown>) =>
+      fn(tx),
     );
 
     const result = await updateDisclosureTriage({

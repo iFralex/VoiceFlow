@@ -39,10 +39,7 @@ export async function persistCallArtifactsHandler(data: CallCompletedData): Prom
       // Re-throw so Inngest retries with back-off
       throw err;
     }
-    if (
-      err instanceof VoiceProviderError &&
-      err.code === 'vapi.recording_not_available'
-    ) {
+    if (err instanceof VoiceProviderError && err.code === 'vapi.recording_not_available') {
       // No recording for this call (e.g. no_answer, busy, failed) — skip artifact
       // persistence. These calls also have no transcript, so classification is not
       // possible. The call status already reflects the outcome (set by recordCallEnded).

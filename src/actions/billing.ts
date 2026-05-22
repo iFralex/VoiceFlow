@@ -31,11 +31,7 @@ export async function createTopupSession(
 
   // Look up credit package (global table — no org context needed)
   const [pkg] = await withSystemContext(async (tx) => {
-    return tx
-      .select()
-      .from(creditPackages)
-      .where(eq(creditPackages.id, packageId))
-      .limit(1);
+    return tx.select().from(creditPackages).where(eq(creditPackages.id, packageId)).limit(1);
   });
 
   if (!pkg) {
@@ -89,7 +85,12 @@ export async function createTopupSession(
 
 export type PaymentStatusResult =
   | { ok: false; message: string }
-  | { ok: true; status: 'pending' | 'succeeded' | 'failed' | 'refunded'; balanceCents?: number; remainingMinutes?: number };
+  | {
+      ok: true;
+      status: 'pending' | 'succeeded' | 'failed' | 'refunded';
+      balanceCents?: number;
+      remainingMinutes?: number;
+    };
 
 /**
  * Returns the current status of a payment by stripe_session_id.
@@ -246,7 +247,8 @@ export async function exportLedgerCsv(
     dateTo: dateTo ? new Date(dateTo) : null,
   });
 
-  const header = 'id,type,description,delta_cents,balance_after_cents,reference_type,reference_id,created_at';
+  const header =
+    'id,type,description,delta_cents,balance_after_cents,reference_type,reference_id,created_at';
   const rows = result.entries.map((e) =>
     [
       e.id,

@@ -27,12 +27,8 @@ export default async function DashboardPage({ searchParams }: Props) {
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-semibold tracking-tight">
-            {translate('greeting')}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {translate(`period_summary_${period}`)}
-          </p>
+          <h1 className="text-2xl font-semibold tracking-tight">{translate('greeting')}</h1>
+          <p className="text-muted-foreground text-sm">{translate(`period_summary_${period}`)}</p>
         </div>
         <PeriodSelector value={period} />
       </header>
@@ -77,17 +73,11 @@ export default async function DashboardPage({ searchParams }: Props) {
 
       <section className="grid gap-4 lg:grid-cols-3">
         <TrendChart data={data.trends} className="lg:col-span-2" />
-        <ActiveCampaignsLive
-          orgId={orgId}
-          initialCampaigns={data.activeCampaigns}
-        />
+        <ActiveCampaignsLive orgId={orgId} initialCampaigns={data.activeCampaigns} />
       </section>
 
       <section className="grid gap-4 lg:grid-cols-3">
-        <RecentAppointments
-          appointments={data.recentAppointments}
-          className="lg:col-span-2"
-        />
+        <RecentAppointments appointments={data.recentAppointments} className="lg:col-span-2" />
         <AlertsList alerts={data.alerts} />
       </section>
     </div>

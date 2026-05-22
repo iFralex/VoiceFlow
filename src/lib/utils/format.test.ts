@@ -1,11 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import {
-  formatCurrency,
-  formatDuration,
-  formatPhone,
-  formatRelativeTime,
-} from './format';
+import { formatCurrency, formatDuration, formatPhone, formatRelativeTime } from './format';
 
 // ---------------------------------------------------------------------------
 // Helpers to produce expected values using the same Intl APIs as the
@@ -21,10 +16,7 @@ function expectedCurrency(cents: number, locale: string): string {
   }).format(cents / 100);
 }
 
-function expectedRelativeTime(
-  diffMs: number,
-  locale: string,
-): string {
+function expectedRelativeTime(diffMs: number, locale: string): string {
   const intlLocale = locale === 'it' ? 'it-IT' : locale === 'en' ? 'en-GB' : locale;
   const rtf = new Intl.RelativeTimeFormat(intlLocale, { numeric: 'auto' });
   const absDiff = Math.abs(diffMs);

@@ -258,7 +258,11 @@ describe('listContacts', () => {
   });
 
   it('returns nextCursor when there are more results than the limit', async () => {
-    const contacts2 = { ...fakeContact, id: 'contact-2', created_at: new Date('2024-01-01T09:00:00Z') };
+    const contacts2 = {
+      ...fakeContact,
+      id: 'contact-2',
+      created_at: new Date('2024-01-01T09:00:00Z'),
+    };
     // Return limit+1 items to trigger cursor generation
     mockTx.select = vi.fn(() => makeSelectChain([fakeContact, contacts2]));
 
@@ -286,7 +290,9 @@ describe('listContacts', () => {
     // Generate a cursor by running first query
     const { listContacts } = await import('./contacts');
 
-    mockTx.select = vi.fn(() => makeSelectChain([fakeContact, { ...fakeContact, id: 'contact-2' }]));
+    mockTx.select = vi.fn(() =>
+      makeSelectChain([fakeContact, { ...fakeContact, id: 'contact-2' }]),
+    );
     const firstPage = await listContacts('org-1', {}, { limit: 1 });
     const cursor = firstPage.nextCursor!;
 

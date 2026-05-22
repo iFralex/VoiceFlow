@@ -63,10 +63,7 @@ describe('contacts integration', () => {
       expect(inserted.org_id).toBe(TEST_ORG_A);
 
       // Query back the contact — should be found
-      const found = await tx
-        .select()
-        .from(contacts)
-        .where(eq(contacts.id, inserted.id));
+      const found = await tx.select().from(contacts).where(eq(contacts.id, inserted.id));
 
       expect(found).toHaveLength(1);
       expect(found[0]!.first_name).toBe('Mario');
@@ -110,9 +107,7 @@ describe('contacts integration', () => {
         const contactAId = contactARows[0]!.id;
 
         // Set the GUC to org B — simulates a request scoped to a different org
-        await tx.execute(
-          sql`SELECT set_config('app.current_org_id', ${TEST_ORG_B}, true)`,
-        );
+        await tx.execute(sql`SELECT set_config('app.current_org_id', ${TEST_ORG_B}, true)`);
 
         // NOTE: The test DB connects as the `postgres` superuser (table owner).
         // In PostgreSQL, the table owner bypasses row-level security unless the
@@ -126,10 +121,7 @@ describe('contacts integration', () => {
         //
         // TODO(plan-04): add a test that connects as `authenticated` to verify
         //   RLS enforcement at the database level.
-        const rowsSeenByOrgB = await tx
-          .select()
-          .from(contacts)
-          .where(eq(contacts.id, contactAId));
+        const rowsSeenByOrgB = await tx.select().from(contacts).where(eq(contacts.id, contactAId));
 
         // Superuser bypasses RLS — the row is visible even with the wrong org GUC.
         expect(rowsSeenByOrgB).toHaveLength(1);

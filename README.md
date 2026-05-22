@@ -62,24 +62,24 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ### Available Scripts
 
-| Script              | Description                      |
-| ------------------- | -------------------------------- |
-| `pnpm dev`          | Start development server         |
-| `pnpm build`        | Build for production             |
-| `pnpm start`        | Start production server          |
-| `pnpm lint`         | Run ESLint                       |
-| `pnpm format`       | Format code with Prettier        |
-| `pnpm format:check` | Check formatting without writing |
-| `pnpm typecheck`    | Run TypeScript compiler check    |
-| `pnpm test`         | Run unit and integration tests   |
-| `pnpm test:watch`   | Run tests in watch mode          |
-| `pnpm test:coverage`| Run tests with coverage report   |
-| `pnpm test:e2e`     | Run Playwright end-to-end tests  |
-| `pnpm db:generate`  | Generate Drizzle migration files |
-| `pnpm db:migrate`   | Run database migrations          |
-| `pnpm db:push`      | Push schema changes (dev only)   |
-| `pnpm db:studio`    | Open Drizzle Studio              |
-| `pnpm db:seed`      | Seed the database                |
+| Script                       | Description                                                       |
+| ---------------------------- | ----------------------------------------------------------------- |
+| `pnpm dev`                   | Start development server                                          |
+| `pnpm build`                 | Build for production                                              |
+| `pnpm start`                 | Start production server                                           |
+| `pnpm lint`                  | Run ESLint                                                        |
+| `pnpm format`                | Format code with Prettier                                         |
+| `pnpm format:check`          | Check formatting without writing                                  |
+| `pnpm typecheck`             | Run TypeScript compiler check                                     |
+| `pnpm test`                  | Run unit and integration tests                                    |
+| `pnpm test:watch`            | Run tests in watch mode                                           |
+| `pnpm test:coverage`         | Run tests with coverage report                                    |
+| `pnpm test:e2e`              | Run Playwright end-to-end tests                                   |
+| `pnpm db:generate`           | Generate Drizzle migration files                                  |
+| `pnpm db:migrate`            | Run database migrations                                           |
+| `pnpm db:push`               | Push schema changes (dev only)                                    |
+| `pnpm db:studio`             | Open Drizzle Studio                                               |
+| `pnpm db:seed`               | Seed the database                                                 |
 | `pnpm db:seed --bump <slug>` | Publish new template version without overwriting existing scripts |
 
 ## Visual Regression Tests

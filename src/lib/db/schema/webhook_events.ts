@@ -24,9 +24,7 @@ export const webhookEvents = pgTable(
     processed_at: timestamp('processed_at', { withTimezone: true }),
     error: text('error'),
   },
-  (t) => [
-    unique('webhook_events_provider_event_id_key').on(t.provider, t.provider_event_id),
-  ],
+  (t) => [unique('webhook_events_provider_event_id_key').on(t.provider, t.provider_event_id)],
 );
 
 export type WebhookEvent = typeof webhookEvents.$inferSelect;

@@ -16,35 +16,26 @@ export default function AccediPage() {
       {/* Header */}
       <div className="space-y-1 text-center">
         <h1 className="text-2xl font-semibold tracking-tight">{t('sign_in')}</h1>
-        <p className="text-sm text-muted-foreground">{t('sign_in_description')}</p>
+        <p className="text-muted-foreground text-sm">{t('sign_in_description')}</p>
       </div>
 
       {/* Form */}
       <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
         <div className="space-y-2">
           <Label htmlFor="email">{t('email')}</Label>
-          <Input
-            id="email"
-            type="email"
-            placeholder="you@example.com"
-            autoComplete="email"
-          />
+          <Input id="email" type="email" placeholder="you@example.com" autoComplete="email" />
         </div>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label htmlFor="password">{t('password')}</Label>
             <Link
               href="/recupera-password"
-              className="text-xs text-muted-foreground hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground text-xs"
             >
               {t('forgot_password')}
             </Link>
           </div>
-          <Input
-            id="password"
-            type="password"
-            autoComplete="current-password"
-          />
+          <Input id="password" type="password" autoComplete="current-password" />
         </div>
         <Button type="submit" className="w-full">
           {t('sign_in')}
@@ -53,7 +44,7 @@ export default function AccediPage() {
 
       <div className="flex items-center gap-3">
         <Separator className="flex-1" />
-        <span className="text-xs text-muted-foreground">{t('or_continue_with')}</span>
+        <span className="text-muted-foreground text-xs">{t('or_continue_with')}</span>
         <Separator className="flex-1" />
       </div>
 
@@ -80,9 +71,12 @@ export default function AccediPage() {
         Google
       </Button>
 
-      <p className="text-center text-sm text-muted-foreground">
+      <p className="text-muted-foreground text-center text-sm">
         {t('no_account_yet')}{' '}
-        <Link href="/registrati" className="font-medium text-foreground underline-offset-4 hover:underline">
+        <Link
+          href="/registrati"
+          className="text-foreground font-medium underline-offset-4 hover:underline"
+        >
           {t('sign_up')}
         </Link>
       </p>

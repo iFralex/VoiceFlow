@@ -42,14 +42,16 @@ interface ExportFilters {
 /**
  * Paginates through `listContacts` and returns all matching contacts.
  */
-export async function collectAllContacts(orgId: string, filters: ExportFilters): Promise<Contact[]> {
+export async function collectAllContacts(
+  orgId: string,
+  filters: ExportFilters,
+): Promise<Contact[]> {
   const all: Contact[] = [];
   let cursor: string | undefined;
 
   do {
-    const page = cursor !== undefined
-      ? { limit: EXPORT_PAGE_SIZE, cursor }
-      : { limit: EXPORT_PAGE_SIZE };
+    const page =
+      cursor !== undefined ? { limit: EXPORT_PAGE_SIZE, cursor } : { limit: EXPORT_PAGE_SIZE };
     const { items, nextCursor } = await listContacts(orgId, filters, page);
     all.push(...items);
     cursor = nextCursor;

@@ -79,8 +79,7 @@ const STRINGS: Record<WeeklySummaryLocale, Strings> = {
     preview: (range) => `Riepilogo settimanale — ${range}`,
     subject: (range) => `Il tuo riepilogo settimanale — ${range}`,
     greeting: (name) => `Ciao ${name},`,
-    intro: (range) =>
-      `Ecco il riepilogo delle attività della settimana dal ${range}.`,
+    intro: (range) => `Ecco il riepilogo delle attività della settimana dal ${range}.`,
     kpiHeading: 'KPI settimanali',
     kpiCalls: 'Chiamate totali',
     kpiCompleted: 'Completate',
@@ -104,8 +103,7 @@ const STRINGS: Record<WeeklySummaryLocale, Strings> = {
     preview: (range) => `Weekly summary — ${range}`,
     subject: (range) => `Your weekly summary — ${range}`,
     greeting: (name) => `Hi ${name},`,
-    intro: (range) =>
-      `Here is the summary of activities for the week of ${range}.`,
+    intro: (range) => `Here is the summary of activities for the week of ${range}.`,
     kpiHeading: 'Weekly KPIs',
     kpiCalls: 'Total calls',
     kpiCompleted: 'Completed',
@@ -139,10 +137,14 @@ function formatDateRange(weekStart: Date, weekEnd: Date, locale: WeeklySummaryLo
     month: 'short',
     timeZone: 'Europe/Rome',
   });
-  const startYear = new Intl.DateTimeFormat('en-US', { year: 'numeric', timeZone: 'Europe/Rome' })
-    .format(weekStart);
-  const endYear = new Intl.DateTimeFormat('en-US', { year: 'numeric', timeZone: 'Europe/Rome' })
-    .format(weekEnd);
+  const startYear = new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    timeZone: 'Europe/Rome',
+  }).format(weekStart);
+  const endYear = new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    timeZone: 'Europe/Rome',
+  }).format(weekEnd);
   if (startYear === endYear) {
     return `${fmtNoYear.format(weekStart)} – ${fmt.format(weekEnd)}`;
   }
@@ -219,7 +221,9 @@ export function WeeklySummaryEmail(props: WeeklySummaryEmailProps) {
                 <thead>
                   <tr>
                     <th style={styles.th}>{t.topCampaignsCampaign}</th>
-                    <th style={{ ...styles.th, ...styles.thRight }}>{t.topCampaignsAppointments}</th>
+                    <th style={{ ...styles.th, ...styles.thRight }}>
+                      {t.topCampaignsAppointments}
+                    </th>
                     <th style={{ ...styles.th, ...styles.thRight }}>{t.topCampaignsCalls}</th>
                     <th style={{ ...styles.th, ...styles.thRight }}>{t.topCampaignsLeads}</th>
                   </tr>
@@ -232,7 +236,9 @@ export function WeeklySummaryEmail(props: WeeklySummaryEmailProps) {
                         {String(c.appointments)}
                       </td>
                       <td style={{ ...styles.td, ...styles.tdRight }}>{String(c.calls)}</td>
-                      <td style={{ ...styles.td, ...styles.tdRight }}>{String(c.qualifiedLeads)}</td>
+                      <td style={{ ...styles.td, ...styles.tdRight }}>
+                        {String(c.qualifiedLeads)}
+                      </td>
                     </tr>
                   ))}
                 </tbody>

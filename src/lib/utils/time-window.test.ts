@@ -270,9 +270,7 @@ describe('nextWindowOpen — custom window times', () => {
   it('respects custom window start and end times', () => {
     // Monday 2025-01-13 11:00 Rome = 10:00 UTC — inside custom 10:00–20:00
     const mon11Rome = new Date('2025-01-13T10:00:00Z');
-    expect(
-      nextWindowOpen(mon11Rome, '10:00', '20:00', 'Europe/Rome'),
-    ).toBeNull();
+    expect(nextWindowOpen(mon11Rome, '10:00', '20:00', 'Europe/Rome')).toBeNull();
   });
 
   it('returns next window when outside custom window hours', () => {

@@ -25,29 +25,32 @@ export function RecentAppointments({ appointments, className }: Props) {
   return (
     <section
       data-slot="recent-appointments"
-      className={cn('flex flex-col gap-3 rounded-xl bg-card p-4 ring-1 ring-foreground/10', className)}
+      className={cn(
+        'bg-card ring-foreground/10 flex flex-col gap-3 rounded-xl p-4 ring-1',
+        className,
+      )}
     >
       <h2 className="text-sm font-semibold">{t('recent_appointments_title')}</h2>
       {appointments.length === 0 ? (
-        <p className="py-4 text-center text-sm text-muted-foreground">
+        <p className="text-muted-foreground py-4 text-center text-sm">
           {t('recent_appointments_empty')}
         </p>
       ) : (
-        <ul className="flex flex-col divide-y divide-border/60">
+        <ul className="divide-border/60 flex flex-col divide-y">
           {appointments.map((a) => (
             <li key={a.id} data-slot="recent-appointment-row" className="py-2 first:pt-0 last:pb-0">
               <div className="flex items-center justify-between gap-2 text-sm">
                 <span className="truncate font-medium">{a.contactName}</span>
                 <time
                   dateTime={a.scheduledAt}
-                  className="shrink-0 text-xs text-muted-foreground tabular-nums"
+                  className="text-muted-foreground shrink-0 text-xs tabular-nums"
                 >
                   {formatDateTime(a.scheduledAt)}
                 </time>
               </div>
               <Link
                 href={`/campaigns/${a.campaignId}`}
-                className="block truncate text-xs text-muted-foreground hover:text-foreground"
+                className="text-muted-foreground hover:text-foreground block truncate text-xs"
               >
                 {a.campaignName}
               </Link>

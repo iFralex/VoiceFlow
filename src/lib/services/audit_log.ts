@@ -150,7 +150,7 @@ export async function listAuditLog(params: ListAuditLogParams): Promise<ListAudi
 
     const emailById = await resolveActorEmails(tx, page);
     const entries = page.map((r) =>
-      toListEntry(r, r.actor_user_id ? emailById.get(r.actor_user_id) ?? null : null),
+      toListEntry(r, r.actor_user_id ? (emailById.get(r.actor_user_id) ?? null) : null),
     );
 
     const last = entries[entries.length - 1];
@@ -228,7 +228,7 @@ export async function buildAuditLogCsv(
 
   const lines: string[] = [CSV_HEADERS.join(',')];
   for (const r of dataRows) {
-    const actorEmail = r.actor_user_id ? emailById.get(r.actor_user_id) ?? '' : '';
+    const actorEmail = r.actor_user_id ? (emailById.get(r.actor_user_id) ?? '') : '';
     lines.push(
       [
         r.created_at.toISOString(),

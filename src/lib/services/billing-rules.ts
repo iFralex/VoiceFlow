@@ -19,10 +19,7 @@ const MIN_BILLABLE_SECONDS = 6;
  * - Billable duration is rounded UP to the next BILLING_GRANULARITY_SECONDS (6s) boundary.
  * - Cost is rounded UP to the nearest whole cent.
  */
-export function computeCallCost(args: {
-  durationSeconds: number;
-  perMinuteCents: number;
-}): {
+export function computeCallCost(args: { durationSeconds: number; perMinuteCents: number }): {
   billableSeconds: number;
   costCents: number;
 } {

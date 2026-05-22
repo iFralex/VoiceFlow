@@ -78,6 +78,7 @@ For each `pending` row:
    product, etc.) before disclosing, this is a regulatory miss.
 
 3. **Refund the call to the dealer.**
+
    ```bash
    curl -s -X POST https://app.voxauto.it/api/admin/credit-adjustment \
      -H "Content-Type: application/json" \
@@ -88,6 +89,7 @@ For each `pending` row:
        "reason": "AI Act disclosure failure — call <call_id> refunded per runbook"
      }'
    ```
+
    Look up `cost_cents` on the row directly: it is shown in the dashboard.
 
 4. **Mark the row `refunded`** in the dashboard with the credit-adjustment

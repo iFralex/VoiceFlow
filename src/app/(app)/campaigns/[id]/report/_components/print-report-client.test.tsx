@@ -59,7 +59,9 @@ describe('PrintReportClient', () => {
   it('renders campaign header, summary cells, outcome bars, and appointment row', () => {
     render(<PrintReportClient {...makeProps()} />);
 
-    expect(screen.getByRole('heading', { level: 1, name: /Riattivazione Lead/ })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { level: 1, name: /Riattivazione Lead/ }),
+    ).toBeInTheDocument();
     expect(screen.getByText(/Riepilogo/)).toBeInTheDocument();
     expect(screen.getByText('100')).toBeInTheDocument(); // total calls
     expect(screen.getByText('80')).toBeInTheDocument(); // completed

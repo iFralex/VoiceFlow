@@ -48,9 +48,7 @@ export interface SetLegalHoldActionResult {
  *   reason      — required, persisted on the audit row
  *   actor       — optional free-form (e.g. founder email)
  */
-export async function setLegalHoldAction(
-  formData: FormData,
-): Promise<SetLegalHoldActionResult> {
+export async function setLegalHoldAction(formData: FormData): Promise<SetLegalHoldActionResult> {
   const token = formData.get('token');
   if (typeof token !== 'string' || !tokenIsValid(token)) {
     return { ok: false, message: 'Unauthorized' };

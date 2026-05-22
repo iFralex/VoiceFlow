@@ -12,11 +12,7 @@ export {
   markOptOutInTx,
   COMPLIANCE_OPT_OUT_REGISTERED_EVENT,
 } from './optout';
-export type {
-  ComplianceOptOutRegisteredData,
-  MarkOptOutOptions,
-  OptOutSource,
-} from './optout';
+export type { ComplianceOptOutRegisteredData, MarkOptOutOptions, OptOutSource } from './optout';
 
 export type RpoStatus = (typeof rpoStatusEnum.enumValues)[number];
 
@@ -227,11 +223,7 @@ export async function softDeleteContact(
       .update(contacts)
       .set({ deleted_at: new Date() })
       .where(
-        and(
-          eq(contacts.id, contactId),
-          eq(contacts.org_id, orgId),
-          isNull(contacts.deleted_at),
-        ),
+        and(eq(contacts.id, contactId), eq(contacts.org_id, orgId), isNull(contacts.deleted_at)),
       )
       .returning({ id: contacts.id });
 
@@ -259,4 +251,3 @@ export async function countContactsForOrg(orgId: string): Promise<number> {
     return result?.total ?? 0;
   });
 }
-

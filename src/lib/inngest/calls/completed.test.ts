@@ -50,7 +50,9 @@ mockSystemTx.select = mockSystemSelect;
 // Org tx update chain: tx.update(...).set({...}).where(...)[.returning()]
 // Returns a thenable so plain `await where(...)` works AND `.returning()` works.
 const makeUpdateWhereChain = (returningRows: unknown[] = []) => {
-  const p = Promise.resolve(undefined) as Promise<undefined> & { returning: () => Promise<unknown[]> };
+  const p = Promise.resolve(undefined) as Promise<undefined> & {
+    returning: () => Promise<unknown[]>;
+  };
   p.returning = () => Promise.resolve(returningRows);
   return p;
 };
@@ -209,10 +211,12 @@ describe('emitOutcomeEvents', () => {
   });
 
   it('emits appointment/booked when outcome is appointment_booked', async () => {
-    mockSystemLimit.mockResolvedValue([{
-      ...baseCallRow,
-      outcome: 'appointment_booked',
-    }]);
+    mockSystemLimit.mockResolvedValue([
+      {
+        ...baseCallRow,
+        outcome: 'appointment_booked',
+      },
+    ]);
 
     await emitOutcomeEvents(CALL_ID);
 
@@ -226,10 +230,12 @@ describe('emitOutcomeEvents', () => {
   });
 
   it('emits contact/do-not-call when outcome is do_not_call', async () => {
-    mockSystemLimit.mockResolvedValue([{
-      ...baseCallRow,
-      outcome: 'do_not_call',
-    }]);
+    mockSystemLimit.mockResolvedValue([
+      {
+        ...baseCallRow,
+        outcome: 'do_not_call',
+      },
+    ]);
 
     await emitOutcomeEvents(CALL_ID);
 
@@ -243,10 +249,12 @@ describe('emitOutcomeEvents', () => {
   });
 
   it('emits no events for other outcomes', async () => {
-    mockSystemLimit.mockResolvedValue([{
-      ...baseCallRow,
-      outcome: 'not_interested',
-    }]);
+    mockSystemLimit.mockResolvedValue([
+      {
+        ...baseCallRow,
+        outcome: 'not_interested',
+      },
+    ]);
 
     await emitOutcomeEvents(CALL_ID);
 
@@ -325,7 +333,9 @@ describe('scheduleRetryIfNeeded', () => {
   });
 
   it('schedules a retry when status is no_answer and attempt < max', async () => {
-    mockSystemLimit.mockResolvedValue([{ ...baseRetryCallRow, status: 'no_answer', attempt_number: 1 }]);
+    mockSystemLimit.mockResolvedValue([
+      { ...baseRetryCallRow, status: 'no_answer', attempt_number: 1 },
+    ]);
 
     await scheduleRetryIfNeeded(CALL_ID);
 
@@ -361,11 +371,13 @@ describe('scheduleRetryIfNeeded', () => {
   });
 
   it(`marks call failed with max_attempts_reached when attempt_number >= ${MAX_RETRY_ATTEMPTS}`, async () => {
-    mockSystemLimit.mockResolvedValue([{
-      ...baseRetryCallRow,
-      status: 'no_answer',
-      attempt_number: MAX_RETRY_ATTEMPTS,
-    }]);
+    mockSystemLimit.mockResolvedValue([
+      {
+        ...baseRetryCallRow,
+        status: 'no_answer',
+        attempt_number: MAX_RETRY_ATTEMPTS,
+      },
+    ]);
 
     await scheduleRetryIfNeeded(CALL_ID);
 
@@ -396,9 +408,7 @@ describe('scheduleRetryIfNeeded', () => {
 
     await scheduleRetryIfNeeded(CALL_ID);
 
-    expect(mockInsertValues).toHaveBeenCalledWith(
-      expect.objectContaining({ attempt_number: 2 }),
-    );
+    expect(mockInsertValues).toHaveBeenCalledWith(expect.objectContaining({ attempt_number: 2 }));
   });
 });
 
@@ -431,14 +441,16 @@ describe('callCompletedHandler', () => {
         return Promise.resolve([{ ...baseCallRow, outcome: 'not_interested' }]);
       }
       // scheduleRetryIfNeeded lookup — status='completed' so no retry
-      return Promise.resolve([{
-        org_id: ORG_ID,
-        campaign_id: CAMPAIGN_ID,
-        contact_id: CONTACT_ID,
-        status: 'completed',
-        attempt_number: 1,
-        started_at: new Date(),
-      }]);
+      return Promise.resolve([
+        {
+          org_id: ORG_ID,
+          campaign_id: CAMPAIGN_ID,
+          contact_id: CONTACT_ID,
+          status: 'completed',
+          attempt_number: 1,
+          started_at: new Date(),
+        },
+      ]);
     });
 
     mockOrgUpdate.mockImplementation(mockUpdateTable);
@@ -469,8 +481,12 @@ describe('callCompletedHandler', () => {
 
   it('charge step runs before classify step', async () => {
     const order: string[] = [];
-    vi.mocked(chargeForCall).mockImplementation(async () => { order.push('charge'); });
-    vi.mocked(classifyAndFinaliseCall).mockImplementation(async () => { order.push('classify'); });
+    vi.mocked(chargeForCall).mockImplementation(async () => {
+      order.push('charge');
+    });
+    vi.mocked(classifyAndFinaliseCall).mockImplementation(async () => {
+      order.push('classify');
+    });
 
     await callCompletedHandler({
       callId: CALL_ID,
@@ -491,10 +507,16 @@ describe('callCompletedHandler', () => {
       if (callCount === 2) return Promise.resolve([{ org_id: ORG_ID, campaign_id: CAMPAIGN_ID }]);
       if (callCount === 3) return Promise.resolve([{ ...baseCallRow, outcome: null }]);
       // scheduleRetryIfNeeded — no_answer, attempt 1
-      return Promise.resolve([{
-        org_id: ORG_ID, campaign_id: CAMPAIGN_ID, contact_id: CONTACT_ID,
-        status: 'no_answer', attempt_number: 1, started_at: new Date(),
-      }]);
+      return Promise.resolve([
+        {
+          org_id: ORG_ID,
+          campaign_id: CAMPAIGN_ID,
+          contact_id: CONTACT_ID,
+          status: 'no_answer',
+          attempt_number: 1,
+          started_at: new Date(),
+        },
+      ]);
     });
     mockOrgInsert.mockImplementation(mockInsertTable);
     mockInsertTable.mockReturnValue({ values: mockInsertValues });
@@ -502,8 +524,11 @@ describe('callCompletedHandler', () => {
     mockInsertReturning.mockResolvedValue([{ id: 'retry-call-id' }]);
 
     await callCompletedHandler({
-      callId: CALL_ID, orgId: ORG_ID, durationSeconds: 0,
-      endedReason: 'no-answer', recordingUrl: null,
+      callId: CALL_ID,
+      orgId: ORG_ID,
+      durationSeconds: 0,
+      endedReason: 'no-answer',
+      recordingUrl: null,
     });
 
     expect(sendInngestEvent).toHaveBeenCalledWith(

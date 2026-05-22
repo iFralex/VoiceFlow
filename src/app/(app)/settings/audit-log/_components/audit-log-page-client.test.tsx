@@ -62,13 +62,7 @@ beforeEach(() => {
 
 describe('AuditLogPageClient', () => {
   it('renders the title, filter inputs and column headers', () => {
-    render(
-      <AuditLogPageClient
-        initialEntries={[ENTRY_USER]}
-        initialCursor={null}
-        pageSize={50}
-      />,
-    );
+    render(<AuditLogPageClient initialEntries={[ENTRY_USER]} initialCursor={null} pageSize={50} />);
     expect(screen.getByRole('heading', { level: 1, name: /Registro audit/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/Prefisso azione/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/^Da$/i)).toBeInTheDocument();
@@ -79,9 +73,7 @@ describe('AuditLogPageClient', () => {
   });
 
   it('shows the empty state when there are no entries', () => {
-    render(
-      <AuditLogPageClient initialEntries={[]} initialCursor={null} pageSize={50} />,
-    );
+    render(<AuditLogPageClient initialEntries={[]} initialCursor={null} pageSize={50} />);
     expect(screen.getByText(/Nessuna voce di audit/i)).toBeInTheDocument();
   });
 
@@ -100,13 +92,7 @@ describe('AuditLogPageClient', () => {
   });
 
   it('expands metadata details on click', async () => {
-    render(
-      <AuditLogPageClient
-        initialEntries={[ENTRY_USER]}
-        initialCursor={null}
-        pageSize={50}
-      />,
-    );
+    render(<AuditLogPageClient initialEntries={[ENTRY_USER]} initialCursor={null} pageSize={50} />);
     const showButton = screen.getByRole('button', { name: /^Mostra$/ });
     expect(screen.queryByText(/"foo"/)).not.toBeInTheDocument();
 
@@ -122,13 +108,7 @@ describe('AuditLogPageClient', () => {
       data: { entries: [ENTRY_SYSTEM], nextCursor: null },
     });
 
-    render(
-      <AuditLogPageClient
-        initialEntries={[ENTRY_USER]}
-        initialCursor={null}
-        pageSize={50}
-      />,
-    );
+    render(<AuditLogPageClient initialEntries={[ENTRY_USER]} initialCursor={null} pageSize={50} />);
 
     await userEvent.type(screen.getByLabelText(/Prefisso azione/i), 'compliance.');
     await userEvent.click(screen.getByRole('button', { name: /^Applica$/ }));
@@ -189,9 +169,7 @@ describe('AuditLogPageClient', () => {
       return el as never;
     });
 
-    render(
-      <AuditLogPageClient initialEntries={[]} initialCursor={null} pageSize={50} />,
-    );
+    render(<AuditLogPageClient initialEntries={[]} initialCursor={null} pageSize={50} />);
 
     await userEvent.click(screen.getByRole('button', { name: /Esporta CSV/i }));
 
@@ -204,9 +182,7 @@ describe('AuditLogPageClient', () => {
   it('shows a toast error when the list action fails', async () => {
     mockListAuditLogEntries.mockResolvedValueOnce({ ok: false, message: 'Forbidden' });
 
-    render(
-      <AuditLogPageClient initialEntries={[]} initialCursor={null} pageSize={50} />,
-    );
+    render(<AuditLogPageClient initialEntries={[]} initialCursor={null} pageSize={50} />);
 
     await userEvent.click(screen.getByRole('button', { name: /^Applica$/ }));
 

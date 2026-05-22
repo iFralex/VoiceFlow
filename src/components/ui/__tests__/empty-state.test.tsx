@@ -24,10 +24,7 @@ describe('EmptyState', () => {
   it('renders an action button with onClick', () => {
     const onClick = vi.fn();
     render(
-      <EmptyState
-        title="Nessun risultato"
-        action={{ label: 'Aggiungi contatto', onClick }}
-      />,
+      <EmptyState title="Nessun risultato" action={{ label: 'Aggiungi contatto', onClick }} />,
     );
     const btn = screen.getByRole('button', { name: 'Aggiungi contatto' });
     expect(btn).toBeInTheDocument();
@@ -49,23 +46,20 @@ describe('EmptyState', () => {
 
   it('renders the illustration slot', () => {
     render(
-      <EmptyState
-        title="Nessun risultato"
-        illustration={<svg data-testid="illustration" />}
-      />,
+      <EmptyState title="Nessun risultato" illustration={<svg data-testid="illustration" />} />,
     );
     expect(screen.getByTestId('illustration')).toBeInTheDocument();
   });
 
   it('does not render illustration slot when omitted', () => {
     const { container } = render(<EmptyState title="Nessun risultato" />);
-    expect(container.querySelector('[data-slot="empty-state-illustration"]')).not.toBeInTheDocument();
+    expect(
+      container.querySelector('[data-slot="empty-state-illustration"]'),
+    ).not.toBeInTheDocument();
   });
 
   it('applies custom className', () => {
-    const { container } = render(
-      <EmptyState title="Nessun risultato" className="custom-class" />,
-    );
+    const { container } = render(<EmptyState title="Nessun risultato" className="custom-class" />);
     expect(container.querySelector('[data-slot="empty-state"]')).toHaveClass('custom-class');
   });
 

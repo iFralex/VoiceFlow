@@ -61,7 +61,9 @@ describe('renderWeeklySummaryEmail', () => {
 
   it('renders alert message in Italian when alerts are present', async () => {
     const result = await renderWeeklySummaryEmail(
-      buildProps({ alerts: [{ type: 'warning', campaignName: 'Spring 2024', failed: 10, total: 20 }] }),
+      buildProps({
+        alerts: [{ type: 'warning', campaignName: 'Spring 2024', failed: 10, total: 20 }],
+      }),
     );
     expect(result.html).toContain('Spring 2024');
     expect(result.html).toContain('10/20');
@@ -70,7 +72,10 @@ describe('renderWeeklySummaryEmail', () => {
 
   it('renders alert message in English when locale is en', async () => {
     const result = await renderWeeklySummaryEmail(
-      buildProps({ locale: 'en', alerts: [{ type: 'warning', campaignName: 'Spring 2024', failed: 10, total: 20 }] }),
+      buildProps({
+        locale: 'en',
+        alerts: [{ type: 'warning', campaignName: 'Spring 2024', failed: 10, total: 20 }],
+      }),
     );
     expect(result.html).toContain('Spring 2024');
     expect(result.html).toContain('high failure rate');

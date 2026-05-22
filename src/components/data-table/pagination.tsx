@@ -19,9 +19,7 @@ type DataTablePaginationProps<TData> = {
 
 const PAGE_SIZES = [10, 20, 50, 100];
 
-export function DataTablePagination<TData>({
-  table,
-}: DataTablePaginationProps<TData>) {
+export function DataTablePagination<TData>({ table }: DataTablePaginationProps<TData>) {
   const t = useTranslations('table');
   const { pageIndex, pageSize } = table.getState().pagination;
   const pageCount = table.getPageCount();
@@ -35,9 +33,7 @@ export function DataTablePagination<TData>({
           {t('rows_selected', { selected: selectedCount, total: totalCount })}
         </p>
       ) : (
-        <p className="text-muted-foreground">
-          {t('total_rows', { total: totalCount })}
-        </p>
+        <p className="text-muted-foreground">{t('total_rows', { total: totalCount })}</p>
       )}
 
       <div className="flex items-center gap-4">
@@ -45,9 +41,7 @@ export function DataTablePagination<TData>({
           <span className="text-muted-foreground">{t('rows_per_page')}</span>
           <Select
             value={String(pageSize)}
-            onValueChange={(value) =>
-              table.setPageSize(Number(value))
-            }
+            onValueChange={(value) => table.setPageSize(Number(value))}
           >
             <SelectTrigger className="h-8 w-16">
               <SelectValue />

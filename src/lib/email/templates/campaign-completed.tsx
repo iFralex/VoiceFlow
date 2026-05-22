@@ -78,8 +78,7 @@ const STRINGS: Record<CampaignCompletedLocale, Strings> = {
     preview: (campaign) => `Campaign completed — ${campaign}`,
     subject: (campaign) => `Campaign completed — ${campaign}`,
     greeting: (name) => `Hi ${name},`,
-    intro: (campaign) =>
-      `The campaign "${campaign}" has ended. Here is a summary of the results.`,
+    intro: (campaign) => `The campaign "${campaign}" has ended. Here is a summary of the results.`,
     kpiHeading: 'Campaign results',
     kpiCalls: 'Total calls',
     kpiCompleted: 'Completed',
@@ -179,7 +178,9 @@ export function CampaignCompletedEmail(props: CampaignCompletedEmailProps) {
                 <Text style={styles.kpiLabel}>{t.kpiAppointments}</Text>
               </Column>
               <Column style={styles.kpiColumn}>
-                <Text style={styles.kpiValue}>{formatCost(props.totalCostCents, props.locale)}</Text>
+                <Text style={styles.kpiValue}>
+                  {formatCost(props.totalCostCents, props.locale)}
+                </Text>
                 <Text style={styles.kpiLabel}>{t.kpiCost}</Text>
               </Column>
             </Row>

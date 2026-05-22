@@ -82,7 +82,10 @@ function CampaignRowActions({ campaign }: { campaign: SerializedCampaign }) {
 
   const canPause = campaign.status === 'running';
   const canResume = campaign.status === 'paused';
-  const canCancel = campaign.status === 'running' || campaign.status === 'paused' || campaign.status === 'scheduled';
+  const canCancel =
+    campaign.status === 'running' ||
+    campaign.status === 'paused' ||
+    campaign.status === 'scheduled';
 
   function translateResult(result: ActionResult): ActionResult {
     if (result.ok) return result;
@@ -161,10 +164,7 @@ function CampaignRowActions({ campaign }: { campaign: SerializedCampaign }) {
             <DropdownMenuSeparator />
             <ConfirmDialog
               trigger={
-                <DropdownMenuItem
-                  variant="destructive"
-                  onSelect={(e) => e.preventDefault()}
-                >
+                <DropdownMenuItem variant="destructive" onSelect={(e) => e.preventDefault()}>
                   {t('action_cancel')}
                 </DropdownMenuItem>
               }
@@ -196,7 +196,7 @@ function CampaignsTable({ campaigns }: { campaigns: SerializedCampaign[] }) {
     <div className="rounded-md border">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b bg-muted/50">
+          <tr className="bg-muted/50 border-b">
             <th className="px-4 py-3 text-left font-medium">{t('col_name')}</th>
             <th className="px-4 py-3 text-left font-medium">{t('col_script')}</th>
             <th className="px-4 py-3 text-right font-medium">{t('col_contacts')}</th>
@@ -208,37 +208,34 @@ function CampaignsTable({ campaigns }: { campaigns: SerializedCampaign[] }) {
         </thead>
         <tbody>
           {campaigns.map((campaign) => (
-            <tr key={campaign.id} className="border-b last:border-0 hover:bg-muted/30">
+            <tr key={campaign.id} className="hover:bg-muted/30 border-b last:border-0">
               <td className="px-4 py-3">
                 <Link
                   href={`/campaigns/${campaign.id}`}
-                  className="font-medium text-foreground hover:underline"
+                  className="text-foreground font-medium hover:underline"
                 >
                   {campaign.name}
                 </Link>
               </td>
-              <td className="px-4 py-3 text-muted-foreground">
-                <Link
-                  href={`/scripts/${campaign.scriptId}`}
-                  className="hover:underline"
-                >
+              <td className="text-muted-foreground px-4 py-3">
+                <Link href={`/scripts/${campaign.scriptId}`} className="hover:underline">
                   {campaign.scriptName}
                 </Link>
               </td>
-              <td className="px-4 py-3 text-right text-muted-foreground">
+              <td className="text-muted-foreground px-4 py-3 text-right">
                 {campaign.totalCalls.toLocaleString('it-IT')}
               </td>
               <td className="px-4 py-3">
                 <StatusBadge status={campaign.status} />
               </td>
-              <td className="px-4 py-3 text-right text-muted-foreground">
+              <td className="text-muted-foreground px-4 py-3 text-right">
                 {campaign.status === 'draft' || campaign.status === 'scheduled' ? (
                   campaign.estimatedMaxCents != null ? (
                     <span className="text-xs">
                       {t('cost_estimated', { cost: formatCents(campaign.estimatedMaxCents) })}
                     </span>
                   ) : (
-                    <span className="text-xs text-muted-foreground/50">—</span>
+                    <span className="text-muted-foreground/50 text-xs">—</span>
                   )
                 ) : (
                   <span className="text-xs">
@@ -246,7 +243,7 @@ function CampaignsTable({ campaigns }: { campaigns: SerializedCampaign[] }) {
                   </span>
                 )}
               </td>
-              <td className="px-4 py-3 text-muted-foreground">
+              <td className="text-muted-foreground px-4 py-3">
                 <span className="flex items-center gap-1">
                   <Calendar className="size-3" />
                   {formatDate(campaign.createdAt)}
@@ -299,7 +296,7 @@ export function CampaignsPageClient({ activeTab, campaigns }: Props) {
               className={[
                 'px-4 py-2 text-sm font-medium transition-colors',
                 isActive
-                  ? 'border-b-2 border-primary text-foreground'
+                  ? 'border-primary text-foreground border-b-2'
                   : 'text-muted-foreground hover:text-foreground',
               ].join(' ')}
             >

@@ -36,18 +36,14 @@ describe('resolvePeriodRange', () => {
 
   it('7d covers a 7-day window ending today', () => {
     const r = resolvePeriodRange('7d', fixedNow);
-    const days = Math.round(
-      (r.end.getTime() - r.start.getTime()) / (1000 * 60 * 60 * 24),
-    );
+    const days = Math.round((r.end.getTime() - r.start.getTime()) / (1000 * 60 * 60 * 24));
     expect(days).toBeGreaterThanOrEqual(6);
     expect(days).toBeLessThanOrEqual(7);
   });
 
   it('30d covers a 30-day window ending today', () => {
     const r = resolvePeriodRange('30d', fixedNow);
-    const days = Math.round(
-      (r.end.getTime() - r.start.getTime()) / (1000 * 60 * 60 * 24),
-    );
+    const days = Math.round((r.end.getTime() - r.start.getTime()) / (1000 * 60 * 60 * 24));
     expect(days).toBeGreaterThanOrEqual(29);
     expect(days).toBeLessThanOrEqual(30);
   });

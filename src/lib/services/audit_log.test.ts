@@ -116,7 +116,9 @@ function buildTx(store: FakeStore): unknown {
 }
 
 beforeEach(() => {
-  mockWithSystemContext.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) => fn(buildTx({ auditRows: [], userRows: [] })));
+  mockWithSystemContext.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) =>
+    fn(buildTx({ auditRows: [], userRows: [] })),
+  );
 });
 
 afterEach(() => {
@@ -147,10 +149,12 @@ describe('listAuditLog', () => {
       row({ id: BigInt(2), created_at: new Date('2026-05-02T10:00:00Z') }),
     ];
     mockWithSystemContext.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) =>
-      fn(buildTx({
-        auditRows: [...visibleRows, overflowRow],
-        userRows: [{ id: USER_A, email: 'alice@example.com' }],
-      })),
+      fn(
+        buildTx({
+          auditRows: [...visibleRows, overflowRow],
+          userRows: [{ id: USER_A, email: 'alice@example.com' }],
+        }),
+      ),
     );
 
     const result = await listAuditLog({ orgId: ORG_ID, limit: 2 });
@@ -171,13 +175,15 @@ describe('listAuditLog', () => {
       row({ id: BigInt(2), actor_user_id: null, actor_type: 'system' }),
     ];
     mockWithSystemContext.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) =>
-      fn(buildTx({
-        auditRows: rows,
-        userRows: [
-          { id: USER_A, email: 'alice@example.com' },
-          { id: USER_B, email: 'bob@example.com' },
-        ],
-      })),
+      fn(
+        buildTx({
+          auditRows: rows,
+          userRows: [
+            { id: USER_A, email: 'alice@example.com' },
+            { id: USER_B, email: 'bob@example.com' },
+          ],
+        }),
+      ),
     );
 
     const result = await listAuditLog({ orgId: ORG_ID });
@@ -190,7 +196,9 @@ describe('listAuditLog', () => {
 
   it('clamps the limit to the [1, 200] range', async () => {
     const rows = [row({ id: BigInt(1) })];
-    mockWithSystemContext.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) => fn(buildTx({ auditRows: rows, userRows: [] })));
+    mockWithSystemContext.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) =>
+      fn(buildTx({ auditRows: rows, userRows: [] })),
+    );
 
     // Should not throw with extreme limits
     const tooSmall = await listAuditLog({ orgId: ORG_ID, limit: -10 });

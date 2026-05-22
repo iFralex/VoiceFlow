@@ -77,22 +77,19 @@ export function NotificationsSettingsClient({ initialPrefs }: NotificationsSetti
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
-        <p className="text-sm text-muted-foreground">{t('description')}</p>
+        <p className="text-muted-foreground text-sm">{t('description')}</p>
       </div>
 
-      <div className="rounded-lg border divide-y">
+      <div className="divide-y rounded-lg border">
         {TOGGLES.map((toggle) => {
           const id = `notif-${toggle.key}`;
           const checked = prefs[toggle.key];
           const isPending = pendingKey === toggle.key;
           return (
-            <div
-              key={toggle.key}
-              className="flex items-start justify-between gap-4 p-4"
-            >
+            <div key={toggle.key} className="flex items-start justify-between gap-4 p-4">
               <div className="space-y-1">
                 <Label htmlFor={id}>{t(toggle.labelKey)}</Label>
-                <p className="text-sm text-muted-foreground">{t(toggle.descriptionKey)}</p>
+                <p className="text-muted-foreground text-sm">{t(toggle.descriptionKey)}</p>
               </div>
               <Switch
                 id={id}

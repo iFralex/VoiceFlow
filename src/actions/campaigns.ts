@@ -70,8 +70,14 @@ const createCampaignSchema = z
     /** ISO 8601 string (from datetime-local input, converted via new Date().toISOString()) */
     scheduledStart: z.string().optional(),
     concurrencyLimit: z.number().int().min(1).max(20).optional(),
-    timeWindowStart: z.string().regex(/^\d{2}:\d{2}$/).optional(),
-    timeWindowEnd: z.string().regex(/^\d{2}:\d{2}$/).optional(),
+    timeWindowStart: z
+      .string()
+      .regex(/^\d{2}:\d{2}$/)
+      .optional(),
+    timeWindowEnd: z
+      .string()
+      .regex(/^\d{2}:\d{2}$/)
+      .optional(),
     /** When true, call launchCampaign immediately after creating. */
     launch: z.boolean().default(false),
   })
@@ -254,9 +260,7 @@ const exportResultsSchema = z.object({
  *
  * Every invocation records an audit log entry under `campaign.export_*`.
  */
-export async function exportCampaignResults(
-  input: z.infer<typeof exportResultsSchema>,
-): Promise<
+export async function exportCampaignResults(input: z.infer<typeof exportResultsSchema>): Promise<
   ActionResult & {
     url?: string;
     deferred?: boolean;

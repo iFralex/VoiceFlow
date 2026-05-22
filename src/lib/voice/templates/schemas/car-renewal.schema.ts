@@ -30,10 +30,7 @@ export const carRenewalSchema = z.object({
         .max(MAX_LEN, `Massimo ${MAX_LEN} caratteri`),
     )
     .min(1, 'Inserire almeno uno slot'),
-  trade_in_offer_summary: z
-    .string()
-    .max(MAX_LEN, `Massimo ${MAX_LEN} caratteri`)
-    .optional(),
+  trade_in_offer_summary: z.string().max(MAX_LEN, `Massimo ${MAX_LEN} caratteri`).optional(),
 });
 
 export type CarRenewalVariables = z.infer<typeof carRenewalSchema>;
@@ -87,7 +84,7 @@ export const carRenewalJsonSchema = {
     trade_in_offer_summary: {
       type: 'string',
       maxLength: 256,
-      description: "Riepilogo offerta permuta (opzionale, es. €12.000 garantiti per la sua Golf)",
+      description: 'Riepilogo offerta permuta (opzionale, es. €12.000 garantiti per la sua Golf)',
     },
   },
   additionalProperties: false,

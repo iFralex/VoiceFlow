@@ -22,7 +22,8 @@ function isPrivateOrLoopbackUrl(url: string): boolean {
     // IPv6 loopback, link-local (fe80::/10), and unique-local (fc00::/7) ranges.
     // URL.hostname returns bracketed IPv6 literals, e.g. "[::1]".
     if (hostname === '[::1]' || hostname === '[0:0:0:0:0:0:0:1]') return true;
-    if (/^\[fe80:/i.test(hostname) || /^\[fc/i.test(hostname) || /^\[fd/i.test(hostname)) return true;
+    if (/^\[fe80:/i.test(hostname) || /^\[fc/i.test(hostname) || /^\[fd/i.test(hostname))
+      return true;
     // IPv4-mapped IPv6 addresses (::ffff:0:0/96) can reach IPv4 private ranges.
     if (/^\[::ffff:/i.test(hostname)) return true;
     const ipv4 = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(hostname);

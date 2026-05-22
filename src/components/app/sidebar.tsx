@@ -60,9 +60,7 @@ export function Sidebar({
                 <Icons.PanelLeft size={16} />
               </Button>
             </TooltipTrigger>
-            <TooltipContent side="right">
-              {collapsed ? t('expand') : t('collapse')}
-            </TooltipContent>
+            <TooltipContent side="right">{collapsed ? t('expand') : t('collapse')}</TooltipContent>
           </Tooltip>
         </div>
 

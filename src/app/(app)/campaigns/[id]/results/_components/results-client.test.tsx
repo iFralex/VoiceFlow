@@ -117,13 +117,7 @@ describe('CampaignResultsClient', () => {
 
   it('navigates to the next page when the next button is clicked', async () => {
     const user = userEvent.setup();
-    render(
-      <CampaignResultsClient
-        {...baseProps}
-        total={50}
-        rows={sampleRows}
-      />,
-    );
+    render(<CampaignResultsClient {...baseProps} total={50} rows={sampleRows} />);
     await user.click(screen.getByRole('button', { name: 'Pagina successiva' }));
     expect(mockPush).toHaveBeenCalled();
     const url = mockPush.mock.calls[0]?.[0] as string;
@@ -140,9 +134,7 @@ describe('CampaignResultsClient', () => {
     const { rerender } = render(<CampaignResultsClient {...baseProps} />);
     expect(screen.queryByText('Pulisci filtri')).not.toBeInTheDocument();
 
-    rerender(
-      <CampaignResultsClient {...baseProps} outcomes={['appointment_booked']} />,
-    );
+    rerender(<CampaignResultsClient {...baseProps} outcomes={['appointment_booked']} />);
     expect(screen.getByText('Pulisci filtri')).toBeInTheDocument();
   });
 

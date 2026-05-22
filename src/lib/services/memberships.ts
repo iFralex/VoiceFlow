@@ -14,11 +14,7 @@ import type { MemberRole } from '@/types';
 
 // ─── Internal helpers ─────────────────────────────────────────────────────────
 
-async function getMemberRole(
-  tx: DbTx,
-  orgId: string,
-  userId: string,
-): Promise<MemberRole | null> {
+async function getMemberRole(tx: DbTx, orgId: string, userId: string): Promise<MemberRole | null> {
   const [m] = await tx
     .select({ role: memberships.role })
     .from(memberships)
@@ -176,10 +172,7 @@ export async function inviteMember(
 
     // Mirror into public.users in case the trigger hasn't fired yet
     await withSystemContext(async (tx) => {
-      await tx
-        .insert(users)
-        .values({ id: inviteeId!, email: input.email })
-        .onConflictDoNothing();
+      await tx.insert(users).values({ id: inviteeId!, email: input.email }).onConflictDoNothing();
     });
   }
 
@@ -220,8 +213,11 @@ export async function inviteMember(
     // Non-fatal: send invite email with data collected in the preflight context
     if (emailData) {
       emailData.membershipId = membership.id;
-      void sendInviteEmail(emailData).catch((e: unknown) =>
-        void logger.error('[memberships] sendInviteEmail failed', { error: e instanceof Error ? e.message : String(e) }),
+      void sendInviteEmail(emailData).catch(
+        (e: unknown) =>
+          void logger.error('[memberships] sendInviteEmail failed', {
+            error: e instanceof Error ? e.message : String(e),
+          }),
       );
     }
 
@@ -260,10 +256,7 @@ export async function acceptPendingInvites(userId: string): Promise<void> {
 
 export async function acceptInvite(membershipId: string, userId: string): Promise<void> {
   await withSystemContext(async (tx) => {
-    const [m] = await tx
-      .select()
-      .from(memberships)
-      .where(eq(memberships.id, membershipId));
+    const [m] = await tx.select().from(memberships).where(eq(memberships.id, membershipId));
 
     if (!m) throw new Error('membership_not_found');
     if (m.user_id !== userId) throw new Error('membership_user_mismatch');
@@ -285,9 +278,7 @@ export async function acceptInvite(membershipId: string, userId: string): Promis
   });
 }
 
-export async function listMembers(
-  orgId: string,
-): Promise<Array<Membership & { user: User }>> {
+export async function listMembers(orgId: string): Promise<Array<Membership & { user: User }>> {
   return withOrgContext(orgId, async (tx) => {
     const rows = await tx
       .select()
@@ -331,10 +322,7 @@ export async function updateMemberRole(
       if (ownerCount <= 1) throw new Error('sole_owner_cannot_be_demoted');
     }
 
-    await tx
-      .update(memberships)
-      .set({ role: newRole })
-      .where(eq(memberships.id, membershipId));
+    await tx.update(memberships).set({ role: newRole }).where(eq(memberships.id, membershipId));
 
     await recordAudit(tx, {
       orgId,

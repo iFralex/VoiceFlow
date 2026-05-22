@@ -68,7 +68,9 @@ const mockTx = {
 };
 
 vi.mock('@/lib/db/context', () => ({
-  withOrgContext: vi.fn(async (_orgId: string, fn: (tx: unknown) => Promise<unknown>) => fn(mockTx)),
+  withOrgContext: vi.fn(async (_orgId: string, fn: (tx: unknown) => Promise<unknown>) =>
+    fn(mockTx),
+  ),
   withSystemContext: vi.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn(mockTx)),
 }));
 
@@ -185,9 +187,7 @@ describe('processContactsImport', () => {
 
     const { processContactsImport } = await import('./import');
 
-    await expect(processContactsImport(importData)).rejects.toThrow(
-      'Failed to download CSV file',
-    );
+    await expect(processContactsImport(importData)).rejects.toThrow('Failed to download CSV file');
   });
 
   it('calls parseContactsCsv with correct options', async () => {
@@ -444,9 +444,7 @@ describe('processContactsImport', () => {
     mockCountContactsForOrg.mockResolvedValue(1_000_000);
 
     const { processContactsImport } = await import('./import');
-    await expect(processContactsImport(importData)).rejects.toThrow(
-      'org_contact_limit_exceeded',
-    );
+    await expect(processContactsImport(importData)).rejects.toThrow('org_contact_limit_exceeded');
 
     const calls = mockUpdateListImportStatus.mock.calls;
     const failCall = calls.find((c) => c[2] === 'failed');
@@ -555,11 +553,7 @@ describe('processContactsImport', () => {
     await processContactsImport(importData);
 
     expect(mockBulkMarkOptOut).toHaveBeenCalledOnce();
-    expect(mockBulkMarkOptOut).toHaveBeenCalledWith(
-      'org-1',
-      ['+393401234567'],
-      'rpo_block',
-    );
+    expect(mockBulkMarkOptOut).toHaveBeenCalledWith('org-1', ['+393401234567'], 'rpo_block');
   });
 
   it('does not enrol opt-out registry when no contacts are blocked', async () => {

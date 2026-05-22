@@ -68,7 +68,9 @@ describe('StatusBadge', () => {
 
     it('renders no_answer', () => {
       const { container } = render(<StatusBadge status="no_answer" />);
-      expect(container.querySelector('[data-status="no_answer"]')).toHaveTextContent('Senza risposta');
+      expect(container.querySelector('[data-status="no_answer"]')).toHaveTextContent(
+        'Senza risposta',
+      );
     });
 
     it('renders busy', () => {
@@ -80,7 +82,9 @@ describe('StatusBadge', () => {
   describe('payment statuses', () => {
     it('renders processing', () => {
       const { container } = render(<StatusBadge status="processing" />);
-      expect(container.querySelector('[data-status="processing"]')).toHaveTextContent('In elaborazione');
+      expect(container.querySelector('[data-status="processing"]')).toHaveTextContent(
+        'In elaborazione',
+      );
     });
 
     it('renders succeeded', () => {
@@ -107,7 +111,9 @@ describe('StatusBadge', () => {
 
     it('renders pending_review', () => {
       const { container } = render(<StatusBadge status="pending_review" />);
-      expect(container.querySelector('[data-status="pending_review"]')).toHaveTextContent('In revisione');
+      expect(container.querySelector('[data-status="pending_review"]')).toHaveTextContent(
+        'In revisione',
+      );
     });
   });
 
@@ -150,11 +156,29 @@ describe('StatusBadge', () => {
 
   it('STATUS_MAP covers all expected statuses', () => {
     const expectedStatuses = [
-      'draft', 'scheduled', 'running', 'paused', 'completed', 'cancelled', 'error',
-      'pending', 'dialing', 'in_progress', 'failed', 'no_answer', 'busy',
-      'processing', 'succeeded', 'refunded',
-      'active', 'opted_out', 'pending_review',
-      'compliant', 'warning', 'blocked', 'expired',
+      'draft',
+      'scheduled',
+      'running',
+      'paused',
+      'completed',
+      'cancelled',
+      'error',
+      'pending',
+      'dialing',
+      'in_progress',
+      'failed',
+      'no_answer',
+      'busy',
+      'processing',
+      'succeeded',
+      'refunded',
+      'active',
+      'opted_out',
+      'pending_review',
+      'compliant',
+      'warning',
+      'blocked',
+      'expired',
     ];
     for (const status of expectedStatuses) {
       expect(STATUS_MAP).toHaveProperty(status);

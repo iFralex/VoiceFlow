@@ -174,8 +174,9 @@ describe('buildSubjectExport', () => {
   });
 
   it('throws SubjectNotFoundError when no contact matches', async () => {
-    mockWithOrgContext.mockImplementation(async (_orgId: string, fn: (tx: unknown) => Promise<unknown>) =>
-      fn(buildOrgTx({ contact: null, callRows: [], apptRows: [], optOutRows: [] })),
+    mockWithOrgContext.mockImplementation(
+      async (_orgId: string, fn: (tx: unknown) => Promise<unknown>) =>
+        fn(buildOrgTx({ contact: null, callRows: [], apptRows: [], optOutRows: [] })),
     );
 
     await expect(
@@ -203,14 +204,27 @@ describe('buildSubjectExport', () => {
             contact,
             callRows: [call],
             apptRows: [],
-            optOutRows: [{ id: 'opt-1', org_id: ORG_ID, phone_e164: contact['phone_e164'], source: 'dealer_input' }],
+            optOutRows: [
+              {
+                id: 'opt-1',
+                org_id: ORG_ID,
+                phone_e164: contact['phone_e164'],
+                source: 'dealer_input',
+              },
+            ],
           }),
         ),
     );
     mockWithSystemContext.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) =>
       fn(
         buildSystemTx([
-          { id: BigInt(1), org_id: ORG_ID, action: 'contact.created', subject_id: CONTACT_ID, subject_type: 'contact' },
+          {
+            id: BigInt(1),
+            org_id: ORG_ID,
+            action: 'contact.created',
+            subject_id: CONTACT_ID,
+            subject_type: 'contact',
+          },
         ]),
       ),
     );
@@ -341,7 +355,10 @@ describe('buildSubjectExport', () => {
     ).rejects.toBeInstanceOf(SubjectNotFoundError);
 
     // Each branch of the lookup OR must include an isNull(deleted_at) clause.
-    const cond = capturedConditions as { type: string; args: Array<{ type: string; args: unknown[] }> };
+    const cond = capturedConditions as {
+      type: string;
+      args: Array<{ type: string; args: unknown[] }>;
+    };
     expect(cond.type).toBe('or');
     for (const branch of cond.args) {
       expect(branch.type).toBe('and');

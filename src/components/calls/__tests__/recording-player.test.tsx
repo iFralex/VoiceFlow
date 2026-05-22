@@ -219,25 +219,18 @@ describe('RecordingPlayer', () => {
     // After auto-expansion, segments past the initial page render and the
     // "show full" button is gone.
     expect(screen.getByText('Auto segmento 120')).toBeInTheDocument();
-    expect(
-      container.querySelector('[data-slot="transcript-show-full"]'),
-    ).toBeNull();
+    expect(container.querySelector('[data-slot="transcript-show-full"]')).toBeNull();
   });
 
   it('does not paginate transcripts at or below the threshold', () => {
-    const exactlyAtThreshold: TranscriptSegment[] = Array.from(
-      { length: 100 },
-      (_, i) => ({
-        speaker: 'agent' as const,
-        text: `At threshold ${i}`,
-        startMs: i * 1_000,
-        endMs: (i + 1) * 1_000,
-      }),
-    );
+    const exactlyAtThreshold: TranscriptSegment[] = Array.from({ length: 100 }, (_, i) => ({
+      speaker: 'agent' as const,
+      text: `At threshold ${i}`,
+      startMs: i * 1_000,
+      endMs: (i + 1) * 1_000,
+    }));
     const { container } = renderPlayer({ transcript: exactlyAtThreshold });
     expect(container.querySelector('ol[data-paginated="true"]')).toBeNull();
-    expect(
-      container.querySelector('[data-slot="transcript-show-full"]'),
-    ).toBeNull();
+    expect(container.querySelector('[data-slot="transcript-show-full"]')).toBeNull();
   });
 });

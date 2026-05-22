@@ -34,13 +34,14 @@ export function AlertsList({ alerts, className }: Props) {
   return (
     <section
       data-slot="alerts-list"
-      className={cn('flex flex-col gap-3 rounded-xl bg-card p-4 ring-1 ring-foreground/10', className)}
+      className={cn(
+        'bg-card ring-foreground/10 flex flex-col gap-3 rounded-xl p-4 ring-1',
+        className,
+      )}
     >
       <h2 className="text-sm font-semibold">{t('alerts_title')}</h2>
       {alerts.length === 0 ? (
-        <p className="py-4 text-center text-sm text-muted-foreground">
-          {t('alerts_empty')}
-        </p>
+        <p className="text-muted-foreground py-4 text-center text-sm">{t('alerts_empty')}</p>
       ) : (
         <ul className="flex flex-col gap-2">
           {alerts.map((a) => {
@@ -50,8 +51,8 @@ export function AlertsList({ alerts, className }: Props) {
               a.kind === 'low_credit'
                 ? t('alert_low_credit', { minutes: a.balanceMinutes })
                 : a.kind === 'cli_cooldown'
-                ? t('alert_cli_cooldown', { count: a.count })
-                : t('alert_disclosure_failure', { count: a.count });
+                  ? t('alert_cli_cooldown', { count: a.count })
+                  : t('alert_disclosure_failure', { count: a.count });
             return (
               <li
                 key={a.id}

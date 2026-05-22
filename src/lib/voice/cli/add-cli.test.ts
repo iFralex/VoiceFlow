@@ -3,14 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { AddCliArgsError, parseAddCliArgs } from './add-cli';
 
 describe('parseAddCliArgs', () => {
-  const baseArgs = [
-    '--e164',
-    '+390212345678',
-    '--provider',
-    'voiped',
-    '--vapi-id',
-    'pn_abc123',
-  ];
+  const baseArgs = ['--e164', '+390212345678', '--provider', 'voiped', '--vapi-id', 'pn_abc123'];
 
   it('parses a minimal valid command', () => {
     const out = parseAddCliArgs(baseArgs);
@@ -47,20 +40,12 @@ describe('parseAddCliArgs', () => {
   });
 
   it('lowercases org-id (UUID is case-insensitive but we normalise)', () => {
-    const out = parseAddCliArgs([
-      ...baseArgs,
-      '--org-id',
-      '11111111-2222-3333-4444-AAAABBBBCCCC',
-    ]);
+    const out = parseAddCliArgs([...baseArgs, '--org-id', '11111111-2222-3333-4444-AAAABBBBCCCC']);
     expect(out.orgId).toBe('11111111-2222-3333-4444-aaaabbbbcccc');
   });
 
   it('supports --flag=value form', () => {
-    const out = parseAddCliArgs([
-      '--e164=+393409876543',
-      '--provider=twilio',
-      '--vapi-id=pn_xyz',
-    ]);
+    const out = parseAddCliArgs(['--e164=+393409876543', '--provider=twilio', '--vapi-id=pn_xyz']);
     expect(out.e164).toBe('+393409876543');
     expect(out.provider).toBe('twilio');
     expect(out.vapiId).toBe('pn_xyz');
@@ -82,21 +67,12 @@ describe('parseAddCliArgs', () => {
 
   it('rejects an unknown provider', () => {
     expect(() =>
-      parseAddCliArgs([
-        '--e164',
-        '+390212345678',
-        '--provider',
-        'plivo',
-        '--vapi-id',
-        'x',
-      ]),
+      parseAddCliArgs(['--e164', '+390212345678', '--provider', 'plivo', '--vapi-id', 'x']),
     ).toThrow(/voiped, twilio, telnyx/);
   });
 
   it('rejects a malformed org-id', () => {
-    expect(() => parseAddCliArgs([...baseArgs, '--org-id', 'not-a-uuid'])).toThrow(
-      /UUID/,
-    );
+    expect(() => parseAddCliArgs([...baseArgs, '--org-id', 'not-a-uuid'])).toThrow(/UUID/);
   });
 
   it('rejects a flag missing its value', () => {

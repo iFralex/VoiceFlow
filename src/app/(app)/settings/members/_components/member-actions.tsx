@@ -94,10 +94,7 @@ export function MemberActions({ membershipId, currentRole }: MemberActionsProps)
             {t('change_role')}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem
-            variant="destructive"
-            onSelect={() => setRemoveDialogOpen(true)}
-          >
+          <DropdownMenuItem variant="destructive" onSelect={() => setRemoveDialogOpen(true)}>
             {t('remove_member')}
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -109,10 +106,7 @@ export function MemberActions({ membershipId, currentRole }: MemberActionsProps)
           <DialogHeader>
             <DialogTitle>{t('change_role_dialog_title')}</DialogTitle>
           </DialogHeader>
-          <Select
-            value={selectedRole}
-            onValueChange={(v) => setSelectedRole(v as MemberRole)}
-          >
+          <Select value={selectedRole} onValueChange={(v) => setSelectedRole(v as MemberRole)}>
             <SelectTrigger className="w-full">
               <SelectValue />
             </SelectTrigger>

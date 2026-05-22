@@ -39,10 +39,7 @@ import { middleware } from './middleware';
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
-function makeRequest(
-  pathname: string,
-  cookies: Record<string, string> = {},
-): NextRequest {
+function makeRequest(pathname: string, cookies: Record<string, string> = {}): NextRequest {
   const url = new URL(pathname, 'http://localhost:3000');
   const req = new NextRequest(url);
   Object.entries(cookies).forEach(([name, value]) => req.cookies.set(name, value));
@@ -141,7 +138,7 @@ describe('middleware', () => {
     const req = makeRequest('/api/campaigns');
     const res = await middleware(req);
     expect(res.status).toBe(401);
-    const body = await res.json() as { error: string };
+    const body = (await res.json()) as { error: string };
     expect(body.error).toBe('Unauthorized');
   });
 
@@ -272,7 +269,11 @@ describe('middleware', () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } });
     mockFrom.mockReturnValue(
       membershipChain([
-        { org_id: 'org-deleted', role: 'owner', organizations: { deleted_at: '2025-01-01T00:00:00Z' } },
+        {
+          org_id: 'org-deleted',
+          role: 'owner',
+          organizations: { deleted_at: '2025-01-01T00:00:00Z' },
+        },
       ]),
     );
 
@@ -287,7 +288,11 @@ describe('middleware', () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } });
     mockFrom.mockReturnValue(
       membershipChain([
-        { org_id: 'org-deleted', role: 'owner', organizations: { deleted_at: '2025-01-01T00:00:00Z' } },
+        {
+          org_id: 'org-deleted',
+          role: 'owner',
+          organizations: { deleted_at: '2025-01-01T00:00:00Z' },
+        },
         { org_id: 'org-active', role: 'admin', organizations: { deleted_at: null } },
       ]),
     );

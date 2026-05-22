@@ -185,12 +185,7 @@ async function seedCallScaffold(tx: TestDbTx, orgId: string) {
   });
 }
 
-async function insertCallFrom(
-  tx: TestDbTx,
-  orgId: string,
-  fromNumber: string,
-  startedAt: Date,
-) {
+async function insertCallFrom(tx: TestDbTx, orgId: string, fromNumber: string, startedAt: Date) {
   await tx.insert(calls).values({
     org_id: orgId,
     campaign_id: CAMPAIGN_ID,
@@ -205,22 +200,22 @@ async function insertCallFrom(
 // ── Tests ───────────────────────────────────────────────────────────────────
 
 describe('pickCliForOrg integration', () => {
-  it.skipIf(skipWhenNoDb)('returns a shared-pool CLI when no org-dedicated number exists', async () => {
-    await withTestDb(async (tx) => {
-      await seedBaseOrgs(tx);
-      await seedSharedPool(tx);
+  it.skipIf(skipWhenNoDb)(
+    'returns a shared-pool CLI when no org-dedicated number exists',
+    async () => {
+      await withTestDb(async (tx) => {
+        await seedBaseOrgs(tx);
+        await seedSharedPool(tx);
 
-      const picked = await pickCliForOrg(ORG_A, undefined, { tx: asProdTx(tx) });
+        const picked = await pickCliForOrg(ORG_A, undefined, { tx: asProdTx(tx) });
 
-      expect([
-        '+390299990001',
-        '+390699990001',
-        '+390819990001',
-        '+393999900001',
-      ]).toContain(picked.phoneE164);
-      expect(picked.provider).toBe('voiped');
-    });
-  });
+        expect(['+390299990001', '+390699990001', '+390819990001', '+393999900001']).toContain(
+          picked.phoneE164,
+        );
+        expect(picked.provider).toBe('voiped');
+      });
+    },
+  );
 
   it.skipIf(skipWhenNoDb)('prefers an org-dedicated CLI over the shared pool', async () => {
     await withTestDb(async (tx) => {
@@ -261,9 +256,9 @@ describe('pickCliForOrg integration', () => {
         spam_score: '0',
       });
 
-      await expect(
-        pickCliForOrg(ORG_A, undefined, { tx: asProdTx(tx) }),
-      ).rejects.toBeInstanceOf(NoAvailableCliError);
+      await expect(pickCliForOrg(ORG_A, undefined, { tx: asProdTx(tx) })).rejects.toBeInstanceOf(
+        NoAvailableCliError,
+      );
     });
   });
 
@@ -280,35 +275,38 @@ describe('pickCliForOrg integration', () => {
     });
   });
 
-  it.skipIf(skipWhenNoDb)('falls through to lowest daily count when no region match exists', async () => {
-    await withTestDb(async (tx) => {
-      await seedBaseOrgs(tx);
-      await seedSharedPool(tx);
+  it.skipIf(skipWhenNoDb)(
+    'falls through to lowest daily count when no region match exists',
+    async () => {
+      await withTestDb(async (tx) => {
+        await seedBaseOrgs(tx);
+        await seedSharedPool(tx);
 
-      await tx
-        .update(phoneNumbers)
-        .set({ daily_call_count: 5 })
-        .where(eq(phoneNumbers.id, PHONE_SHARED_MILANO));
-      await tx
-        .update(phoneNumbers)
-        .set({ daily_call_count: 2 })
-        .where(eq(phoneNumbers.id, PHONE_SHARED_NAPOLI));
-      await tx
-        .update(phoneNumbers)
-        .set({ daily_call_count: 0 })
-        .where(eq(phoneNumbers.id, PHONE_SHARED_ROMA));
-      await tx
-        .update(phoneNumbers)
-        .set({ daily_call_count: 9 })
-        .where(eq(phoneNumbers.id, PHONE_SHARED_MOBILE));
+        await tx
+          .update(phoneNumbers)
+          .set({ daily_call_count: 5 })
+          .where(eq(phoneNumbers.id, PHONE_SHARED_MILANO));
+        await tx
+          .update(phoneNumbers)
+          .set({ daily_call_count: 2 })
+          .where(eq(phoneNumbers.id, PHONE_SHARED_NAPOLI));
+        await tx
+          .update(phoneNumbers)
+          .set({ daily_call_count: 0 })
+          .where(eq(phoneNumbers.id, PHONE_SHARED_ROMA));
+        await tx
+          .update(phoneNumbers)
+          .set({ daily_call_count: 9 })
+          .where(eq(phoneNumbers.id, PHONE_SHARED_MOBILE));
 
-      // Padova contact: 049 area code, no region match for any seeded row.
-      const picked = await pickCliForOrg(ORG_A, '+390499999999', {
-        tx: asProdTx(tx),
+        // Padova contact: 049 area code, no region match for any seeded row.
+        const picked = await pickCliForOrg(ORG_A, '+390499999999', {
+          tx: asProdTx(tx),
+        });
+        expect(picked.phoneE164).toBe('+390699990001'); // lowest count = Roma
       });
-      expect(picked.phoneE164).toBe('+390699990001'); // lowest count = Roma
-    });
-  });
+    },
+  );
 
   it.skipIf(skipWhenNoDb)('excludes CLIs at the daily cap', async () => {
     await withTestDb(async (tx) => {
@@ -374,9 +372,9 @@ describe('pickCliForOrg integration', () => {
         spam_score: '85',
       });
 
-      await expect(
-        pickCliForOrg(ORG_A, undefined, { tx: asProdTx(tx) }),
-      ).rejects.toBeInstanceOf(NoAvailableCliError);
+      await expect(pickCliForOrg(ORG_A, undefined, { tx: asProdTx(tx) })).rejects.toBeInstanceOf(
+        NoAvailableCliError,
+      );
     });
   });
 

@@ -18,16 +18,11 @@ export default function MarketingPage() {
   return (
     <>
       {/* Hero */}
-      <section
-        data-testid="landing-hero"
-        className="py-20 text-center"
-      >
-        <h1 className="text-4xl font-bold leading-tight tracking-tight text-foreground sm:text-5xl lg:text-6xl">
+      <section data-testid="landing-hero" className="py-20 text-center">
+        <h1 className="text-foreground text-4xl leading-tight font-bold tracking-tight sm:text-5xl lg:text-6xl">
           {t('hero_title')}
         </h1>
-        <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
-          {t('hero_subtitle')}
-        </p>
+        <p className="text-muted-foreground mx-auto mt-6 max-w-2xl text-lg">{t('hero_subtitle')}</p>
         <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
           <Button asChild size="lg">
             <Link href="/registrati">{t('hero_cta_primary')}</Link>
@@ -39,11 +34,8 @@ export default function MarketingPage() {
       </section>
 
       {/* Value propositions */}
-      <section
-        data-testid="landing-value-props"
-        className="py-16"
-      >
-        <h2 className="mb-12 text-center text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+      <section data-testid="landing-value-props" className="py-16">
+        <h2 className="text-foreground mb-12 text-center text-2xl font-semibold tracking-tight sm:text-3xl">
           {t('value_props_title')}
         </h2>
         <div className="grid gap-8 sm:grid-cols-3">
@@ -51,16 +43,18 @@ export default function MarketingPage() {
             <article
               key={key}
               data-testid={`value-prop-${key}`}
-              className="rounded-lg border bg-card p-6 text-card-foreground shadow-sm"
+              className="bg-card text-card-foreground rounded-lg border p-6 shadow-sm"
             >
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-md bg-muted">
+              <div className="bg-muted mb-4 flex h-12 w-12 items-center justify-center rounded-md">
                 <Icon size={28} className="text-primary" />
               </div>
               <h3 className="mb-2 text-lg font-semibold">
                 {t(`${key}_title` as 'vp1_title' | 'vp2_title' | 'vp3_title')}
               </h3>
-              <p className="text-sm leading-relaxed text-muted-foreground">
-                {t(`${key}_description` as 'vp1_description' | 'vp2_description' | 'vp3_description')}
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                {t(
+                  `${key}_description` as 'vp1_description' | 'vp2_description' | 'vp3_description',
+                )}
               </p>
             </article>
           ))}
@@ -68,17 +62,12 @@ export default function MarketingPage() {
       </section>
 
       {/* Pricing teaser */}
-      <section
-        data-testid="landing-pricing"
-        className="py-16 text-center"
-      >
-        <div className="rounded-xl border bg-muted/40 px-8 py-12">
-          <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+      <section data-testid="landing-pricing" className="py-16 text-center">
+        <div className="bg-muted/40 rounded-xl border px-8 py-12">
+          <h2 className="text-foreground text-2xl font-semibold tracking-tight sm:text-3xl">
             {t('pricing_title')}
           </h2>
-          <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
-            {t('pricing_description')}
-          </p>
+          <p className="text-muted-foreground mx-auto mt-4 max-w-xl">{t('pricing_description')}</p>
           <Button asChild size="lg" className="mt-8" variant="outline">
             <Link href={t('pricing_href')}>{t('pricing_cta')}</Link>
           </Button>

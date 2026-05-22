@@ -301,12 +301,7 @@ export async function checkOrgDailyCallCap(
     tx
       .select({ cnt: count() })
       .from(calls)
-      .where(
-        and(
-          eq(calls.org_id, orgId),
-          gt(calls.created_at, midnightToday),
-        ),
-      ),
+      .where(and(eq(calls.org_id, orgId), gt(calls.created_at, midnightToday))),
   );
 
   const todayCount = row?.cnt ?? 0;
@@ -360,12 +355,7 @@ export async function checkCliHourlyCap(
     tx
       .select({ cnt: count() })
       .from(phoneNumbers)
-      .where(
-        and(
-          eq(phoneNumbers.org_id, orgId),
-          eq(phoneNumbers.status, 'active'),
-        ),
-      ),
+      .where(and(eq(phoneNumbers.org_id, orgId), eq(phoneNumbers.status, 'active'))),
   );
 
   const activeCLIs = cliRow?.cnt ?? 0;
@@ -379,12 +369,7 @@ export async function checkCliHourlyCap(
     tx
       .select({ cnt: count() })
       .from(calls)
-      .where(
-        and(
-          eq(calls.org_id, orgId),
-          gt(calls.created_at, hourAgo),
-        ),
-      ),
+      .where(and(eq(calls.org_id, orgId), gt(calls.created_at, hourAgo))),
   );
 
   const hourlyCallCount = callRow?.cnt ?? 0;
@@ -472,10 +457,7 @@ export async function waitForCallWindow(
  * or RPO-blocked between planning time and actual dispatch. This is a safety
  * net — the contact may have changed state after the eligibility filter ran.
  */
-export async function verifyContactStillEligible(
-  orgId: string,
-  contactId: string,
-): Promise<void> {
+export async function verifyContactStillEligible(orgId: string, contactId: string): Promise<void> {
   const [contact] = await withOrgContext(orgId, (tx) =>
     tx
       .select({
@@ -738,10 +720,7 @@ export async function campaignDispatchCallHandler(
   }
 
   // 2. Time-window gate
-  const sleepUntil = await waitForCallWindow(
-    campaign.time_window_start,
-    campaign.time_window_end,
-  );
+  const sleepUntil = await waitForCallWindow(campaign.time_window_start, campaign.time_window_end);
   if (sleepUntil !== null) {
     return { sleepUntil };
   }
@@ -867,7 +846,8 @@ export async function campaignDispatchCallHandler(
         )
         .returning({ id: calls.id });
 
-      if (updated.length === 0) return { flipped: false, optOutEvents: [] as InngestEventPayload[] };
+      if (updated.length === 0)
+        return { flipped: false, optOutEvents: [] as InngestEventPayload[] };
 
       // Routes through the unified opt-out service so the registry insert,
       // contact flag, audit log, and `compliance/opt-out-registered` event

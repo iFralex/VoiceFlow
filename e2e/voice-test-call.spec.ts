@@ -19,8 +19,7 @@ import { createTestUser, deleteTestUser, generateMagicLink } from './helpers/sup
  * unless SKIP_E2E_VOICE is explicitly set to 'false'.
  */
 
-const SKIP =
-  process.env['SKIP_E2E_VOICE'] !== 'false' || !process.env['E2E_TEST_PHONE'];
+const SKIP = process.env['SKIP_E2E_VOICE'] !== 'false' || !process.env['E2E_TEST_PHONE'];
 
 const TEST_PHONE = process.env['E2E_TEST_PHONE'] ?? '+393000000000';
 
@@ -118,85 +117,82 @@ test.describe('Voice test-call end-to-end (staging only)', () => {
     });
   });
 
-  test(
-    'dispatch test call → call completes → recording and transcript persisted → outcome classified',
-    async ({ page }) => {
-      // ── 1. Authenticate ──────────────────────────────────────────────────
-      await loginViaGeneratedLink(page, userEmail);
-      if (page.url().includes('onboarding')) {
-        await completeOnboarding(page, `Voice E2E Org ${Date.now()}`);
-      }
+  test('dispatch test call → call completes → recording and transcript persisted → outcome classified', async ({
+    page,
+  }) => {
+    // ── 1. Authenticate ──────────────────────────────────────────────────
+    await loginViaGeneratedLink(page, userEmail);
+    if (page.url().includes('onboarding')) {
+      await completeOnboarding(page, `Voice E2E Org ${Date.now()}`);
+    }
 
-      // ── 2. Create a script from the lead-reactivation template ───────────
-      await page.goto('/scripts');
-      await page.waitForLoadState('networkidle');
+    // ── 2. Create a script from the lead-reactivation template ───────────
+    await page.goto('/scripts');
+    await page.waitForLoadState('networkidle');
 
-      const templateLink = page
-        .locator('[href="/scripts/new?template=lead-reactivation"]')
-        .first();
-      await expect(templateLink).toBeVisible({ timeout: 10_000 });
-      await templateLink.click();
+    const templateLink = page.locator('[href="/scripts/new?template=lead-reactivation"]').first();
+    await expect(templateLink).toBeVisible({ timeout: 10_000 });
+    await templateLink.click();
 
-      await page.waitForURL('**/scripts/new**', { timeout: 10_000 });
-      await page.waitForLoadState('networkidle');
+    await page.waitForURL('**/scripts/new**', { timeout: 10_000 });
+    await page.waitForLoadState('networkidle');
 
-      // Fill in required fields
-      await page.getByLabel(/nome script/i).fill('Voice E2E Test Script');
-      await page.getByLabel(/dealership_name/i).fill('Concessionaria E2E');
-      await page.getByLabel(/brand/i).fill('Volkswagen');
-      await page.getByLabel(/salesperson_first_name/i).fill('Marco');
-      await page.locator('input[placeholder*="GG/MM"]').first().fill('15/06 10:00');
-      await page.getByLabel(/lead_origin_context/i).fill('Test chiamata E2E');
+    // Fill in required fields
+    await page.getByLabel(/nome script/i).fill('Voice E2E Test Script');
+    await page.getByLabel(/dealership_name/i).fill('Concessionaria E2E');
+    await page.getByLabel(/brand/i).fill('Volkswagen');
+    await page.getByLabel(/salesperson_first_name/i).fill('Marco');
+    await page.locator('input[placeholder*="GG/MM"]').first().fill('15/06 10:00');
+    await page.getByLabel(/lead_origin_context/i).fill('Test chiamata E2E');
 
-      // Save the script
-      await page.getByRole('button', { name: /salva script/i }).click();
-      await page.waitForURL('**/scripts/**', { timeout: 15_000 });
+    // Save the script
+    await page.getByRole('button', { name: /salva script/i }).click();
+    await page.waitForURL('**/scripts/**', { timeout: 15_000 });
 
-      // Confirm we are on the script detail page
-      await expect(page.getByRole('heading', { name: /modifica script/i })).toBeVisible({
-        timeout: 10_000,
-      });
+    // Confirm we are on the script detail page
+    await expect(page.getByRole('heading', { name: /modifica script/i })).toBeVisible({
+      timeout: 10_000,
+    });
 
-      // ── 3. Open the "Chiamami ora" dialog ────────────────────────────────
-      const testCallButton = page.getByRole('button', { name: /chiamami ora/i });
-      await expect(testCallButton).toBeVisible({ timeout: 5_000 });
-      await testCallButton.click();
+    // ── 3. Open the "Chiamami ora" dialog ────────────────────────────────
+    const testCallButton = page.getByRole('button', { name: /chiamami ora/i });
+    await expect(testCallButton).toBeVisible({ timeout: 5_000 });
+    await testCallButton.click();
 
-      // Fill in the Italian test phone number
-      await page.getByLabel(/numero di telefono/i).fill(TEST_PHONE);
+    // Fill in the Italian test phone number
+    await page.getByLabel(/numero di telefono/i).fill(TEST_PHONE);
 
-      // ── 4. Submit and capture the callId from the API response ───────────
-      const [apiResponse] = await Promise.all([
-        page.waitForResponse((resp) => resp.url().includes('/api/internal/test-call'), {
-          timeout: 30_000,
-        }),
-        page.getByRole('button', { name: /avvia chiamata/i }).click(),
-      ]);
+    // ── 4. Submit and capture the callId from the API response ───────────
+    const [apiResponse] = await Promise.all([
+      page.waitForResponse((resp) => resp.url().includes('/api/internal/test-call'), {
+        timeout: 30_000,
+      }),
+      page.getByRole('button', { name: /avvia chiamata/i }).click(),
+    ]);
 
-      expect(apiResponse.status()).toBe(200);
-      const { callId } = (await apiResponse.json()) as { callId: string };
-      expect(callId).toBeTruthy();
+    expect(apiResponse.status()).toBe(200);
+    const { callId } = (await apiResponse.json()) as { callId: string };
+    expect(callId).toBeTruthy();
 
-      // ── 5. Wait for success toast to confirm dispatch ────────────────────
-      await expect(page.getByText(/chiamata di prova avviata/i)).toBeVisible({ timeout: 10_000 });
+    // ── 5. Wait for success toast to confirm dispatch ────────────────────
+    await expect(page.getByText(/chiamata di prova avviata/i)).toBeVisible({ timeout: 10_000 });
 
-      // ── 6. Poll /api/internal/calls/:id until the call reaches a terminal status
-      const callData = await pollCallUntilTerminal(page, callId, {
-        intervalMs: 5_000,
-        timeoutMs: 300_000,
-      });
+    // ── 6. Poll /api/internal/calls/:id until the call reaches a terminal status
+    const callData = await pollCallUntilTerminal(page, callId, {
+      intervalMs: 5_000,
+      timeoutMs: 300_000,
+    });
 
-      // ── 7. Assert the call completed (not failed / no-answer) ────────────
-      expect(callData['status']).toBe('completed');
+    // ── 7. Assert the call completed (not failed / no-answer) ────────────
+    expect(callData['status']).toBe('completed');
 
-      // ── 8. Assert recording and transcript are persisted ─────────────────
-      expect(callData['recording_path']).toBeTruthy();
-      expect(callData['transcript_path']).toBeTruthy();
+    // ── 8. Assert recording and transcript are persisted ─────────────────
+    expect(callData['recording_path']).toBeTruthy();
+    expect(callData['transcript_path']).toBeTruthy();
 
-      // ── 9. Assert outcome is a known enum value ───────────────────────────
-      // Outcome is set by tool invocation or the classifier.
-      // It may be null only for incomplete calls (which we assert completed above).
-      expect(VALID_OUTCOMES).toContain(callData['outcome']);
-    },
-  );
+    // ── 9. Assert outcome is a known enum value ───────────────────────────
+    // Outcome is set by tool invocation or the classifier.
+    // It may be null only for incomplete calls (which we assert completed above).
+    expect(VALID_OUTCOMES).toContain(callData['outcome']);
+  });
 });

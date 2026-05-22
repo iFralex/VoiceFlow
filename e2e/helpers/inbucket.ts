@@ -126,9 +126,7 @@ export async function waitForMagicLink(
     await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
   }
 
-  throw new Error(
-    `Timed out waiting for magic-link email for ${email} after ${POLL_TIMEOUT_MS}ms`,
-  );
+  throw new Error(`Timed out waiting for magic-link email for ${email} after ${POLL_TIMEOUT_MS}ms`);
 }
 
 /**

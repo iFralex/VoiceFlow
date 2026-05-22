@@ -17,23 +17,23 @@ export function MarketingFooter() {
   ] as const;
 
   return (
-    <footer
-      data-testid="marketing-footer"
-      className="border-t bg-background"
-    >
+    <footer data-testid="marketing-footer" className="bg-background border-t">
       <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 px-6 py-8 md:flex-row md:justify-between">
         {/* Copyright */}
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           {t('marketing_copyright', { year: CURRENT_YEAR })}
         </p>
 
         {/* Legal + status links */}
-        <nav aria-label={t('marketing_legal_nav_label')} className="flex flex-wrap justify-center gap-4 md:justify-end">
+        <nav
+          aria-label={t('marketing_legal_nav_label')}
+          className="flex flex-wrap justify-center gap-4 md:justify-end"
+        >
           {legalLinks.map(({ href, labelKey }) => (
             <Link
               key={href}
               href={href}
-              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground text-sm transition-colors"
             >
               {t(labelKey)}
             </Link>
@@ -43,7 +43,7 @@ export function MarketingFooter() {
               href={STATUS_PAGE_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground text-sm transition-colors"
               data-testid="footer-status-link"
             >
               {t('marketing_status')}

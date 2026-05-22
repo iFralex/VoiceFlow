@@ -10,16 +10,19 @@
 ## 1. Intake — how requests arrive
 
 ### 1a. In-app (self-service)
+
 Contact the customer (dealer) via their dashboard. If they ask you to erase
 a data subject on their behalf, collect the subject's phone number or email
 address and proceed to §3.
 
 ### 1b. Email
+
 Erasure requests usually arrive at the support address (`SUPPORT_EMAIL_ADDRESS`
 env var, visible in email footers). Forward the email to a dedicated inbox or
 Notion page so you can track the 30-day deadline.
 
 ### 1c. Postal mail
+
 Italian GDPR requests sent by registered letter are valid. Scan the letter
 and record it in the same tracking inbox / Notion page as email requests.
 Start the 30-day clock from the date on the postmark or the date of receipt
@@ -35,7 +38,7 @@ Before executing any erasure you must confirm that:
    government-issued ID (carta d'identità / passaporto). Verify the name
    matches what is stored in the contact record.
 2. **Or the requestor is an authorised representative** — ask for a written
-   proxy (*delega scritta*) plus the representative's ID.
+   proxy (_delega scritta_) plus the representative's ID.
 3. **The request is unambiguous** — it must clearly state the right being
    exercised (erasure / cancellazione) and identify the subject (phone number
    or email address registered in the platform).

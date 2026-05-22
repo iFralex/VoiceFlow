@@ -43,12 +43,12 @@ When a check fails the object includes an `"error"` field with a short descripti
 
 Checks performed:
 
-| Check  | What it does |
-|--------|-------------|
-| `db`   | `SELECT 1` via the pgBouncer pooler |
-| `stripe` | `GET /v1/balance` — verifies the Stripe key is valid |
-| `vapi` | `GET /assistant` — verifies the Vapi key is valid (skipped if `VAPI_API_KEY` absent) |
-| `resend` | `GET /domains` — verifies the Resend key is valid |
+| Check    | What it does                                                                         |
+| -------- | ------------------------------------------------------------------------------------ |
+| `db`     | `SELECT 1` via the pgBouncer pooler                                                  |
+| `stripe` | `GET /v1/balance` — verifies the Stripe key is valid                                 |
+| `vapi`   | `GET /assistant` — verifies the Vapi key is valid (skipped if `VAPI_API_KEY` absent) |
+| `resend` | `GET /domains` — verifies the Resend key is valid                                    |
 
 ## External Uptime Monitor
 

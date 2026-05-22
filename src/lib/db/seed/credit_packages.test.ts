@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import { creditPackageSeedData } from './credit_packages';
 import stripeProductsJson from '../../stripe/products.json';
 
-
 const EXPECTED_SLUGS = ['test', 'starter', 'growth', 'scale', 'enterprise'];
 
 describe('credit_packages seed data', () => {
@@ -51,9 +50,7 @@ describe('credit_packages seed data', () => {
   });
 
   it('stripe_price_id for each package matches products.json mapping', () => {
-    const priceMap = new Map(
-      stripeProductsJson.packages.map((p) => [p.slug, p.stripe_price_id]),
-    );
+    const priceMap = new Map(stripeProductsJson.packages.map((p) => [p.slug, p.stripe_price_id]));
     for (const p of creditPackageSeedData) {
       const expected = priceMap.get(p.slug) ?? null;
       expect(p.stripe_price_id).toBe(expected);

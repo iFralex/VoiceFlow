@@ -115,9 +115,10 @@ describe('VapiAdapter', () => {
       const tools: unknown[] = body.assistantOverrides.model.tools;
       // Should have the original function tool + one transferCall tool
       expect(tools).toHaveLength(2);
-      const transferTool = tools.find(
-        (t) => (t as { type: string }).type === 'transferCall',
-      ) as { type: string; destinations: { type: string; number: string }[] };
+      const transferTool = tools.find((t) => (t as { type: string }).type === 'transferCall') as {
+        type: string;
+        destinations: { type: string; number: string }[];
+      };
       expect(transferTool).toBeDefined();
       expect(transferTool.destinations[0]!.number).toBe('+390212345678');
     });
@@ -133,9 +134,7 @@ describe('VapiAdapter', () => {
 
       const body = JSON.parse((fetchMock.mock.calls[0]![1] as RequestInit).body as string);
       const tools: unknown[] = body.assistantOverrides.model.tools;
-      const hasTransferTool = tools.some(
-        (t) => (t as { type: string }).type === 'transferCall',
-      );
+      const hasTransferTool = tools.some((t) => (t as { type: string }).type === 'transferCall');
       expect(hasTransferTool).toBe(false);
     });
 
@@ -218,15 +217,16 @@ describe('VapiAdapter', () => {
     });
 
     it('throws VoiceProviderError when Vapi returns non-ok response', async () => {
-      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-        ok: false,
-        text: async () => 'Bad Request',
-      }));
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: false,
+          text: async () => 'Bad Request',
+        }),
+      );
 
       await expect(makeAdapter().createCall(baseParams)).rejects.toThrow(VoiceProviderError);
-      await expect(makeAdapter().createCall(baseParams)).rejects.toThrow(
-        'vapi.create_call_failed',
-      );
+      await expect(makeAdapter().createCall(baseParams)).rejects.toThrow('vapi.create_call_failed');
     });
   });
 
@@ -243,17 +243,23 @@ describe('VapiAdapter', () => {
     });
 
     it('treats 404 as success (already cancelled)', async () => {
-      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 404, text: async () => 'Not Found' }));
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({ ok: false, status: 404, text: async () => 'Not Found' }),
+      );
 
       await expect(makeAdapter().cancelCall(TEST_CALL_ID)).resolves.toBeUndefined();
     });
 
     it('throws VoiceProviderError on other non-ok responses', async () => {
-      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-        ok: false,
-        status: 500,
-        text: async () => 'Internal Server Error',
-      }));
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 500,
+          text: async () => 'Internal Server Error',
+        }),
+      );
 
       await expect(makeAdapter().cancelCall(TEST_CALL_ID)).rejects.toThrow(VoiceProviderError);
     });
@@ -270,9 +276,10 @@ describe('VapiAdapter', () => {
         arrayBuffer: async () => new ArrayBuffer(8),
       };
 
-      const fetchMock = vi.fn()
-        .mockResolvedValueOnce({ ok: true, json: async () => callResponse })   // GET /call
-        .mockResolvedValueOnce(downloadResponse);                              // GET recording
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValueOnce({ ok: true, json: async () => callResponse }) // GET /call
+        .mockResolvedValueOnce(downloadResponse); // GET recording
       vi.stubGlobal('fetch', fetchMock);
 
       const result = await makeAdapter().fetchRecording(TEST_CALL_ID);
@@ -285,9 +292,12 @@ describe('VapiAdapter', () => {
         id: TEST_CALL_ID,
         recordingUrl: 'https://cdn.vapi.ai/recordings/fallback.mp3',
       };
-      vi.stubGlobal('fetch', vi.fn()
-        .mockResolvedValueOnce({ ok: true, json: async () => callResponse })
-        .mockResolvedValueOnce({ ok: true, arrayBuffer: async () => new ArrayBuffer(4) }),
+      vi.stubGlobal(
+        'fetch',
+        vi
+          .fn()
+          .mockResolvedValueOnce({ ok: true, json: async () => callResponse })
+          .mockResolvedValueOnce({ ok: true, arrayBuffer: async () => new ArrayBuffer(4) }),
       );
 
       const result = await makeAdapter().fetchRecording(TEST_CALL_ID);
@@ -299,9 +309,12 @@ describe('VapiAdapter', () => {
         id: TEST_CALL_ID,
         recordingUrl: 'https://cdn.vapi.ai/recordings/abc.mp3',
       };
-      vi.stubGlobal('fetch', vi.fn()
-        .mockResolvedValueOnce({ ok: true, json: async () => callResponse })
-        .mockResolvedValueOnce({ ok: false }),
+      vi.stubGlobal(
+        'fetch',
+        vi
+          .fn()
+          .mockResolvedValueOnce({ ok: true, json: async () => callResponse })
+          .mockResolvedValueOnce({ ok: false }),
       );
 
       const result = await makeAdapter().fetchRecording(TEST_CALL_ID);
@@ -310,10 +323,13 @@ describe('VapiAdapter', () => {
     });
 
     it('throws VoiceProviderError when no recording URL is present', async () => {
-      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-        ok: true,
-        json: async () => ({ id: TEST_CALL_ID }),
-      }));
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({ id: TEST_CALL_ID }),
+        }),
+      );
 
       await expect(makeAdapter().fetchRecording(TEST_CALL_ID)).rejects.toThrow(
         'vapi.recording_not_available',
@@ -332,10 +348,13 @@ describe('VapiAdapter', () => {
           ],
         },
       };
-      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-        ok: true,
-        json: async () => callResponse,
-      }));
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: async () => callResponse,
+        }),
+      );
 
       const segments = await makeAdapter().fetchTranscript(TEST_CALL_ID);
       expect(segments).toHaveLength(2);
@@ -358,10 +377,13 @@ describe('VapiAdapter', () => {
           { role: 'user', message: 'Sì.', secondsFromStart: 2.0, endTime: 3.0 },
         ],
       };
-      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-        ok: true,
-        json: async () => callResponse,
-      }));
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: async () => callResponse,
+        }),
+      );
 
       const segments = await makeAdapter().fetchTranscript(TEST_CALL_ID);
       expect(segments).toHaveLength(2);
@@ -370,10 +392,13 @@ describe('VapiAdapter', () => {
     });
 
     it('returns empty array when call has no messages', async () => {
-      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-        ok: true,
-        json: async () => ({ id: TEST_CALL_ID }),
-      }));
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({ id: TEST_CALL_ID }),
+        }),
+      );
 
       const segments = await makeAdapter().fetchTranscript(TEST_CALL_ID);
       expect(segments).toEqual([]);
@@ -389,10 +414,13 @@ describe('VapiAdapter', () => {
           ],
         },
       };
-      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-        ok: true,
-        json: async () => callResponse,
-      }));
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: async () => callResponse,
+        }),
+      );
 
       const segments = await makeAdapter().fetchTranscript(TEST_CALL_ID);
       expect(segments[0]!.text).toBe('Artifact message');

@@ -241,8 +241,7 @@ describe('computePerMinuteCents', () => {
     const rateB = 2990 / 700;
     const unconsumedCentsB = 2990;
     const unconsumedMinB = unconsumedCentsB / rateB;
-    const expectedRate =
-      (unconsumedCentsA + unconsumedCentsB) / (unconsumedMinA + unconsumedMinB);
+    const expectedRate = (unconsumedCentsA + unconsumedCentsB) / (unconsumedMinA + unconsumedMinB);
 
     expect(result).toBeCloseTo(expectedRate, 5);
   });

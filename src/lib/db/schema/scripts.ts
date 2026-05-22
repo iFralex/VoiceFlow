@@ -17,14 +17,14 @@ export const scripts = pgTable(
       .notNull()
       .references(() => scriptTemplates.id, { onDelete: 'restrict' }),
     name: text('name').notNull(),
-    variables: jsonb('variables').notNull().default(sql`'{}'::jsonb`),
+    variables: jsonb('variables')
+      .notNull()
+      .default(sql`'{}'::jsonb`),
     voice_id: text('voice_id'),
     created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [
-    index('scripts_org_id_idx').on(t.org_id),
-  ],
+  (t) => [index('scripts_org_id_idx').on(t.org_id)],
 );
 
 export type Script = typeof scripts.$inferSelect;

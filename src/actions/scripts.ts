@@ -14,10 +14,7 @@ import {
   ScriptReferencedByCampaignError,
 } from '@/lib/services/scripts';
 import type { ActionResult } from '@/lib/utils/action-toast';
-import {
-  ELEVENLABS_DEFAULT_VOICE_ID,
-  synthesizeSpeech,
-} from '@/lib/voice/elevenlabs';
+import { ELEVENLABS_DEFAULT_VOICE_ID, synthesizeSpeech } from '@/lib/voice/elevenlabs';
 
 const createScriptInputSchema = z.object({
   templateSlug: z.string().min(1),
@@ -192,9 +189,7 @@ export async function previewVoiceSampleAction(
 
     const { firstMessage } = await previewSystemPromptService(orgId, parsed.data.scriptId);
     const textToSynthesize = firstMessage.slice(0, 60);
-    const voiceId = resolveElevenLabsVoiceId(
-      script.voice_id ?? script.template.default_voice_id,
-    );
+    const voiceId = resolveElevenLabsVoiceId(script.voice_id ?? script.template.default_voice_id);
 
     const cacheKey = `${voiceId}:${textToSynthesize}`;
     const cached = voiceSampleCache.get(cacheKey);
@@ -209,7 +204,9 @@ export async function previewVoiceSampleAction(
 
     return { ok: true, audioDataUrl: dataUrl };
   } catch (e) {
-    void logger.error('[previewVoiceSampleAction]', { error: e instanceof Error ? e.message : String(e) });
+    void logger.error('[previewVoiceSampleAction]', {
+      error: e instanceof Error ? e.message : String(e),
+    });
     return { ok: false, status: 'error', message: 'Errore durante la sintesi vocale.' };
   }
 }

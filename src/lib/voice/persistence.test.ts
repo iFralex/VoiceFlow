@@ -32,7 +32,9 @@ const TRANSCRIPT_SEGMENTS = [
   { speaker: 'caller', text: 'Ciao, si.', startMs: 2500, endMs: 4000 },
 ];
 
-function makeCallRow(overrides: Partial<{ provider: string; provider_call_id: string | null }> = {}) {
+function makeCallRow(
+  overrides: Partial<{ provider: string; provider_call_id: string | null }> = {},
+) {
   return { org_id: ORG_ID, provider: 'vapi', provider_call_id: PROVIDER_CALL_ID, ...overrides };
 }
 
@@ -92,7 +94,11 @@ describe('persistCallArtifacts', () => {
     expect(supabaseAdmin.storage.from).toHaveBeenCalledWith(CALL_MEDIA_BUCKET);
     expect(storageMock.upload).toHaveBeenCalledTimes(2);
 
-    const uploadCalls = storageMock.upload.mock.calls as [string, unknown, Record<string, unknown>][];
+    const uploadCalls = storageMock.upload.mock.calls as [
+      string,
+      unknown,
+      Record<string, unknown>,
+    ][];
     const [recPath, recBody, recOpts] = uploadCalls[0]!;
     const [txPath, txBody, txOpts] = uploadCalls[1]!;
     expect(recPath).toBe(`recordings/${ORG_ID}/${CALL_ID}.mp3`);
@@ -117,8 +123,10 @@ describe('persistCallArtifacts', () => {
   it('throws when call is not found', async () => {
     vi.mocked(withSystemContext).mockImplementation(async (fn) => {
       const tx = {
-        select: vi.fn().mockReturnThis(), from: vi.fn().mockReturnThis(),
-        where: vi.fn().mockReturnThis(), limit: vi.fn().mockResolvedValue([]),
+        select: vi.fn().mockReturnThis(),
+        from: vi.fn().mockReturnThis(),
+        where: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockResolvedValue([]),
       };
       return fn(tx as never);
     });
@@ -128,13 +136,16 @@ describe('persistCallArtifacts', () => {
   it('throws when provider_call_id is null', async () => {
     vi.mocked(withSystemContext).mockImplementation(async (fn) => {
       const tx = {
-        select: vi.fn().mockReturnThis(), from: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        from: vi.fn().mockReturnThis(),
         where: vi.fn().mockReturnThis(),
         limit: vi.fn().mockResolvedValue([makeCallRow({ provider_call_id: null })]),
       };
       return fn(tx as never);
     });
-    await expect(persistCallArtifacts(CALL_ID)).rejects.toThrow(`Call ${CALL_ID} has no provider_call_id`);
+    await expect(persistCallArtifacts(CALL_ID)).rejects.toThrow(
+      `Call ${CALL_ID} has no provider_call_id`,
+    );
   });
 
   it('throws when storage upload fails', async () => {
@@ -147,7 +158,8 @@ describe('persistCallArtifacts', () => {
   it('delegates to getVoiceProviderByName with retell provider', async () => {
     vi.mocked(withSystemContext).mockImplementation(async (fn) => {
       const tx = {
-        select: vi.fn().mockReturnThis(), from: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        from: vi.fn().mockReturnThis(),
         where: vi.fn().mockReturnThis(),
         limit: vi.fn().mockResolvedValue([makeCallRow({ provider: 'retell' })]),
       };
@@ -170,7 +182,8 @@ describe('persistCallArtifacts', () => {
     });
     vi.mocked(withSystemContext).mockImplementation(async (fn) => {
       const tx = {
-        select: vi.fn().mockReturnThis(), from: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        from: vi.fn().mockReturnThis(),
         where: vi.fn().mockReturnThis(),
         limit: vi.fn().mockResolvedValue([makeCallRow({ provider: 'proprietary' })]),
       };

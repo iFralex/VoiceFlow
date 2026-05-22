@@ -10,18 +10,18 @@ export const bookAppointmentJsonSchema = {
       date: {
         type: 'string',
         format: 'date',
-        description: 'Data dell\'appuntamento in formato ISO 8601 (es. 2024-06-15)',
+        description: "Data dell'appuntamento in formato ISO 8601 (es. 2024-06-15)",
       },
       time: {
         type: 'string',
         pattern: '^\\d{2}:\\d{2}$',
-        description: 'Ora dell\'appuntamento in formato HH:MM (es. 10:30)',
+        description: "Ora dell'appuntamento in formato HH:MM (es. 10:30)",
       },
       contact_confirmation_text: {
         type: 'string',
         maxLength: 512,
         description:
-          'Testo di conferma pronunciato dal contatto che indica l\'accettazione esplicita (citazione testuale)',
+          "Testo di conferma pronunciato dal contatto che indica l'accettazione esplicita (citazione testuale)",
       },
     },
     additionalProperties: false,

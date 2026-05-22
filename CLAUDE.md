@@ -85,27 +85,33 @@ Default connection: `postgresql://postgres:postgres@localhost:5433/vox_auto_test
 `src/lib/env.ts` validates all environment variables via Zod on startup. Set `SKIP_ENV_VALIDATION=true` to bypass in CI builds and test runners that don't have real secrets.
 
 Contact import limits (optional, validated in `env.ts`):
+
 - `CONTACTS_MAX_ROWS_PER_UPLOAD` — max rows per single CSV upload (default: 100,000)
 - `CONTACTS_MAX_ROWS_PER_ORG` — max total non-deleted contacts per org (default: 1,000,000)
 
 Voice preview (optional, validated in `env.ts`):
+
 - `ELEVENLABS_API_KEY` — ElevenLabs API key. When absent, `previewVoiceSampleAction` returns `{ ok: false, status: 'not_configured' }` and the UI hides the "Ascolta un esempio" button.
 
 CLI rotation (optional, validated in `env.ts`):
+
 - `CLI_DAILY_CAP_DEFAULT` — per-CLI daily dial cap enforced by `pickCliForOrg` (default: 100)
 - `CLI_HOURLY_CAP_DEFAULT` — per-CLI hourly sliding-window cap (default: 30)
 - `SBC_SMOKE_TEST_NUMBER` — destination E.164 for the weekly SBC smoke-test cron `/api/cron/sbc-smoke-test`. When absent the cron emits `sbc/smoke-test-failed` with reason `no_test_number_configured`.
 
 Email (required, validated in `env.ts`):
+
 - `RESEND_API_KEY` — Resend API key; required for all transactional email dispatch via `src/lib/email/client.ts`
 - `EMAIL_FROM_ADDRESS` — `From:` address for all outgoing emails (e.g. `noreply@voiceflow.it`)
 - `NEXT_PUBLIC_APP_URL` — absolute base URL used to build email CTA links and webhook callback absolute URLs
 
 Email (optional, validated in `env.ts`):
+
 - `EMAIL_REPLY_TO` — `Reply-To:` address appended to outgoing emails
 - `SUPPORT_EMAIL_ADDRESS` — support address rendered in email footers
 
 Internal / Security (required, validated in `env.ts`):
+
 - `CRON_SECRET` — Bearer token Vercel cron passes in the `Authorization` header; validated by all `/api/cron/*` route handlers (min 16 chars)
 - `INTERNAL_ADMIN_TOKEN` — guards internal dev tools (e.g. `/dev/webhook-test`); must be min 32 chars
 
@@ -135,6 +141,7 @@ Migration files live in `drizzle/migrations/` as `000N_<slug>.sql`. All files mu
 Every UI string must pass through `next-intl`. No inline strings in components.
 
 **Client component:**
+
 ```tsx
 'use client';
 import { useTranslations } from 'next-intl';
@@ -146,6 +153,7 @@ export function MyComponent() {
 ```
 
 **Server component:**
+
 ```tsx
 import { t } from '@/i18n/server';
 
@@ -190,11 +198,13 @@ For destructive actions, wrap the trigger in `<ConfirmDialog>` from `@/component
 ## Library Layer Architecture
 
 `src/lib/` is a three-layer architecture (see `src/lib/README.md`):
+
 - **Adapters** (`db/`, `supabase/`, `stripe/`, `email/`, `inngest/`, `voice/`, `storage/`, `compliance/`, `auth/`, `observability/`, `feature-flags/`) — wrap external SDKs
 - **Services** (`services/`) — orchestrate multiple adapters; never called by adapters
 - **Utils** (`utils/`) — pure functions, no side effects, usable at any layer
 
 Rules:
+
 1. Route handlers and Server Actions import from adapters and services, never directly from external SDKs.
 2. `utils/` has no side effects and no imports from adapters.
 
@@ -221,6 +231,7 @@ The logger ships events to Axiom when `AXIOM_TOKEN` and `AXIOM_DATASET` are set;
 Feature flags are managed via PostHog. Add new flag keys to `src/lib/feature-flags/flags.ts` before using them.
 
 **Server-side** (Server Components, Server Actions, cron routes):
+
 ```ts
 import { isFlagEnabled, FLAGS } from '@/lib/feature-flags';
 
@@ -228,6 +239,7 @@ const enabled = await isFlagEnabled(orgId, FLAGS.VOICE_PROPRIETARY_STACK);
 ```
 
 **Client-side** (Client Components):
+
 ```ts
 import { useFlag } from '@/lib/feature-flags/client';
 
@@ -249,6 +261,7 @@ Theme switching uses `next-themes`. The `ThemeProvider` is in `src/components/pr
 **Empty states:** Use `<EmptyState>` from `@/components/ui/empty-state` for empty-list and zero-data states.
 
 **Suspense fallbacks:** Use skeletons from `@/components/ui/page-skeleton`:
+
 - `<KpiRowSkeleton>` — row of KPI cards
 - `<ListPageSkeleton>` — toolbar + rows + pagination
 - `<DetailPageSkeleton>` — page header + body cards
@@ -274,18 +287,22 @@ await requireCapability('members.invite');
 Capability → role mapping (`src/lib/auth/context.ts`): `owner` has all capabilities; `admin` has all except `org.manage`; `operator` has campaign/contact/script/billing-view; `viewer` has billing/campaigns/audit read-only.
 
 Contact capabilities (plan 06):
+
 - `contacts.upload` — create contact lists, upload CSVs, trigger imports, mark opt-out; granted to `operator`+
 - `contacts.delete` — soft-delete contacts; granted to `admin`+ only (`operator` does NOT have this)
 
 Script capabilities (plan 07):
+
 - `scripts.edit` — create, update, copy, delete scripts; granted to `operator`+
 
 Webhook capabilities (plan 13):
+
 - `webhooks.manage` — create, rotate secret, delete, and replay webhook subscriptions; granted to `admin`+ only (`operator` and `viewer` do NOT have this)
 
 ## Supabase Clients
 
 Three client factories in `src/lib/supabase/`:
+
 - `createServerSupabaseClient()` — async, reads session cookies; use in Server Components, Server Actions, Route Handlers
 - `supabaseAdmin` — service-role singleton, bypasses RLS; use only in trusted server contexts (auth triggers, membership invite). Never expose to the browser.
 - `getSupabaseBrowserClient()` — singleton browser client for Client Components needing client-side auth state

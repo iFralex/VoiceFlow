@@ -100,9 +100,7 @@ function resetMockTx() {
 }
 
 vi.mock('@/lib/db/context', () => ({
-  withOrgContext: vi.fn((_orgId: string, fn: (tx: unknown) => Promise<unknown>) =>
-    fn(mockTx),
-  ),
+  withOrgContext: vi.fn((_orgId: string, fn: (tx: unknown) => Promise<unknown>) => fn(mockTx)),
   withSystemContext: vi.fn((fn: (tx: unknown) => Promise<unknown>) => fn(mockTx)),
 }));
 
@@ -199,21 +197,17 @@ describe('launchCampaign', () => {
     // getCampaign: select campaign + select stats
     selectResults = [
       [DRAFT_CAMPAIGN], // getCampaign → campaigns select
-      [],               // getCampaign → attachStats calls select
+      [], // getCampaign → attachStats calls select
       [{ contact_list_id: 'list-1' }], // countEligibleContacts → get campaign
-      [],               // countEligibleContacts → recent calls (none)
-      [{ total: 10 }],  // countEligibleContacts → count eligible
+      [], // countEligibleContacts → recent calls (none)
+      [{ total: 10 }], // countEligibleContacts → count eligible
     ];
     updateResults = [[{ id: CAMPAIGN_ID }]]; // transition to running
 
     const { launchCampaign } = await import('./campaigns');
     await launchCampaign(ORG_ID, USER_ID, CAMPAIGN_ID);
 
-    expect(mockReserveForCampaign).toHaveBeenCalledWith(
-      ORG_ID,
-      CAMPAIGN_ID,
-      expect.any(Number),
-    );
+    expect(mockReserveForCampaign).toHaveBeenCalledWith(ORG_ID, CAMPAIGN_ID, expect.any(Number));
     expect(mockSendInngestEvent).toHaveBeenCalledWith(
       expect.objectContaining({
         name: 'campaign/launched',
@@ -251,10 +245,10 @@ describe('launchCampaign', () => {
   it('throws no_eligible_contacts when count is zero', async () => {
     selectResults = [
       [DRAFT_CAMPAIGN], // getCampaign
-      [],               // attachStats
+      [], // attachStats
       [{ contact_list_id: 'list-1' }], // countEligibleContacts → campaign
-      [],               // recent calls
-      [{ total: 0 }],   // countEligibleContacts → count
+      [], // recent calls
+      [{ total: 0 }], // countEligibleContacts → count
     ];
 
     const { launchCampaign } = await import('./campaigns');
@@ -269,14 +263,12 @@ describe('launchCampaign', () => {
       [DRAFT_CAMPAIGN],
       [],
       [{ contact_list_id: 'list-1' }],
-      [],               // recent calls
+      [], // recent calls
       [{ total: 5 }],
     ];
 
     const { launchCampaign } = await import('./campaigns');
-    await expect(launchCampaign(ORG_ID, USER_ID, CAMPAIGN_ID)).rejects.toThrow(
-      'no_billing_rate',
-    );
+    await expect(launchCampaign(ORG_ID, USER_ID, CAMPAIGN_ID)).rejects.toThrow('no_billing_rate');
   });
 
   it('propagates insufficient_credit error from reserveForCampaign', async () => {
@@ -285,7 +277,7 @@ describe('launchCampaign', () => {
       [DRAFT_CAMPAIGN],
       [],
       [{ contact_list_id: 'list-1' }],
-      [],               // recent calls
+      [], // recent calls
       [{ total: 5 }],
     ];
 
@@ -310,9 +302,7 @@ describe('launchCampaign', () => {
     });
 
     const { launchCampaign } = await import('./campaigns');
-    await expect(launchCampaign(ORG_ID, USER_ID, CAMPAIGN_ID)).rejects.toThrow(
-      'dpa_outdated',
-    );
+    await expect(launchCampaign(ORG_ID, USER_ID, CAMPAIGN_ID)).rejects.toThrow('dpa_outdated');
     expect(mockReserveForCampaign).not.toHaveBeenCalled();
     expect(mockSendInngestEvent).not.toHaveBeenCalled();
   });
@@ -325,9 +315,7 @@ describe('launchCampaign', () => {
     });
 
     const { launchCampaign } = await import('./campaigns');
-    await expect(launchCampaign(ORG_ID, USER_ID, CAMPAIGN_ID)).rejects.toThrow(
-      'dpa_outdated',
-    );
+    await expect(launchCampaign(ORG_ID, USER_ID, CAMPAIGN_ID)).rejects.toThrow('dpa_outdated');
   });
 });
 
@@ -433,7 +421,7 @@ describe('listCampaigns', () => {
   it('returns paginated campaigns', async () => {
     selectResults = [
       [DRAFT_CAMPAIGN], // campaigns select
-      [],               // calls stats
+      [], // calls stats
     ];
 
     const { listCampaigns } = await import('./campaigns');
@@ -448,7 +436,7 @@ describe('listCampaigns', () => {
     const campaign2 = { ...DRAFT_CAMPAIGN, id: 'campaign-2' };
     selectResults = [
       [DRAFT_CAMPAIGN, campaign2], // returns 2 rows for limit of 1
-      [],                           // calls stats for 1 campaign
+      [], // calls stats for 1 campaign
     ];
 
     const { listCampaigns } = await import('./campaigns');
@@ -516,8 +504,6 @@ describe('requireRunning', () => {
     selectResults = [[]];
 
     const { requireRunning } = await import('./campaigns');
-    await expect(requireRunning(ORG_ID, 'missing')).rejects.toThrow(
-      'campaign_not_found',
-    );
+    await expect(requireRunning(ORG_ID, 'missing')).rejects.toThrow('campaign_not_found');
   });
 });

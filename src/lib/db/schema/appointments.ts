@@ -33,9 +33,7 @@ export const appointments = pgTable(
     status: appointmentStatusEnum('status').notNull().default('booked'),
     created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [
-    index('appointments_org_scheduled_at_idx').on(t.org_id, t.scheduled_at),
-  ],
+  (t) => [index('appointments_org_scheduled_at_idx').on(t.org_id, t.scheduled_at)],
 );
 
 export type Appointment = typeof appointments.$inferSelect;

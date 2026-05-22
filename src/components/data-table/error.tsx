@@ -19,14 +19,9 @@ export function DataTableError({
           data-slot="data-table-error"
           className="flex flex-col items-center justify-center gap-2 py-12 text-center"
         >
-          <Icons.AlertCircle
-            size={24}
-            className="text-[hsl(var(--status-danger))]"
-          />
-          <p className="text-sm font-medium text-foreground">
-            Errore di caricamento
-          </p>
-          <p className="text-sm text-muted-foreground">{message}</p>
+          <Icons.AlertCircle size={24} className="text-[hsl(var(--status-danger))]" />
+          <p className="text-foreground text-sm font-medium">Errore di caricamento</p>
+          <p className="text-muted-foreground text-sm">{message}</p>
         </div>
       </TableCell>
     </TableRow>

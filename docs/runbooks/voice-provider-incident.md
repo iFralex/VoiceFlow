@@ -10,11 +10,11 @@
 
 ### 1a. Alert-driven detection
 
-| Alert tier | Condition | Channel |
-|---|---|---|
-| CRITICAL | Vapi/Retell 5xx rate >5% of outbound call initiations over a 5-min window | PagerDuty SMS + push |
-| HIGH | Vapi/Retell 5xx rate 1–5% over 1-h rolling window | Email + Slack #alerts-high |
-| HIGH | SBC connectivity error (registration failure or ICE timeout) >3 in 15 min | Sentry issue alert |
+| Alert tier | Condition                                                                 | Channel                    |
+| ---------- | ------------------------------------------------------------------------- | -------------------------- |
+| CRITICAL   | Vapi/Retell 5xx rate >5% of outbound call initiations over a 5-min window | PagerDuty SMS + push       |
+| HIGH       | Vapi/Retell 5xx rate 1–5% over 1-h rolling window                         | Email + Slack #alerts-high |
+| HIGH       | SBC connectivity error (registration failure or ICE timeout) >3 in 15 min | Sentry issue alert         |
 
 See `docs/runbooks/alerting.md` for full tier definitions and acknowledgement SLAs.
 
@@ -44,6 +44,7 @@ If you notice calls failing without an alert, check:
 1. **Open the provider status page** for the affected provider. Check whether a known incident or maintenance window is in progress. If yes, note the estimated resolution time (ERT) and skip to §3.
 
 2. **Check error rate trend in Axiom.** Run:
+
    ```apl
    ['voiceflow']
    | where service == "voice"
@@ -54,6 +55,7 @@ If you notice calls failing without an alert, check:
    | extend error_pct = errors * 100.0 / total
    | order by _time desc
    ```
+
    If error rate is climbing and the provider reports no incident, open a support ticket with the provider immediately.
 
 3. **Verify it is not an SBC trunk issue.** Run `pnpm exec tsx scripts/test-sbc-trunk.ts` (or check the latest SBC smoke-test result at `/api/cron/sbc-smoke-test`). An SBC failure is distinct from a Vapi/Retell failure — see §3b.
@@ -209,15 +211,15 @@ One paragraph describing what happened and the customer impact.
 
 ## Timeline
 
-| Time (CET) | Event |
-|---|---|
-| HH:MM | First alert fired |
-| HH:MM | On-call acknowledged |
-| HH:MM | Root cause identified |
-| HH:MM | Mitigation applied (provider switched / trunk failover) |
-| HH:MM | Service restored |
-| HH:MM | Campaigns resumed |
-| HH:MM | Incident closed |
+| Time (CET) | Event                                                   |
+| ---------- | ------------------------------------------------------- |
+| HH:MM      | First alert fired                                       |
+| HH:MM      | On-call acknowledged                                    |
+| HH:MM      | Root cause identified                                   |
+| HH:MM      | Mitigation applied (provider switched / trunk failover) |
+| HH:MM      | Service restored                                        |
+| HH:MM      | Campaigns resumed                                       |
+| HH:MM      | Incident closed                                         |
 
 ## Root cause
 
@@ -235,9 +237,9 @@ Detailed technical explanation. Was it provider-side or platform-side?
 
 ## Action items
 
-| Item | Owner | Due |
-|---|---|---|
-| [Specific improvement] | [name] | YYYY-MM-DD |
+| Item                                                 | Owner  | Due        |
+| ---------------------------------------------------- | ------ | ---------- |
+| [Specific improvement]                               | [name] | YYYY-MM-DD |
 | Update smoke-test to catch this failure mode earlier | [name] | YYYY-MM-DD |
 
 ## Impact summary

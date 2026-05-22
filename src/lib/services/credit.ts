@@ -3,7 +3,14 @@ import { and, count, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm';
 import { recordAudit } from '@/lib/db/audit';
 import type { DbTx } from '@/lib/db/context';
 import { withOrgContext, withSystemContext } from '@/lib/db/context';
-import { auditLog, calls, creditEntryTypeEnum, creditLedger, creditPackages, payments } from '@/lib/db/schema';
+import {
+  auditLog,
+  calls,
+  creditEntryTypeEnum,
+  creditLedger,
+  creditPackages,
+  payments,
+} from '@/lib/db/schema';
 import { env } from '@/lib/env';
 import { sendInngestEvent } from '@/lib/inngest/client';
 import { logger } from '@/lib/observability/logger';
@@ -39,9 +46,7 @@ async function weightedAvgCentsPerMinute(tx: DbTx, orgId: string): Promise<numbe
       reference_id: creditLedger.reference_id,
     })
     .from(creditLedger)
-    .where(
-      and(eq(creditLedger.org_id, orgId), eq(creditLedger.entry_type, 'topup')),
-    );
+    .where(and(eq(creditLedger.org_id, orgId), eq(creditLedger.entry_type, 'topup')));
 
   if (topups.length === 0) return null;
 
@@ -161,9 +166,7 @@ export async function getBalance(
     const centsPerMinute = await weightedAvgCentsPerMinute(tx, orgId);
 
     const remainingMinutes =
-      centsPerMinute !== null && centsPerMinute > 0
-        ? Math.floor(balanceCents / centsPerMinute)
-        : 0;
+      centsPerMinute !== null && centsPerMinute > 0 ? Math.floor(balanceCents / centsPerMinute) : 0;
 
     return { balanceCents, remainingMinutes };
   });
@@ -412,7 +415,10 @@ export async function chargeForCall(
   // the ledger write. Fire-and-forget with error suppression.
   if (newBalance !== undefined) {
     await maybeEmitLowBalanceAlert(orgId, newBalance).catch((e: unknown) => {
-      void logger.error('[credit] Low-balance alert failed for org', { org_id: orgId, error: e instanceof Error ? e.message : String(e) });
+      void logger.error('[credit] Low-balance alert failed for org', {
+        org_id: orgId,
+        error: e instanceof Error ? e.message : String(e),
+      });
     });
   }
 }
@@ -543,9 +549,7 @@ export async function getBalanceWithBreakdown(orgId: string): Promise<{
     const balanceCents = latest?.balance_after_cents ?? 0;
     const centsPerMinute = await weightedAvgCentsPerMinute(tx, orgId);
     const remainingMinutes =
-      centsPerMinute !== null && centsPerMinute > 0
-        ? Math.floor(balanceCents / centsPerMinute)
-        : 0;
+      centsPerMinute !== null && centsPerMinute > 0 ? Math.floor(balanceCents / centsPerMinute) : 0;
 
     const topupEntries = await tx
       .select({
@@ -559,12 +563,7 @@ export async function getBalanceWithBreakdown(orgId: string): Promise<{
       .from(creditLedger)
       .leftJoin(payments, eq(payments.stripe_payment_intent_id, creditLedger.reference_id))
       .leftJoin(creditPackages, eq(creditPackages.id, payments.package_id))
-      .where(
-        and(
-          eq(creditLedger.org_id, orgId),
-          eq(creditLedger.entry_type, 'topup'),
-        ),
-      )
+      .where(and(eq(creditLedger.org_id, orgId), eq(creditLedger.entry_type, 'topup')))
       .orderBy(desc(creditLedger.created_at));
 
     const pools: PackagePool[] = topupEntries
@@ -636,10 +635,7 @@ export async function getLedgerHistory(
 
     const where = and(...conditions);
 
-    const [countRow] = await tx
-      .select({ total: count() })
-      .from(creditLedger)
-      .where(where);
+    const [countRow] = await tx.select({ total: count() }).from(creditLedger).where(where);
 
     const entries = await tx
       .select({

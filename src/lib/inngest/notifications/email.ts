@@ -28,9 +28,7 @@ import type { AppointmentBookedData, CallQualifiedLeadData } from '../voice/even
 import type { AuthSuspiciousLoginData } from './events';
 
 /** Handles `appointment/booked` — sends appointment confirmation email. */
-export async function appointmentBookedEmailHandler(
-  data: AppointmentBookedData,
-): Promise<void> {
+export async function appointmentBookedEmailHandler(data: AppointmentBookedData): Promise<void> {
   await sendAppointmentBookedEmail({ orgId: data.orgId, appointmentId: data.appointmentId });
 }
 
@@ -45,15 +43,11 @@ export async function lowBalanceEmailHandler(data: CreditLowBalanceData): Promis
 }
 
 /** Handles `campaign/completed` — sends campaign summary email. */
-export async function campaignCompletedEmailHandler(
-  data: CampaignCompletedData,
-): Promise<void> {
+export async function campaignCompletedEmailHandler(data: CampaignCompletedData): Promise<void> {
   await sendCampaignCompletedEmail({ orgId: data.orgId, campaignId: data.campaignId });
 }
 
 /** Handles `auth/suspicious-login` — sends suspicious login alert email. */
-export async function suspiciousLoginEmailHandler(
-  data: AuthSuspiciousLoginData,
-): Promise<void> {
+export async function suspiciousLoginEmailHandler(data: AuthSuspiciousLoginData): Promise<void> {
   await sendSuspiciousLoginEmail({ userId: data.userId, signinId: data.signinId });
 }

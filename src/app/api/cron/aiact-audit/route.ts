@@ -17,10 +17,7 @@ import { timingSafeEqual } from 'crypto';
 
 import { NextResponse } from 'next/server';
 
-import {
-  type AiActAuditResult,
-  runAiActConformanceAudit,
-} from '@/lib/compliance/aiact/audit';
+import { type AiActAuditResult, runAiActConformanceAudit } from '@/lib/compliance/aiact/audit';
 import { recordAudit } from '@/lib/db/audit';
 import { withSystemContext } from '@/lib/db/context';
 import { env } from '@/lib/env';
@@ -52,9 +49,7 @@ export interface AiActAuditCronResult extends AiActAuditResult {
 
 export async function runAiActAuditCron(now: Date = new Date()): Promise<AiActAuditResult> {
   const windowEnd = now;
-  const windowStart = new Date(
-    windowEnd.getTime() - DEFAULT_WINDOW_DAYS * 24 * 60 * 60 * 1000,
-  );
+  const windowStart = new Date(windowEnd.getTime() - DEFAULT_WINDOW_DAYS * 24 * 60 * 60 * 1000);
 
   const result = await runAiActConformanceAudit({ windowStart, windowEnd });
 

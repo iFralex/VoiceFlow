@@ -59,8 +59,6 @@ describe('hasRecentEmailSent', () => {
   it('passes the correct table to from()', async () => {
     mockLimit.mockResolvedValue([]);
     await hasRecentEmailSent('org-456', 'low-balance', 24);
-    expect(mockFrom).toHaveBeenCalledWith(
-      expect.objectContaining({ id: 'email_log.id' }),
-    );
+    expect(mockFrom).toHaveBeenCalledWith(expect.objectContaining({ id: 'email_log.id' }));
   });
 });

@@ -152,14 +152,12 @@ describe('POST /api/internal/test-call', () => {
       },
     );
 
-    mockWithSystemContext.mockImplementation(
-      async (fn: (tx: unknown) => Promise<unknown>) => {
-        const tx = {
-          update: () => ({ set: () => ({ where: () => Promise.resolve([]) }) }),
-        };
-        return fn(tx);
-      },
-    );
+    mockWithSystemContext.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) => {
+      const tx = {
+        update: () => ({ set: () => ({ where: () => Promise.resolve([]) }) }),
+      };
+      return fn(tx);
+    });
   });
 
   // ── Auth ───────────────────────────────────────────────────────────────────
@@ -186,14 +184,14 @@ describe('POST /api/internal/test-call', () => {
     });
     const res = await POST(req);
     expect(res.status).toBe(400);
-    const json = await res.json() as { error: string };
+    const json = (await res.json()) as { error: string };
     expect(json.error).toBe('Invalid JSON body');
   });
 
   it('returns 400 for a non-Italian phone number', async () => {
     const res = await POST(makeRequest({ ...VALID_BODY, toNumber: '+441234567890' }));
     expect(res.status).toBe(400);
-    const json = await res.json() as { error: string };
+    const json = (await res.json()) as { error: string };
     expect(json.error).toBe('Invalid request body');
   });
 
@@ -215,7 +213,7 @@ describe('POST /api/internal/test-call', () => {
 
     const res = await POST(makeRequest(VALID_BODY));
     expect(res.status).toBe(429);
-    const json = await res.json() as { error: string; limit: number };
+    const json = (await res.json()) as { error: string; limit: number };
     expect(json.error).toBe('test_call_rate_limit_exceeded');
     expect(json.limit).toBe(10);
   });
@@ -262,7 +260,7 @@ describe('POST /api/internal/test-call', () => {
 
     const res = await POST(makeRequest(VALID_BODY));
     expect(res.status).toBe(200);
-    const json = await res.json() as { callId: string };
+    const json = (await res.json()) as { callId: string };
     expect(json.callId).toBe('call-uuid');
     expect(mockDispatchCall).toHaveBeenCalledWith('org-1', 'call-uuid');
   });
@@ -284,7 +282,7 @@ describe('POST /api/internal/test-call', () => {
 
     const res = await POST(makeRequest(VALID_BODY));
     expect(res.status).toBe(500);
-    const json = await res.json() as { error: string };
+    const json = (await res.json()) as { error: string };
     expect(json.error).toBe('no_phone_number');
   });
 });

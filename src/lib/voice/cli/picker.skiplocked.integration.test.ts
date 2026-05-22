@@ -40,8 +40,7 @@ import { organizations, phoneNumbers } from '@/lib/db/schema';
 import { pickCliForOrg } from './picker';
 
 const TEST_DATABASE_URL =
-  process.env['TEST_DATABASE_URL'] ??
-  'postgresql://postgres:postgres@localhost:5433/vox_auto_test';
+  process.env['TEST_DATABASE_URL'] ?? 'postgresql://postgres:postgres@localhost:5433/vox_auto_test';
 
 const skipWhenNoDb = !process.env['TEST_DATABASE_URL'];
 
@@ -180,10 +179,7 @@ describe('pickCliForOrg + SKIP LOCKED (multi-connection)', () => {
         aRelease.resolve();
 
         const aPicked = await aResult.promise;
-        await Promise.all([
-          aPromise.catch(() => undefined),
-          bPromise.catch(() => undefined),
-        ]);
+        await Promise.all([aPromise.catch(() => undefined), bPromise.catch(() => undefined)]);
 
         // The core invariant: the two pickers selected different CLIs. If
         // SKIP LOCKED were broken, B would either block on A's row (timing

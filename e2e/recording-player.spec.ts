@@ -66,9 +66,7 @@ test.describe('Recording player — seeded call interactions', () => {
     });
 
     // The audio element should report not-paused.
-    const playing = await audio.evaluate(
-      (el) => !(el as HTMLAudioElement).paused,
-    );
+    const playing = await audio.evaluate((el) => !(el as HTMLAudioElement).paused);
     expect(playing).toBe(true);
 
     // ── Pause ─────────────────────────────────────────────────────────────
@@ -76,9 +74,7 @@ test.describe('Recording player — seeded call interactions', () => {
     await expect(page.getByRole('button', { name: /^riproduci$/i })).toBeVisible({
       timeout: 5_000,
     });
-    const paused = await audio.evaluate(
-      (el) => (el as HTMLAudioElement).paused,
-    );
+    const paused = await audio.evaluate((el) => (el as HTMLAudioElement).paused);
     expect(paused).toBe(true);
 
     // ── Seek via the "Avanti di 15 secondi" button ───────────────────────
@@ -110,9 +106,7 @@ test.describe('Recording player — seeded call interactions', () => {
       const label = (await target.locator('span.tabular-nums').textContent()) ?? '0:00';
       const [m, s] = label.split(':').map((n) => Number.parseInt(n, 10));
       const expectedStart = (m ?? 0) * 60 + (s ?? 0);
-      const currentTime = await audio.evaluate(
-        (el) => (el as HTMLAudioElement).currentTime,
-      );
+      const currentTime = await audio.evaluate((el) => (el as HTMLAudioElement).currentTime);
       // Allow a 1.5s tolerance for browser-specific seek rounding.
       expect(Math.abs(currentTime - expectedStart)).toBeLessThanOrEqual(1.5);
     }

@@ -1,5 +1,14 @@
 import { sql } from 'drizzle-orm';
-import { bigserial, index, jsonb, pgEnum, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import {
+  bigserial,
+  index,
+  jsonb,
+  pgEnum,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+} from 'drizzle-orm/pg-core';
 
 // System-owned table — no RLS. Queried via service role with explicit org filter.
 export const actorTypeEnum = pgEnum('actor_type', ['user', 'system', 'webhook']);
@@ -19,7 +28,11 @@ export const auditLog = pgTable(
   },
   (t) => [
     index('audit_log_org_created_at_idx').on(t.org_id, t.created_at),
-    index('audit_log_action_idx').on(t.action).where(sql`${t.action} IN ('call.completed', 'payment.succeeded', 'contact.opted_out', 'member.invited', 'member.removed')`),
+    index('audit_log_action_idx')
+      .on(t.action)
+      .where(
+        sql`${t.action} IN ('call.completed', 'payment.succeeded', 'contact.opted_out', 'member.invited', 'member.removed')`,
+      ),
   ],
 );
 

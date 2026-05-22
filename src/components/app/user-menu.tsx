@@ -65,7 +65,7 @@ export function UserMenu({ user }: UserMenuProps) {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
-          className="flex h-8 w-8 items-center justify-center rounded-full outline-none ring-ring focus-visible:ring-2"
+          className="ring-ring flex h-8 w-8 items-center justify-center rounded-full outline-none focus-visible:ring-2"
           aria-label={t('user_menu_label')}
           data-testid="user-menu-trigger"
         >
@@ -80,10 +80,13 @@ export function UserMenu({ user }: UserMenuProps) {
         {/* Identity header */}
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col gap-0.5">
-            <span className="text-sm font-medium leading-none" data-testid="user-menu-name">
+            <span className="text-sm leading-none font-medium" data-testid="user-menu-name">
               {displayName}
             </span>
-            <span className="text-xs leading-none text-muted-foreground" data-testid="user-menu-email">
+            <span
+              className="text-muted-foreground text-xs leading-none"
+              data-testid="user-menu-email"
+            >
               {email}
             </span>
           </div>

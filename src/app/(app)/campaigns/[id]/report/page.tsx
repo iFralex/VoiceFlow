@@ -1,10 +1,7 @@
 import { notFound } from 'next/navigation';
 
 import { getAuthContext } from '@/lib/auth/context';
-import {
-  formatBilledDuration,
-  getCampaignPrintReport,
-} from '@/lib/services/campaign-print-report';
+import { formatBilledDuration, getCampaignPrintReport } from '@/lib/services/campaign-print-report';
 
 import { PrintReportClient } from './_components/print-report-client';
 

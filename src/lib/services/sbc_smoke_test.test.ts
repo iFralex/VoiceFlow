@@ -12,9 +12,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { mockWithSystemContext, mockEnv, mockSendInngestEvent } = vi.hoisted(() => {
-  const mockWithSystemContext = vi.fn(
-    async (fn: (tx: unknown) => Promise<unknown>) => fn({}),
-  );
+  const mockWithSystemContext = vi.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn({}));
   const mockEnv: {
     SBC_SMOKE_TEST_NUMBER?: string;
     VAPI_API_KEY?: string;
@@ -89,8 +87,8 @@ function makeMockTx(rows: PoolRow[]): unknown {
 }
 
 function setPoolRows(rows: PoolRow[]): void {
-  mockWithSystemContext.mockImplementation(
-    async (fn: (tx: unknown) => Promise<unknown>) => fn(makeMockTx(rows)),
+  mockWithSystemContext.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) =>
+    fn(makeMockTx(rows)),
   );
 }
 
@@ -110,10 +108,7 @@ function makeAdapter(options: MockAdapterOptions = {}): {
 }
 
 function makeFetchSequence(
-  responses: Array<
-    | { ok: true; body: Record<string, unknown> }
-    | { ok: false; status: number }
-  >,
+  responses: Array<{ ok: true; body: Record<string, unknown> } | { ok: false; status: number }>,
 ): typeof fetch {
   let i = 0;
   return vi.fn(async () => {
@@ -148,8 +143,8 @@ describe('runSbcSmokeTest', () => {
     mockEnv.SBC_SMOKE_TEST_NUMBER = '+393331234567';
     mockEnv.VAPI_API_KEY = 'vapi-test-key';
     mockEnv.NEXT_PUBLIC_APP_URL = 'https://app.example.com';
-    mockWithSystemContext.mockImplementation(
-      async (fn: (tx: unknown) => Promise<unknown>) => fn(makeMockTx([])),
+    mockWithSystemContext.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) =>
+      fn(makeMockTx([])),
     );
     mockSendInngestEvent.mockResolvedValue(undefined);
   });
@@ -169,9 +164,7 @@ describe('runSbcSmokeTest', () => {
   it('emits no_candidate_cli when the pool has no active SBC rows', async () => {
     setPoolRows([]);
     const emit = vi.fn();
-    const adapter = makeAdapter() as unknown as ConstructorParameters<
-      typeof Object
-    >[0];
+    const adapter = makeAdapter() as unknown as ConstructorParameters<typeof Object>[0];
     const result = await runSbcSmokeTest({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       adapter: adapter as any,
@@ -179,9 +172,7 @@ describe('runSbcSmokeTest', () => {
     });
     expect(result.ok).toBe(false);
     expect(result.reason).toBe('no_candidate_cli');
-    expect(emit).toHaveBeenCalledWith(
-      expect.objectContaining({ reason: 'no_candidate_cli' }),
-    );
+    expect(emit).toHaveBeenCalledWith(expect.objectContaining({ reason: 'no_candidate_cli' }));
   });
 
   it('emits no_candidate_cli when the only candidates are Twilio fallback CLIs', async () => {
@@ -225,10 +216,7 @@ describe('runSbcSmokeTest', () => {
     setPoolRows([HAPPY_PATH_ROW]);
     const emit = vi.fn();
     const adapter = makeAdapter({
-      createCallThrow: new VoiceProviderError(
-        'vapi.create_call_failed',
-        'trunk auth rejected',
-      ),
+      createCallThrow: new VoiceProviderError('vapi.create_call_failed', 'trunk auth rejected'),
     });
     const result = await runSbcSmokeTest({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

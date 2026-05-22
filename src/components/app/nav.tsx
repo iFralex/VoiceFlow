@@ -58,7 +58,12 @@ interface NavProps {
   badgeValues?: Record<string, string | null>;
 }
 
-export function Nav({ items = PRIMARY_NAV_ITEMS, collapsed = false, role = 'viewer', badgeValues }: NavProps) {
+export function Nav({
+  items = PRIMARY_NAV_ITEMS,
+  collapsed = false,
+  role = 'viewer',
+  badgeValues,
+}: NavProps) {
   const pathname = usePathname();
   const t = useTranslations('nav');
 
@@ -96,7 +101,7 @@ export function Nav({ items = PRIMARY_NAV_ITEMS, collapsed = false, role = 'view
                       <>
                         <span className="flex-1 truncate">{label}</span>
                         {badge != null && (
-                          <span className="ml-auto rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-medium leading-none text-primary-foreground">
+                          <span className="bg-primary text-primary-foreground ml-auto rounded-full px-1.5 py-0.5 text-[10px] leading-none font-medium">
                             {badge}
                           </span>
                         )}

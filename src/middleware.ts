@@ -202,9 +202,9 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
     url.searchParams.set('next', pathname);
     const redirectRes = NextResponse.redirect(url);
     // Propagate any refreshed session cookies so the browser doesn't lose them
-    supabaseResponse.cookies.getAll().forEach(({ name, value, ...opts }) =>
-      redirectRes.cookies.set(name, value, opts),
-    );
+    supabaseResponse.cookies
+      .getAll()
+      .forEach(({ name, value, ...opts }) => redirectRes.cookies.set(name, value, opts));
     return redirectRes;
   }
 
@@ -222,8 +222,7 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
   // Exclude memberships for soft-deleted organizations
   const validMemberships = (rawMemberships ?? [])
     .filter((m) => {
-      const org = (m as unknown as { organizations?: { deleted_at: string | null } })
-        .organizations;
+      const org = (m as unknown as { organizations?: { deleted_at: string | null } }).organizations;
       return !org?.deleted_at;
     })
     .map(({ org_id, role }) => ({ org_id, role }));
@@ -237,9 +236,9 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
       url.pathname = '/onboarding';
       const redirectRes = NextResponse.redirect(url);
       // Propagate any refreshed session cookies so the browser doesn't lose them
-      supabaseResponse.cookies.getAll().forEach(({ name, value, ...opts }) =>
-        redirectRes.cookies.set(name, value, opts),
-      );
+      supabaseResponse.cookies
+        .getAll()
+        .forEach(({ name, value, ...opts }) => redirectRes.cookies.set(name, value, opts));
       return redirectRes;
     }
     // Already on onboarding — allow through with user identity only
@@ -248,9 +247,9 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
     reqHeaders.set('x-request-id', requestId);
     reqHeaders.set('x-user-id', user.id);
     const res = NextResponse.next({ request: { headers: reqHeaders } });
-    supabaseResponse.cookies.getAll().forEach(({ name, value, ...opts }) =>
-      res.cookies.set(name, value, opts),
-    );
+    supabaseResponse.cookies
+      .getAll()
+      .forEach(({ name, value, ...opts }) => res.cookies.set(name, value, opts));
     return res;
   }
 
@@ -273,9 +272,9 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
   reqHeaders.set('x-member-role', activeMembership.role);
 
   const finalRes = NextResponse.next({ request: { headers: reqHeaders } });
-  supabaseResponse.cookies.getAll().forEach(({ name, value, ...opts }) =>
-    finalRes.cookies.set(name, value, opts),
-  );
+  supabaseResponse.cookies
+    .getAll()
+    .forEach(({ name, value, ...opts }) => finalRes.cookies.set(name, value, opts));
 
   return finalRes;
 }

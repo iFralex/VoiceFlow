@@ -90,8 +90,7 @@ export async function persistCallArtifacts(callId: string): Promise<void> {
   // 3. Persist recording ──────────────────────────────────────────────────────
   const recordingStoragePath = `recordings/${orgId}/${callId}.mp3`;
 
-  const { url: recordingUrl, bytes: recordingBytes } =
-    await adapter.fetchRecording(providerCallId);
+  const { url: recordingUrl, bytes: recordingBytes } = await adapter.fetchRecording(providerCallId);
 
   if (recordingBytes === null) {
     // Provider hasn't finished processing yet — signal for retry

@@ -122,7 +122,9 @@ describe('listAuditLogEntries', () => {
   });
 
   it('returns ok=false when capability check throws', async () => {
-    mockRequireCapability.mockRejectedValueOnce(new Error("Forbidden: role 'operator' does not have capability 'audit.view'"));
+    mockRequireCapability.mockRejectedValueOnce(
+      new Error("Forbidden: role 'operator' does not have capability 'audit.view'"),
+    );
 
     const result = await listAuditLogEntries({});
     expect(result.ok).toBe(false);

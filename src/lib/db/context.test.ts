@@ -72,7 +72,11 @@ describe('withOrgContext', () => {
 
   it('propagates errors thrown by fn', async () => {
     const boom = new Error('db error');
-    await expect(withOrgContext('org-1', async () => { throw boom; })).rejects.toThrow('db error');
+    await expect(
+      withOrgContext('org-1', async () => {
+        throw boom;
+      }),
+    ).rejects.toThrow('db error');
   });
 
   it('GUC is SET LOCAL (only inside transaction) — verified via call sequencing', async () => {
@@ -135,6 +139,10 @@ describe('withSystemContext', () => {
 
   it('propagates errors thrown by fn', async () => {
     const boom = new Error('system error');
-    await expect(withSystemContext(async () => { throw boom; })).rejects.toThrow('system error');
+    await expect(
+      withSystemContext(async () => {
+        throw boom;
+      }),
+    ).rejects.toThrow('system error');
   });
 });

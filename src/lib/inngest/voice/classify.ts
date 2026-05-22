@@ -28,7 +28,11 @@ import { CALL_MEDIA_BUCKET } from '@/lib/voice/persistence';
 import type { TranscriptSegment } from '@/lib/voice/types';
 
 import type { CallClassifyData } from './events';
-import { CALL_QUALIFIED_LEAD_EVENT, QUALITY_DISCLOSURE_MISSING_EVENT, QUALITY_OUTCOME_MISMATCH_EVENT } from './events';
+import {
+  CALL_QUALIFIED_LEAD_EVENT,
+  QUALITY_DISCLOSURE_MISSING_EVENT,
+  QUALITY_OUTCOME_MISMATCH_EVENT,
+} from './events';
 
 const WEBHOOK_EMIT_EVENT = 'webhook/emit' as const;
 
@@ -151,13 +155,7 @@ export async function classifyCallHandler(data: CallClassifyData): Promise<void>
         outcome: result.outcome,
         outcome_confidence: result.confidence.toFixed(2),
       })
-      .where(
-        and(
-          eq(calls.id, callId),
-          eq(calls.org_id, orgId),
-          isNull(calls.outcome),
-        ),
-      );
+      .where(and(eq(calls.id, callId), eq(calls.org_id, orgId), isNull(calls.outcome)));
   });
 
   // Fan out lead.qualified webhook when classifier determines the caller is interested.

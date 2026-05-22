@@ -103,7 +103,8 @@ const adapterConfigs: AdapterConfig[] = [
         text: async () => 'Internal Server Error',
       }) as unknown as typeof fetch,
     makeRecordingSuccessFetch: () =>
-      vi.fn()
+      vi
+        .fn()
         .mockResolvedValueOnce({
           ok: true,
           json: async () => ({ id: 'vapi-call-conformance', recordingUrl: RECORDING_URL }),
@@ -172,7 +173,8 @@ const adapterConfigs: AdapterConfig[] = [
         text: async () => 'Internal Server Error',
       }) as unknown as typeof fetch,
     makeRecordingSuccessFetch: () =>
-      vi.fn()
+      vi
+        .fn()
         .mockResolvedValueOnce({
           ok: true,
           json: async () => ({

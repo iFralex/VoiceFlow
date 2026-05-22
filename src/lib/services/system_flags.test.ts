@@ -129,12 +129,8 @@ describe('SBC dispatch failure bookkeeping', () => {
     const t1 = new Date('2026-05-06T10:01:00Z');
     const t2 = new Date('2026-05-06T10:02:00Z');
 
-    await withKey(SBC_UNHEALTHY_FLAG_KEY, () =>
-      recordSbcDispatchFailure('a', { now: t0 }),
-    );
-    await withKey(SBC_UNHEALTHY_FLAG_KEY, () =>
-      recordSbcDispatchFailure('b', { now: t1 }),
-    );
+    await withKey(SBC_UNHEALTHY_FLAG_KEY, () => recordSbcDispatchFailure('a', { now: t0 }));
+    await withKey(SBC_UNHEALTHY_FLAG_KEY, () => recordSbcDispatchFailure('b', { now: t1 }));
     const tripped = await withKey(SBC_UNHEALTHY_FLAG_KEY, () =>
       recordSbcDispatchFailure('c', { now: t2 }),
     );
@@ -150,12 +146,8 @@ describe('SBC dispatch failure bookkeeping', () => {
     const t1 = new Date(t0.getTime() + SBC_FAILURE_TRIP_WINDOW_MS + 1);
     const t2 = new Date(t1.getTime() + 1000);
 
-    await withKey(SBC_UNHEALTHY_FLAG_KEY, () =>
-      recordSbcDispatchFailure('a', { now: t0 }),
-    );
-    await withKey(SBC_UNHEALTHY_FLAG_KEY, () =>
-      recordSbcDispatchFailure('b', { now: t1 }),
-    );
+    await withKey(SBC_UNHEALTHY_FLAG_KEY, () => recordSbcDispatchFailure('a', { now: t0 }));
+    await withKey(SBC_UNHEALTHY_FLAG_KEY, () => recordSbcDispatchFailure('b', { now: t1 }));
     const state = await withKey(SBC_UNHEALTHY_FLAG_KEY, () =>
       recordSbcDispatchFailure('c', { now: t2 }),
     );
@@ -168,9 +160,7 @@ describe('SBC dispatch failure bookkeeping', () => {
 
   it('breaks the streak on a healthy success but does not clear the flag prematurely', async () => {
     const t0 = new Date('2026-05-06T10:00:00Z');
-    await withKey(SBC_UNHEALTHY_FLAG_KEY, () =>
-      recordSbcDispatchFailure('a', { now: t0 }),
-    );
+    await withKey(SBC_UNHEALTHY_FLAG_KEY, () => recordSbcDispatchFailure('a', { now: t0 }));
     await withKey(SBC_UNHEALTHY_FLAG_KEY, () =>
       recordSbcDispatchFailure('b', { now: new Date(t0.getTime() + 1000) }),
     );
@@ -221,11 +211,9 @@ describe('SBC auto-clear', () => {
     }
     // Within the auto-clear window, isSbcUnhealthy still reports raised.
     const insideWindow = new Date(t0.getTime() + 5 * 60_000);
-    expect(
-      await withKey(SBC_UNHEALTHY_FLAG_KEY, () =>
-        isSbcUnhealthy({ now: insideWindow }),
-      ),
-    ).toBe(true);
+    expect(await withKey(SBC_UNHEALTHY_FLAG_KEY, () => isSbcUnhealthy({ now: insideWindow }))).toBe(
+      true,
+    );
 
     // The 3rd failure was at t0+2s, so we need wellAfter > lastFailureAt + 30 min.
     const wellAfter = new Date(t0.getTime() + 2_000 + SBC_HEALTHY_AUTO_CLEAR_MS + 1_000);
@@ -234,9 +222,7 @@ describe('SBC auto-clear', () => {
     );
     expect(cleared.unhealthy).toBe(false);
 
-    expect(
-      await withKey(SBC_UNHEALTHY_FLAG_KEY, () => isSbcUnhealthy()),
-    ).toBe(false);
+    expect(await withKey(SBC_UNHEALTHY_FLAG_KEY, () => isSbcUnhealthy())).toBe(false);
   });
 
   it('does not clear the flag on a healthy dispatch within the 30-min window', async () => {
@@ -257,9 +243,7 @@ describe('SBC auto-clear', () => {
   });
 
   it('clearStaleSbcUnhealthyFlag is a no-op when SBC is healthy', async () => {
-    const cleared = await withKey(SBC_UNHEALTHY_FLAG_KEY, () =>
-      clearStaleSbcUnhealthyFlag(),
-    );
+    const cleared = await withKey(SBC_UNHEALTHY_FLAG_KEY, () => clearStaleSbcUnhealthyFlag());
     expect(cleared).toBe(false);
   });
 
@@ -277,9 +261,7 @@ describe('SBC auto-clear', () => {
       clearStaleSbcUnhealthyFlag({ now: stale }),
     );
     expect(cleared).toBe(true);
-    expect(
-      await withKey(SBC_UNHEALTHY_FLAG_KEY, () => isSbcUnhealthy()),
-    ).toBe(false);
+    expect(await withKey(SBC_UNHEALTHY_FLAG_KEY, () => isSbcUnhealthy())).toBe(false);
   });
 
   it('isSbcUnhealthy lazily clears a stale flag once the auto-clear window has elapsed', async () => {
@@ -294,11 +276,9 @@ describe('SBC auto-clear', () => {
     }
     // While we are inside the 30-min window, the flag stays raised.
     const insideWindow = new Date(t0.getTime() + 5 * 60_000);
-    expect(
-      await withKey(SBC_UNHEALTHY_FLAG_KEY, () =>
-        isSbcUnhealthy({ now: insideWindow }),
-      ),
-    ).toBe(true);
+    expect(await withKey(SBC_UNHEALTHY_FLAG_KEY, () => isSbcUnhealthy({ now: insideWindow }))).toBe(
+      true,
+    );
 
     // Advance past the auto-clear window. While the flag is raised, dispatches
     // are routed away from SBC, so `recordSbcDispatchSuccess` will never run;
@@ -311,17 +291,13 @@ describe('SBC auto-clear', () => {
     expect(stillUnhealthy).toBe(false);
 
     // Subsequent reads see a healthy state because the flag was actually cleared.
-    expect(
-      await withKey(SBC_UNHEALTHY_FLAG_KEY, () => isSbcUnhealthy({ now: stale })),
-    ).toBe(false);
+    expect(await withKey(SBC_UNHEALTHY_FLAG_KEY, () => isSbcUnhealthy({ now: stale }))).toBe(false);
   });
 });
 
 describe('getSbcHealthSnapshot', () => {
   it('returns null when SBC is healthy', async () => {
-    const snap = await withKey(SBC_UNHEALTHY_FLAG_KEY, () =>
-      getSbcHealthSnapshot(),
-    );
+    const snap = await withKey(SBC_UNHEALTHY_FLAG_KEY, () => getSbcHealthSnapshot());
     expect(snap).toBeNull();
   });
 
@@ -334,9 +310,7 @@ describe('getSbcHealthSnapshot', () => {
         }),
       );
     }
-    const snap = await withKey(SBC_UNHEALTHY_FLAG_KEY, () =>
-      getSbcHealthSnapshot(),
-    );
+    const snap = await withKey(SBC_UNHEALTHY_FLAG_KEY, () => getSbcHealthSnapshot());
     expect(snap).not.toBeNull();
     expect(snap!.reason).toBe('vapi 502');
     expect(snap!.recentFailures.length).toBe(SBC_FAILURE_TRIP_THRESHOLD);

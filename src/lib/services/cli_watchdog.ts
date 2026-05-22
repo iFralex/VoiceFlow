@@ -338,9 +338,7 @@ export async function runWatchdog(options: RunWatchdogOptions = {}): Promise<Wat
       if (m.spamScore <= threshold) continue;
 
       // Count prior cooldowns in the rolling window (this run will add one).
-      const windowStart = new Date(
-        now.getTime() - RETIREMENT_WINDOW_DAYS * 24 * 60 * 60 * 1000,
-      );
+      const windowStart = new Date(now.getTime() - RETIREMENT_WINDOW_DAYS * 24 * 60 * 60 * 1000);
       const [{ n: priorCount } = { n: 0 }] = await tx
         .select({ n: count() })
         .from(cliCooldownHistory)
@@ -386,9 +384,7 @@ export async function runWatchdog(options: RunWatchdogOptions = {}): Promise<Wat
           .update(phoneNumbers)
           .set({ status: 'cooling_down', spam_score: String(m.spamScore) })
           .where(eq(phoneNumbers.id, m.phoneNumberId));
-        const resumeAt = new Date(
-          now.getTime() + COOLDOWN_DURATION_DAYS * 24 * 60 * 60 * 1000,
-        );
+        const resumeAt = new Date(now.getTime() + COOLDOWN_DURATION_DAYS * 24 * 60 * 60 * 1000);
         transitions.push({
           phoneNumberId: m.phoneNumberId,
           e164: m.e164,
@@ -425,7 +421,9 @@ export async function runWatchdog(options: RunWatchdogOptions = {}): Promise<Wat
       await sendInngestEvents(result.events);
     } catch (err) {
       // Best-effort: the audit trail is still in cli_cooldown_history.
-      void logger.error('Failed to publish CLI watchdog events', { error: err instanceof Error ? err.message : String(err) });
+      void logger.error('Failed to publish CLI watchdog events', {
+        error: err instanceof Error ? err.message : String(err),
+      });
     }
   }
 

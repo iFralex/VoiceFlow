@@ -101,10 +101,15 @@ describe('collectAllContacts', () => {
 
     expect(result).toHaveLength(3);
     expect(mockListContacts).toHaveBeenCalledTimes(2);
-    expect(mockListContacts).toHaveBeenNthCalledWith(2, 'org-1', {}, {
-      limit: 1000,
-      cursor: 'cursor-1',
-    });
+    expect(mockListContacts).toHaveBeenNthCalledWith(
+      2,
+      'org-1',
+      {},
+      {
+        limit: 1000,
+        cursor: 'cursor-1',
+      },
+    );
   });
 
   it('passes filters to listContacts', async () => {
@@ -168,7 +173,10 @@ describe('processContactsExport', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    mockListContacts.mockResolvedValue({ items: [makeContact('+393401234567')], nextCursor: undefined });
+    mockListContacts.mockResolvedValue({
+      items: [makeContact('+393401234567')],
+      nextCursor: undefined,
+    });
     mockUpload.mockResolvedValue({ data: {}, error: null });
     mockCreateSignedUrl.mockResolvedValue({
       data: { signedUrl: 'https://example.com/signed' },

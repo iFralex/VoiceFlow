@@ -24,10 +24,7 @@ export const voiceCatalogue = pgTable(
     created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    unique('voice_catalogue_external_voice_id_provider_unique').on(
-      t.external_voice_id,
-      t.provider,
-    ),
+    unique('voice_catalogue_external_voice_id_provider_unique').on(t.external_voice_id, t.provider),
   ],
 );
 

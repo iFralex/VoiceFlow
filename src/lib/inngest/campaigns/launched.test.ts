@@ -65,8 +65,18 @@ describe('createPendingCallRows', () => {
 
     expect(mockInsert).toHaveBeenCalledOnce();
     expect(mockValues).toHaveBeenCalledWith([
-      expect.objectContaining({ org_id: ORG, campaign_id: CAMPAIGN, contact_id: 'c-1', status: 'pending' }),
-      expect.objectContaining({ org_id: ORG, campaign_id: CAMPAIGN, contact_id: 'c-2', status: 'pending' }),
+      expect.objectContaining({
+        org_id: ORG,
+        campaign_id: CAMPAIGN,
+        contact_id: 'c-1',
+        status: 'pending',
+      }),
+      expect.objectContaining({
+        org_id: ORG,
+        campaign_id: CAMPAIGN,
+        contact_id: 'c-2',
+        status: 'pending',
+      }),
     ]);
     expect(result).toHaveLength(2);
   });
@@ -84,9 +94,7 @@ describe('createPendingCallRows', () => {
   });
 
   it('preserves attemptNumber from the eligible input', async () => {
-    const retryEligible = [
-      { contactId: 'c-1', phoneE164: '+39012345678', attemptNumber: 2 },
-    ];
+    const retryEligible = [{ contactId: 'c-1', phoneE164: '+39012345678', attemptNumber: 2 }];
     mockReturning.mockResolvedValue([{ id: 'call-r', contact_id: 'c-1' }]);
 
     const result = await createPendingCallRows(ORG, CAMPAIGN, retryEligible);

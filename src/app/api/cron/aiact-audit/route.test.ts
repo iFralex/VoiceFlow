@@ -4,23 +4,19 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 // Hoisted mocks
 // ---------------------------------------------------------------------------
 
-const {
-  mockWithSystemContext,
-  mockRecordAudit,
-  mockRunAiActConformanceAudit,
-  mockEnv,
-} = vi.hoisted(() => {
-  const mockWithSystemContext = vi.fn();
-  const mockRecordAudit = vi.fn().mockResolvedValue(undefined);
-  const mockRunAiActConformanceAudit = vi.fn();
-  const mockEnv = { CRON_SECRET: 'test-cron-secret-16chars' };
-  return {
-    mockWithSystemContext,
-    mockRecordAudit,
-    mockRunAiActConformanceAudit,
-    mockEnv,
-  };
-});
+const { mockWithSystemContext, mockRecordAudit, mockRunAiActConformanceAudit, mockEnv } =
+  vi.hoisted(() => {
+    const mockWithSystemContext = vi.fn();
+    const mockRecordAudit = vi.fn().mockResolvedValue(undefined);
+    const mockRunAiActConformanceAudit = vi.fn();
+    const mockEnv = { CRON_SECRET: 'test-cron-secret-16chars' };
+    return {
+      mockWithSystemContext,
+      mockRecordAudit,
+      mockRunAiActConformanceAudit,
+      mockEnv,
+    };
+  });
 
 vi.mock('@/lib/db/context', () => ({
   withSystemContext: mockWithSystemContext,
@@ -91,8 +87,8 @@ describe('GET /api/cron/aiact-audit — auth', () => {
     mockEnv.CRON_SECRET = CRON_SECRET;
     mockRunAiActConformanceAudit.mockResolvedValue(defaultAuditResult());
     // Pass-through so recordAudit is observed
-    mockWithSystemContext.mockImplementation(
-      async (fn: (tx: unknown) => Promise<unknown>) => fn({}),
+    mockWithSystemContext.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) =>
+      fn({}),
     );
   });
 
@@ -126,8 +122,8 @@ describe('runAiActAuditCron', () => {
   beforeEach(() => {
     vi.resetAllMocks();
     mockRunAiActConformanceAudit.mockResolvedValue(defaultAuditResult());
-    mockWithSystemContext.mockImplementation(
-      async (fn: (tx: unknown) => Promise<unknown>) => fn({}),
+    mockWithSystemContext.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) =>
+      fn({}),
     );
   });
 

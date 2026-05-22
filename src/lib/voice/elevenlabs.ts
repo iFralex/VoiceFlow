@@ -26,25 +26,22 @@ export async function synthesizeSpeech(args: {
   voiceId: string;
   apiKey: string;
 }): Promise<Buffer> {
-  const response = await fetch(
-    `${ELEVENLABS_BASE_URL}/text-to-speech/${args.voiceId}`,
-    {
-      method: 'POST',
-      headers: {
-        'xi-api-key': args.apiKey,
-        'Content-Type': 'application/json',
-        Accept: 'audio/mpeg',
-      },
-      body: JSON.stringify({
-        text: args.text,
-        model_id: 'eleven_multilingual_v2',
-        voice_settings: {
-          stability: 0.5,
-          similarity_boost: 0.75,
-        },
-      }),
+  const response = await fetch(`${ELEVENLABS_BASE_URL}/text-to-speech/${args.voiceId}`, {
+    method: 'POST',
+    headers: {
+      'xi-api-key': args.apiKey,
+      'Content-Type': 'application/json',
+      Accept: 'audio/mpeg',
     },
-  );
+    body: JSON.stringify({
+      text: args.text,
+      model_id: 'eleven_multilingual_v2',
+      voice_settings: {
+        stability: 0.5,
+        similarity_boost: 0.75,
+      },
+    }),
+  });
 
   if (!response.ok) {
     const errorText = await response.text().catch(() => '');

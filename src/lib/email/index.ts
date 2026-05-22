@@ -56,7 +56,12 @@ export async function sendEmail(params: SendEmailParams): Promise<void> {
       tags: params.tags ?? null,
       error: error ? error.message : null,
     })
-    .catch((e: unknown) => void logger.error('[email] email_log insert failed', { error: e instanceof Error ? e.message : String(e) }));
+    .catch(
+      (e: unknown) =>
+        void logger.error('[email] email_log insert failed', {
+          error: e instanceof Error ? e.message : String(e),
+        }),
+    );
 
   if (error) {
     throw new Error(`Resend send failed: ${error.message}`);

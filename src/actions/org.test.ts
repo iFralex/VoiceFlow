@@ -144,5 +144,4 @@ describe('setActiveOrg', () => {
       expect(opts.maxAge).toBe(60 * 60 * 24 * 365);
     });
   });
-
 });

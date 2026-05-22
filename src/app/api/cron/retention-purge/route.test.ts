@@ -242,14 +242,21 @@ function queueOrgPlans(plans: OrgPlan[], captured: Captured) {
 
     // held contacts (legal hold)
     queue.push(async (fn) =>
-      fn(buildTx({ select: { rows: (plan.heldContactIds ?? []).map((id) => ({ id })) } }, captured)),
+      fn(
+        buildTx({ select: { rows: (plan.heldContactIds ?? []).map((id) => ({ id })) } }, captured),
+      ),
     );
 
     // recordings
     queue.push(async (fn) => fn(buildTx({ select: { rows: plan.recordings ?? [] } }, captured)));
     if ((plan.recordings ?? []).length > 0 && !plan.recordingsStorageError) {
       queue.push(async (fn) =>
-        fn(buildTx({ update: { rows: plan.recordingsClearedRows ?? plan.recordings ?? [] } }, captured)),
+        fn(
+          buildTx(
+            { update: { rows: plan.recordingsClearedRows ?? plan.recordings ?? [] } },
+            captured,
+          ),
+        ),
       );
     }
 
@@ -271,18 +278,14 @@ function queueOrgPlans(plans: OrgPlan[], captured: Captured) {
     //   2. (only if any) select call paths for those contacts
     //   3. (only if any) delete contacts
     const hardDeletedRows = plan.hardDeletedContacts ?? [];
-    queue.push(async (fn) =>
-      fn(buildTx({ select: { rows: hardDeletedRows } }, captured)),
-    );
+    queue.push(async (fn) => fn(buildTx({ select: { rows: hardDeletedRows } }, captured)));
     if (hardDeletedRows.length > 0) {
       // Call paths lookup — empty by default; tests that exercise the storage
       // purge override mockStorageRemove and wire `cascadePaths` separately.
       queue.push(async (fn) =>
         fn(buildTx({ select: { rows: plan.cascadeCallPaths ?? [] } }, captured)),
       );
-      queue.push(async (fn) =>
-        fn(buildTx({ delete: { rows: hardDeletedRows } }, captured)),
-      );
+      queue.push(async (fn) => fn(buildTx({ delete: { rows: hardDeletedRows } }, captured)));
     }
   }
 
@@ -457,8 +460,7 @@ describe('runRetentionPurge', () => {
     );
 
     // First call (recordings) errors; second call would be transcripts (none).
-    mockStorageRemove
-      .mockResolvedValueOnce({ data: null, error: { message: 'simulated' } });
+    mockStorageRemove.mockResolvedValueOnce({ data: null, error: { message: 'simulated' } });
 
     const result = await runRetentionPurge(NOW);
 
@@ -624,13 +626,9 @@ describe('runRetentionPurge', () => {
     queue.push(async (fn) => fn(buildTx({ select: { rows: [] } }, captured)));
     queue.push(async (fn) => fn(buildTx({ select: { rows: [] } }, captured)));
     queue.push(async (fn) => fn(buildTx({ select: { rows: [] } }, captured)));
-    queue.push(async (fn) =>
-      fn(buildTx({ select: { rows: [{ id: 'kc-b' }] } }, captured)),
-    );
+    queue.push(async (fn) => fn(buildTx({ select: { rows: [{ id: 'kc-b' }] } }, captured)));
     queue.push(async (fn) => fn(buildTx({ select: { rows: [] } }, captured)));
-    queue.push(async (fn) =>
-      fn(buildTx({ delete: { rows: [{ id: 'kc-b' }] } }, captured)),
-    );
+    queue.push(async (fn) => fn(buildTx({ delete: { rows: [{ id: 'kc-b' }] } }, captured)));
     // Close-out audit
     queue.push(async (fn) => fn(buildTx({}, captured)));
 
@@ -690,11 +688,7 @@ describe('runRetentionPurge', () => {
     }
     const hardPurgeSelect = captured.selects
       .map((s) => s.whereArg as AndExpr)
-      .find((sel) =>
-        sel?.args?.some(
-          (a) => a.type === 'notInArray' && a.col === 'k_id',
-        ),
-      );
+      .find((sel) => sel?.args?.some((a) => a.type === 'notInArray' && a.col === 'k_id'));
     expect(hardPurgeSelect).toBeDefined();
     const selectNotIn = hardPurgeSelect!.args.find((arg) => arg.type === 'notInArray');
     expect(selectNotIn?.vals).toEqual(['held-contact-1', 'held-contact-2']);

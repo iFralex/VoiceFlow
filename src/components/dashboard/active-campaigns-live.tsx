@@ -20,12 +20,7 @@ type Props = {
   className?: string;
 };
 
-const NON_TERMINAL_STATUSES = new Set<CampaignStatus>([
-  'draft',
-  'scheduled',
-  'running',
-  'paused',
-]);
+const NON_TERMINAL_STATUSES = new Set<CampaignStatus>(['draft', 'scheduled', 'running', 'paused']);
 
 function applyStatsPayload(
   campaigns: ActiveCampaignRow[],
@@ -41,9 +36,7 @@ function applyStatsPayload(
 
   const total = typeof row['total_calls'] === 'number' ? row['total_calls'] : campaigns[idx]!.total;
   const completed =
-    typeof row['completed_calls'] === 'number'
-      ? row['completed_calls']
-      : campaigns[idx]!.completed;
+    typeof row['completed_calls'] === 'number' ? row['completed_calls'] : campaigns[idx]!.completed;
   const appointments =
     typeof row['outcome_appointment_booked'] === 'number'
       ? row['outcome_appointment_booked']
@@ -92,8 +85,7 @@ function applyCampaignPayload(
  */
 export function ActiveCampaignsLive({ orgId, initialCampaigns, className }: Props) {
   const router = useRouter();
-  const [campaigns, setCampaigns] =
-    React.useState<ActiveCampaignRow[]>(initialCampaigns);
+  const [campaigns, setCampaigns] = React.useState<ActiveCampaignRow[]>(initialCampaigns);
   // Reset the in-memory realtime patches when the server sends a fresh
   // snapshot — e.g. after `router.refresh()` recovers from a reconnect, or
   // when the dashboard period changes. Pattern: derive state from props by
@@ -155,12 +147,7 @@ export function ActiveCampaignsLive({ orgId, initialCampaigns, className }: Prop
     };
   }, [orgId, router]);
 
-  return (
-    <ActiveCampaigns
-      campaigns={campaigns}
-      {...(className ? { className } : {})}
-    />
-  );
+  return <ActiveCampaigns campaigns={campaigns} {...(className ? { className } : {})} />;
 }
 
 // Exported for tests

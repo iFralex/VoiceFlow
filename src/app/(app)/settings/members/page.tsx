@@ -38,11 +38,5 @@ export default async function MembersPage() {
   const canInvite = hasCapability(role, 'members.invite');
   const canManage = hasCapability(role, 'members.update_role');
 
-  return (
-    <MembersPageClient
-      members={serialized}
-      canInvite={canInvite}
-      canManage={canManage}
-    />
-  );
+  return <MembersPageClient members={serialized} canInvite={canInvite} canManage={canManage} />;
 }

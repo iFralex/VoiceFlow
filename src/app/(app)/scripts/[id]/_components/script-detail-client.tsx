@@ -6,15 +6,14 @@ import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 
-import { copyScriptAction, deleteScriptAction, previewVoiceSampleAction, updateScriptAction } from '@/actions/scripts';
-import { Button } from '@/components/ui/button';
 import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+  copyScriptAction,
+  deleteScriptAction,
+  previewVoiceSampleAction,
+  updateScriptAction,
+} from '@/actions/scripts';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import {
   Dialog,
@@ -102,7 +101,14 @@ type Props = {
   testCallEnabled: boolean;
 };
 
-export function ScriptDetailClient({ script, templateInfo, preamble, outcomeInstructions, elevenLabsConfigured, testCallEnabled }: Props) {
+export function ScriptDetailClient({
+  script,
+  templateInfo,
+  preamble,
+  outcomeInstructions,
+  elevenLabsConfigured,
+  testCallEnabled,
+}: Props) {
   const t = useTranslations('scripts');
   const router = useRouter();
   const [isSaving, startSaveTransition] = useTransition();
@@ -120,9 +126,7 @@ export function ScriptDetailClient({ script, templateInfo, preamble, outcomeInst
 
   const [scriptName, setScriptName] = useState(script.name);
   const [voiceId, setVoiceId] = useState(script.voice_id ?? '');
-  const [variables, setVariables] = useState<VariableValues>(
-    coerceVariables(script.variables),
-  );
+  const [variables, setVariables] = useState<VariableValues>(coerceVariables(script.variables));
   const [nameError, setNameError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
 
@@ -264,14 +268,11 @@ export function ScriptDetailClient({ script, templateInfo, preamble, outcomeInst
     });
   }
 
-  const schemaProperties = templateInfo
-    ? Object.entries(templateInfo.schema.properties)
-    : [];
+  const schemaProperties = templateInfo ? Object.entries(templateInfo.schema.properties) : [];
 
-  const previewText =
-    templateInfo
-      ? buildPreview(preamble, templateInfo.systemPromptBody, outcomeInstructions, variables)
-      : '';
+  const previewText = templateInfo
+    ? buildPreview(preamble, templateInfo.systemPromptBody, outcomeInstructions, variables)
+    : '';
 
   const firstMessagePreview = templateInfo
     ? previewInterpolate(templateInfo.firstMessageBody, variables)
@@ -287,24 +288,17 @@ export function ScriptDetailClient({ script, templateInfo, preamble, outcomeInst
           </Button>
           <div>
             <h1 className="text-2xl font-semibold">{t('edit_script_title')}</h1>
-            <p className="text-sm text-muted-foreground">{script.template_name}</p>
+            <p className="text-muted-foreground text-sm">{script.template_name}</p>
           </div>
         </div>
 
         {/* Secondary actions */}
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleCopy}
-            disabled={isCopying}
-          >
+          <Button variant="outline" size="sm" onClick={handleCopy} disabled={isCopying}>
             {t('copy_script')}
           </Button>
           <Button variant="outline" size="sm" asChild>
-            <Link href={`/campaigns/new?script=${script.id}`}>
-              {t('use_in_campaign')}
-            </Link>
+            <Link href={`/campaigns/new?script=${script.id}`}>{t('use_in_campaign')}</Link>
           </Button>
           {testCallEnabled && (
             <Dialog open={testCallOpen} onOpenChange={setTestCallOpen}>
@@ -332,14 +326,11 @@ export function ScriptDetailClient({ script, templateInfo, preamble, outcomeInst
                     disabled={isTestCalling}
                   />
                   {testCallPhoneError && (
-                    <p className="text-xs text-destructive">{testCallPhoneError}</p>
+                    <p className="text-destructive text-xs">{testCallPhoneError}</p>
                   )}
                 </div>
                 <DialogFooter>
-                  <Button
-                    onClick={handleTestCall}
-                    disabled={isTestCalling}
-                  >
+                  <Button onClick={handleTestCall} disabled={isTestCalling}>
                     {isTestCalling ? t('test_call_submitting') : t('test_call_submit')}
                   </Button>
                 </DialogFooter>
@@ -370,7 +361,7 @@ export function ScriptDetailClient({ script, templateInfo, preamble, outcomeInst
                   placeholder={t('field_script_name_placeholder')}
                   maxLength={200}
                 />
-                {nameError && <p className="text-xs text-destructive">{nameError}</p>}
+                {nameError && <p className="text-destructive text-xs">{nameError}</p>}
               </div>
 
               {/* Variable fields */}
@@ -410,7 +401,7 @@ export function ScriptDetailClient({ script, templateInfo, preamble, outcomeInst
                   placeholder={t('voice_override_placeholder')}
                   maxLength={256}
                 />
-                <p className="text-xs text-muted-foreground">{t('voice_override_hint')}</p>
+                <p className="text-muted-foreground text-xs">{t('voice_override_hint')}</p>
               </div>
             </CardContent>
             <CardFooter className="flex items-center justify-between gap-3 border-t pt-4">
@@ -446,7 +437,7 @@ export function ScriptDetailClient({ script, templateInfo, preamble, outcomeInst
               <CardContent className="space-y-4">
                 <div>
                   <div className="mb-2 flex items-center justify-between">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    <p className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
                       {t('preview_first_message_label')}
                     </p>
                     {elevenLabsConfigured && (
@@ -461,18 +452,16 @@ export function ScriptDetailClient({ script, templateInfo, preamble, outcomeInst
                       </Button>
                     )}
                   </div>
-                  <pre className="whitespace-pre-wrap rounded-md bg-muted p-3 text-xs text-foreground">
+                  <pre className="bg-muted text-foreground rounded-md p-3 text-xs whitespace-pre-wrap">
                     {firstMessagePreview || t('preview_placeholder_hint')}
                   </pre>
-                  {sampleError && (
-                    <p className="text-xs text-destructive">{sampleError}</p>
-                  )}
+                  {sampleError && <p className="text-destructive text-xs">{sampleError}</p>}
                 </div>
                 <div>
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  <p className="text-muted-foreground mb-2 text-xs font-semibold tracking-wide uppercase">
                     {t('preview_system_prompt_label')}
                   </p>
-                  <pre className="max-h-[32rem] overflow-y-auto whitespace-pre-wrap rounded-md bg-muted p-3 text-xs text-foreground">
+                  <pre className="bg-muted text-foreground max-h-[32rem] overflow-y-auto rounded-md p-3 text-xs whitespace-pre-wrap">
                     {previewText}
                   </pre>
                 </div>

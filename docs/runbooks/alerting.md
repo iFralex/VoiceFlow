@@ -22,6 +22,7 @@ Trigger conditions:
 - Security incidents: any Sentry event with tag `security=true` or matching patterns (SQL injection attempt, auth bypass, excessive failed logins from a single IP within 5 min)
 
 Notification channels:
+
 - PagerDuty (integrates with founder's phone via SMS + push)
 - Sentry "Issue Alert" rule: condition "Sentry detects a new issue" with filter `level = fatal` or tag `tier = critical`
 
@@ -43,6 +44,7 @@ Trigger conditions:
 - Low-balance cascade: >3 orgs triggering low-balance alert within 1 h (may indicate a billing bug)
 
 Notification channels:
+
 - Email to `founder@company.com` via automated Sentry/Axiom alert
 - Slack webhook to `#alerts-high` channel
 
@@ -63,6 +65,7 @@ Trigger conditions:
 - Script template published: a new version of a seed template deployed
 
 Notification channels:
+
 - Slack webhook to `#alerts-info` channel (auto-post from Axiom monitor on relevant log events)
 
 Response SLA: no SLA; reviewed during normal working hours.
@@ -102,6 +105,7 @@ Configure these in the Sentry project settings under "Alerts > Issue Alerts".
 - Environment: production
 
 To create these rules:
+
 1. Open Sentry → Settings → Alerts → Create Alert Rule
 2. Set project to the production Next.js project
 3. Configure conditions/filters/actions as above
@@ -194,11 +198,11 @@ Configure these in the Axiom workspace under "Monitors".
 
 ## Quiet Hours
 
-| Tier | Active hours | Out-of-hours behaviour |
-|------|-------------|------------------------|
-| CRITICAL | 24/7 | Always pages |
-| HIGH | 08:00–22:00 Europe/Rome | Suppressed; delivered at 08:00 next day |
-| INFO | Business hours only | Never pages |
+| Tier     | Active hours            | Out-of-hours behaviour                  |
+| -------- | ----------------------- | --------------------------------------- |
+| CRITICAL | 24/7                    | Always pages                            |
+| HIGH     | 08:00–22:00 Europe/Rome | Suppressed; delivered at 08:00 next day |
+| INFO     | Business hours only     | Never pages                             |
 
 PagerDuty "Schedules" must encode these hours so HIGH alerts queued outside the window are delivered at 08:00 rather than dropped.
 
@@ -215,14 +219,14 @@ Verify each alert is correctly wired before relying on it:
 
 Document the last test date in this file after each drill:
 
-| Alert | Last tested | Outcome |
-|-------|------------|---------|
-| Sentry CRITICAL fatal | — | — |
-| Sentry HIGH spike | — | — |
-| Axiom disclosure-failure-rate | — | — |
-| Axiom cli-pool-saturation | — | — |
-| Axiom webhook-deactivation-spike | — | — |
-| Axiom voice-provider-error-rate | — | — |
+| Alert                            | Last tested | Outcome |
+| -------------------------------- | ----------- | ------- |
+| Sentry CRITICAL fatal            | —           | —       |
+| Sentry HIGH spike                | —           | —       |
+| Axiom disclosure-failure-rate    | —           | —       |
+| Axiom cli-pool-saturation        | —           | —       |
+| Axiom webhook-deactivation-spike | —           | —       |
+| Axiom voice-provider-error-rate  | —           | —       |
 
 ---
 

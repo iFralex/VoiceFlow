@@ -20,42 +20,39 @@ const skipWhenNoDb = !process.env['TEST_DATABASE_URL'];
 // ─── hasRecentEmailSent (org-scoped dedup) ────────────────────────────────────
 
 describe('idempotency SQL — org-scoped dedup (low-balance / once per 24h)', () => {
-  it.skipIf(skipWhenNoDb)(
-    'finds a recent row with matching template and org_id tags',
-    async () => {
-      await withTestDb(async (tx) => {
-        const orgId = 'org-idem-int-001';
-        const template = 'low-balance';
-        const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  it.skipIf(skipWhenNoDb)('finds a recent row with matching template and org_id tags', async () => {
+    await withTestDb(async (tx) => {
+      const orgId = 'org-idem-int-001';
+      const template = 'low-balance';
+      const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-        await tx.insert(emailLog).values({
-          to_address: 'owner@example.com',
-          subject: 'Credito basso',
-          tags: [
-            { name: 'template', value: template },
-            { name: 'org_id', value: orgId },
-          ],
-        });
-
-        const rows = await tx
-          .select({ id: emailLog.id })
-          .from(emailLog)
-          .where(
-            and(
-              gt(emailLog.sent_at, cutoff),
-              sql`${emailLog.tags} @> ${JSON.stringify([
-                { name: 'template', value: template },
-                { name: 'org_id', value: orgId },
-              ])}::jsonb`,
-              sql`${emailLog.error} IS NULL`,
-            ),
-          )
-          .limit(1);
-
-        expect(rows.length).toBe(1);
+      await tx.insert(emailLog).values({
+        to_address: 'owner@example.com',
+        subject: 'Credito basso',
+        tags: [
+          { name: 'template', value: template },
+          { name: 'org_id', value: orgId },
+        ],
       });
-    },
-  );
+
+      const rows = await tx
+        .select({ id: emailLog.id })
+        .from(emailLog)
+        .where(
+          and(
+            gt(emailLog.sent_at, cutoff),
+            sql`${emailLog.tags} @> ${JSON.stringify([
+              { name: 'template', value: template },
+              { name: 'org_id', value: orgId },
+            ])}::jsonb`,
+            sql`${emailLog.error} IS NULL`,
+          ),
+        )
+        .limit(1);
+
+      expect(rows.length).toBe(1);
+    });
+  });
 
   it.skipIf(skipWhenNoDb)(
     'does not find a row whose error column is non-null (failed send does not block retry)',
@@ -175,42 +172,39 @@ describe('idempotency SQL — org-scoped dedup (low-balance / once per 24h)', ()
 // ─── hasRecentEmailSentForRef (ref-scoped dedup) ──────────────────────────────
 
 describe('idempotency SQL — ref-scoped dedup (appointment-booked / once per hour)', () => {
-  it.skipIf(skipWhenNoDb)(
-    'finds a recent row with matching template and ref_id tags',
-    async () => {
-      await withTestDb(async (tx) => {
-        const refId = 'appt-idem-int-001';
-        const template = 'appointment-booked';
-        const cutoff = new Date(Date.now() - 1 * 60 * 60 * 1000);
+  it.skipIf(skipWhenNoDb)('finds a recent row with matching template and ref_id tags', async () => {
+    await withTestDb(async (tx) => {
+      const refId = 'appt-idem-int-001';
+      const template = 'appointment-booked';
+      const cutoff = new Date(Date.now() - 1 * 60 * 60 * 1000);
 
-        await tx.insert(emailLog).values({
-          to_address: 'owner@example.com',
-          subject: 'Appuntamento fissato',
-          tags: [
-            { name: 'template', value: template },
-            { name: 'ref_id', value: refId },
-          ],
-        });
-
-        const rows = await tx
-          .select({ id: emailLog.id })
-          .from(emailLog)
-          .where(
-            and(
-              gt(emailLog.sent_at, cutoff),
-              sql`${emailLog.tags} @> ${JSON.stringify([
-                { name: 'template', value: template },
-                { name: 'ref_id', value: refId },
-              ])}::jsonb`,
-              sql`${emailLog.error} IS NULL`,
-            ),
-          )
-          .limit(1);
-
-        expect(rows.length).toBe(1);
+      await tx.insert(emailLog).values({
+        to_address: 'owner@example.com',
+        subject: 'Appuntamento fissato',
+        tags: [
+          { name: 'template', value: template },
+          { name: 'ref_id', value: refId },
+        ],
       });
-    },
-  );
+
+      const rows = await tx
+        .select({ id: emailLog.id })
+        .from(emailLog)
+        .where(
+          and(
+            gt(emailLog.sent_at, cutoff),
+            sql`${emailLog.tags} @> ${JSON.stringify([
+              { name: 'template', value: template },
+              { name: 'ref_id', value: refId },
+            ])}::jsonb`,
+            sql`${emailLog.error} IS NULL`,
+          ),
+        )
+        .limit(1);
+
+      expect(rows.length).toBe(1);
+    });
+  });
 
   it.skipIf(skipWhenNoDb)(
     'does not find a row with a different ref_id — dedup is ref-scoped',

@@ -10,13 +10,14 @@ the Supabase Dashboard or Management API are described here.
 
 In the [Supabase Dashboard](https://supabase.com/dashboard) create three projects in the **EU (Frankfurt)** region:
 
-| Display name         | Slug (example)          | Tier     |
-|----------------------|-------------------------|----------|
-| VoiceFlow-dev        | voiceflow-dev           | Free/Pro |
-| VoiceFlow-staging    | voiceflow-staging       | Pro      |
-| VoiceFlow-prod       | voiceflow-prod          | Pro      |
+| Display name      | Slug (example)    | Tier     |
+| ----------------- | ----------------- | -------- |
+| VoiceFlow-dev     | voiceflow-dev     | Free/Pro |
+| VoiceFlow-staging | voiceflow-staging | Pro      |
+| VoiceFlow-prod    | voiceflow-prod    | Pro      |
 
 For each project:
+
 - Select **Postgres 16**
 - Enable **Authentication**, **Storage**, **Realtime** during project creation (all are on by default)
 
@@ -39,12 +40,12 @@ separate entries for `dev`, `staging`, and `prod`:
 
 In **Storage → Buckets** for each project, create four **private** buckets:
 
-| Bucket name    | Max upload size |
-|----------------|-----------------|
-| recordings     | 500 MB          |
-| transcripts    | 50 MB           |
-| csv-uploads    | 50 MB           |
-| exports        | 50 MB           |
+| Bucket name | Max upload size |
+| ----------- | --------------- |
+| recordings  | 500 MB          |
+| transcripts | 50 MB           |
+| csv-uploads | 50 MB           |
+| exports     | 50 MB           |
 
 Set each bucket to **private** (unauthenticated reads disabled).
 RLS storage policies are applied by migration `drizzle/migrations/0004_storage_policies.sql`.

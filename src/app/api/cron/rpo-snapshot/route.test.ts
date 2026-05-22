@@ -80,10 +80,9 @@ vi.mock('drizzle-orm', () => ({
   gt: (col: unknown, val: unknown) => ({ type: 'gt', col, val }),
   isNull: (col: unknown) => ({ type: 'isNull', col }),
   inArray: (col: unknown, vals: unknown[]) => ({ type: 'inArray', col, vals }),
-  sql: Object.assign(
-    (strings: TemplateStringsArray) => ({ type: 'sql', text: strings.join('') }),
-    { raw: (s: string) => s },
-  ),
+  sql: Object.assign((strings: TemplateStringsArray) => ({ type: 'sql', text: strings.join('') }), {
+    raw: (s: string) => s,
+  }),
 }));
 
 // ---------------------------------------------------------------------------
@@ -133,15 +132,18 @@ interface ChunkPlan {
   contactsUpdateRows?: { clear: string[]; blocked: string[] };
 }
 
-function buildTx(plan: ChunkPlan, captured: { inserts: InsertRecorder[]; updates: UpdateRecorder[] }): unknown {
+function buildTx(
+  plan: ChunkPlan,
+  captured: { inserts: InsertRecorder[]; updates: UpdateRecorder[] },
+): unknown {
   return {
     selectDistinct: vi.fn(() => ({
       from: vi.fn(() => ({
         where: vi.fn(() => ({
           orderBy: vi.fn(() => ({
-            limit: vi.fn().mockResolvedValue(
-              (plan.candidates ?? []).map((p) => ({ phone_e164: p })),
-            ),
+            limit: vi
+              .fn()
+              .mockResolvedValue((plan.candidates ?? []).map((p) => ({ phone_e164: p }))),
           })),
         })),
       })),
@@ -177,8 +179,7 @@ function buildTx(plan: ChunkPlan, captured: { inserts: InsertRecorder[]; updates
             where: (w: unknown) => {
               recorder.whereArg = w;
               const isBlockedUpdate =
-                (s.rpo_status as unknown) === 'blocked' ||
-                (typeof s.opt_out !== 'undefined');
+                (s.rpo_status as unknown) === 'blocked' || typeof s.opt_out !== 'undefined';
               const rows = isBlockedUpdate
                 ? (plan.contactsUpdateRows?.blocked ?? []).map((id) => ({ id }))
                 : (plan.contactsUpdateRows?.clear ?? []).map((id) => ({ id }));
@@ -195,7 +196,10 @@ function buildTx(plan: ChunkPlan, captured: { inserts: InsertRecorder[]; updates
   };
 }
 
-function queueChunkPlans(plans: ChunkPlan[], captured: { inserts: InsertRecorder[]; updates: UpdateRecorder[] }) {
+function queueChunkPlans(
+  plans: ChunkPlan[],
+  captured: { inserts: InsertRecorder[]; updates: UpdateRecorder[] },
+) {
   // Each chunk uses several withSystemContext calls. We sequence them via a
   // single tx-builder per call using captured plan state per chunk.
   // Order per chunk:
@@ -387,8 +391,16 @@ describe('runRpoSnapshot', () => {
     expect(registryInsert).toBeDefined();
     expect(registryInsert?.values).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ org_id: ORG_ID_A, phone_e164: PHONE_BLOCKED, source: 'rpo_block' }),
-        expect.objectContaining({ org_id: ORG_ID_B, phone_e164: PHONE_BLOCKED, source: 'rpo_block' }),
+        expect.objectContaining({
+          org_id: ORG_ID_A,
+          phone_e164: PHONE_BLOCKED,
+          source: 'rpo_block',
+        }),
+        expect.objectContaining({
+          org_id: ORG_ID_B,
+          phone_e164: PHONE_BLOCKED,
+          source: 'rpo_block',
+        }),
       ]),
     );
 
@@ -414,9 +426,7 @@ describe('runRpoSnapshot', () => {
 
     const rpoBlockEvents = events.filter((e) => e.name === RPO_BLOCK_DETECTED_EVENT);
     expect(rpoBlockEvents).toHaveLength(2);
-    expect(rpoBlockEvents.map((e) => e.data.orgId).sort()).toEqual(
-      [ORG_ID_A, ORG_ID_B].sort(),
-    );
+    expect(rpoBlockEvents.map((e) => e.data.orgId).sort()).toEqual([ORG_ID_A, ORG_ID_B].sort());
     expect(rpoBlockEvents.every((e) => e.data.phoneE164 === PHONE_BLOCKED)).toBe(true);
     expect(
       rpoBlockEvents.every((e) => typeof e.id === 'string' && e.id!.startsWith('rpo-block-')),
@@ -425,14 +435,10 @@ describe('runRpoSnapshot', () => {
     const optOutEvents = events.filter((e) => e.name === 'compliance/opt-out-registered');
     expect(optOutEvents).toHaveLength(2);
     expect(optOutEvents.every((e) => e.data.source === 'rpo_block')).toBe(true);
-    expect(optOutEvents.map((e) => e.data.orgId).sort()).toEqual(
-      [ORG_ID_A, ORG_ID_B].sort(),
-    );
+    expect(optOutEvents.map((e) => e.data.orgId).sort()).toEqual([ORG_ID_A, ORG_ID_B].sort());
     expect(optOutEvents.every((e) => e.data.phoneE164 === PHONE_BLOCKED)).toBe(true);
     expect(
-      optOutEvents.every(
-        (e) => typeof e.id === 'string' && e.id!.startsWith('opt-out-'),
-      ),
+      optOutEvents.every((e) => typeof e.id === 'string' && e.id!.startsWith('opt-out-')),
     ).toBe(true);
   });
 

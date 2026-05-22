@@ -47,12 +47,7 @@ function formatCents(cents: number): string {
   });
 }
 
-const NON_TERMINAL_STATUSES = new Set<CampaignStatus>([
-  'draft',
-  'scheduled',
-  'running',
-  'paused',
-]);
+const NON_TERMINAL_STATUSES = new Set<CampaignStatus>(['draft', 'scheduled', 'running', 'paused']);
 
 // ---------------------------------------------------------------------------
 // KPI Card
@@ -60,11 +55,8 @@ const NON_TERMINAL_STATUSES = new Set<CampaignStatus>([
 
 function LiveKpi({ label, value }: { label: string; value: string }) {
   return (
-    <div
-      data-slot="live-kpi"
-      className="flex flex-col gap-1 rounded-lg border bg-card p-4"
-    >
-      <span className="text-xs text-muted-foreground">{label}</span>
+    <div data-slot="live-kpi" className="bg-card flex flex-col gap-1 rounded-lg border p-4">
+      <span className="text-muted-foreground text-xs">{label}</span>
       <span className="text-2xl font-semibold tabular-nums">{value}</span>
     </div>
   );
@@ -109,8 +101,7 @@ export function CampaignLiveClient({
   const [state, setState] = React.useState<CampaignLiveState>(() =>
     initialStateFromSnapshot(initialSnapshot),
   );
-  const [campaignStatus, setCampaignStatus] =
-    React.useState<CampaignStatus>(initialStatus);
+  const [campaignStatus, setCampaignStatus] = React.useState<CampaignStatus>(initialStatus);
   const [pending, setPending] = React.useState(false);
 
   // ─── Realtime subscriptions ────────────────────────────────────────────────
@@ -154,12 +145,9 @@ export function CampaignLiveClient({
     const unsubCalls = subscribeToCalls(supabase, orgId, handleCallPayload, {
       onStatus,
     });
-    const unsubCampaigns = subscribeToCampaigns(
-      supabase,
-      orgId,
-      handleCampaignPayload,
-      { onStatus },
-    );
+    const unsubCampaigns = subscribeToCampaigns(supabase, orgId, handleCampaignPayload, {
+      onStatus,
+    });
 
     function handleOnline() {
       router.refresh();
@@ -227,7 +215,7 @@ export function CampaignLiveClient({
         <div className="flex flex-col gap-1">
           <Link
             href={`/campaigns/${campaignId}`}
-            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm"
           >
             <ArrowLeft className="size-3" />
             {t('back_to_campaigns')}
@@ -292,13 +280,10 @@ export function CampaignLiveClient({
       </div>
 
       {/* Live progress bar */}
-      <div
-        data-slot="live-progress"
-        className="rounded-lg border bg-card p-4"
-      >
+      <div data-slot="live-progress" className="bg-card rounded-lg border p-4">
         <div className="mb-2 flex items-center justify-between text-sm">
           <span className="font-medium">{t('live_progress_label')}</span>
-          <span className="tabular-nums text-muted-foreground">
+          <span className="text-muted-foreground tabular-nums">
             {t('live_progress_count', {
               completed: state.completedCalls,
               total: state.totalCalls,
@@ -312,10 +297,10 @@ export function CampaignLiveClient({
           aria-valuenow={completionPct}
           aria-valuemin={0}
           aria-valuemax={100}
-          className="h-2 w-full overflow-hidden rounded-full bg-muted"
+          className="bg-muted h-2 w-full overflow-hidden rounded-full"
         >
           <div
-            className="h-full bg-primary transition-all duration-500"
+            className="bg-primary h-full transition-all duration-500"
             style={{ width: `${completionPct}%` }}
           />
         </div>
@@ -338,26 +323,20 @@ export function CampaignLiveClient({
           label={t('live_kpi_appointments')}
           value={state.appointmentsBooked.toLocaleString('it-IT')}
         />
-        <LiveKpi
-          label={t('live_kpi_cost')}
-          value={formatCents(state.costCents)}
-        />
+        <LiveKpi label={t('live_kpi_cost')} value={formatCents(state.costCents)} />
       </section>
 
       {/* Calls list */}
-      <section className="rounded-lg border bg-card">
+      <section className="bg-card rounded-lg border">
         <header className="border-b px-4 py-3">
           <h2 className="text-sm font-semibold">{t('live_calls_title')}</h2>
         </header>
         {callsList.length === 0 ? (
-          <p className="px-4 py-8 text-center text-sm text-muted-foreground">
+          <p className="text-muted-foreground px-4 py-8 text-center text-sm">
             {t('live_calls_empty')}
           </p>
         ) : (
-          <ul
-            data-slot="live-calls-list"
-            className="divide-y"
-          >
+          <ul data-slot="live-calls-list" className="divide-y">
             {callsList.map((c) => (
               <li
                 key={c.id}
@@ -366,13 +345,9 @@ export function CampaignLiveClient({
                 className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:gap-4"
               >
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">
-                    {c.contactName || '—'}
-                  </p>
+                  <p className="truncate text-sm font-medium">{c.contactName || '—'}</p>
                   {c.phoneE164 && (
-                    <p className="truncate text-xs text-muted-foreground">
-                      {c.phoneE164}
-                    </p>
+                    <p className="text-muted-foreground truncate text-xs">{c.phoneE164}</p>
                   )}
                 </div>
                 <div className="flex items-center gap-3 text-xs">

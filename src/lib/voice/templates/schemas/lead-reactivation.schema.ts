@@ -9,10 +9,7 @@ export const leadReactivationSchema = z.object({
     .string()
     .min(1, 'Campo obbligatorio')
     .max(MAX_LEN, `Massimo ${MAX_LEN} caratteri`),
-  brand: z
-    .string()
-    .min(1, 'Campo obbligatorio')
-    .max(MAX_LEN, `Massimo ${MAX_LEN} caratteri`),
+  brand: z.string().min(1, 'Campo obbligatorio').max(MAX_LEN, `Massimo ${MAX_LEN} caratteri`),
   salesperson_first_name: z
     .string()
     .min(1, 'Campo obbligatorio')
@@ -29,10 +26,7 @@ export const leadReactivationSchema = z.object({
     .string()
     .min(1, 'Campo obbligatorio')
     .max(MAX_LEN, `Massimo ${MAX_LEN} caratteri`),
-  incentive_to_offer: z
-    .string()
-    .max(MAX_LEN, `Massimo ${MAX_LEN} caratteri`)
-    .optional(),
+  incentive_to_offer: z.string().max(MAX_LEN, `Massimo ${MAX_LEN} caratteri`).optional(),
 });
 
 export type LeadReactivationVariables = z.infer<typeof leadReactivationSchema>;
@@ -86,7 +80,8 @@ export const leadReactivationJsonSchema = {
     incentive_to_offer: {
       type: 'string',
       maxLength: 256,
-      description: 'Incentivo da proporre (opzionale, es. sconto di €1.500 valido fino a fine mese)',
+      description:
+        'Incentivo da proporre (opzionale, es. sconto di €1.500 valido fino a fine mese)',
     },
   },
   additionalProperties: false,

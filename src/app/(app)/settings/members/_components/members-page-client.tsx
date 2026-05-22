@@ -57,41 +57,38 @@ export function MembersPageClient({ members, canInvite, canManage }: MembersPage
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">{t('members_title')}</h1>
-          <p className="text-sm text-muted-foreground">{t('members_description')}</p>
+          <p className="text-muted-foreground text-sm">{t('members_description')}</p>
         </div>
         {canInvite && <InviteMemberDialog />}
       </div>
 
       {/* Active members */}
       <section>
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+        <h2 className="text-muted-foreground mb-3 text-sm font-semibold tracking-wide uppercase">
           {t('accepted_members_title')}
         </h2>
 
         {accepted.length === 0 ? (
-          <EmptyState
-            illustration={<Users className="size-10" />}
-            title={t('no_members')}
-          />
+          <EmptyState illustration={<Users className="size-10" />} title={t('no_members')} />
         ) : (
           <div className="rounded-lg border">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b bg-muted/50">
-                  <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">
+                <tr className="bg-muted/50 border-b">
+                  <th className="text-muted-foreground px-4 py-2.5 text-left font-medium">
                     {t('column_member')}
                   </th>
-                  <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">
+                  <th className="text-muted-foreground px-4 py-2.5 text-left font-medium">
                     {t('column_role')}
                   </th>
-                  <th className="hidden px-4 py-2.5 text-left font-medium text-muted-foreground md:table-cell">
+                  <th className="text-muted-foreground hidden px-4 py-2.5 text-left font-medium md:table-cell">
                     {t('column_joined')}
                   </th>
-                  <th className="hidden px-4 py-2.5 text-left font-medium text-muted-foreground lg:table-cell">
+                  <th className="text-muted-foreground hidden px-4 py-2.5 text-left font-medium lg:table-cell">
                     {t('column_last_login')}
                   </th>
                   {canManage && (
-                    <th className="w-10 px-4 py-2.5 text-right font-medium text-muted-foreground">
+                    <th className="text-muted-foreground w-10 px-4 py-2.5 text-right font-medium">
                       <span className="sr-only">{t('column_actions')}</span>
                     </th>
                   )}
@@ -99,32 +96,29 @@ export function MembersPageClient({ members, canInvite, canManage }: MembersPage
               </thead>
               <tbody>
                 {accepted.map((member) => (
-                  <tr key={member.id} className="border-b last:border-0 hover:bg-muted/30">
+                  <tr key={member.id} className="hover:bg-muted/30 border-b last:border-0">
                     <td className="px-4 py-3">
                       <div className="font-medium">
                         {member.user.full_name ?? member.user.email}
                       </div>
                       {member.user.full_name && (
-                        <div className="text-xs text-muted-foreground">{member.user.email}</div>
+                        <div className="text-muted-foreground text-xs">{member.user.email}</div>
                       )}
                     </td>
                     <td className="px-4 py-3">
-                      <Badge variant={ROLE_VARIANT[member.role]}>
-                        {t(`role_${member.role}`)}
-                      </Badge>
+                      <Badge variant={ROLE_VARIANT[member.role]}>{t(`role_${member.role}`)}</Badge>
                     </td>
-                    <td className="hidden px-4 py-3 text-muted-foreground md:table-cell">
+                    <td className="text-muted-foreground hidden px-4 py-3 md:table-cell">
                       {member.accepted_at ? formatDate(member.accepted_at) : '—'}
                     </td>
-                    <td className="hidden px-4 py-3 text-muted-foreground lg:table-cell">
-                      {member.lastSignInAt ? formatDate(member.lastSignInAt) : t('last_login_never')}
+                    <td className="text-muted-foreground hidden px-4 py-3 lg:table-cell">
+                      {member.lastSignInAt
+                        ? formatDate(member.lastSignInAt)
+                        : t('last_login_never')}
                     </td>
                     {canManage && (
                       <td className="px-4 py-3 text-right">
-                        <MemberActions
-                          membershipId={member.id}
-                          currentRole={member.role}
-                        />
+                        <MemberActions membershipId={member.id} currentRole={member.role} />
                       </td>
                     )}
                   </tr>
@@ -137,28 +131,28 @@ export function MembersPageClient({ members, canInvite, canManage }: MembersPage
 
       {/* Pending invites */}
       <section>
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+        <h2 className="text-muted-foreground mb-3 text-sm font-semibold tracking-wide uppercase">
           {t('pending_invites_title')}
         </h2>
 
         {pending.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{t('no_pending_invites')}</p>
+          <p className="text-muted-foreground text-sm">{t('no_pending_invites')}</p>
         ) : (
           <div className="rounded-lg border">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b bg-muted/50">
-                  <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">
+                <tr className="bg-muted/50 border-b">
+                  <th className="text-muted-foreground px-4 py-2.5 text-left font-medium">
                     {t('column_member')}
                   </th>
-                  <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">
+                  <th className="text-muted-foreground px-4 py-2.5 text-left font-medium">
                     {t('column_role')}
                   </th>
-                  <th className="hidden px-4 py-2.5 text-left font-medium text-muted-foreground md:table-cell">
+                  <th className="text-muted-foreground hidden px-4 py-2.5 text-left font-medium md:table-cell">
                     {t('invited_date')}
                   </th>
                   {canManage && (
-                    <th className="w-10 px-4 py-2.5 text-right font-medium text-muted-foreground">
+                    <th className="text-muted-foreground w-10 px-4 py-2.5 text-right font-medium">
                       <span className="sr-only">{t('column_actions')}</span>
                     </th>
                   )}
@@ -166,24 +160,19 @@ export function MembersPageClient({ members, canInvite, canManage }: MembersPage
               </thead>
               <tbody>
                 {pending.map((member) => (
-                  <tr key={member.id} className="border-b last:border-0 hover:bg-muted/30">
+                  <tr key={member.id} className="hover:bg-muted/30 border-b last:border-0">
                     <td className="px-4 py-3">
                       <div className="font-medium">{member.user.email}</div>
                     </td>
                     <td className="px-4 py-3">
-                      <Badge variant={ROLE_VARIANT[member.role]}>
-                        {t(`role_${member.role}`)}
-                      </Badge>
+                      <Badge variant={ROLE_VARIANT[member.role]}>{t(`role_${member.role}`)}</Badge>
                     </td>
-                    <td className="hidden px-4 py-3 text-muted-foreground md:table-cell">
+                    <td className="text-muted-foreground hidden px-4 py-3 md:table-cell">
                       {formatDate(member.invited_at)}
                     </td>
                     {canManage && (
                       <td className="px-4 py-3 text-right">
-                        <MemberActions
-                          membershipId={member.id}
-                          currentRole={member.role}
-                        />
+                        <MemberActions membershipId={member.id} currentRole={member.role} />
                       </td>
                     )}
                   </tr>

@@ -3,8 +3,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 // ─── DB context mock ───────────────────────────────────────────────────────────
 
 vi.mock('@/lib/db/context', () => ({
-  withOrgContext: vi.fn(
-    async (_orgId: string, fn: (tx: unknown) => Promise<unknown>) => fn(mockTx),
+  withOrgContext: vi.fn(async (_orgId: string, fn: (tx: unknown) => Promise<unknown>) =>
+    fn(mockTx),
   ),
 }));
 

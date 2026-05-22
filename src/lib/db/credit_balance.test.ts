@@ -33,7 +33,10 @@ interface LedgerRow {
  * inserted" row, which matches the ORDER BY created_at DESC LIMIT 1 behaviour
  * in the fully-serialised (FOR UPDATE) insert pattern.
  */
-function applyBalanceTrigger(existingRows: LedgerRow[], newRow: Omit<LedgerRow, 'balance_after_cents'>): LedgerRow {
+function applyBalanceTrigger(
+  existingRows: LedgerRow[],
+  newRow: Omit<LedgerRow, 'balance_after_cents'>,
+): LedgerRow {
   const orgRows = existingRows.filter((r) => r.org_id === newRow.org_id);
   const lastRow = orgRows.length > 0 ? orgRows[orgRows.length - 1] : null;
   const prevBalance = lastRow ? lastRow.balance_after_cents : 0;
@@ -78,9 +81,7 @@ describe('credit balance trigger — logic simulation', () => {
   });
 
   it('allows balance to go negative (delta can exceed current balance)', () => {
-    const existing: LedgerRow[] = [
-      { org_id: 'org-1', delta_cents: 100, balance_after_cents: 100 },
-    ];
+    const existing: LedgerRow[] = [{ org_id: 'org-1', delta_cents: 100, balance_after_cents: 100 }];
     const row = applyBalanceTrigger(existing, { org_id: 'org-1', delta_cents: -300 });
     expect(row.balance_after_cents).toBe(-200);
   });
@@ -135,10 +136,7 @@ describe('credit balance trigger — logic simulation', () => {
 // ──────────────────────────────────────────────────────────────────────────────
 
 describe('migration 0003_credit_balance_trigger.sql', () => {
-  const migrationPath = join(
-    process.cwd(),
-    'drizzle/migrations/0003_credit_balance_trigger.sql',
-  );
+  const migrationPath = join(process.cwd(), 'drizzle/migrations/0003_credit_balance_trigger.sql');
   let sql: string;
 
   it('migration file exists and is non-empty', () => {

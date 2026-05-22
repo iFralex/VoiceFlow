@@ -25,7 +25,10 @@ import { withSystemContext } from '@/lib/db/context';
 import { contacts } from '@/lib/db/schema';
 
 export class ContactNotFoundError extends Error {
-  constructor(public readonly orgId: string, public readonly contactId: string) {
+  constructor(
+    public readonly orgId: string,
+    public readonly contactId: string,
+  ) {
     super(`Contact ${contactId} not found in org ${orgId}`);
     this.name = 'ContactNotFoundError';
   }

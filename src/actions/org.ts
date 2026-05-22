@@ -62,4 +62,3 @@ export async function setActiveOrg(orgId: string): Promise<ActionResult> {
 
   return { ok: true };
 }
-

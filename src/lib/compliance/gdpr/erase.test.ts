@@ -130,9 +130,7 @@ function buildTx(state: TxState): unknown {
               return Promise.resolve(state.callRows);
             }
             // Contact lookup uses .where(...).limit(1)
-            const limit = vi.fn(() =>
-              Promise.resolve(state.contact ? [state.contact] : []),
-            );
+            const limit = vi.fn(() => Promise.resolve(state.contact ? [state.contact] : []));
             return { limit };
           });
           return { where };
@@ -349,9 +347,7 @@ describe('eraseSubject', () => {
 
   it('writes a compliance.gdpr_erasure audit entry with totals and identifier', async () => {
     const state = makeState({
-      callRows: [
-        { id: CALL_ID, recording_path: null, transcript_path: null },
-      ],
+      callRows: [{ id: CALL_ID, recording_path: null, transcript_path: null }],
     });
     mockWithOrgContext.mockImplementation(
       async (_orgId: string, fn: (tx: unknown) => Promise<unknown>) => fn(buildTx(state)),
@@ -422,9 +418,7 @@ describe('eraseSubject', () => {
       `recordings/${ORG_ID}/${CALL_ID}.mp3`,
       `recordings/${ORG_ID}/second-call.mp3`,
     ]);
-    expect(mockRemove.mock.calls[1]?.[0]).toEqual([
-      `transcripts/${ORG_ID}/${CALL_ID}.json`,
-    ]);
+    expect(mockRemove.mock.calls[1]?.[0]).toEqual([`transcripts/${ORG_ID}/${CALL_ID}.json`]);
     expect(result.totals).toEqual({
       callsScrubbed: 2,
       recordingsDeleted: 2,

@@ -46,8 +46,7 @@ import { sendInngestEvent, sendInngestEvents } from '@/lib/inngest/client';
 
 export type OptOutSource = (typeof optOutSourceEnum.enumValues)[number];
 
-export const COMPLIANCE_OPT_OUT_REGISTERED_EVENT =
-  'compliance/opt-out-registered' as const;
+export const COMPLIANCE_OPT_OUT_REGISTERED_EVENT = 'compliance/opt-out-registered' as const;
 
 export interface ComplianceOptOutRegisteredData {
   orgId: string;
@@ -138,8 +137,7 @@ export async function markOptOutInTx(
   tx: DbTx,
   params: MarkOptOutInTxParams,
 ): Promise<InngestEventPayload[]> {
-  const { orgId, phoneE164, source, reason, actorUserId, actorType, callId, metadata } =
-    params;
+  const { orgId, phoneE164, source, reason, actorUserId, actorType, callId, metadata } = params;
   const recordedAt = new Date();
 
   await tx

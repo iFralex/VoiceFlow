@@ -153,8 +153,10 @@ const _italianStrings: Record<string, Record<string, string>> = {
     signup_title: 'Crea account',
     signup_description: 'Inserisci la tua email per creare un nuovo account',
     verify_title: 'Controlla la tua email',
-    verify_description: 'Abbiamo inviato un link di accesso a {email}. Clicca sul link per accedere.',
-    verify_description_generic: 'Ti abbiamo inviato un link di accesso. Controlla la tua email e clicca sul link.',
+    verify_description:
+      'Abbiamo inviato un link di accesso a {email}. Clicca sul link per accedere.',
+    verify_description_generic:
+      'Ti abbiamo inviato un link di accesso. Controlla la tua email e clicca sul link.',
     back_to_login: 'Torna al login',
     email_required: "L'email è obbligatoria",
     email_invalid: 'Inserisci un indirizzo email valido',
@@ -218,7 +220,8 @@ const _italianStrings: Record<string, Record<string, string>> = {
     list_total_contacts: 'Totale',
     list_valid_contacts: 'Validi',
     list_parsing_title: 'Importazione in corso',
-    list_parsing_description: 'Il tuo CSV è in fase di elaborazione. Potrebbe richiedere alcuni minuti.',
+    list_parsing_description:
+      'Il tuo CSV è in fase di elaborazione. Potrebbe richiedere alcuni minuti.',
     list_failed_title: 'Importazione fallita',
     list_failed_description: 'Nessun contatto valido trovato nel file.',
     list_errors_download: 'Scarica report errori',
@@ -247,7 +250,8 @@ const _italianStrings: Record<string, Record<string, string>> = {
     action_delete_description: 'Il contatto verrà rimosso definitivamente da questa lista.',
     action_delete_success: 'Contatto eliminato',
     action_view_metadata: 'Vedi dati originali',
-    action_bulk_delete_description: 'Elimina {count} contatti. Questa operazione non può essere annullata.',
+    action_bulk_delete_description:
+      'Elimina {count} contatti. Questa operazione non può essere annullata.',
     bulk_mark_opt_out: 'Segna come opt-out',
     bulk_delete: 'Elimina selezionati',
     bulk_selected: '{count} selezionati',
@@ -282,7 +286,8 @@ const _italianStrings: Record<string, Record<string, string>> = {
     add_contact_submitting: 'Salvataggio…',
     dnc_btn: 'Importa do-not-call',
     dnc_dialog_title: 'Importa lista do-not-call',
-    dnc_dialog_description: 'Carica un CSV con un numero di telefono per riga. Nessun contatto viene creato — solo gli opt-out vengono registrati.',
+    dnc_dialog_description:
+      'Carica un CSV con un numero di telefono per riga. Nessun contatto viene creato — solo gli opt-out vengono registrati.',
     dnc_file_label: 'File CSV (un numero per riga)',
     dnc_paste_label: 'Oppure incolla i numeri',
     dnc_paste_placeholder: '+39 333 1234567\n+39 02 12345678\n…',
@@ -317,13 +322,14 @@ const _italianStrings: Record<string, Record<string, string>> = {
     recommended_scale: 'Grande concessionario o rete',
     vat_included: 'IVA inclusa',
     topup_success_title: 'Pagamento completato',
-    topup_success_subtitle: 'Il tuo saldo è stato aggiornato. Puoi iniziare ad utilizzare i tuoi crediti.',
+    topup_success_subtitle:
+      'Il tuo saldo è stato aggiornato. Puoi iniziare ad utilizzare i tuoi crediti.',
     topup_success_balance: '{minutes} minuti disponibili',
     topup_success_cta: 'Vai alla dashboard',
     topup_pending_title: 'Verifica pagamento in corso…',
     topup_pending_subtitle: 'Attendi mentre confermiamo il tuo pagamento.',
     topup_timeout_title: 'Pagamento in elaborazione',
-    topup_timeout_message: 'Riceverai un\'email appena il pagamento è confermato.',
+    topup_timeout_message: "Riceverai un'email appena il pagamento è confermato.",
     topup_session_not_found: 'Sessione non trovata.',
     topup_back_to_topup: 'Torna alla ricarica',
     page_title: 'Credito',
@@ -463,8 +469,7 @@ const _italianStrings: Record<string, Record<string, string>> = {
     qualified_lead_label: 'Lead qualificato',
     qualified_lead_description: 'Notifica quando un contatto viene qualificato come interessato.',
     low_credit_label: 'Credito basso',
-    low_credit_description:
-      'Avviso quando il credito residuo scende sotto la soglia di sicurezza.',
+    low_credit_description: 'Avviso quando il credito residuo scende sotto la soglia di sicurezza.',
     campaign_completed_label: 'Campagna completata',
     campaign_completed_description:
       'Notifica al termine di una campagna con il riepilogo dei risultati.',
@@ -477,7 +482,7 @@ const _italianStrings: Record<string, Record<string, string>> = {
     description: 'Gestisci le richieste degli interessati e consulta la documentazione.',
     rights_title: "Diritti dell'interessato (GDPR)",
     rights_description:
-      "Esporta tutti i dati di un contatto (Articolo 15) o richiedi la cancellazione (Articolo 17).",
+      'Esporta tutti i dati di un contatto (Articolo 15) o richiedi la cancellazione (Articolo 17).',
     identifier_label: 'Telefono o email del contatto',
     identifier_placeholder: '+393331234567 oppure mario.rossi@example.com',
     identifier_hint:
@@ -502,8 +507,7 @@ const _italianStrings: Record<string, Record<string, string>> = {
     history_export_summary: '{calls} chiamate incluse',
     history_erasure_summary: 'Numero: {phone}',
     erase_dialog_title: 'Conferma cancellazione GDPR',
-    erase_dialog_description:
-      'Questa operazione cancella in modo permanente i dati del contatto.',
+    erase_dialog_description: 'Questa operazione cancella in modo permanente i dati del contatto.',
     erase_confirm_phone_label: 'Digita il numero di telefono del contatto per confermare',
     erase_confirm_phone_hint:
       'Deve corrispondere esattamente al numero E.164 registrato nel contatto.',
@@ -563,7 +567,7 @@ const _italianStrings: Record<string, Record<string, string>> = {
   },
   integrations: {
     pat_title: 'Token di Accesso Personale',
-    pat_description: 'Token per accesso programmatico all\'API.',
+    pat_description: "Token per accesso programmatico all'API.",
     create_token: 'Crea token',
     create_token_dialog_title: 'Crea Token di Accesso Personale',
     token_name_label: 'Nome del token',
@@ -645,9 +649,12 @@ const _italianStrings: Record<string, Record<string, string>> = {
     delete_error_referenced:
       'Questo script è utilizzato da campagne attive. Completale o annullale prima.',
     template_lead_reactivation_desc: 'Riattivazione dei lead inattivi con proposta di appuntamento',
-    template_appointment_confirm_desc: 'Conferma, modifica o cancellazione degli appuntamenti esistenti',
-    template_car_renewal_desc: 'Proposta di rinnovo del veicolo ai clienti con auto di un certo numero di anni',
-    template_post_sale_followup_desc: 'Follow-up post-vendita per raccogliere soddisfazione e prenotare tagliando',
+    template_appointment_confirm_desc:
+      'Conferma, modifica o cancellazione degli appuntamenti esistenti',
+    template_car_renewal_desc:
+      'Proposta di rinnovo del veicolo ai clienti con auto di un certo numero di anni',
+    template_post_sale_followup_desc:
+      'Follow-up post-vendita per raccogliere soddisfazione e prenotare tagliando',
     template_csi_survey_desc: 'Questionario di soddisfazione cliente per la casa madre',
     new_script_title: 'Nuovo script',
     step_select_template: 'Seleziona template',
@@ -661,7 +668,7 @@ const _italianStrings: Record<string, Record<string, string>> = {
     preview_title: 'Anteprima prompt',
     preview_system_prompt_label: 'System prompt',
     preview_first_message_label: 'Primo messaggio',
-    preview_placeholder_hint: "Completa i campi per visualizzare l\u2019anteprima completa",
+    preview_placeholder_hint: 'Completa i campi per visualizzare l\u2019anteprima completa',
     save_script: 'Salva script',
     saving_script: 'Salvataggio\u2026',
     save_success: 'Script salvato con successo',
@@ -686,10 +693,12 @@ const _italianStrings: Record<string, Record<string, string>> = {
     required_fields: 'Campi richiesti',
     test_call_button: 'Chiamami ora',
     test_call_dialog_title: 'Chiama di prova',
-    test_call_dialog_description: 'Inserisci il tuo numero di telefono italiano per ricevere una chiamata di prova con questo script. Limite: 10 chiamate di prova al giorno per organizzazione.',
+    test_call_dialog_description:
+      'Inserisci il tuo numero di telefono italiano per ricevere una chiamata di prova con questo script. Limite: 10 chiamate di prova al giorno per organizzazione.',
     test_call_phone_label: 'Numero di telefono',
     test_call_phone_placeholder: '+393331234567',
-    test_call_phone_invalid: 'Inserisci un numero di telefono italiano in formato E.164 (es. +393331234567)',
+    test_call_phone_invalid:
+      'Inserisci un numero di telefono italiano in formato E.164 (es. +393331234567)',
     test_call_submit: 'Avvia chiamata',
     test_call_submitting: 'Avvio in corso\u2026',
     test_call_success: 'Chiamata di prova avviata (ID: {callId})',
@@ -785,8 +794,7 @@ const _italianStrings: Record<string, Record<string, string>> = {
     print_phones_show: 'Mostra numeri completi',
     print_phones_mask: 'Mascherare numeri',
     print_phones_full_notice: 'I numeri sono mostrati per intero.',
-    print_phones_mask_notice:
-      'I numeri sono mascherati: visibili solo le ultime 4 cifre.',
+    print_phones_mask_notice: 'I numeri sono mascherati: visibili solo le ultime 4 cifre.',
     print_report_label: 'Report di campagna',
     print_status_label: 'Stato',
     print_generated_at: 'Generato il {date}',
@@ -890,7 +898,8 @@ const _italianStrings: Record<string, Record<string, string>> = {
     retry: 'Riprova',
   },
   legal: {
-    draft_notice: 'Documento in bozza — i contenuti sono indicativi e devono essere validati dal consulente legale prima della pubblicazione.',
+    draft_notice:
+      'Documento in bozza — i contenuti sono indicativi e devono essere validati dal consulente legale prima della pubblicazione.',
     last_updated_label: 'Ultimo aggiornamento',
     effective_date_value: '1 gennaio 2026',
     back_to_home: 'Torna alla home',
@@ -901,7 +910,8 @@ const _italianStrings: Record<string, Record<string, string>> = {
     privacy_section_controller_title: '1. Titolare del trattamento',
     privacy_section_controller_body: 'Il titolare del trattamento è VoiceFlow S.r.l.',
     privacy_section_data_collected_title: '2. Categorie di dati trattati',
-    privacy_section_data_collected_body: 'Trattiamo dati identificativi, di contatto, di fatturazione e di utilizzo.',
+    privacy_section_data_collected_body:
+      'Trattiamo dati identificativi, di contatto, di fatturazione e di utilizzo.',
     privacy_section_purposes_title: '3. Finalità del trattamento',
     privacy_section_purposes_body: 'I dati sono trattati per la fornitura del servizio.',
     privacy_section_legal_basis_title: '4. Base giuridica',
@@ -917,7 +927,7 @@ const _italianStrings: Record<string, Record<string, string>> = {
     privacy_section_contact_title: '9. Contatti',
     privacy_section_contact_body: 'privacy@voiceflow.example',
     dpa_title: 'Accordo sul Trattamento dei Dati (DPA)',
-    dpa_subtitle: 'Accordo ai sensi dell\'Art. 28 GDPR.',
+    dpa_subtitle: "Accordo ai sensi dell'Art. 28 GDPR.",
     dpa_version_label: 'Versione DPA',
     dpa_section_parties_title: '1. Parti',
     dpa_section_parties_body: 'Cliente e VoiceFlow.',
@@ -1012,7 +1022,7 @@ const _italianStrings: Record<string, Record<string, string>> = {
     refund_success: 'Rimborso eseguito',
     report_action: 'Segnala problema',
     report_dialog_title: 'Segnala un problema con questa chiamata',
-    report_dialog_description: "Il messaggio verrà inviato al supporto.",
+    report_dialog_description: 'Il messaggio verrà inviato al supporto.',
     report_message_placeholder: 'Descrivi il problema',
     report_confirm: 'Invia segnalazione',
     report_success: 'Segnalazione inviata al supporto',

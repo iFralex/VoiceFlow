@@ -44,7 +44,7 @@ export function TrendChart({ data, height = 220, className }: TrendChartProps) {
       <div
         data-slot="trend-chart-empty"
         className={cn(
-          'flex items-center justify-center rounded-lg border border-border bg-card text-sm text-muted-foreground',
+          'border-border bg-card text-muted-foreground flex items-center justify-center rounded-lg border text-sm',
           className,
         )}
         style={{ height }}
@@ -55,8 +55,7 @@ export function TrendChart({ data, height = 220, className }: TrendChartProps) {
   }
 
   const totals = data.map(
-    (d) =>
-      d.appointmentBooked + d.completed + d.notInterested + d.voicemail + d.failed,
+    (d) => d.appointmentBooked + d.completed + d.notInterested + d.voicemail + d.failed,
   );
   const max = Math.max(1, ...totals);
 
@@ -67,11 +66,11 @@ export function TrendChart({ data, height = 220, className }: TrendChartProps) {
   return (
     <div
       data-slot="trend-chart"
-      className={cn('rounded-lg border border-border bg-card p-4', className)}
+      className={cn('border-border bg-card rounded-lg border p-4', className)}
     >
       <div className="mb-3 flex items-center justify-between gap-2">
         <h3 className="text-sm font-medium">{t('trend_title')}</h3>
-        <ul className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+        <ul className="text-muted-foreground flex flex-wrap items-center gap-3 text-xs">
           {SEGMENT_KEYS.map((k) => (
             <li key={k} className="flex items-center gap-1.5">
               <span

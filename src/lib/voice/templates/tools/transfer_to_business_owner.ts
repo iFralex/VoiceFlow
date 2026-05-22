@@ -20,7 +20,7 @@ export const transferToBusinessOwnerJsonSchema = {
         type: 'string',
         pattern: '^\\+[1-9]\\d{7,14}$',
         description:
-          "Numero E.164 del chiamante (es. +393401234567). Vapi lo passa nei metadati della chiamata.",
+          'Numero E.164 del chiamante (es. +393401234567). Vapi lo passa nei metadati della chiamata.',
       },
     },
     additionalProperties: false,

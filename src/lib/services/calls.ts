@@ -6,18 +6,15 @@ import { and, eq, inArray, sql } from 'drizzle-orm';
 import { recordAudit } from '@/lib/db/audit';
 import { withOrgContext, withSystemContext } from '@/lib/db/context';
 import type { Call, NewCall } from '@/lib/db/schema';
-import {
-  auditLog,
-  calls,
-  campaigns,
-  contacts,
-  scriptTemplates,
-  scripts,
-} from '@/lib/db/schema';
+import { auditLog, calls, campaigns, contacts, scriptTemplates, scripts } from '@/lib/db/schema';
 import { TEMPLATE_DEFINITIONS } from '@/lib/db/seed/script_templates';
 import { env } from '@/lib/env';
 import { sendInngestEvent } from '@/lib/inngest/client';
-import { CALL_CLASSIFY_EVENT, CALL_COMPLETED_EVENT, CALL_QUALIFIED_LEAD_EVENT } from '@/lib/inngest/voice/events';
+import {
+  CALL_CLASSIFY_EVENT,
+  CALL_COMPLETED_EVENT,
+  CALL_QUALIFIED_LEAD_EVENT,
+} from '@/lib/inngest/voice/events';
 import { logger } from '@/lib/observability/logger';
 import { computeCallCost, computePerMinuteCents } from '@/lib/services/billing-rules';
 import { chargeForCall } from '@/lib/services/credit';
@@ -86,8 +83,7 @@ function fillMissingSchemaKeys(
   vars: Record<string, string>,
   schema: unknown,
 ): Record<string, string> {
-  const props =
-    (schema as { properties?: Record<string, unknown> } | null)?.properties ?? {};
+  const props = (schema as { properties?: Record<string, unknown> } | null)?.properties ?? {};
   const result = { ...vars };
   for (const key of Object.keys(props)) {
     if (!(key in result)) {
@@ -210,11 +206,7 @@ export async function dispatchCall(orgId: string, callId: string): Promise<void>
 
   // 4. Load template (system-owned table — requires withSystemContext)
   const [template] = await withSystemContext((tx) =>
-    tx
-      .select()
-      .from(scriptTemplates)
-      .where(eq(scriptTemplates.id, script.template_id))
-      .limit(1),
+    tx.select().from(scriptTemplates).where(eq(scriptTemplates.id, script.template_id)).limit(1),
   );
   if (!template) throw new Error('template_not_found');
 
@@ -240,8 +232,14 @@ export async function dispatchCall(orgId: string, callId: string): Promise<void>
   const firstMessage = interpolate(readFirstMessageTemplate(template.slug), stringVars);
 
   // 7. Pick voice: test-call override → script override → template default → last-resort fallback
-  const callMetaVoiceOverride = (call.metadata as Record<string, unknown> | null)?.['voice_id_override'] as string | null | undefined;
-  const voiceId = (callMetaVoiceOverride || undefined) ?? script.voice_id ?? template.default_voice_id ?? 'it-IT-placeholder';
+  const callMetaVoiceOverride = (call.metadata as Record<string, unknown> | null)?.[
+    'voice_id_override'
+  ] as string | null | undefined;
+  const voiceId =
+    (callMetaVoiceOverride || undefined) ??
+    script.voice_id ??
+    template.default_voice_id ??
+    'it-IT-placeholder';
 
   // 8. Pick a caller number from the phone pool via the rotation picker
   //    (plan 10 task 4). The picker enforces daily/hourly caps, prefers regional
@@ -285,9 +283,8 @@ export async function dispatchCall(orgId: string, callId: string): Promise<void>
   };
 
   // 9. Resolve per-template tools
-  const tools = (
-    TEMPLATE_TOOLS[template.slug as keyof typeof TEMPLATE_TOOLS] ?? []
-  ) as unknown as ToolDefinition[];
+  const tools = (TEMPLATE_TOOLS[template.slug as keyof typeof TEMPLATE_TOOLS] ??
+    []) as unknown as ToolDefinition[];
 
   // 10. Dispatch to voice provider.
   //     Anti-spam jitter (plan 10 task 6): a small random 0–500ms delay before
@@ -356,7 +353,9 @@ export async function dispatchCall(orgId: string, callId: string): Promise<void>
         const reason = err instanceof Error ? err.message : 'createCall_failed';
         await recordSbcDispatchFailure(reason);
       } catch (trackErr) {
-        void logger.error('[dispatch] Failed to record SBC dispatch failure', { error: trackErr instanceof Error ? trackErr.message : String(trackErr) });
+        void logger.error('[dispatch] Failed to record SBC dispatch failure', {
+          error: trackErr instanceof Error ? trackErr.message : String(trackErr),
+        });
       }
     }
     throw err;
@@ -409,16 +408,9 @@ export async function dispatchCall(orgId: string, callId: string): Promise<void>
  * Records that a call has started ringing / connected (webhook: call.started).
  * Idempotent: only transitions from pending/dialing to in_progress.
  */
-export async function recordCallStarted(
-  callId: string,
-  providerEventId: string,
-): Promise<void> {
+export async function recordCallStarted(callId: string, providerEventId: string): Promise<void> {
   const [row] = await withSystemContext((tx) =>
-    tx
-      .select({ org_id: calls.org_id })
-      .from(calls)
-      .where(eq(calls.id, callId))
-      .limit(1),
+    tx.select({ org_id: calls.org_id }).from(calls).where(eq(calls.id, callId)).limit(1),
   );
   if (!row) return;
 
@@ -428,12 +420,7 @@ export async function recordCallStarted(
     await tx
       .update(calls)
       .set({ status: 'in_progress', started_at: new Date() })
-      .where(
-        and(
-          eq(calls.id, callId),
-          inArray(calls.status, ['pending', 'dialing']),
-        ),
-      );
+      .where(and(eq(calls.id, callId), inArray(calls.status, ['pending', 'dialing'])));
 
     await recordAudit(tx, {
       orgId,
@@ -491,7 +478,8 @@ export async function recordCallEnded(
   let voicemailOutcome: Call['outcome'] | null = null;
   if (terminalStatus === 'voicemail') {
     const meta = (row.metadata as Record<string, unknown> | null) ?? {};
-    voicemailOutcome = meta['leave_voicemail_message'] === true ? 'voicemail_left' : 'voicemail_no_message';
+    voicemailOutcome =
+      meta['leave_voicemail_message'] === true ? 'voicemail_left' : 'voicemail_no_message';
   }
 
   await withOrgContext(orgId, async (tx) => {
@@ -505,10 +493,7 @@ export async function recordCallEnded(
         ...(voicemailOutcome !== null && { outcome: voicemailOutcome }),
       })
       .where(
-        and(
-          eq(calls.id, callId),
-          inArray(calls.status, ['pending', 'dialing', 'in_progress']),
-        ),
+        and(eq(calls.id, callId), inArray(calls.status, ['pending', 'dialing', 'in_progress'])),
       );
 
     await recordAudit(tx, {
@@ -601,11 +586,7 @@ export async function recordToolInvocation(
   args: unknown,
 ): Promise<void> {
   const [row] = await withSystemContext((tx) =>
-    tx
-      .select({ org_id: calls.org_id })
-      .from(calls)
-      .where(eq(calls.id, callId))
-      .limit(1),
+    tx.select({ org_id: calls.org_id }).from(calls).where(eq(calls.id, callId)).limit(1),
   );
   if (!row) return;
 

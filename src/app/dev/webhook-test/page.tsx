@@ -109,7 +109,8 @@ const SAMPLE_ENVELOPES: Record<string, object> = {
       contact_name: 'Mario Rossi',
       contact_phone: '+39 02 1234567',
       campaign_id: 'camp_01hx9qkz3e4f5g6h7j8k9m0n1p',
-      ai_summary: 'Il cliente è molto interessato al modello Elettra. Ha chiesto informazioni sul finanziamento.',
+      ai_summary:
+        'Il cliente è molto interessato al modello Elettra. Ha chiesto informazioni sul finanziamento.',
       recommended_action: 'call_back',
     },
   },
@@ -237,7 +238,12 @@ export default async function WebhookTestPage({ searchParams }: PageProps) {
       <h2 style={sectionTitle}>Step 1 — Get a temporary receiver URL</h2>
       <p style={{ marginBottom: '0.5rem' }}>
         Go to{' '}
-        <a href="https://webhook.site" target="_blank" rel="noreferrer" style={{ color: '#2563eb' }}>
+        <a
+          href="https://webhook.site"
+          target="_blank"
+          rel="noreferrer"
+          style={{ color: '#2563eb' }}
+        >
           webhook.site
         </a>{' '}
         and copy the unique URL shown on the page. It will look like:
@@ -250,8 +256,8 @@ export default async function WebhookTestPage({ searchParams }: PageProps) {
         <a href="/settings/integrations" style={{ color: '#2563eb' }}>
           Settings → Integrations
         </a>
-        , click <strong>Add webhook</strong>, paste the Webhook.site URL, and select the event types you
-        want to test. Save the signing secret that appears — you will need it for verification.
+        , click <strong>Add webhook</strong>, paste the Webhook.site URL, and select the event types
+        you want to test. Save the signing secret that appears — you will need it for verification.
       </p>
 
       <h2 style={sectionTitle}>Step 3 — Trigger an event</h2>
@@ -267,8 +273,8 @@ export default async function WebhookTestPage({ searchParams }: PageProps) {
 
       <h2 style={{ ...sectionTitle, marginTop: '3rem' }}>Envelope shapes</h2>
       <p style={{ color: '#666', marginBottom: '1rem' }}>
-        Every delivery is wrapped in a standard envelope. The <code>data</code> field varies by event
-        type.
+        Every delivery is wrapped in a standard envelope. The <code>data</code> field varies by
+        event type.
       </p>
 
       {Object.entries(SAMPLE_ENVELOPES).map(([eventType, envelope]) => (

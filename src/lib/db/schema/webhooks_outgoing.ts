@@ -14,7 +14,10 @@ export const webhooksOutgoing = pgTable(
       .references(() => organizations.id, { onDelete: 'cascade' }),
     url: text('url').notNull(),
     secret: text('secret').notNull(),
-    event_types: text('event_types').array().notNull().default(sql`'{}'::text[]`),
+    event_types: text('event_types')
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
     active: boolean('active').notNull().default(true),
     created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     last_delivery_at: timestamp('last_delivery_at', { withTimezone: true }),

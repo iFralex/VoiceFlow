@@ -1,13 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  type DailyReportEmailProps,
-  renderDailyReportEmail,
-} from './daily-report';
+import { type DailyReportEmailProps, renderDailyReportEmail } from './daily-report';
 
-function buildProps(
-  overrides: Partial<DailyReportEmailProps> = {},
-): DailyReportEmailProps {
+function buildProps(overrides: Partial<DailyReportEmailProps> = {}): DailyReportEmailProps {
   return {
     locale: 'it',
     recipientName: 'Mario',
@@ -88,9 +83,7 @@ describe('renderDailyReportEmail', () => {
       campaignName: 'Campaign',
     }));
 
-    const result = await renderDailyReportEmail(
-      buildProps({ recentAppointments: many }),
-    );
+    const result = await renderDailyReportEmail(buildProps({ recentAppointments: many }));
 
     expect(result.html).toContain('Contact 0');
     expect(result.html).toContain('Contact 9');
@@ -106,9 +99,7 @@ describe('renderDailyReportEmail', () => {
       appointmentsBooked: 0,
     }));
 
-    const result = await renderDailyReportEmail(
-      buildProps({ topCampaigns: many }),
-    );
+    const result = await renderDailyReportEmail(buildProps({ topCampaigns: many }));
 
     expect(result.html).toContain('Campaign 0');
     expect(result.html).toContain('Campaign 4');
@@ -116,9 +107,7 @@ describe('renderDailyReportEmail', () => {
   });
 
   it('falls back to org name when recipient name is blank', async () => {
-    const result = await renderDailyReportEmail(
-      buildProps({ recipientName: '   ' }),
-    );
+    const result = await renderDailyReportEmail(buildProps({ recipientName: '   ' }));
 
     expect(result.html).toContain('Ciao Acme Auto');
   });

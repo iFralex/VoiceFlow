@@ -23,13 +23,13 @@ export function DashboardOnboardingCard({ className }: { className?: string }) {
       data-slot="dashboard-onboarding"
       aria-label={t('onboarding_title')}
       className={cn(
-        'flex flex-col gap-6 rounded-xl bg-card p-6 ring-1 ring-foreground/10',
+        'bg-card ring-foreground/10 flex flex-col gap-6 rounded-xl p-6 ring-1',
         className,
       )}
     >
       <div className="flex flex-col gap-1">
         <h2 className="text-lg font-semibold tracking-tight">{t('onboarding_title')}</h2>
-        <p className="text-sm text-muted-foreground">{t('onboarding_description')}</p>
+        <p className="text-muted-foreground text-sm">{t('onboarding_description')}</p>
       </div>
 
       <ol className="grid gap-4 md:grid-cols-3">
@@ -41,20 +41,20 @@ export function DashboardOnboardingCard({ className }: { className?: string }) {
             <li
               key={key}
               data-slot="dashboard-onboarding-step"
-              className="flex flex-col gap-3 rounded-lg border border-border/60 bg-background/40 p-4"
+              className="border-border/60 bg-background/40 flex flex-col gap-3 rounded-lg border p-4"
             >
               <div className="flex items-center gap-3">
                 <span
                   aria-hidden
-                  className="flex size-8 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary"
+                  className="bg-primary/10 text-primary flex size-8 items-center justify-center rounded-full text-sm font-semibold"
                 >
                   {index + 1}
                 </span>
-                <Icon aria-hidden className="size-4 text-muted-foreground" />
+                <Icon aria-hidden className="text-muted-foreground size-4" />
               </div>
               <div className="flex flex-col gap-1">
-                <p className="text-sm font-semibold text-foreground">{t(titleKey)}</p>
-                <p className="text-sm text-muted-foreground">{t(descKey)}</p>
+                <p className="text-foreground text-sm font-semibold">{t(titleKey)}</p>
+                <p className="text-muted-foreground text-sm">{t(descKey)}</p>
               </div>
               <Button asChild variant="outline" size="sm" className="mt-auto w-fit">
                 <Link href={href}>

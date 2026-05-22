@@ -68,8 +68,8 @@ export function OrgSwitcher({ orgs, activeOrgId, collapsed = false }: OrgSwitche
               <Icons.Building2 size={16} className="shrink-0" />
               {!collapsed && (
                 <>
-                  <span className="flex-1 truncate text-muted-foreground">{displayName}</span>
-                  <Icons.ChevronsUpDown size={14} className="shrink-0 text-muted-foreground" />
+                  <span className="text-muted-foreground flex-1 truncate">{displayName}</span>
+                  <Icons.ChevronsUpDown size={14} className="text-muted-foreground shrink-0" />
                 </>
               )}
             </Button>
@@ -85,7 +85,7 @@ export function OrgSwitcher({ orgs, activeOrgId, collapsed = false }: OrgSwitche
         className="w-56 p-1"
         data-testid="org-switcher-content"
       >
-        <p className="px-2 py-1 text-xs font-medium text-muted-foreground">{t('organizations')}</p>
+        <p className="text-muted-foreground px-2 py-1 text-xs font-medium">{t('organizations')}</p>
         <ul role="list">
           {orgs.map((org) => {
             const isActive = org.id === activeOrgId;
@@ -107,10 +107,7 @@ export function OrgSwitcher({ orgs, activeOrgId, collapsed = false }: OrgSwitche
                   {isLoading ? (
                     <Icons.Loader2 size={14} className="shrink-0 animate-spin" />
                   ) : (
-                    <Icons.Check
-                      size={14}
-                      className={cn('shrink-0', !isActive && 'invisible')}
-                    />
+                    <Icons.Check size={14} className={cn('shrink-0', !isActive && 'invisible')} />
                   )}
                   <span className="flex-1 truncate">{org.name}</span>
                 </button>
@@ -123,7 +120,7 @@ export function OrgSwitcher({ orgs, activeOrgId, collapsed = false }: OrgSwitche
         <button
           type="button"
           onClick={() => setOpen(false)}
-          className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          className="text-muted-foreground hover:bg-accent hover:text-foreground flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm transition-colors"
         >
           <Icons.Plus size={14} className="shrink-0" />
           <span>{t('create_new_org')}</span>

@@ -10,8 +10,12 @@ vi.mock('next/navigation', () => ({
 vi.mock('@/lib/supabase/browser', () => ({
   getSupabaseBrowserClient: () => ({
     channel: () => ({
-      on: function () { return this; },
-      subscribe: function () { return this; },
+      on: function () {
+        return this;
+      },
+      subscribe: function () {
+        return this;
+      },
     }),
     removeChannel: vi.fn().mockResolvedValue(undefined),
   }),
@@ -99,9 +103,7 @@ describe('CampaignLiveClient', () => {
     const kpis = container.querySelectorAll('[data-slot="live-kpi"]');
     expect(kpis).toHaveLength(4);
     // values: 5 in-progress, 25 completed, 3 appointments, €12.34 cost
-    const values = Array.from(kpis).map((k) =>
-      k.querySelector('span:last-child')?.textContent,
-    );
+    const values = Array.from(kpis).map((k) => k.querySelector('span:last-child')?.textContent);
     expect(values).toContain('5');
     expect(values).toContain('25');
     expect(values).toContain('3');

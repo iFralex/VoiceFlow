@@ -40,7 +40,7 @@ working together:
    rows, so when both exist the dedicated CLI is picked first regardless of
    daily count, region, or spam score. The integration test
    `pickCliForOrg integration > prefers an org-dedicated CLI over the shared
-   pool` (`src/lib/voice/cli/picker.integration.test.ts`) pins that ordering.
+pool` (`src/lib/voice/cli/picker.integration.test.ts`) pins that ordering.
 
 The hourly/daily caps still apply per-CLI. A dealer with one dedicated CLI is
 capped at `CLI_DAILY_CAP_DEFAULT` calls/day from that number — when it's hit,

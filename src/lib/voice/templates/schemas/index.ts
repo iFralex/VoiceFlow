@@ -22,11 +22,7 @@ export {
   type PostSaleFollowupVariables,
 } from './post-sale-followup.schema';
 
-export {
-  csiSurveySchema,
-  csiSurveyJsonSchema,
-  type CsiSurveyVariables,
-} from './csi-survey.schema';
+export { csiSurveySchema, csiSurveyJsonSchema, type CsiSurveyVariables } from './csi-survey.schema';
 
 export const TEMPLATE_SCHEMAS = {
   'lead-reactivation': {

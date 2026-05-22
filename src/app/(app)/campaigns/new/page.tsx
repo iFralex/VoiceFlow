@@ -9,11 +9,7 @@ import { NewCampaignWizard } from './_components/new-campaign-wizard';
 
 type SearchParams = Promise<{ script?: string }>;
 
-export default async function NewCampaignPage({
-  searchParams,
-}: {
-  searchParams: SearchParams;
-}) {
+export default async function NewCampaignPage({ searchParams }: { searchParams: SearchParams }) {
   const { orgId } = await getAuthContext();
   const { script: initialScriptId } = await searchParams;
 

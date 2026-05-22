@@ -98,11 +98,7 @@ function buildMockTx() {
 }
 
 // Helper: push call row + contact row for loadCallContact (2 queries)
-function pushContact(
-  tx: ReturnType<typeof buildMockTx>,
-  contactId: string,
-  phoneE164: string,
-) {
+function pushContact(tx: ReturnType<typeof buildMockTx>, contactId: string, phoneE164: string) {
   tx._selectQueue.push([{ contactId }], [{ phoneE164 }]);
 }
 
@@ -150,7 +146,9 @@ describe('dispatchToolSideEffect', () => {
       expect(appointmentEvent!.id).toBe(`appointment-booked-${CALL_ID}`);
       const webhookEmitEvent = result.inngestEvents.find((e) => e.name === 'webhook/emit');
       expect(webhookEmitEvent).toBeDefined();
-      expect((webhookEmitEvent!.data as Record<string, unknown>).eventType).toBe('appointment.booked');
+      expect((webhookEmitEvent!.data as Record<string, unknown>).eventType).toBe(
+        'appointment.booked',
+      );
     });
 
     it('is idempotent: skips insert when appointment already exists', async () => {
@@ -185,13 +183,9 @@ describe('dispatchToolSideEffect', () => {
 
   describe('mark_not_interested', () => {
     it('sets outcome to not_interested', async () => {
-      const result = await dispatchToolSideEffect(
-        mockTx,
-        ORG_ID,
-        CALL_ID,
-        'mark_not_interested',
-        { reason: 'Ho già una macchina nuova' },
-      );
+      const result = await dispatchToolSideEffect(mockTx, ORG_ID, CALL_ID, 'mark_not_interested', {
+        reason: 'Ho già una macchina nuova',
+      });
 
       expect(mockTx.update).toHaveBeenCalledOnce();
       const updatedSet = mockTx._updatedSets[0] as Record<string, unknown>;
@@ -219,13 +213,7 @@ describe('dispatchToolSideEffect', () => {
       // select for call row (to get contactId) inside runMarkWrongNumber
       mockTx._selectQueue.push([{ contactId: CONTACT_ID }]);
 
-      const result = await dispatchToolSideEffect(
-        mockTx,
-        ORG_ID,
-        CALL_ID,
-        'mark_wrong_number',
-        {},
-      );
+      const result = await dispatchToolSideEffect(mockTx, ORG_ID, CALL_ID, 'mark_wrong_number', {});
 
       // Two updates: calls.outcome + contacts.metadata
       expect(mockTx.update).toHaveBeenCalledTimes(2);
@@ -248,13 +236,9 @@ describe('dispatchToolSideEffect', () => {
 
   describe('request_callback', () => {
     it('sets outcome to callback_requested', async () => {
-      const result = await dispatchToolSideEffect(
-        mockTx,
-        ORG_ID,
-        CALL_ID,
-        'request_callback',
-        { preferred_window: 'domani mattina dopo le 10' },
-      );
+      const result = await dispatchToolSideEffect(mockTx, ORG_ID, CALL_ID, 'request_callback', {
+        preferred_window: 'domani mattina dopo le 10',
+      });
 
       expect(mockTx.update).toHaveBeenCalledOnce();
       const updatedSet = mockTx._updatedSets[0] as Record<string, unknown>;
@@ -305,13 +289,9 @@ describe('dispatchToolSideEffect', () => {
     it('routes through markOptOutInTx and forwards its events', async () => {
       pushContact(mockTx, CONTACT_ID, '+39123456789');
 
-      const result = await dispatchToolSideEffect(
-        mockTx,
-        ORG_ID,
-        CALL_ID,
-        'register_opt_out',
-        { confirmation_text: 'Non voglio essere ricontattato' },
-      );
+      const result = await dispatchToolSideEffect(mockTx, ORG_ID, CALL_ID, 'register_opt_out', {
+        confirmation_text: 'Non voglio essere ricontattato',
+      });
 
       // Plan 11 task 5: opt-out is now centralised — handler delegates the
       // registry insert + contact flip + audit + event to the unified service.
@@ -342,13 +322,9 @@ describe('dispatchToolSideEffect', () => {
       // call row not found → loadCallContact returns null
       mockTx._selectQueue.push([]);
 
-      const result = await dispatchToolSideEffect(
-        mockTx,
-        ORG_ID,
-        CALL_ID,
-        'register_opt_out',
-        { confirmation_text: 'Opt out' },
-      );
+      const result = await dispatchToolSideEffect(mockTx, ORG_ID, CALL_ID, 'register_opt_out', {
+        confirmation_text: 'Opt out',
+      });
 
       expect(result.inngestEvents).toHaveLength(0);
       expect(mockMarkOptOutInTx).not.toHaveBeenCalled();
@@ -359,13 +335,9 @@ describe('dispatchToolSideEffect', () => {
 
   describe('confirm_appointment', () => {
     it('updates appointment status to confirmed', async () => {
-      const result = await dispatchToolSideEffect(
-        mockTx,
-        ORG_ID,
-        CALL_ID,
-        'confirm_appointment',
-        { confirmation_text: 'Sì, ci sarò' },
-      );
+      const result = await dispatchToolSideEffect(mockTx, ORG_ID, CALL_ID, 'confirm_appointment', {
+        confirmation_text: 'Sì, ci sarò',
+      });
 
       expect(mockTx.update).toHaveBeenCalledOnce();
       const updatedSet = mockTx._updatedSets[0] as Record<string, unknown>;
@@ -417,13 +389,7 @@ describe('dispatchToolSideEffect', () => {
 
   describe('unknown tool', () => {
     it('returns no events and performs no DB writes', async () => {
-      const result = await dispatchToolSideEffect(
-        mockTx,
-        ORG_ID,
-        CALL_ID,
-        'nonexistent_tool',
-        {},
-      );
+      const result = await dispatchToolSideEffect(mockTx, ORG_ID, CALL_ID, 'nonexistent_tool', {});
 
       expect(result.inngestEvents).toHaveLength(0);
       expect(mockTx.insert).not.toHaveBeenCalled();

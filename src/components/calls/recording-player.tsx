@@ -26,11 +26,7 @@ export type RecordingPlayerProps = {
   durationSeconds?: number;
 };
 
-export function RecordingPlayer({
-  audioUrl,
-  transcript,
-  durationSeconds,
-}: RecordingPlayerProps) {
+export function RecordingPlayer({ audioUrl, transcript, durationSeconds }: RecordingPlayerProps) {
   const t = useTranslations('recording_player');
   const audioRef = useRef<HTMLAudioElement>(null);
   const transcriptListRef = useRef<HTMLOListElement>(null);
@@ -63,8 +59,7 @@ export function RecordingPlayer({
   // initial page boundary, so the auto-scroll-to-current-segment behaviour
   // keeps working on long calls. Derived from playback state so we don't need
   // to mirror it in `useState` + `useEffect`.
-  const effectiveShowFull =
-    showFullTranscript || currentSegmentIdx >= TRANSCRIPT_INITIAL_SEGMENTS;
+  const effectiveShowFull = showFullTranscript || currentSegmentIdx >= TRANSCRIPT_INITIAL_SEGMENTS;
   const visibleTranscript =
     !isPaginated || effectiveShowFull
       ? transcript
@@ -122,9 +117,7 @@ export function RecordingPlayer({
       const target = e.target as HTMLElement | null;
       if (
         target &&
-        (target.tagName === 'INPUT' ||
-          target.tagName === 'TEXTAREA' ||
-          target.isContentEditable)
+        (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)
       ) {
         return;
       }
@@ -196,16 +189,12 @@ export function RecordingPlayer({
             <SkipForward />
           </Button>
           <span
-            className="ml-2 text-xs tabular-nums text-muted-foreground"
+            className="text-muted-foreground ml-2 text-xs tabular-nums"
             data-slot="recording-time"
           >
             {formatTime(currentTime)} / {formatTime(duration)}
           </span>
-          <div
-            className="ml-auto flex gap-1"
-            role="group"
-            aria-label={t('speed_group_label')}
-          >
+          <div className="ml-auto flex gap-1" role="group" aria-label={t('speed_group_label')}>
             {PLAYBACK_RATES.map((r) => (
               <Button
                 key={r}
@@ -247,7 +236,7 @@ export function RecordingPlayer({
           data-paginated={isPaginated && !effectiveShowFull ? 'true' : undefined}
         >
           {transcript.length === 0 ? (
-            <li className="px-2 py-4 text-center text-sm text-muted-foreground">
+            <li className="text-muted-foreground px-2 py-4 text-center text-sm">
               {t('transcript_empty')}
             </li>
           ) : (
@@ -259,7 +248,7 @@ export function RecordingPlayer({
                     key={`${seg.startMs}-${idx}`}
                     data-current={isCurrent ? 'true' : undefined}
                     className={cn(
-                      'cursor-pointer rounded px-2 py-1 text-sm transition-colors hover:bg-muted',
+                      'hover:bg-muted cursor-pointer rounded px-2 py-1 text-sm transition-colors',
                       isCurrent && 'bg-muted font-medium',
                     )}
                     onClick={() => seekToMs(seg.startMs)}
@@ -273,15 +262,11 @@ export function RecordingPlayer({
                       }
                     }}
                   >
-                    <div className="flex justify-between text-xs text-muted-foreground">
+                    <div className="text-muted-foreground flex justify-between text-xs">
                       <span>
-                        {seg.speaker === 'agent'
-                          ? t('speaker_agent')
-                          : t('speaker_caller')}
+                        {seg.speaker === 'agent' ? t('speaker_agent') : t('speaker_caller')}
                       </span>
-                      <span className="tabular-nums">
-                        {formatTime(seg.startMs / 1000)}
-                      </span>
+                      <span className="tabular-nums">{formatTime(seg.startMs / 1000)}</span>
                     </div>
                     <p className="text-foreground">{seg.text}</p>
                   </li>

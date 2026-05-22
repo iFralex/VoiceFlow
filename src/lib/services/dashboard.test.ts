@@ -80,19 +80,23 @@ const ORG_ID = 'org-1';
  *   9. KPI appointments aggregate        (kpiAggregateInRange — second select,
  *                                         issued after its first await resolves)
  */
-function pushDefaultSelectResults(opts: {
-  callsCompleted?: number;
-  qualifiedLeads?: number;
-  appointmentsBooked?: number;
-  trendRows?: unknown[];
-  sparklineRows?: unknown[];
-  activeCampaigns?: unknown[];
-  recentAppointments?: unknown[];
-  coolingCount?: number;
-  disclosureFailureCount?: number;
-  hasCampaign?: boolean;
-} = {}) {
-  selectResults.push([{ completed: opts.callsCompleted ?? 0, qualified: opts.qualifiedLeads ?? 0 }]);
+function pushDefaultSelectResults(
+  opts: {
+    callsCompleted?: number;
+    qualifiedLeads?: number;
+    appointmentsBooked?: number;
+    trendRows?: unknown[];
+    sparklineRows?: unknown[];
+    activeCampaigns?: unknown[];
+    recentAppointments?: unknown[];
+    coolingCount?: number;
+    disclosureFailureCount?: number;
+    hasCampaign?: boolean;
+  } = {},
+) {
+  selectResults.push([
+    { completed: opts.callsCompleted ?? 0, qualified: opts.qualifiedLeads ?? 0 },
+  ]);
   selectResults.push(opts.trendRows ?? []);
   selectResults.push(opts.sparklineRows ?? []);
   selectResults.push(opts.activeCampaigns ?? []);
@@ -191,9 +195,7 @@ describe('getDashboardData', () => {
   it('builds 14-day sparklines by stitching per-day rows over a 14-entry chronological array', async () => {
     const today = formatYmd(new Date());
     pushDefaultSelectResults({
-      sparklineRows: [
-        { date: today, completed: 7, qualifiedLeads: 4, appointmentBooked: 2 },
-      ],
+      sparklineRows: [{ date: today, completed: 7, qualifiedLeads: 4, appointmentBooked: 2 }],
     });
     mockGetBalance.mockResolvedValue({ balanceCents: 0, remainingMinutes: 0 });
 

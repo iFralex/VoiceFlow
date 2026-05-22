@@ -40,8 +40,7 @@ vi.mock('@/lib/db/schema', () => ({
 vi.mock('drizzle-orm', () => ({
   eq: (col: unknown, val: unknown) => ({ type: 'eq', col, val }),
   sql: Object.assign(
-    (strings: TemplateStringsArray, ...values: unknown[]) =>
-      strings.raw.join('') + values.join(''),
+    (strings: TemplateStringsArray, ...values: unknown[]) => strings.raw.join('') + values.join(''),
     { raw: (s: string) => s },
   ),
 }));

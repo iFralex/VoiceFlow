@@ -154,18 +154,14 @@ describe('defensive limits', () => {
 
   it('throws csv_too_many_columns when CSV has more than 50 columns', async () => {
     const cols = Array.from({ length: 51 }, (_, i) => (i === 0 ? 'phone' : `col${i}`));
-    const vals = Array.from({ length: 51 }, (_, i) =>
-      i === 0 ? '+393331234567' : `val${i}`,
-    );
+    const vals = Array.from({ length: 51 }, (_, i) => (i === 0 ? '+393331234567' : `val${i}`));
     const csv = `${cols.join(',')}\n${vals.join(',')}`;
     await expect(parseContactsCsv(csv, BASE_OPTIONS)).rejects.toThrow('csv_too_many_columns');
   });
 
   it('does not throw for exactly 50 columns', async () => {
     const cols = Array.from({ length: 50 }, (_, i) => (i === 0 ? 'phone' : `col${i}`));
-    const vals = Array.from({ length: 50 }, (_, i) =>
-      i === 0 ? '+393331234567' : `val${i}`,
-    );
+    const vals = Array.from({ length: 50 }, (_, i) => (i === 0 ? '+393331234567' : `val${i}`));
     const csv = `${cols.join(',')}\n${vals.join(',')}`;
     await expect(parseContactsCsv(csv, BASE_OPTIONS)).resolves.toBeDefined();
   });

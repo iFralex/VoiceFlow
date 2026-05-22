@@ -128,9 +128,7 @@ describe('exportCampaignResults', () => {
     await exportCampaignResults({ campaignId: CAMPAIGN_ID });
 
     expect(mockStorageUpload).toHaveBeenCalledWith(
-      expect.stringMatching(
-        new RegExp(`^${ORG_ID}/exports/campaign-${CAMPAIGN_ID}-.*\\.csv$`),
-      ),
+      expect.stringMatching(new RegExp(`^${ORG_ID}/exports/campaign-${CAMPAIGN_ID}-.*\\.csv$`)),
       'contatto,telefono\nMario call-1,+393331234567',
       expect.objectContaining({ contentType: 'text/csv' }),
     );
@@ -139,10 +137,7 @@ describe('exportCampaignResults', () => {
   it('signs the download URL with a 1-hour TTL', async () => {
     await exportCampaignResults({ campaignId: CAMPAIGN_ID });
 
-    expect(mockCreateSignedUrl).toHaveBeenCalledWith(
-      expect.any(String),
-      3_600,
-    );
+    expect(mockCreateSignedUrl).toHaveBeenCalledWith(expect.any(String), 3_600);
   });
 
   it('records an audit log entry on inline completion', async () => {

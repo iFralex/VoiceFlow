@@ -3,12 +3,7 @@ import { and, count, desc, eq, gt, inArray, isNull, lt, ne, not, or, sql } from 
 import { getDpaStatus } from '@/lib/compliance/dpa';
 import { recordAudit } from '@/lib/db/audit';
 import { withOrgContext } from '@/lib/db/context';
-import {
-  calls,
-  campaignStatusEnum,
-  campaigns,
-  contacts,
-} from '@/lib/db/schema';
+import { calls, campaignStatusEnum, campaigns, contacts } from '@/lib/db/schema';
 import type { Campaign } from '@/lib/db/schema';
 import { CAMPAIGN_COMPLETED_EVENT } from '@/lib/inngest/campaigns/events';
 import { sendInngestEvent } from '@/lib/inngest/client';
@@ -47,10 +42,7 @@ export interface CampaignWithStats extends Campaign {
  * - phone_e164 present and E.164-valid (starts with '+', min 7 chars)
  * - no completed/no_answer/busy call attempt within the last 48 hours
  */
-async function countEligibleContacts(
-  orgId: string,
-  campaignId: string,
-): Promise<number> {
+async function countEligibleContacts(orgId: string, campaignId: string): Promise<number> {
   return withOrgContext(orgId, async (tx) => {
     const [campaign] = await tx
       .select({ contact_list_id: campaigns.contact_list_id })
@@ -97,10 +89,7 @@ async function countEligibleContacts(
         ? and(baseConditions, not(inArray(contacts.id, recentContactIds)))
         : baseConditions;
 
-    const [row] = await tx
-      .select({ total: count() })
-      .from(contacts)
-      .where(whereCondition);
+    const [row] = await tx.select({ total: count() }).from(contacts).where(whereCondition);
 
     return row?.total ?? 0;
   });
@@ -109,10 +98,7 @@ async function countEligibleContacts(
 /**
  * Attaches live call-count stats to campaign rows.
  */
-async function attachStats(
-  orgId: string,
-  campaignRows: Campaign[],
-): Promise<CampaignWithStats[]> {
+async function attachStats(orgId: string, campaignRows: Campaign[]): Promise<CampaignWithStats[]> {
   if (campaignRows.length === 0) return [];
 
   const campaignIds = campaignRows.map((c) => c.id);
@@ -433,9 +419,12 @@ export async function cancelCampaign(
     try {
       await getVoiceProviderByName(call.provider).cancelCall(call.provider_call_id);
     } catch (err) {
-      void logger.error(`[cancelCampaign] Failed to terminate provider call ${call.provider_call_id}`, {
-        error: err instanceof Error ? err.message : String(err),
-      });
+      void logger.error(
+        `[cancelCampaign] Failed to terminate provider call ${call.provider_call_id}`,
+        {
+          error: err instanceof Error ? err.message : String(err),
+        },
+      );
     }
   }
 
@@ -458,10 +447,13 @@ export async function cancelCampaign(
   try {
     await aggregateOneCampaign(campaignId, orgId);
   } catch (err) {
-    void logger.error(`[cancelCampaign] Failed to aggregate final stats for campaign ${campaignId}`, {
-      campaign_id: campaignId,
-      error: err instanceof Error ? err.message : String(err),
-    });
+    void logger.error(
+      `[cancelCampaign] Failed to aggregate final stats for campaign ${campaignId}`,
+      {
+        campaign_id: campaignId,
+        error: err instanceof Error ? err.message : String(err),
+      },
+    );
   }
 }
 
@@ -498,16 +490,14 @@ export async function listCampaigns(
   page: { limit: number; cursor?: string },
 ): Promise<{ items: CampaignWithStats[]; nextCursor?: string }> {
   // Decode cursor: base64-encoded JSON { createdAt: string; id: string }
-  let cursorCondition:
-    | ReturnType<typeof or>
-    | ReturnType<typeof and>
-    | undefined = undefined;
+  let cursorCondition: ReturnType<typeof or> | ReturnType<typeof and> | undefined = undefined;
 
   if (page.cursor) {
     try {
-      const decoded = JSON.parse(
-        Buffer.from(page.cursor, 'base64').toString('utf-8'),
-      ) as { createdAt: string; id: string };
+      const decoded = JSON.parse(Buffer.from(page.cursor, 'base64').toString('utf-8')) as {
+        createdAt: string;
+        id: string;
+      };
       const cursorDate = new Date(decoded.createdAt);
       cursorCondition = or(
         lt(campaigns.created_at, cursorDate),
@@ -580,10 +570,7 @@ export async function duplicateCampaign(
  * Marks a campaign as completed when all calls have reached terminal states.
  * Called by the `campaign-completed` Inngest function (Task 7).
  */
-export async function markCampaignCompleted(
-  orgId: string,
-  campaignId: string,
-): Promise<void> {
+export async function markCampaignCompleted(orgId: string, campaignId: string): Promise<void> {
   let didComplete = false;
 
   await withOrgContext(orgId, async (tx) => {
@@ -638,10 +625,7 @@ export async function markCampaignCompleted(
  * Marks a campaign as completed because zero eligible contacts were found
  * at planning time. Called by the `campaign-launched` Inngest function (Task 3).
  */
-export async function markCampaignCompletedEmpty(
-  orgId: string,
-  campaignId: string,
-): Promise<void> {
+export async function markCampaignCompletedEmpty(orgId: string, campaignId: string): Promise<void> {
   let didComplete = false;
 
   await withOrgContext(orgId, async (tx) => {
@@ -701,10 +685,7 @@ export async function markCampaignCompletedEmpty(
  * Returns the campaign row.
  * Used by dispatch-call Inngest function to abort gracefully on pause/cancel.
  */
-export async function requireRunning(
-  orgId: string,
-  campaignId: string,
-): Promise<Campaign> {
+export async function requireRunning(orgId: string, campaignId: string): Promise<Campaign> {
   const campaign = await withOrgContext(orgId, async (tx) => {
     const rows = await tx
       .select()

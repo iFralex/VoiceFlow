@@ -306,9 +306,10 @@ async function fetchExpiredCalls(
     const pathCol = column === 'recording_path' ? calls.recording_path : calls.transcript_path;
     // Calls with `contact_id IS NULL` are inbound IVR rows — they have no
     // contact and therefore no legal-hold linkage; they purge as normal.
-    const heldExclusion = heldContactIds.size > 0
-      ? or(isNull(calls.contact_id), notInArray(calls.contact_id, [...heldContactIds]))
-      : undefined;
+    const heldExclusion =
+      heldContactIds.size > 0
+        ? or(isNull(calls.contact_id), notInArray(calls.contact_id, [...heldContactIds]))
+        : undefined;
     const rows = await tx
       .select({ id: calls.id, path: pathCol })
       .from(calls)
@@ -334,9 +335,8 @@ async function clearArtifactColumn(
 ): Promise<number> {
   if (callIds.length === 0) return 0;
   return withSystemContext(async (tx) => {
-    const setClause = column === 'recording_path'
-      ? { recording_path: null }
-      : { transcript_path: null };
+    const setClause =
+      column === 'recording_path' ? { recording_path: null } : { transcript_path: null };
     const r = await tx
       .update(calls)
       .set(setClause)
@@ -395,9 +395,8 @@ async function hardDeleteSoftDeletedContacts(
   //    under us — once the contacts are gone we lose all paths to their
   //    calls' storage objects.
   const contactIds = await withSystemContext(async (tx) => {
-    const heldExclusion = heldContactIds.size > 0
-      ? notInArray(contacts.id, [...heldContactIds])
-      : undefined;
+    const heldExclusion =
+      heldContactIds.size > 0 ? notInArray(contacts.id, [...heldContactIds]) : undefined;
     const ids = await tx
       .select({ id: contacts.id })
       .from(contacts)

@@ -38,7 +38,11 @@ const TEST_SECRET = 'whsec_test_signing_secret_for_unit_tests';
  *   v1            = HMAC-SHA256(signedPayload, secret) as hex
  *   header        = `t=${timestamp},v1=${v1}`
  */
-function generateStripeSignature(rawBody: string, secret: string, timestampOverride?: number): string {
+function generateStripeSignature(
+  rawBody: string,
+  secret: string,
+  timestampOverride?: number,
+): string {
   const timestamp = timestampOverride ?? Math.floor(Date.now() / 1000);
   const signedPayload = `${timestamp}.${rawBody}`;
   const v1 = createHmac('sha256', secret).update(signedPayload, 'utf8').digest('hex');
@@ -71,7 +75,12 @@ describe('verifyStripeWebhook', () => {
     const result = verifyStripeWebhook(FIXTURE_BODY, signature, TEST_SECRET);
 
     expect(mockConstructEvent).toHaveBeenCalledOnce();
-    expect(mockConstructEvent).toHaveBeenCalledWith(FIXTURE_BODY, signature, TEST_SECRET, undefined);
+    expect(mockConstructEvent).toHaveBeenCalledWith(
+      FIXTURE_BODY,
+      signature,
+      TEST_SECRET,
+      undefined,
+    );
     expect(result).toEqual(FIXTURE_EVENT);
   });
 
@@ -85,7 +94,9 @@ describe('verifyStripeWebhook', () => {
   });
 
   it('re-throws when constructEvent throws a signature mismatch error', () => {
-    const signatureError = new Error('No signatures found matching the expected signature for payload');
+    const signatureError = new Error(
+      'No signatures found matching the expected signature for payload',
+    );
     mockConstructEvent.mockImplementation(() => {
       throw signatureError;
     });

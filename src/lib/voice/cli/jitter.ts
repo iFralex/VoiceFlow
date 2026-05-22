@@ -18,9 +18,7 @@ export function pickJitterMs(maxMs: number = DEFAULT_JITTER_MAX_MS): number {
   return Math.floor(Math.random() * (maxMs + 1));
 }
 
-export async function applyDispatchJitter(
-  maxMs: number = DEFAULT_JITTER_MAX_MS,
-): Promise<number> {
+export async function applyDispatchJitter(maxMs: number = DEFAULT_JITTER_MAX_MS): Promise<number> {
   const ms = pickJitterMs(maxMs);
   if (ms === 0) return 0;
   await new Promise<void>((resolve) => setTimeout(resolve, ms));

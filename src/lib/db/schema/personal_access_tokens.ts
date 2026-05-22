@@ -21,7 +21,10 @@ export const personalAccessTokens = pgTable(
     token_hash: text('token_hash').notNull().unique(),
     /** First 8 characters of the raw token for display purposes */
     prefix: text('prefix').notNull(),
-    scopes: text('scopes').array().notNull().default(sql`'{}'`),
+    scopes: text('scopes')
+      .array()
+      .notNull()
+      .default(sql`'{}'`),
     last_used_at: timestamp('last_used_at', { withTimezone: true }),
     expires_at: timestamp('expires_at', { withTimezone: true }),
     revoked_at: timestamp('revoked_at', { withTimezone: true }),

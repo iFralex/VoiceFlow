@@ -178,9 +178,7 @@ export async function parseContactsCsv(
 
   // Hard cap: reject uploads exceeding the per-upload row limit
   if (parsed.data.length > MAX_ROWS_PER_UPLOAD) {
-    throw new Error(
-      `csv_too_many_rows: ${parsed.data.length} rows (max ${MAX_ROWS_PER_UPLOAD})`,
-    );
+    throw new Error(`csv_too_many_rows: ${parsed.data.length} rows (max ${MAX_ROWS_PER_UPLOAD})`);
   }
 
   const mapping = options.columnMapping ?? detectColumns(headers);

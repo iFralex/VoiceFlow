@@ -52,11 +52,7 @@ export async function recordInboundCallStarted(
   // Idempotency: if we have already inserted a row for this provider_call_id,
   // return it without re-running the org lookup.
   const [existing] = await withSystemContext((tx) =>
-    tx
-      .select()
-      .from(calls)
-      .where(eq(calls.provider_call_id, params.providerCallId))
-      .limit(1),
+    tx.select().from(calls).where(eq(calls.provider_call_id, params.providerCallId)).limit(1),
   );
   if (existing) return existing;
 
@@ -114,19 +110,12 @@ interface RecordInboundCallEndedParams {
  * metadata. No-op when no inbound row exists for the provider call id (e.g.
  * the call-start webhook arrived before any recent outbound call existed).
  */
-export async function recordInboundCallEnded(
-  params: RecordInboundCallEndedParams,
-): Promise<void> {
+export async function recordInboundCallEnded(params: RecordInboundCallEndedParams): Promise<void> {
   const [row] = await withSystemContext((tx) =>
     tx
       .select({ id: calls.id, org_id: calls.org_id })
       .from(calls)
-      .where(
-        and(
-          eq(calls.provider_call_id, params.providerCallId),
-          eq(calls.direction, 'inbound'),
-        ),
-      )
+      .where(and(eq(calls.provider_call_id, params.providerCallId), eq(calls.direction, 'inbound')))
       .limit(1),
   );
   if (!row) return;
@@ -215,21 +204,13 @@ export async function recordInboundOptout(
     tx
       .select({ id: calls.id, org_id: calls.org_id })
       .from(calls)
-      .where(
-        and(
-          eq(calls.provider_call_id, params.providerCallId),
-          eq(calls.direction, 'inbound'),
-        ),
-      )
+      .where(and(eq(calls.provider_call_id, params.providerCallId), eq(calls.direction, 'inbound')))
       .orderBy(desc(calls.created_at))
       .limit(1),
   );
   if (inboundRow) {
     await withOrgContext(inboundRow.org_id, async (tx) => {
-      await tx
-        .update(calls)
-        .set({ outcome: 'do_not_call' })
-        .where(eq(calls.id, inboundRow.id));
+      await tx.update(calls).set({ outcome: 'do_not_call' }).where(eq(calls.id, inboundRow.id));
     });
   }
 

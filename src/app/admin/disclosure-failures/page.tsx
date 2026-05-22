@@ -107,15 +107,9 @@ export default async function DisclosureFailuresAdminPage({ searchParams }: Page
   const rawFilter = Array.isArray(params.status) ? params.status[0] : params.status;
   // `?status=all` shows every row; missing or unknown → default to pending.
   const filter: DisclosureTriageStatus | 'all' =
-    rawFilter === 'all'
-      ? 'all'
-      : isDisclosureTriageStatus(rawFilter)
-        ? rawFilter
-        : 'pending';
+    rawFilter === 'all' ? 'all' : isDisclosureTriageStatus(rawFilter) ? rawFilter : 'pending';
 
-  const rows = await listDisclosureFailures(
-    filter === 'all' ? {} : { status: filter },
-  );
+  const rows = await listDisclosureFailures(filter === 'all' ? {} : { status: filter });
   const signed = await attachSignedUrls(rows);
 
   const filterOptions: ReadonlyArray<DisclosureTriageStatus | 'all'> = [
@@ -135,8 +129,8 @@ export default async function DisclosureFailuresAdminPage({ searchParams }: Page
       <meta name="referrer" content="no-referrer" />
       <h1 style={{ marginBottom: '0.5rem' }}>AI Act disclosure failures</h1>
       <p style={{ color: '#666', marginBottom: '1rem' }}>
-        Calls whose post-call classifier did not detect the phrase &ldquo;assistente vocale automatico&rdquo;
-        in the first 30 seconds of the transcript. See{' '}
+        Calls whose post-call classifier did not detect the phrase &ldquo;assistente vocale
+        automatico&rdquo; in the first 30 seconds of the transcript. See{' '}
         <code>docs/runbooks/aiact-disclosure-failure.md</code> for the triage procedure.
       </p>
 
@@ -169,7 +163,9 @@ export default async function DisclosureFailuresAdminPage({ searchParams }: Page
       </p>
 
       {signed.length === 0 ? (
-        <p style={{ color: '#666', marginTop: '2rem' }}>No disclosure failures match this filter.</p>
+        <p style={{ color: '#666', marginTop: '2rem' }}>
+          No disclosure failures match this filter.
+        </p>
       ) : (
         <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: '0.85em' }}>
           <thead>
@@ -255,11 +251,18 @@ export default async function DisclosureFailuresAdminPage({ searchParams }: Page
                   ) : null}
                 </td>
                 <td style={{ padding: '0.5rem' }}>
-                  <form action={triageDisclosureFailureFormAction} style={{ display: 'grid', gap: 4 }}>
+                  <form
+                    action={triageDisclosureFailureFormAction}
+                    style={{ display: 'grid', gap: 4 }}
+                  >
                     <input type="hidden" name="token" value={token} />
                     <input type="hidden" name="callId" value={row.callId} />
                     <input type="hidden" name="filterStatus" value={filter} />
-                    <select name="status" defaultValue={row.triageStatus} style={{ padding: '2px 4px' }}>
+                    <select
+                      name="status"
+                      defaultValue={row.triageStatus}
+                      style={{ padding: '2px 4px' }}
+                    >
                       {DISCLOSURE_TRIAGE_STATUSES.map((s) => (
                         <option key={s} value={s}>
                           {s}

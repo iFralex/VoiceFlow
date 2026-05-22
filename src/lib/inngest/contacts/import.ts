@@ -50,7 +50,9 @@ async function downloadCsvFile(storagePath: string): Promise<Buffer> {
   const { data, error } = await supabaseAdmin.storage.from(CSV_BUCKET).download(storagePath);
 
   if (error ?? !data) {
-    throw new Error(`Failed to download CSV file at "${storagePath}": ${error?.message ?? 'no data returned'}`);
+    throw new Error(
+      `Failed to download CSV file at "${storagePath}": ${error?.message ?? 'no data returned'}`,
+    );
   }
 
   const arrayBuffer = await data.arrayBuffer();
@@ -72,7 +74,10 @@ async function storeErrorsArtifact(
 
   if (error) {
     // Non-fatal — log and continue so the import can still complete
-    void logger.error('[contacts/import] Failed to store errors artifact', { path, error: error.message });
+    void logger.error('[contacts/import] Failed to store errors artifact', {
+      path,
+      error: error.message,
+    });
   }
 }
 
@@ -108,12 +113,7 @@ async function enrichWithOptOutAndRpo(
       const results = await tx
         .select({ phone_e164: optOutRegistry.phone_e164 })
         .from(optOutRegistry)
-        .where(
-          and(
-            eq(optOutRegistry.org_id, orgId),
-            inArray(optOutRegistry.phone_e164, chunk),
-          ),
-        );
+        .where(and(eq(optOutRegistry.org_id, orgId), inArray(optOutRegistry.phone_e164, chunk)));
       for (const r of results) optOutPhones.add(r.phone_e164);
     });
   }
@@ -132,8 +132,7 @@ async function enrichWithOptOutAndRpo(
 
   return validRows.map((row) => {
     const isBlocked = rpoMap.get(row.phone_e164);
-    const rpoStatus =
-      isBlocked === undefined ? 'unchecked' : isBlocked ? 'blocked' : 'clear';
+    const rpoStatus = isBlocked === undefined ? 'unchecked' : isBlocked ? 'blocked' : 'clear';
 
     return {
       ...row,
@@ -167,10 +166,7 @@ interface RpoBatchCheckResult {
 
 const RPO_BATCH_CHUNK_SIZE = 500;
 
-async function performBatchRpoCheck(
-  orgId: string,
-  listId: string,
-): Promise<RpoBatchCheckResult> {
+async function performBatchRpoCheck(orgId: string, listId: string): Promise<RpoBatchCheckResult> {
   let rpoClient: RpoClient;
   try {
     rpoClient = getRpoClient();
@@ -214,9 +210,12 @@ async function performBatchRpoCheck(
     try {
       result = await rpoClient.bulkCheck(chunk);
     } catch (e) {
-      void logger.warn('[contacts/import] RPO bulkCheck failed for chunk; dispatch-time safety net will cover', {
-        error: e instanceof Error ? e.message : String(e),
-      });
+      void logger.warn(
+        '[contacts/import] RPO bulkCheck failed for chunk; dispatch-time safety net will cover',
+        {
+          error: e instanceof Error ? e.message : String(e),
+        },
+      );
       errors += 1;
       continue;
     }

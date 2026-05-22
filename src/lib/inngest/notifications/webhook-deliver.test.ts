@@ -327,7 +327,13 @@ describe('webhookDeliverHandler — deactivation after MAX_FAILURES', () => {
     const webhookNearMax = { ...activeWebhook, failure_count: 5 };
     const ownerRow = { email: 'owner@example.com', fullName: null, locale: 'en' };
 
-    setupSystemContextReturns([[webhookNearMax], [], [{ failureCount: 6 }], [{ id: WEBHOOK_ID }], [ownerRow]]);
+    setupSystemContextReturns([
+      [webhookNearMax],
+      [],
+      [{ failureCount: 6 }],
+      [{ id: WEBHOOK_ID }],
+      [ownerRow],
+    ]);
 
     await webhookDeliverHandler({
       webhookId: WEBHOOK_ID,
@@ -345,7 +351,13 @@ describe('webhookDeliverHandler — deactivation after MAX_FAILURES', () => {
     const webhookNearMax = { ...activeWebhook, failure_count: 5 };
     const ownerRow = { email: 'owner@example.com', fullName: null, locale: 'it' };
 
-    setupSystemContextReturns([[webhookNearMax], [], [{ failureCount: 6 }], [{ id: WEBHOOK_ID }], [ownerRow]]);
+    setupSystemContextReturns([
+      [webhookNearMax],
+      [],
+      [{ failureCount: 6 }],
+      [{ id: WEBHOOK_ID }],
+      [ownerRow],
+    ]);
 
     await webhookDeliverHandler({
       webhookId: WEBHOOK_ID,

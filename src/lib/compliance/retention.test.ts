@@ -51,9 +51,7 @@ function buildTx(retentionDays: number | null, found = true) {
     select: vi.fn(() => ({
       from: vi.fn(() => ({
         where: vi.fn(() => ({
-          limit: vi.fn(async () =>
-            found ? [{ recording_retention_days: retentionDays }] : [],
-          ),
+          limit: vi.fn(async () => (found ? [{ recording_retention_days: retentionDays }] : [])),
         })),
       })),
     })),
@@ -99,9 +97,9 @@ describe('buildPolicy', () => {
   it('clamps to the platform default when the override is outside the allowed range', () => {
     expect(buildPolicy(0).recordingDays).toBe(DEFAULT_RECORDING_RETENTION_DAYS);
     expect(buildPolicy(-5).recordingDays).toBe(DEFAULT_RECORDING_RETENTION_DAYS);
-    expect(
-      buildPolicy(RECORDING_RETENTION_DAYS_MAX + 1).recordingDays,
-    ).toBe(DEFAULT_RECORDING_RETENTION_DAYS);
+    expect(buildPolicy(RECORDING_RETENTION_DAYS_MAX + 1).recordingDays).toBe(
+      DEFAULT_RECORDING_RETENTION_DAYS,
+    );
   });
 
   it('accepts the boundary values', () => {
@@ -141,12 +139,8 @@ describe('policyToThresholds', () => {
     expect(NOW.getTime() - t.recordingCutoff.getTime()).toBe(
       DEFAULT_RECORDING_RETENTION_DAYS * oneDay,
     );
-    expect(NOW.getTime() - t.transcriptCutoff.getTime()).toBe(
-      TRANSCRIPT_RETENTION_DAYS * oneDay,
-    );
-    expect(NOW.getTime() - t.auditLogCutoff.getTime()).toBe(
-      AUDIT_LOG_RETENTION_DAYS * oneDay,
-    );
+    expect(NOW.getTime() - t.transcriptCutoff.getTime()).toBe(TRANSCRIPT_RETENTION_DAYS * oneDay);
+    expect(NOW.getTime() - t.auditLogCutoff.getTime()).toBe(AUDIT_LOG_RETENTION_DAYS * oneDay);
     expect(NOW.getTime() - t.softDeletedContactCutoff.getTime()).toBe(
       SOFT_DELETED_CONTACT_PURGE_DAYS * oneDay,
     );
@@ -163,8 +157,7 @@ describe('policyToThresholds', () => {
     const before = Date.now();
     const t = policyToThresholds(ORG_ID, buildPolicy(null));
     const after = Date.now();
-    const recordingMs =
-      DEFAULT_RECORDING_RETENTION_DAYS * 24 * 60 * 60 * 1000;
+    const recordingMs = DEFAULT_RECORDING_RETENTION_DAYS * 24 * 60 * 60 * 1000;
     expect(t.recordingCutoff.getTime()).toBeGreaterThanOrEqual(before - recordingMs);
     expect(t.recordingCutoff.getTime()).toBeLessThanOrEqual(after - recordingMs);
   });

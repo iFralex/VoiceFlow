@@ -61,9 +61,7 @@ function resetMockTx() {
 }
 
 vi.mock('@/lib/db/context', () => ({
-  withOrgContext: vi.fn(
-    (_orgId: string, fn: (tx: unknown) => Promise<unknown>) => fn(mockTx),
-  ),
+  withOrgContext: vi.fn((_orgId: string, fn: (tx: unknown) => Promise<unknown>) => fn(mockTx)),
 }));
 
 beforeEach(() => {
@@ -80,7 +78,7 @@ describe('listCampaignResults', () => {
     // listCampaignResults runs two queries via Promise.all: rows first, then total.
     // Promise.all kicks them off in source order so the rows query is registered first.
     selectResults.push(opts.rows ?? []);
-    selectResults.push([{ cnt: opts.total ?? (opts.rows?.length ?? 0) }]);
+    selectResults.push([{ cnt: opts.total ?? opts.rows?.length ?? 0 }]);
   }
 
   it('returns serialized rows and total count', async () => {
@@ -119,12 +117,7 @@ describe('listCampaignResults', () => {
     });
 
     const { listCampaignResults } = await import('./campaign-results');
-    const out = await listCampaignResults(
-      'org-1',
-      'camp-1',
-      {},
-      { page: 0, pageSize: 20 },
-    );
+    const out = await listCampaignResults('org-1', 'camp-1', {}, { page: 0, pageSize: 20 });
 
     expect(out.total).toBe(25);
     expect(out.rows).toHaveLength(2);
@@ -154,12 +147,7 @@ describe('listCampaignResults', () => {
     pushResult({ rows: [], total: 0 });
 
     const { listCampaignResults } = await import('./campaign-results');
-    const out = await listCampaignResults(
-      'org-1',
-      'camp-1',
-      {},
-      { page: 0, pageSize: 20 },
-    );
+    const out = await listCampaignResults('org-1', 'camp-1', {}, { page: 0, pageSize: 20 });
 
     expect(out.rows).toEqual([]);
     expect(out.total).toBe(0);
@@ -203,7 +191,7 @@ describe('collectCampaignResultsForExport', () => {
   function pushResult(opts: { rows?: unknown[]; total?: number }) {
     // Same Promise.all order as listCampaignResults: rows then total.
     selectResults.push(opts.rows ?? []);
-    selectResults.push([{ cnt: opts.total ?? (opts.rows?.length ?? 0) }]);
+    selectResults.push([{ cnt: opts.total ?? opts.rows?.length ?? 0 }]);
   }
 
   it('returns rows joined with appointment scheduled_at and the total count', async () => {

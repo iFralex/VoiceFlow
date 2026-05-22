@@ -8,10 +8,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import { createBillingPortalSession } from '@/actions/billing';
-import {
-  deleteOrganizationAction,
-  updateOrganizationAction,
-} from '@/actions/organization';
+import { deleteOrganizationAction, updateOrganizationAction } from '@/actions/organization';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -22,7 +19,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { toastResult } from '@/lib/utils/action-toast';
 
@@ -81,12 +85,8 @@ function DeleteOrgDialog({ orgName }: { orgName: string }) {
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-2">
-          <p className="text-sm text-muted-foreground">{t('org_delete_confirm_label')}</p>
-          <Input
-            ref={inputRef}
-            placeholder={orgName}
-            aria-label={t('org_delete_confirm_label')}
-          />
+          <p className="text-muted-foreground text-sm">{t('org_delete_confirm_label')}</p>
+          <Input ref={inputRef} placeholder={orgName} aria-label={t('org_delete_confirm_label')} />
         </div>
         <DialogFooter>
           <Button variant="destructive" disabled={isPending} onClick={handleDelete}>
@@ -98,7 +98,11 @@ function DeleteOrgDialog({ orgName }: { orgName: string }) {
   );
 }
 
-export function OrganizationSettingsClient({ org, isOwner, canUpdate }: OrganizationSettingsClientProps) {
+export function OrganizationSettingsClient({
+  org,
+  isOwner,
+  canUpdate,
+}: OrganizationSettingsClientProps) {
   const t = useTranslations('settings');
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -137,22 +141,22 @@ export function OrganizationSettingsClient({ org, isOwner, canUpdate }: Organiza
       {/* Page header */}
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">{t('org_title')}</h1>
-        <p className="text-sm text-muted-foreground">{t('org_description')}</p>
+        <p className="text-muted-foreground text-sm">{t('org_description')}</p>
       </div>
 
       {/* Info card */}
       <div className="rounded-lg border p-4 text-sm">
         <dl className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <div>
-            <dt className="font-medium text-muted-foreground">{t('org_info_id')}</dt>
+            <dt className="text-muted-foreground font-medium">{t('org_info_id')}</dt>
             <dd className="mt-1 font-mono text-xs break-all">{org.id}</dd>
           </div>
           <div>
-            <dt className="font-medium text-muted-foreground">{t('org_info_created')}</dt>
+            <dt className="text-muted-foreground font-medium">{t('org_info_created')}</dt>
             <dd className="mt-1">{createdAt}</dd>
           </div>
           <div>
-            <dt className="font-medium text-muted-foreground">{t('org_info_members')}</dt>
+            <dt className="text-muted-foreground font-medium">{t('org_info_members')}</dt>
             <dd className="mt-1">{org.memberCount}</dd>
           </div>
         </dl>
@@ -182,7 +186,11 @@ export function OrganizationSettingsClient({ org, isOwner, canUpdate }: Organiza
               <FormItem>
                 <FormLabel>{t('org_legal_name_label')}</FormLabel>
                 <FormControl>
-                  <Input placeholder={t('org_legal_name_placeholder')} {...field} disabled={!canUpdate} />
+                  <Input
+                    placeholder={t('org_legal_name_placeholder')}
+                    {...field}
+                    disabled={!canUpdate}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -216,9 +224,9 @@ export function OrganizationSettingsClient({ org, isOwner, canUpdate }: Organiza
 
       {/* Danger zone — owner only */}
       {isOwner && (
-        <div className="rounded-lg border border-destructive/30 p-4 space-y-3">
-          <h2 className="text-sm font-semibold text-destructive">{t('org_danger_zone_title')}</h2>
-          <p className="text-sm text-muted-foreground">{t('org_danger_zone_description')}</p>
+        <div className="border-destructive/30 space-y-3 rounded-lg border p-4">
+          <h2 className="text-destructive text-sm font-semibold">{t('org_danger_zone_title')}</h2>
+          <p className="text-muted-foreground text-sm">{t('org_danger_zone_description')}</p>
           <DeleteOrgDialog orgName={org.name} />
         </div>
       )}
@@ -240,9 +248,9 @@ function BillingPortalSection() {
   }
 
   return (
-    <div className="rounded-lg border p-4 space-y-3">
+    <div className="space-y-3 rounded-lg border p-4">
       <h2 className="text-sm font-semibold">{t('billing_portal_title')}</h2>
-      <p className="text-sm text-muted-foreground">{t('billing_portal_description')}</p>
+      <p className="text-muted-foreground text-sm">{t('billing_portal_description')}</p>
       <Button variant="outline" disabled={isPending} onClick={handleOpenPortal}>
         {isPending ? t('billing_portal_opening') : t('billing_portal_button')}
       </Button>

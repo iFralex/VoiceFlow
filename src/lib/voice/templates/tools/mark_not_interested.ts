@@ -1,7 +1,7 @@
 export const markNotInterestedJsonSchema = {
   name: 'mark_not_interested',
   description:
-    'Invoca questo strumento quando il contatto ha chiaramente espresso disinteresse per l\'offerta o il prodotto.',
+    "Invoca questo strumento quando il contatto ha chiaramente espresso disinteresse per l'offerta o il prodotto.",
   parameters: {
     $schema: 'http://json-schema.org/draft-07/schema#',
     type: 'object',

@@ -20,10 +20,7 @@ type DataTableToolbarProps<TData> = {
   children?: React.ReactNode;
 };
 
-export function DataTableToolbar<TData>({
-  table,
-  children,
-}: DataTableToolbarProps<TData>) {
+export function DataTableToolbar<TData>({ table, children }: DataTableToolbarProps<TData>) {
   const t = useTranslations('table');
 
   return (
@@ -42,20 +39,14 @@ export function DataTableToolbar<TData>({
           <DropdownMenuSeparator />
           {table
             .getAllColumns()
-            .filter(
-              (column) =>
-                typeof column.accessorFn !== 'undefined' &&
-                column.getCanHide(),
-            )
+            .filter((column) => typeof column.accessorFn !== 'undefined' && column.getCanHide())
             .map((column) => (
               <DropdownMenuCheckboxItem
                 key={column.id}
                 checked={column.getIsVisible()}
                 onCheckedChange={(value) => column.toggleVisibility(!!value)}
               >
-                {typeof column.columnDef.header === 'string'
-                  ? column.columnDef.header
-                  : column.id}
+                {typeof column.columnDef.header === 'string' ? column.columnDef.header : column.id}
               </DropdownMenuCheckboxItem>
             ))}
         </DropdownMenuContent>

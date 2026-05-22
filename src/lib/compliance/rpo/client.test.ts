@@ -73,10 +73,7 @@ describe('RpoIntermediaryClient', () => {
   });
 
   it('throws on non-2xx bulk-check response', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue(new Response('forbidden', { status: 403 })),
-    );
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('forbidden', { status: 403 })));
     const client = new RpoIntermediaryClient(ENDPOINT, API_KEY);
     await expect(client.bulkCheck(['+390212345678'])).rejects.toThrow(/403/);
   });
@@ -91,10 +88,9 @@ describe('RpoIntermediaryClient', () => {
 
   it('GETs /check for singleCheck and returns parsed result', async () => {
     const fetchSpy = vi.fn().mockResolvedValue(
-      new Response(
-        JSON.stringify({ blocked: true, checked_at: '2026-05-07T12:00:00Z' }),
-        { status: 200 },
-      ),
+      new Response(JSON.stringify({ blocked: true, checked_at: '2026-05-07T12:00:00Z' }), {
+        status: 200,
+      }),
     );
     vi.stubGlobal('fetch', fetchSpy);
 
@@ -111,10 +107,7 @@ describe('RpoIntermediaryClient', () => {
   });
 
   it('throws on non-2xx single-check response', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue(new Response('boom', { status: 500 })),
-    );
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('boom', { status: 500 })));
     const client = new RpoIntermediaryClient(ENDPOINT, API_KEY);
     await expect(client.singleCheck('+390212345678')).rejects.toThrow(/500/);
   });
@@ -136,7 +129,11 @@ describe('RpoMockClient', () => {
     const numbers: string[] = [];
     for (const prefix of prefixes) {
       for (let i = 0; i < 500; i += 1) {
-        numbers.push(`${prefix}${String(i * 7919 + 1234567).padStart(8, '0').slice(0, 8)}`);
+        numbers.push(
+          `${prefix}${String(i * 7919 + 1234567)
+            .padStart(8, '0')
+            .slice(0, 8)}`,
+        );
       }
     }
     const out = await client.bulkCheck(numbers);

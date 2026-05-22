@@ -96,12 +96,7 @@ describe('payments schema', () => {
   });
 
   it('paymentStatusEnum has correct values', () => {
-    expect(paymentStatusEnum.enumValues).toEqual([
-      'pending',
-      'succeeded',
-      'failed',
-      'refunded',
-    ]);
+    expect(paymentStatusEnum.enumValues).toEqual(['pending', 'succeeded', 'failed', 'refunded']);
   });
 
   it('nullable optional fields', () => {

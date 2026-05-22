@@ -158,7 +158,9 @@ async function emitFailure(
   } catch (err) {
     // Best-effort: the cron route also logs the result, so an Inngest outage
     // never masks the original failure.
-    void logger.error('[sbc-smoke-test] Failed to emit alert event', { error: err instanceof Error ? err.message : String(err) });
+    void logger.error('[sbc-smoke-test] Failed to emit alert event', {
+      error: err instanceof Error ? err.message : String(err),
+    });
   }
 }
 
@@ -189,9 +191,7 @@ async function pickSbcCandidate(
   // Filter to SBC providers in JS rather than via inArray to keep the Drizzle
   // query simple and avoid an extra import; the pool size is at most 15 so
   // this is trivially cheap.
-  const sbc = rows.find((r) =>
-    (SBC_PROVIDERS as readonly string[]).includes(r.provider),
-  );
+  const sbc = rows.find((r) => (SBC_PROVIDERS as readonly string[]).includes(r.provider));
   if (!sbc) return null;
   return {
     id: sbc.id,
@@ -218,13 +218,10 @@ async function waitForCallEnd(
   while (now() < deadline) {
     let res: Response;
     try {
-      res = await fetchImpl(
-        `${VAPI_BASE_URL}/call/${encodeURIComponent(providerCallId)}`,
-        {
-          method: 'GET',
-          headers: { Authorization: `Bearer ${apiKey}` },
-        },
-      );
+      res = await fetchImpl(`${VAPI_BASE_URL}/call/${encodeURIComponent(providerCallId)}`, {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${apiKey}` },
+      });
     } catch (err) {
       // Network failure (DNS, connection refused, TLS, abort): treat the same
       // as a 5xx blip so a transient outage doesn't break the cron's contract
@@ -280,8 +277,7 @@ export async function runSbcSmokeTest(
     const result: SbcSmokeTestResult = {
       ok: false,
       reason: 'no_test_number_configured',
-      detail:
-        'SBC_SMOKE_TEST_NUMBER is not configured — smoke test cannot run',
+      detail: 'SBC_SMOKE_TEST_NUMBER is not configured — smoke test cannot run',
     };
     await emitFailure(toFailureData(result), options.emit);
     return result;
@@ -289,9 +285,7 @@ export async function runSbcSmokeTest(
 
   // 1. Pick a CLI.
   const work = (tx: DbTx) => pickSbcCandidate(tx);
-  const candidate = options.tx
-    ? await work(options.tx)
-    : await withSystemContext(work);
+  const candidate = options.tx ? await work(options.tx) : await withSystemContext(work);
   if (!candidate) {
     const result: SbcSmokeTestResult = {
       ok: false,

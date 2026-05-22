@@ -80,14 +80,21 @@ type Props = {
   outcomeInstructions: string;
 };
 
-export function NewScriptWizard({ templates, initialTemplateSlug, preamble, outcomeInstructions }: Props) {
+export function NewScriptWizard({
+  templates,
+  initialTemplateSlug,
+  preamble,
+  outcomeInstructions,
+}: Props) {
   const t = useTranslations('scripts');
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   const initialTemplate = templates.find((tpl) => tpl.slug === initialTemplateSlug) ?? null;
 
-  const [step, setStep] = useState<WizardStep>(initialTemplate ? 'variables' : 'template_selection');
+  const [step, setStep] = useState<WizardStep>(
+    initialTemplate ? 'variables' : 'template_selection',
+  );
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateInfo | null>(initialTemplate);
   const [scriptName, setScriptName] = useState('');
   const [variables, setVariables] = useState<VariableValues>({});
@@ -185,14 +192,14 @@ export function NewScriptWizard({ templates, initialTemplateSlug, preamble, outc
                 <CardDescription>{tpl.description}</CardDescription>
               </CardHeader>
               <CardContent className="flex-1">
-                <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                <p className="text-muted-foreground mb-2 text-xs font-medium tracking-wide uppercase">
                   {t('required_fields')}
                 </p>
                 <div className="flex flex-wrap gap-1">
                   {tpl.schema.required.map((field) => (
                     <span
                       key={field}
-                      className="rounded bg-muted px-2 py-0.5 font-mono text-xs text-muted-foreground"
+                      className="bg-muted text-muted-foreground rounded px-2 py-0.5 font-mono text-xs"
                     >
                       {field}
                     </span>
@@ -227,7 +234,7 @@ export function NewScriptWizard({ templates, initialTemplateSlug, preamble, outc
         </Button>
         <div>
           <h1 className="text-2xl font-semibold">{t('new_script_title')}</h1>
-          <p className="text-sm text-muted-foreground">{tpl.name}</p>
+          <p className="text-muted-foreground text-sm">{tpl.name}</p>
         </div>
       </div>
 
@@ -255,7 +262,7 @@ export function NewScriptWizard({ templates, initialTemplateSlug, preamble, outc
                   placeholder={t('field_script_name_placeholder')}
                   maxLength={200}
                 />
-                {nameError && <p className="text-xs text-destructive">{nameError}</p>}
+                {nameError && <p className="text-destructive text-xs">{nameError}</p>}
               </div>
 
               {/* Variable fields */}
@@ -304,18 +311,18 @@ export function NewScriptWizard({ templates, initialTemplateSlug, preamble, outc
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <p className="text-muted-foreground mb-2 text-xs font-semibold tracking-wide uppercase">
                   {t('preview_first_message_label')}
                 </p>
-                <pre className="whitespace-pre-wrap rounded-md bg-muted p-3 text-xs text-foreground">
+                <pre className="bg-muted text-foreground rounded-md p-3 text-xs whitespace-pre-wrap">
                   {firstMessagePreview || t('preview_placeholder_hint')}
                 </pre>
               </div>
               <div>
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <p className="text-muted-foreground mb-2 text-xs font-semibold tracking-wide uppercase">
                   {t('preview_system_prompt_label')}
                 </p>
-                <pre className="max-h-[32rem] overflow-y-auto whitespace-pre-wrap rounded-md bg-muted p-3 text-xs text-foreground">
+                <pre className="bg-muted text-foreground max-h-[32rem] overflow-y-auto rounded-md p-3 text-xs whitespace-pre-wrap">
                   {previewText}
                 </pre>
               </div>
@@ -352,7 +359,7 @@ function StepIndicator({ current, t }: { current: 1 | 2; t: (key: string) => str
           <span className={`text-sm ${s.n === current ? 'font-medium' : 'text-muted-foreground'}`}>
             {s.label}
           </span>
-          {i < steps.length - 1 && <div className="mx-2 h-px w-8 bg-border" />}
+          {i < steps.length - 1 && <div className="bg-border mx-2 h-px w-8" />}
         </div>
       ))}
     </div>

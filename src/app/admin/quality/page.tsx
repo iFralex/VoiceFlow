@@ -82,7 +82,11 @@ function statusColor(status: QaReviewStatus): string {
 
 function checkboxSelect(name: string, current: boolean | null): React.ReactNode {
   return (
-    <select name={name} defaultValue={current === null ? '' : String(current)} style={{ padding: '2px 4px', fontSize: '0.85em' }}>
+    <select
+      name={name}
+      defaultValue={current === null ? '' : String(current)}
+      style={{ padding: '2px 4px', fontSize: '0.85em' }}
+    >
       <option value="">—</option>
       <option value="true">pass</option>
       <option value="false">fail</option>
@@ -119,10 +123,7 @@ export default async function QualityAdminPage({ searchParams }: PageProps) {
   }
   const filter = resolveFilter(rawFilter);
 
-  const [reviews, weeklyStats] = await Promise.all([
-    listQaReviews(filter),
-    getWeeklyStats(),
-  ]);
+  const [reviews, weeklyStats] = await Promise.all([listQaReviews(filter), getWeeklyStats()]);
   const signed = await attachSignedUrls(reviews);
 
   const filterOptions: ReadonlyArray<QaReviewStatus | 'all'> = [...QA_REVIEW_STATUSES, 'all'];
@@ -150,13 +151,29 @@ export default async function QualityAdminPage({ searchParams }: PageProps) {
       </p>
 
       {/* Weekly aggregate stats */}
-      <section style={{ marginBottom: '2rem', background: '#f9f9f9', padding: '1rem', borderRadius: '4px', border: '1px solid #e5e7eb' }}>
+      <section
+        style={{
+          marginBottom: '2rem',
+          background: '#f9f9f9',
+          padding: '1rem',
+          borderRadius: '4px',
+          border: '1px solid #e5e7eb',
+        }}
+      >
         <h2 style={{ marginBottom: '0.75rem', fontSize: '1rem' }}>Weekly stats (last 7 days)</h2>
         <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
-          <span>Total: <strong>{weeklyStats.total}</strong></span>
-          <span style={{ color: '#f59e0b' }}>Pending: <strong>{weeklyStats.pending}</strong></span>
-          <span style={{ color: '#22c55e' }}>OK: <strong>{weeklyStats.ok}</strong></span>
-          <span style={{ color: '#ef4444' }}>Needs improvement: <strong>{weeklyStats.needsImprovement}</strong></span>
+          <span>
+            Total: <strong>{weeklyStats.total}</strong>
+          </span>
+          <span style={{ color: '#f59e0b' }}>
+            Pending: <strong>{weeklyStats.pending}</strong>
+          </span>
+          <span style={{ color: '#22c55e' }}>
+            OK: <strong>{weeklyStats.ok}</strong>
+          </span>
+          <span style={{ color: '#ef4444' }}>
+            Needs improvement: <strong>{weeklyStats.needsImprovement}</strong>
+          </span>
         </div>
         {weeklyStats.total > 0 && (
           <table style={{ borderCollapse: 'collapse', fontSize: '0.85em' }}>
@@ -169,12 +186,17 @@ export default async function QualityAdminPage({ searchParams }: PageProps) {
             </thead>
             <tbody>
               {(Object.entries(checklistLabels) as [string, string][]).map(([key, label]) => {
-                const s = weeklyStats.checklistStats[key as keyof typeof weeklyStats.checklistStats];
+                const s =
+                  weeklyStats.checklistStats[key as keyof typeof weeklyStats.checklistStats];
                 return (
                   <tr key={key} style={{ borderBottom: '1px solid #f0f0f0' }}>
                     <td style={{ padding: '4px 8px' }}>{label}</td>
-                    <td style={{ padding: '4px 8px', textAlign: 'right', color: '#22c55e' }}>{s.pass}</td>
-                    <td style={{ padding: '4px 8px', textAlign: 'right', color: '#ef4444' }}>{s.fail}</td>
+                    <td style={{ padding: '4px 8px', textAlign: 'right', color: '#22c55e' }}>
+                      {s.pass}
+                    </td>
+                    <td style={{ padding: '4px 8px', textAlign: 'right', color: '#ef4444' }}>
+                      {s.fail}
+                    </td>
                   </tr>
                 );
               })}
@@ -229,7 +251,10 @@ export default async function QualityAdminPage({ searchParams }: PageProps) {
           </thead>
           <tbody>
             {signed.map((row) => (
-              <tr key={String(row.id)} style={{ borderBottom: '1px solid #ddd', verticalAlign: 'top' }}>
+              <tr
+                key={String(row.id)}
+                style={{ borderBottom: '1px solid #ddd', verticalAlign: 'top' }}
+              >
                 <td style={{ padding: '0.5rem', whiteSpace: 'nowrap' }}>
                   {row.sampledAt.toISOString().replace('T', ' ').slice(0, 19)}
                 </td>
@@ -289,13 +314,24 @@ export default async function QualityAdminPage({ searchParams }: PageProps) {
                     </div>
                   ) : null}
                   {row.note ? (
-                    <div style={{ color: '#444', fontSize: '0.85em', marginTop: '4px', whiteSpace: 'pre-wrap', maxWidth: 200 }}>
+                    <div
+                      style={{
+                        color: '#444',
+                        fontSize: '0.85em',
+                        marginTop: '4px',
+                        whiteSpace: 'pre-wrap',
+                        maxWidth: 200,
+                      }}
+                    >
                       {row.note}
                     </div>
                   ) : null}
                 </td>
                 <td style={{ padding: '0.5rem' }}>
-                  <form action={updateQaReviewFormAction} style={{ display: 'grid', gap: 4, minWidth: 220 }}>
+                  <form
+                    action={updateQaReviewFormAction}
+                    style={{ display: 'grid', gap: 4, minWidth: 220 }}
+                  >
                     <input type="hidden" name="token" value={token} />
                     <input type="hidden" name="reviewId" value={String(row.id)} />
 
@@ -307,10 +343,23 @@ export default async function QualityAdminPage({ searchParams }: PageProps) {
                       ))}
                     </select>
 
-                    <div style={{ fontSize: '0.85em', color: '#555', marginTop: 4 }}>Checklist:</div>
+                    <div style={{ fontSize: '0.85em', color: '#555', marginTop: 4 }}>
+                      Checklist:
+                    </div>
                     {(Object.entries(checklistLabels) as [string, string][]).map(([key, label]) => (
-                      <label key={key} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85em' }}>
-                        {checkboxSelect(key, row.checklist?.[key as keyof typeof row.checklist] ?? null)}
+                      <label
+                        key={key}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 6,
+                          fontSize: '0.85em',
+                        }}
+                      >
+                        {checkboxSelect(
+                          key,
+                          row.checklist?.[key as keyof typeof row.checklist] ?? null,
+                        )}
                         <span>{label}</span>
                       </label>
                     ))}

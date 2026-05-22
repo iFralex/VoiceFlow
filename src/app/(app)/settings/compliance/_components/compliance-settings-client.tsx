@@ -68,16 +68,16 @@ export function ComplianceSettingsClient({
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
-        <p className="text-sm text-muted-foreground">{t('description')}</p>
+        <p className="text-muted-foreground text-sm">{t('description')}</p>
       </div>
 
-      <section className="rounded-lg border p-4 space-y-4">
+      <section className="space-y-4 rounded-lg border p-4">
         <div>
           <h2 className="text-sm font-semibold">{t('rights_title')}</h2>
-          <p className="text-sm text-muted-foreground">{t('rights_description')}</p>
+          <p className="text-muted-foreground text-sm">{t('rights_description')}</p>
         </div>
 
-        <div className="space-y-2 max-w-lg">
+        <div className="max-w-lg space-y-2">
           <label htmlFor="gdpr-identifier" className="text-sm font-medium">
             {t('identifier_label')}
           </label>
@@ -88,14 +88,11 @@ export function ComplianceSettingsClient({
             onChange={(e) => setIdentifier(e.target.value)}
             disabled={exportPending}
           />
-          <p className="text-xs text-muted-foreground">{t('identifier_hint')}</p>
+          <p className="text-muted-foreground text-xs">{t('identifier_hint')}</p>
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <Button
-            onClick={handleExport}
-            disabled={exportPending || !identifier.trim()}
-          >
+          <Button onClick={handleExport} disabled={exportPending || !identifier.trim()}>
             {exportPending ? t('export_submitting') : t('export_button')}
           </Button>
           {canErase && (
@@ -110,7 +107,7 @@ export function ComplianceSettingsClient({
         </div>
 
         {lastExport && (
-          <div className="rounded-md border bg-muted/30 p-3 text-sm space-y-1">
+          <div className="bg-muted/30 space-y-1 rounded-md border p-3 text-sm">
             <p className="font-medium">{t('export_ready_title')}</p>
             <p className="text-muted-foreground">
               {t('export_ready_expires', { date: new Date(lastExport.expiresAt).toLocaleString() })}
@@ -127,40 +124,41 @@ export function ComplianceSettingsClient({
         )}
       </section>
 
-      <section className="rounded-lg border p-4 space-y-3">
+      <section className="space-y-3 rounded-lg border p-4">
         <div className="flex items-baseline justify-between gap-2">
           <div>
             <h2 className="text-sm font-semibold">{t('history_title')}</h2>
-            <p className="text-sm text-muted-foreground">{t('history_description')}</p>
+            <p className="text-muted-foreground text-sm">{t('history_description')}</p>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={refreshHistory}
-            disabled={historyPending}
-          >
+          <Button variant="outline" size="sm" onClick={refreshHistory} disabled={historyPending}>
             {historyPending ? t('history_refreshing') : t('history_refresh')}
           </Button>
         </div>
 
         {history.length === 0 ? (
-          <EmptyState title={t('history_empty_title')} description={t('history_empty_description')} />
+          <EmptyState
+            title={t('history_empty_title')}
+            description={t('history_empty_description')}
+          />
         ) : (
           <ul className="divide-y rounded-md border">
             {history.map((entry) => (
-              <li key={entry.id} className="flex flex-col gap-1 p-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+              <li
+                key={entry.id}
+                className="flex flex-col gap-1 p-3 text-sm sm:flex-row sm:items-center sm:justify-between"
+              >
                 <div>
                   <p className="font-medium">
                     {entry.action === 'compliance.gdpr_export'
                       ? t('history_action_export')
                       : t('history_action_erasure')}
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     {new Date(entry.createdAt).toLocaleString()} ·{' '}
                     {entry.actorEmail ?? t('history_actor_system')}
                   </p>
                 </div>
-                <p className="text-xs text-muted-foreground sm:text-right">
+                <p className="text-muted-foreground text-xs sm:text-right">
                   {formatHistoryMetadata(entry, t)}
                 </p>
               </li>
@@ -169,10 +167,10 @@ export function ComplianceSettingsClient({
         )}
       </section>
 
-      <section className="rounded-lg border p-4 space-y-3">
+      <section className="space-y-3 rounded-lg border p-4">
         <div>
           <h2 className="text-sm font-semibold">{t('docs_title')}</h2>
-          <p className="text-sm text-muted-foreground">{t('docs_description')}</p>
+          <p className="text-muted-foreground text-sm">{t('docs_description')}</p>
         </div>
         <ul className="space-y-2 text-sm">
           <li>
@@ -264,7 +262,7 @@ function EraseDialog({ open, onOpenChange, identifier, onCompleted }: EraseDialo
               autoComplete="off"
               disabled={pending}
             />
-            <p className="text-xs text-muted-foreground">{t('erase_confirm_phone_hint')}</p>
+            <p className="text-muted-foreground text-xs">{t('erase_confirm_phone_hint')}</p>
           </div>
           <div className="space-y-1">
             <label className="text-sm font-medium" htmlFor="erase-reason">

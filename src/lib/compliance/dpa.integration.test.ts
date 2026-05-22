@@ -31,11 +31,7 @@ vi.mock('@/lib/db/context', async () => ({
   withOrgContext: vi.fn(),
 }));
 
-import {
-  CURRENT_DPA_VERSION,
-  getDpaStatus,
-  recordDpaAcceptance,
-} from '@/lib/compliance/dpa';
+import { CURRENT_DPA_VERSION, getDpaStatus, recordDpaAcceptance } from '@/lib/compliance/dpa';
 import { withOrgContext, withSystemContext } from '@/lib/db/context';
 import { auditLog, organizations } from '@/lib/db/schema';
 import { type DbTx as TestDbTx, withTestDb } from '@/test/db';
@@ -64,21 +60,18 @@ async function seedOrg(tx: TestDbTx): Promise<void> {
 }
 
 describe('DPA acceptance gate integration', () => {
-  it.skipIf(skipWhenNoDb)(
-    'reports never_accepted for an org with no acceptance row',
-    async () => {
-      await withTestDb(async (tx) => {
-        await seedOrg(tx);
-        bindContextsTo(tx);
+  it.skipIf(skipWhenNoDb)('reports never_accepted for an org with no acceptance row', async () => {
+    await withTestDb(async (tx) => {
+      await seedOrg(tx);
+      bindContextsTo(tx);
 
-        const status = await getDpaStatus(ORG);
-        expect(status.state).toBe('never_accepted');
-        if (status.state === 'never_accepted') {
-          expect(status.currentVersion).toBe(CURRENT_DPA_VERSION);
-        }
-      });
-    },
-  );
+      const status = await getDpaStatus(ORG);
+      expect(status.state).toBe('never_accepted');
+      if (status.state === 'never_accepted') {
+        expect(status.currentVersion).toBe(CURRENT_DPA_VERSION);
+      }
+    });
+  });
 
   it.skipIf(skipWhenNoDb)(
     'reports current after recording an acceptance for the current version',
@@ -168,9 +161,7 @@ describe('DPA acceptance gate integration', () => {
         });
 
         // Most recent re-acceptance for the current version.
-        await tx.execute(
-          sql`SELECT pg_sleep(0.001)`,
-        ); // ensure ordering by created_at differs even on fast inserts
+        await tx.execute(sql`SELECT pg_sleep(0.001)`); // ensure ordering by created_at differs even on fast inserts
         await recordDpaAcceptance({
           orgId: ORG,
           userId: ACTOR_USER,

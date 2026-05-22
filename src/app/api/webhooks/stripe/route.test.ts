@@ -196,9 +196,8 @@ function setupUpdate(): void {
 describe('POST /api/webhooks/stripe', () => {
   beforeEach(() => {
     vi.resetAllMocks();
-    mockWithSystemContext.mockImplementation(
-      async (fn: (tx: unknown) => Promise<unknown>) =>
-        fn({ insert: mockInsert, update: mockUpdate, select: mockSelect }),
+    mockWithSystemContext.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) =>
+      fn({ insert: mockInsert, update: mockUpdate, select: mockSelect }),
     );
     mockTopUp.mockResolvedValue(undefined);
     mockAdjust.mockResolvedValue(undefined);
@@ -305,7 +304,9 @@ describe('POST /api/webhooks/stripe', () => {
       };
       const event = makeStripeEvent('checkout.session.completed', session);
       mockConstructEvent.mockReturnValue(event);
-      mockInvoicesRetrieve.mockResolvedValue({ hosted_invoice_url: 'https://invoice.stripe.com/i/123' });
+      mockInvoicesRetrieve.mockResolvedValue({
+        hosted_invoice_url: 'https://invoice.stripe.com/i/123',
+      });
       setupNewEvent();
       setupUpdate();
 
@@ -581,9 +582,11 @@ describe('POST /api/webhooks/stripe', () => {
       mockUpdate.mockReturnValue({
         set: vi.fn(() => ({
           where: vi.fn().mockResolvedValue(undefined),
-          returning: vi.fn().mockResolvedValue([
-            { id: PAYMENT_ROW_ID, org_id: ORG_ID, amount_cents: 29900, package_id: PACKAGE_ID },
-          ]),
+          returning: vi
+            .fn()
+            .mockResolvedValue([
+              { id: PAYMENT_ROW_ID, org_id: ORG_ID, amount_cents: 29900, package_id: PACKAGE_ID },
+            ]),
         })),
       });
       mockTopUp.mockRejectedValue(new Error('ledger write failed'));

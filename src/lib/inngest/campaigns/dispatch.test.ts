@@ -386,9 +386,7 @@ describe('verifyContactStillEligible', () => {
 
   it('throws ContactNotEligibleError when contact not found', async () => {
     setupContactQuery(null);
-    await expect(verifyContactStillEligible(ORG, CONTACT)).rejects.toThrow(
-      ContactNotEligibleError,
-    );
+    await expect(verifyContactStillEligible(ORG, CONTACT)).rejects.toThrow(ContactNotEligibleError);
   });
 
   it('throws ContactNotEligibleError when contact deleted', async () => {
@@ -509,9 +507,9 @@ describe('campaignDispatchCallHandler', () => {
         return {
           from: vi.fn(() => ({
             where: vi.fn(() => ({
-              limit: vi.fn().mockResolvedValue([
-                { deleted_at: null, opt_out: false, rpo_status: 'clear' },
-              ]),
+              limit: vi
+                .fn()
+                .mockResolvedValue([{ deleted_at: null, opt_out: false, rpo_status: 'clear' }]),
             })),
           })),
         };
@@ -621,9 +619,9 @@ describe('campaignDispatchCallHandler', () => {
       return {
         from: vi.fn(() => ({
           where: vi.fn(() => ({
-            limit: vi.fn().mockResolvedValue([
-              { deleted_at: null, opt_out: true, rpo_status: 'clear' },
-            ]),
+            limit: vi
+              .fn()
+              .mockResolvedValue([{ deleted_at: null, opt_out: true, rpo_status: 'clear' }]),
           })),
         })),
       };
@@ -661,9 +659,9 @@ describe('campaignDispatchCallHandler', () => {
         return {
           from: vi.fn(() => ({
             where: vi.fn(() => ({
-              limit: vi.fn().mockResolvedValue([
-                { deleted_at: null, opt_out: false, rpo_status: 'clear' },
-              ]),
+              limit: vi
+                .fn()
+                .mockResolvedValue([{ deleted_at: null, opt_out: false, rpo_status: 'clear' }]),
             })),
           })),
         };
@@ -724,9 +722,9 @@ describe('campaignDispatchCallHandler', () => {
         return {
           from: vi.fn(() => ({
             where: vi.fn(() => ({
-              limit: vi.fn().mockResolvedValue([
-                { deleted_at: null, opt_out: false, rpo_status: 'clear' },
-              ]),
+              limit: vi
+                .fn()
+                .mockResolvedValue([{ deleted_at: null, opt_out: false, rpo_status: 'clear' }]),
             })),
           })),
         };
@@ -790,9 +788,9 @@ describe('campaignDispatchCallHandler', () => {
         return {
           from: vi.fn(() => ({
             where: vi.fn(() => ({
-              limit: vi.fn().mockResolvedValue([
-                { deleted_at: null, opt_out: false, rpo_status: 'clear' },
-              ]),
+              limit: vi
+                .fn()
+                .mockResolvedValue([{ deleted_at: null, opt_out: false, rpo_status: 'clear' }]),
             })),
           })),
         };
@@ -886,9 +884,13 @@ describe('campaignDispatchCallHandler', () => {
         return {
           from: vi.fn(() => ({
             where: vi.fn(() => ({
-              limit: vi.fn().mockResolvedValue([{
-                deleted_at: null, opt_out: false, rpo_status: 'clear',
-              }]),
+              limit: vi.fn().mockResolvedValue([
+                {
+                  deleted_at: null,
+                  opt_out: false,
+                  rpo_status: 'clear',
+                },
+              ]),
             })),
           })),
         };
@@ -1102,7 +1104,13 @@ describe('onDispatchFailure', () => {
       from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([]) })),
     });
 
-    await onDispatchFailure({ campaignId: CAMPAIGN, orgId: ORG, contactId: CONTACT, callId: CALL, attempt: 1 });
+    await onDispatchFailure({
+      campaignId: CAMPAIGN,
+      orgId: ORG,
+      contactId: CONTACT,
+      callId: CALL,
+      attempt: 1,
+    });
 
     expect(mockUpdate).toHaveBeenCalledOnce();
     expect(mockSet).toHaveBeenCalledWith({ status: 'failed', error_code: 'provider_error' });
@@ -1113,7 +1121,13 @@ describe('onDispatchFailure', () => {
       from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([]) })),
     });
 
-    await onDispatchFailure({ campaignId: CAMPAIGN, orgId: ORG, contactId: CONTACT, callId: CALL, attempt: 1 });
+    await onDispatchFailure({
+      campaignId: CAMPAIGN,
+      orgId: ORG,
+      contactId: CONTACT,
+      callId: CALL,
+      attempt: 1,
+    });
 
     // Degradation check ran (select was called for degradation query)
     expect(mockSelect).toHaveBeenCalled();
@@ -1138,7 +1152,13 @@ describe('onDispatchFailure', () => {
 
     // Should resolve without throwing despite degradation check failure
     await expect(
-      onDispatchFailure({ campaignId: CAMPAIGN, orgId: ORG, contactId: CONTACT, callId: CALL, attempt: 1 }),
+      onDispatchFailure({
+        campaignId: CAMPAIGN,
+        orgId: ORG,
+        contactId: CONTACT,
+        callId: CALL,
+        attempt: 1,
+      }),
     ).resolves.toBeUndefined();
   });
 });
@@ -1378,7 +1398,9 @@ describe('campaignDispatchCallHandler — quota gates', () => {
         return {
           from: vi.fn(() => ({
             where: vi.fn(() => ({
-              limit: vi.fn().mockResolvedValue([{ deleted_at: null, opt_out: false, rpo_status: 'clear' }]),
+              limit: vi
+                .fn()
+                .mockResolvedValue([{ deleted_at: null, opt_out: false, rpo_status: 'clear' }]),
             })),
           })),
         };
@@ -1663,9 +1685,9 @@ describe('campaignDispatchCallHandler — verify-rpo integration', () => {
         return {
           from: vi.fn(() => ({
             where: vi.fn(() => ({
-              limit: vi.fn().mockResolvedValue([
-                { deleted_at: null, opt_out: false, rpo_status: 'clear' },
-              ]),
+              limit: vi
+                .fn()
+                .mockResolvedValue([{ deleted_at: null, opt_out: false, rpo_status: 'clear' }]),
             })),
           })),
         };
@@ -1687,9 +1709,7 @@ describe('campaignDispatchCallHandler — verify-rpo integration', () => {
         return {
           from: vi.fn(() => ({
             where: vi.fn(() => ({
-              limit: vi.fn().mockResolvedValue(
-                verifyRpoContactRow ? [verifyRpoContactRow] : [],
-              ),
+              limit: vi.fn().mockResolvedValue(verifyRpoContactRow ? [verifyRpoContactRow] : []),
             })),
           })),
         };
@@ -1772,9 +1792,9 @@ describe('campaignDispatchCallHandler — verify-rpo integration', () => {
         return {
           from: vi.fn(() => ({
             where: vi.fn(() => ({
-              limit: vi.fn().mockResolvedValue([
-                { deleted_at: null, opt_out: false, rpo_status: 'clear' },
-              ]),
+              limit: vi
+                .fn()
+                .mockResolvedValue([{ deleted_at: null, opt_out: false, rpo_status: 'clear' }]),
             })),
           })),
         };

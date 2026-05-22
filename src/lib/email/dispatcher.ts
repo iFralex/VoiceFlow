@@ -58,10 +58,7 @@ function prefColumn(key: OrgPrefKey) {
   return userNotificationPreferences[key];
 }
 
-async function getOrgOwnerRecipients(
-  orgId: string,
-  prefKey: OrgPrefKey,
-): Promise<OrgRecipient[]> {
+async function getOrgOwnerRecipients(orgId: string, prefKey: OrgPrefKey): Promise<OrgRecipient[]> {
   return withSystemContext(async (tx) => {
     const rows = await tx
       .select({
@@ -139,9 +136,7 @@ export async function sendAppointmentBookedEmail(params: {
       .innerJoin(calls, eq(calls.id, appointments.call_id))
       .leftJoin(campaigns, eq(campaigns.id, calls.campaign_id))
       .innerJoin(organizations, eq(organizations.id, appointments.org_id))
-      .where(
-        and(eq(appointments.id, params.appointmentId), eq(appointments.org_id, params.orgId)),
-      );
+      .where(and(eq(appointments.id, params.appointmentId), eq(appointments.org_id, params.orgId)));
     return row;
   });
 
@@ -454,9 +449,7 @@ export async function sendMemberInviteEmail(params: {
       .from(memberships)
       .innerJoin(users, eq(users.id, memberships.user_id))
       .innerJoin(organizations, eq(organizations.id, memberships.org_id))
-      .where(
-        and(eq(memberships.id, params.membershipId), eq(memberships.org_id, params.orgId)),
-      );
+      .where(and(eq(memberships.id, params.membershipId), eq(memberships.org_id, params.orgId)));
     return row;
   });
 
@@ -503,9 +496,7 @@ export async function sendSuspiciousLoginEmail(params: {
       })
       .from(authSignins)
       .innerJoin(users, eq(users.id, authSignins.user_id))
-      .where(
-        and(eq(authSignins.id, params.signinId), eq(authSignins.user_id, params.userId)),
-      );
+      .where(and(eq(authSignins.id, params.signinId), eq(authSignins.user_id, params.userId)));
     return row;
   });
 

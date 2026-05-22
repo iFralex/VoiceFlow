@@ -23,7 +23,9 @@ describe('Legal — Privacy Policy page', () => {
 
   it('renders the data subject rights section', async () => {
     render(await PrivacyPolicyPage());
-    expect(screen.getByRole('heading', { level: 2, name: /diritti dell.?interessato/i })).toBeTruthy();
+    expect(
+      screen.getByRole('heading', { level: 2, name: /diritti dell.?interessato/i }),
+    ).toBeTruthy();
   });
 
   it('renders the draft notice', async () => {

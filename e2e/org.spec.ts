@@ -140,10 +140,13 @@ test.describe('Invite member via magic-link email', () => {
     // Member has a pending (unaccepted) membership → middleware sends to /onboarding
     // until an auto-accept mechanism is implemented. For now, verify they reach the
     // app shell (onboarding or dashboard depending on implementation).
-    await memberPage.waitForURL((url) => {
-      const p = new URL(url).pathname;
-      return p.startsWith('/onboarding') || p.startsWith('/dashboard');
-    }, { timeout: 15_000 });
+    await memberPage.waitForURL(
+      (url) => {
+        const p = new URL(url).pathname;
+        return p.startsWith('/onboarding') || p.startsWith('/dashboard');
+      },
+      { timeout: 15_000 },
+    );
 
     await memberPage.close();
   });

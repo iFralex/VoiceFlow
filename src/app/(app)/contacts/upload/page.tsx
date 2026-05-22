@@ -286,7 +286,7 @@ export default function ContactsUploadPage() {
     <div className="mx-auto max-w-2xl space-y-8">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">{t('upload_title')}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{t('upload_description')}</p>
+        <p className="text-muted-foreground mt-1 text-sm">{t('upload_description')}</p>
       </div>
 
       {/* Step indicator */}
@@ -304,12 +304,10 @@ export default function ContactsUploadPage() {
             >
               {i + 1}
             </div>
-            <span
-              className={`text-sm ${s.id === step ? 'font-medium' : 'text-muted-foreground'}`}
-            >
+            <span className={`text-sm ${s.id === step ? 'font-medium' : 'text-muted-foreground'}`}>
               {s.label}
             </span>
-            {i < steps.length - 1 && <div className="mx-2 h-px w-8 bg-border" />}
+            {i < steps.length - 1 && <div className="bg-border mx-2 h-px w-8" />}
           </div>
         ))}
       </div>
@@ -335,10 +333,10 @@ export default function ContactsUploadPage() {
                 if (e.key === 'Enter' || e.key === ' ') fileInputRef.current?.click();
               }}
             >
-              <CloudUpload className="mb-4 h-10 w-10 text-muted-foreground" />
+              <CloudUpload className="text-muted-foreground mb-4 h-10 w-10" />
               <p className="text-sm font-medium">{t('drop_file_here')}</p>
-              <p className="mt-1 text-sm text-muted-foreground">{t('or_click_to_browse')}</p>
-              <p className="mt-2 text-xs text-muted-foreground">
+              <p className="text-muted-foreground mt-1 text-sm">{t('or_click_to_browse')}</p>
+              <p className="text-muted-foreground mt-2 text-xs">
                 {t('accepted_formats')} &middot; {t('file_size_limit')}
               </p>
             </div>
@@ -356,29 +354,27 @@ export default function ContactsUploadPage() {
                 <div className="flex items-center gap-3">
                   <span className="flex-1 truncate text-sm font-medium">{file.name}</span>
                   {uploadDone && <CheckCircle2 className="h-5 w-5 shrink-0 text-green-600" />}
-                  {uploadError && <AlertCircle className="h-5 w-5 shrink-0 text-destructive" />}
+                  {uploadError && <AlertCircle className="text-destructive h-5 w-5 shrink-0" />}
                 </div>
 
                 {!uploadDone && !uploadError && (
                   <div className="space-y-1">
-                    <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+                    <div className="bg-muted h-2 w-full overflow-hidden rounded-full">
                       <div
-                        className="h-full bg-primary transition-all duration-150"
+                        className="bg-primary h-full transition-all duration-150"
                         style={{ width: `${uploadProgress}%` }}
                       />
                     </div>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-muted-foreground text-xs">
                       {t('uploading')} {uploadProgress}%
                     </p>
                   </div>
                 )}
 
-                {uploadDone && (
-                  <p className="text-xs text-green-600">{t('upload_complete')}</p>
-                )}
-                {uploadError && <p className="text-xs text-destructive">{uploadError}</p>}
+                {uploadDone && <p className="text-xs text-green-600">{t('upload_complete')}</p>}
+                {uploadError && <p className="text-destructive text-xs">{uploadError}</p>}
                 {uploadDone && csvHeaders.length > 0 && !needsMapping && (
-                  <p className="text-xs text-muted-foreground">{t('auto_detected_columns')}</p>
+                  <p className="text-muted-foreground text-xs">{t('auto_detected_columns')}</p>
                 )}
               </div>
             )}
@@ -416,7 +412,7 @@ export default function ContactsUploadPage() {
                     {previewRows.slice(0, 5).map((row, i) => (
                       <tr key={i}>
                         {csvHeaders.map((h) => (
-                          <td key={h} className="border px-2 py-1 text-muted-foreground">
+                          <td key={h} className="text-muted-foreground border px-2 py-1">
                             {row[h] ?? ''}
                           </td>
                         ))}
@@ -514,7 +510,7 @@ export default function ContactsUploadPage() {
               </div>
             </div>
 
-            {mappingError && <p className="text-sm text-destructive">{mappingError}</p>}
+            {mappingError && <p className="text-destructive text-sm">{mappingError}</p>}
           </CardContent>
           <div className="flex justify-between border-t p-4">
             <Button variant="outline" onClick={goBack}>
@@ -591,7 +587,7 @@ export default function ContactsUploadPage() {
               </div>
             </div>
 
-            {complianceError && <p className="text-sm text-destructive">{complianceError}</p>}
+            {complianceError && <p className="text-destructive text-sm">{complianceError}</p>}
           </CardContent>
           <div className="flex justify-between border-t p-4">
             <Button variant="outline" onClick={goBack}>

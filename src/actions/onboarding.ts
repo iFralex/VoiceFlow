@@ -25,9 +25,7 @@ type OnboardingInput = z.infer<typeof onboardingSchema>;
  * sets it as the active org. Records DPA acceptance in the audit log.
  * Redirects to /dashboard on success.
  */
-export async function createOrganizationAndOnboard(
-  input: OnboardingInput,
-): Promise<ActionResult> {
+export async function createOrganizationAndOnboard(input: OnboardingInput): Promise<ActionResult> {
   const parsed = onboardingSchema.safeParse(input);
   if (!parsed.success) {
     const issue = parsed.error.issues[0];
@@ -55,9 +53,7 @@ export async function createOrganizationAndOnboard(
     // Record DPA acceptance in the audit log with IP, user-agent and version.
     const h = await headers();
     const ip =
-      h.get('x-forwarded-for')?.split(',')[0]?.trim() ??
-      h.get('x-real-ip')?.trim() ??
-      null;
+      h.get('x-forwarded-for')?.split(',')[0]?.trim() ?? h.get('x-real-ip')?.trim() ?? null;
     const userAgent = h.get('user-agent') ?? null;
 
     await recordDpaAcceptance({

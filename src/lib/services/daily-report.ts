@@ -117,11 +117,7 @@ export interface RunDailyReportOptions {
 
 interface DailyReportDeps {
   listActiveOrgs: (range: DailyReportRange) => Promise<ActiveOrgRow[]>;
-  buildData: (
-    orgId: string,
-    orgName: string,
-    range: DailyReportRange,
-  ) => Promise<DailyReportData>;
+  buildData: (orgId: string, orgName: string, range: DailyReportRange) => Promise<DailyReportData>;
   listRecipients: (orgId: string) => Promise<DailyReportRecipient[]>;
   writeAudit: (
     orgId: string,
@@ -184,7 +180,11 @@ export async function runDailyReport(
           sent++;
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
-          void logger.error('[daily-report] recipient failed', { org_id: org.id, user_id: recipient.userId, error: msg });
+          void logger.error('[daily-report] recipient failed', {
+            org_id: org.id,
+            user_id: recipient.userId,
+            error: msg,
+          });
         }
       }
 
@@ -214,9 +214,7 @@ export async function runDailyReport(
         error: message,
       });
       orgsFailed++;
-      await deps
-        .writeAudit(org.id, 'failed', { error: message })
-        .catch(() => undefined);
+      await deps.writeAudit(org.id, 'failed', { error: message }).catch(() => undefined);
     }
   }
 
@@ -373,8 +371,7 @@ async function recentAppointmentsForRange(
 
   return rows.map((r) => ({
     id: r.id,
-    contactName:
-      [r.contactFirst, r.contactLast].filter(Boolean).join(' ') || r.contactPhone,
+    contactName: [r.contactFirst, r.contactLast].filter(Boolean).join(' ') || r.contactPhone,
     scheduledAt: r.scheduledAt,
     campaignName: r.campaignName ?? '',
   }));
@@ -402,20 +399,13 @@ async function fetchActiveOrgs(range: DailyReportRange): Promise<ActiveOrgRow[]>
     const rows = await tx
       .select({ id: organizations.id, name: organizations.name })
       .from(organizations)
-      .where(
-        and(
-          inArray(organizations.id, ids),
-          sql`${organizations.deleted_at} IS NULL`,
-        ),
-      )
+      .where(and(inArray(organizations.id, ids), sql`${organizations.deleted_at} IS NULL`))
       .orderBy(organizations.id);
     return rows;
   });
 }
 
-export async function getDailyReportRecipients(
-  orgId: string,
-): Promise<DailyReportRecipient[]> {
+export async function getDailyReportRecipients(orgId: string): Promise<DailyReportRecipient[]> {
   return withSystemContext(async (tx) => {
     // Owners are the default recipient pool; other roles never receive the
     // daily report regardless of their per-user preferences.
@@ -439,7 +429,12 @@ export async function getDailyReportRecipients(
     if (rows.length === 0) return [];
 
     const eligibleIds = new Set(
-      await filterRecipientsByPreference(tx, orgId, rows.map((r) => r.userId), 'daily_report'),
+      await filterRecipientsByPreference(
+        tx,
+        orgId,
+        rows.map((r) => r.userId),
+        'daily_report',
+      ),
     );
 
     return rows
@@ -604,10 +599,7 @@ interface RateLimiter {
   acquire(): Promise<void>;
 }
 
-function createRateLimiter(
-  perSecond: number,
-  sleep: (ms: number) => Promise<void>,
-): RateLimiter {
+function createRateLimiter(perSecond: number, sleep: (ms: number) => Promise<void>): RateLimiter {
   if (perSecond <= 0) {
     return { acquire: async () => undefined };
   }

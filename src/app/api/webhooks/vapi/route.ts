@@ -83,9 +83,7 @@ function buildProviderEventId(providerCallId: string, eventType: string, extra?:
  * Maps a Vapi `status-update` status value to our call status enum.
  * Returns null when the status has no meaningful mapping (no DB write needed).
  */
-function mapVapiStatusToCallStatus(
-  vapiStatus: string,
-): 'dialing' | 'in_progress' | null {
+function mapVapiStatusToCallStatus(vapiStatus: string): 'dialing' | 'in_progress' | null {
   switch (vapiStatus.toLowerCase()) {
     case 'queued':
     case 'ringing':
@@ -144,8 +142,7 @@ export async function POST(request: Request): Promise<Response> {
   // on first event and resolves it back via provider_call_id thereafter.
   const isInbound =
     !callId &&
-    (msg.call?.type === 'inboundPhoneCall' ||
-      typeof msg.call?.customer?.number === 'string');
+    (msg.call?.type === 'inboundPhoneCall' || typeof msg.call?.customer?.number === 'string');
 
   const providerEventId = buildProviderEventId(
     providerCallId,
@@ -218,7 +215,11 @@ export async function POST(request: Request): Promise<Response> {
       // ── tool / function call ──────────────────────────────────────────────
       case 'function-call': {
         if (callId && msg.functionCall) {
-          await recordToolInvocation(callId, msg.functionCall.name, msg.functionCall.parameters ?? null);
+          await recordToolInvocation(
+            callId,
+            msg.functionCall.name,
+            msg.functionCall.parameters ?? null,
+          );
         } else if (isInbound && msg.functionCall?.name === 'register_inbound_optout') {
           // Always use Vapi's verified caller number — the LLM-supplied
           // `callerNumber` argument is untrusted (a caller could social-engineer
@@ -250,23 +251,14 @@ export async function POST(request: Request): Promise<Response> {
             // Guard against overwriting a terminal status with 'dialing' when
             // delayed/out-of-order webhooks arrive.
             const [row] = await withSystemContext((tx) =>
-              tx
-                .select({ org_id: calls.org_id })
-                .from(calls)
-                .where(eq(calls.id, callId))
-                .limit(1),
+              tx.select({ org_id: calls.org_id }).from(calls).where(eq(calls.id, callId)).limit(1),
             );
             if (row) {
               await withOrgContext(row.org_id, async (tx) => {
                 await tx
                   .update(calls)
                   .set({ status: 'dialing' })
-                  .where(
-                    and(
-                      eq(calls.id, callId),
-                      inArray(calls.status, ['pending', 'dialing']),
-                    ),
-                  );
+                  .where(and(eq(calls.id, callId), inArray(calls.status, ['pending', 'dialing'])));
               });
             }
           }

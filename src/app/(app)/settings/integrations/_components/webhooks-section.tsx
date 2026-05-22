@@ -69,14 +69,19 @@ function RotateSecretButton({ webhookId }: { webhookId: string }) {
         loading={isPending}
       />
 
-      <Dialog open={!!secret} onOpenChange={(v) => { if (!v) setSecret(null); }}>
+      <Dialog
+        open={!!secret}
+        onOpenChange={(v) => {
+          if (!v) setSecret(null);
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t('secret_rotated_title')}</DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-muted-foreground">{t('webhook_secret_description')}</p>
-          <div className="flex items-center gap-2 rounded-md border bg-muted px-3 py-2">
-            <code className="flex-1 break-all text-xs">{secret}</code>
+          <p className="text-muted-foreground text-sm">{t('webhook_secret_description')}</p>
+          <div className="bg-muted flex items-center gap-2 rounded-md border px-3 py-2">
+            <code className="flex-1 text-xs break-all">{secret}</code>
             <Button
               type="button"
               variant="ghost"
@@ -138,7 +143,9 @@ export function WebhooksSection({ webhooks }: Props) {
       return <Badge variant="destructive">{t('status_inactive')}</Badge>;
     }
     if (webhook.failure_count > 0) {
-      return <Badge variant="outline">{t('status_cooling', { count: webhook.failure_count })}</Badge>;
+      return (
+        <Badge variant="outline">{t('status_cooling', { count: webhook.failure_count })}</Badge>
+      );
     }
     return <Badge variant="secondary">{t('status_active')}</Badge>;
   }
@@ -148,7 +155,7 @@ export function WebhooksSection({ webhooks }: Props) {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold">{t('title')}</h2>
-          <p className="text-sm text-muted-foreground">{t('description')}</p>
+          <p className="text-muted-foreground text-sm">{t('description')}</p>
         </div>
         <CreateWebhookDialog />
       </div>
@@ -159,7 +166,7 @@ export function WebhooksSection({ webhooks }: Props) {
         <div className="rounded-md border">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b bg-muted/50">
+              <tr className="bg-muted/50 border-b">
                 <th className="px-4 py-3 text-left font-medium">{t('column_url')}</th>
                 <th className="px-4 py-3 text-left font-medium">{t('column_events')}</th>
                 <th className="px-4 py-3 text-left font-medium">{t('column_status')}</th>
@@ -171,21 +178,21 @@ export function WebhooksSection({ webhooks }: Props) {
               {webhooks.map((webhook) => (
                 <tr key={webhook.id} className="border-b last:border-0">
                   <td className="max-w-xs px-4 py-3">
-                    <span className="block truncate text-xs font-mono" title={webhook.url}>
+                    <span className="block truncate font-mono text-xs" title={webhook.url}>
                       {webhook.url}
                     </span>
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap gap-1">
                       {webhook.event_types.map((et) => (
-                        <span key={et} className="rounded bg-muted px-1.5 py-0.5 text-xs font-mono">
+                        <span key={et} className="bg-muted rounded px-1.5 py-0.5 font-mono text-xs">
                           {et}
                         </span>
                       ))}
                     </div>
                   </td>
                   <td className="px-4 py-3">{getStatusBadge(webhook)}</td>
-                  <td className="px-4 py-3 text-muted-foreground text-xs">
+                  <td className="text-muted-foreground px-4 py-3 text-xs">
                     {webhook.last_delivery_at
                       ? new Date(webhook.last_delivery_at).toLocaleString('it-IT')
                       : '—'}

@@ -474,11 +474,11 @@ describe('chargeForCall', () => {
     process.env['CREDIT_SOFT_THRESHOLD_MINUTES'] = '30';
 
     selectResults.push([{ balance_after_cents: 3000 }]); // lockBalance (charge tx)
-    insertResults.push([LEDGER_ROW]);                     // insert charge entry
+    insertResults.push([LEDGER_ROW]); // insert charge entry
     // maybeEmitLowBalanceAlert → withOrgContext → weightedAvgCentsPerMinute
     selectResults.push([{ delta_cents: 2990, reference_id: PAYMENT_INTENT_ID }]); // topups
-    selectResults.push([{ package_id: PACKAGE_ID }]);                            // payment
-    selectResults.push([{ included_minutes: 700 }]);                             // package
+    selectResults.push([{ package_id: PACKAGE_ID }]); // payment
+    selectResults.push([{ included_minutes: 700 }]); // package
     // maybeEmitLowBalanceAlert → withSystemContext → auditLog check
     selectResults.push([]); // no prior alert today
 

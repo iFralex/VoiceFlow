@@ -17,9 +17,7 @@ describe('Button', () => {
   it.each(['default', 'outline', 'secondary', 'ghost', 'destructive', 'link'] as const)(
     'renders variant %s without errors',
     (variant) => {
-      const { container, unmount } = render(
-        <Button variant={variant}>{variant}</Button>,
-      );
+      const { container, unmount } = render(<Button variant={variant}>{variant}</Button>);
       expect(container.querySelector('button')).not.toBeNull();
       unmount();
     },

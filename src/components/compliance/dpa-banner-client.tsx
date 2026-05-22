@@ -14,11 +14,7 @@ export interface DpaBannerClientProps {
   currentVersion: string;
 }
 
-export function DpaBannerClient({
-  state,
-  acceptedVersion,
-  currentVersion,
-}: DpaBannerClientProps) {
+export function DpaBannerClient({ state, acceptedVersion, currentVersion }: DpaBannerClientProps) {
   const t = useTranslations('compliance_settings');
   const [isPending, startTransition] = useTransition();
 

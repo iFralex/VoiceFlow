@@ -122,10 +122,7 @@ export async function revokePat(patId: string, byUserId: string, orgId: string):
 /**
  * Lists active (non-revoked, non-expired) PATs for a user within an org.
  */
-export async function listPats(
-  userId: string,
-  orgId: string,
-): Promise<PersonalAccessToken[]> {
+export async function listPats(userId: string, orgId: string): Promise<PersonalAccessToken[]> {
   return withOrgContext(orgId, async (tx) => {
     return tx
       .select()
@@ -135,7 +132,10 @@ export async function listPats(
           eq(personalAccessTokens.user_id, userId),
           eq(personalAccessTokens.org_id, orgId),
           isNull(personalAccessTokens.revoked_at),
-          or(isNull(personalAccessTokens.expires_at), gt(personalAccessTokens.expires_at, new Date())),
+          or(
+            isNull(personalAccessTokens.expires_at),
+            gt(personalAccessTokens.expires_at, new Date()),
+          ),
         ),
       );
   });

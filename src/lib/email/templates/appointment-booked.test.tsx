@@ -17,7 +17,7 @@ function buildProps(
     serviceType: 'Tagliando',
     campaignName: 'Campagna Primavera 2026',
     transcriptSnippet:
-      "Ho parlato con il signor Bianchi e abbiamo concordato un appuntamento per il tagliando.",
+      'Ho parlato con il signor Bianchi e abbiamo concordato un appuntamento per il tagliando.',
     callDetailUrl: 'https://app.example.com/calls/call-123',
     preferencesUrl: 'https://app.example.com/settings/notifications',
     appUrl: 'https://app.example.com',
@@ -56,9 +56,7 @@ describe('renderAppointmentBookedEmail', () => {
     const result = await renderAppointmentBookedEmail(buildProps());
 
     expect(result.html).toContain('Estratto dalla chiamata');
-    expect(result.html).toContain(
-      "Ho parlato con il signor Bianchi",
-    );
+    expect(result.html).toContain('Ho parlato con il signor Bianchi');
   });
 
   it('omits transcript section when snippet is absent', async () => {
@@ -78,9 +76,7 @@ describe('renderAppointmentBookedEmail', () => {
   });
 
   it('falls back to org name when recipient name is blank', async () => {
-    const result = await renderAppointmentBookedEmail(
-      buildProps({ recipientName: '   ' }),
-    );
+    const result = await renderAppointmentBookedEmail(buildProps({ recipientName: '   ' }));
 
     expect(result.html).toContain('Ciao Acme Auto');
   });

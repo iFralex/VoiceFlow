@@ -45,19 +45,9 @@ export {
   CLI_RETIRED_EVENT,
   SBC_SMOKE_TEST_FAILED_EVENT,
 } from './handlers/cli';
-export type {
-  CliCoolingDownData,
-  CliRetiredData,
-  SbcSmokeTestFailedData,
-} from './handlers/cli';
-export {
-  CONTACTS_IMPORT_REQUESTED,
-  CONTACTS_IMPORT_COMPLETED,
-} from './contacts/events';
-export type {
-  ContactsImportRequestedData,
-  ContactsImportCompletedData,
-} from './contacts/events';
+export type { CliCoolingDownData, CliRetiredData, SbcSmokeTestFailedData } from './handlers/cli';
+export { CONTACTS_IMPORT_REQUESTED, CONTACTS_IMPORT_COMPLETED } from './contacts/events';
+export type { ContactsImportRequestedData, ContactsImportCompletedData } from './contacts/events';
 export { processContactsImport } from './contacts/import';
 export {
   CALL_COMPLETED_EVENT,

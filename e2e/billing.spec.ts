@@ -112,9 +112,7 @@ test.describe('Credit top-up page', () => {
     await expect(userPage.getByText(/1\.999|1999/)).toBeVisible();
 
     // Proceed button
-    await expect(
-      userPage.getByRole('button', { name: /procedi al pagamento/i }),
-    ).toBeVisible();
+    await expect(userPage.getByRole('button', { name: /procedi al pagamento/i })).toBeVisible();
   });
 
   test('first package is selected by default', async () => {
@@ -346,9 +344,7 @@ test.describe('Billing — full Stripe Checkout flow', () => {
    * does not trigger SCA for this card), the test records a note and skips the
    * challenge interaction — the redirect flow is still exercised.
    */
-  test('SCA card (3DS): 4000 0025 0000 3155 → complete 3DS → success page', async ({
-    browser,
-  }) => {
+  test('SCA card (3DS): 4000 0025 0000 3155 → complete 3DS → success page', async ({ browser }) => {
     const context = await browser.newContext();
     const page = await context.newPage();
 
@@ -372,7 +368,10 @@ test.describe('Billing — full Stripe Checkout flow', () => {
       await page.goto('/credit/topup');
       await page.waitForLoadState('networkidle');
 
-      await page.getByRole('button', { name: /^test$/i }).first().click();
+      await page
+        .getByRole('button', { name: /^test$/i })
+        .first()
+        .click();
       await page.getByRole('button', { name: /procedi al pagamento/i }).click();
 
       await page.waitForURL(/checkout\.stripe\.com/, { timeout: 30_000 });
@@ -404,9 +403,10 @@ test.describe('Billing — full Stripe Checkout flow', () => {
         await completeBtn.click();
       } else {
         // 3DS frame not found — environment may not trigger SCA for this card
-        test
-          .info()
-          .annotations.push({ type: 'note', description: '3DS challenge frame not found — skipped' });
+        test.info().annotations.push({
+          type: 'note',
+          description: '3DS challenge frame not found — skipped',
+        });
       }
 
       // After 3DS resolution, redirect to success page

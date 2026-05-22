@@ -57,7 +57,9 @@ export function Shell({ children, orgs = [], activeOrgId = null, creditBalance }
     try {
       window.localStorage.setItem(SIDEBAR_STORAGE_KEY, String(next));
       // Dispatch a storage event so other tabs and useSyncExternalStore pick up the change
-      window.dispatchEvent(new StorageEvent('storage', { key: SIDEBAR_STORAGE_KEY, newValue: String(next) }));
+      window.dispatchEvent(
+        new StorageEvent('storage', { key: SIDEBAR_STORAGE_KEY, newValue: String(next) }),
+      );
     } catch {
       // ignore
     }
@@ -70,21 +72,27 @@ export function Shell({ children, orgs = [], activeOrgId = null, creditBalance }
         data-testid="app-sidebar"
         data-collapsed={collapsed}
         className={cn(
-          'hidden shrink-0 flex-col border-r bg-background transition-[width] duration-200 md:flex',
+          'bg-background hidden shrink-0 flex-col border-r transition-[width] duration-200 md:flex',
           collapsed ? 'w-16' : 'w-60',
         )}
       >
-        <Sidebar collapsed={collapsed} onToggle={handleToggle} orgs={orgs} activeOrgId={activeOrgId} />
+        <Sidebar
+          collapsed={collapsed}
+          onToggle={handleToggle}
+          orgs={orgs}
+          activeOrgId={activeOrgId}
+        />
       </aside>
 
       {/* ── Mobile: sidebar inside a Sheet ──────────────────────────────── */}
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-        <SheetContent
-          side="left"
-          className="w-60 p-0"
-          aria-label={t('mobile_nav_label')}
-        >
-          <Sidebar collapsed={false} onToggle={() => setMobileOpen(false)} orgs={orgs} activeOrgId={activeOrgId} />
+        <SheetContent side="left" className="w-60 p-0" aria-label={t('mobile_nav_label')}>
+          <Sidebar
+            collapsed={false}
+            onToggle={() => setMobileOpen(false)}
+            orgs={orgs}
+            activeOrgId={activeOrgId}
+          />
         </SheetContent>
       </Sheet>
 

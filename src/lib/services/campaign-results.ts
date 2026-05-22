@@ -54,7 +54,13 @@ export type CampaignResultsFilters = {
 export type CampaignResultsPage = {
   page: number;
   pageSize: number;
-  sort?: 'started_desc' | 'started_asc' | 'duration_desc' | 'duration_asc' | 'cost_desc' | 'cost_asc';
+  sort?:
+    | 'started_desc'
+    | 'started_asc'
+    | 'duration_desc'
+    | 'duration_asc'
+    | 'cost_desc'
+    | 'cost_asc';
 };
 
 export type CampaignResultsResponse = {
@@ -126,10 +132,7 @@ export async function listCampaignResults(
   const orderBy = (() => {
     switch (sort) {
       case 'started_asc':
-        return [
-          asc(sql`COALESCE(${calls.started_at}, ${calls.created_at})`),
-          asc(calls.id),
-        ];
+        return [asc(sql`COALESCE(${calls.started_at}, ${calls.created_at})`), asc(calls.id)];
       case 'duration_desc':
         return [desc(calls.billable_seconds), desc(calls.created_at)];
       case 'duration_asc':
@@ -140,10 +143,7 @@ export async function listCampaignResults(
         return [asc(calls.cost_cents), asc(calls.created_at)];
       case 'started_desc':
       default:
-        return [
-          desc(sql`COALESCE(${calls.started_at}, ${calls.created_at})`),
-          desc(calls.id),
-        ];
+        return [desc(sql`COALESCE(${calls.started_at}, ${calls.created_at})`), desc(calls.id)];
     }
   })();
 
@@ -170,10 +170,7 @@ export async function listCampaignResults(
         .orderBy(...orderBy)
         .limit(pageSize)
         .offset(offset),
-      tx
-        .select({ cnt: count() })
-        .from(calls)
-        .where(whereClause),
+      tx.select({ cnt: count() }).from(calls).where(whereClause),
     ]);
 
     const items: CampaignResultRow[] = rows.map((r) => {
@@ -248,15 +245,9 @@ export async function collectCampaignResultsForExport(
         .leftJoin(contacts, eq(calls.contact_id, contacts.id))
         .leftJoin(appointments, eq(appointments.call_id, calls.id))
         .where(whereClause)
-        .orderBy(
-          desc(sql`COALESCE(${calls.started_at}, ${calls.created_at})`),
-          desc(calls.id),
-        )
+        .orderBy(desc(sql`COALESCE(${calls.started_at}, ${calls.created_at})`), desc(calls.id))
         .limit(cap),
-      tx
-        .select({ cnt: count() })
-        .from(calls)
-        .where(whereClause),
+      tx.select({ cnt: count() }).from(calls).where(whereClause),
     ]);
 
     const items: CampaignResultExportRow[] = rows.map((r) => {

@@ -49,11 +49,7 @@ const mockMembership = {
   accepted_at: null,
 };
 
-import {
-  inviteMemberAction,
-  removeMemberAction,
-  updateMemberRoleAction,
-} from './membership';
+import { inviteMemberAction, removeMemberAction, updateMemberRoleAction } from './membership';
 
 // ---------------------------------------------------------------------------
 // inviteMemberAction

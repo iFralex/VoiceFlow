@@ -8,10 +8,7 @@ type DataTableSkeletonProps = {
   rowCount?: number;
 };
 
-export function DataTableSkeleton({
-  columnCount,
-  rowCount = 5,
-}: DataTableSkeletonProps) {
+export function DataTableSkeleton({ columnCount, rowCount = 5 }: DataTableSkeletonProps) {
   return Array.from({ length: rowCount }).map((_, rowIndex) => (
     <TableRow key={rowIndex} data-slot="data-table-skeleton-row">
       {Array.from({ length: columnCount }).map((_, colIndex) => (

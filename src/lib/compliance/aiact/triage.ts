@@ -102,14 +102,16 @@ export async function listDisclosureFailures(
     const status: DisclosureTriageStatus = isDisclosureTriageStatus(rawStatus)
       ? rawStatus
       : 'pending';
-    const note = typeof meta?.['disclosure_triage_note'] === 'string'
-      ? (meta['disclosure_triage_note'] as string)
-      : null;
+    const note =
+      typeof meta?.['disclosure_triage_note'] === 'string'
+        ? (meta['disclosure_triage_note'] as string)
+        : null;
     const triagedAtRaw = meta?.['disclosure_triaged_at'];
     const triagedAt = typeof triagedAtRaw === 'string' ? new Date(triagedAtRaw) : null;
-    const triagedBy = typeof meta?.['disclosure_triaged_by'] === 'string'
-      ? (meta['disclosure_triaged_by'] as string)
-      : null;
+    const triagedBy =
+      typeof meta?.['disclosure_triaged_by'] === 'string'
+        ? (meta['disclosure_triaged_by'] as string)
+        : null;
 
     return {
       callId: r.id,

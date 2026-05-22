@@ -92,11 +92,7 @@ describe('CreditPill', () => {
     });
 
     it('shows reserved minutes when provided', async () => {
-      render(
-        <CreditPill
-          balance={{ remainingMinutes: 30, reservedMinutes: 5 }}
-        />,
-      );
+      render(<CreditPill balance={{ remainingMinutes: 30, reservedMinutes: 5 }} />);
       fireEvent.click(screen.getByTestId('credit-pill'));
       await waitFor(() => {
         expect(screen.getByText(/riservati/i)).toBeTruthy();
@@ -105,11 +101,7 @@ describe('CreditPill', () => {
     });
 
     it('hides reserved minutes row when reservedMinutes is 0', async () => {
-      render(
-        <CreditPill
-          balance={{ remainingMinutes: 30, reservedMinutes: 0 }}
-        />,
-      );
+      render(<CreditPill balance={{ remainingMinutes: 30, reservedMinutes: 0 }} />);
       fireEvent.click(screen.getByTestId('credit-pill'));
       await waitFor(() => {
         expect(screen.queryByText(/riservati/i)).toBeNull();
@@ -117,11 +109,7 @@ describe('CreditPill', () => {
     });
 
     it('shows total minutes when provided', async () => {
-      render(
-        <CreditPill
-          balance={{ remainingMinutes: 30, totalMinutes: 500 }}
-        />,
-      );
+      render(<CreditPill balance={{ remainingMinutes: 30, totalMinutes: 500 }} />);
       fireEvent.click(screen.getByTestId('credit-pill'));
       await waitFor(() => {
         expect(screen.getByText(/totale acquistati/i)).toBeTruthy();

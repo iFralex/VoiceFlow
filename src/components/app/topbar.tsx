@@ -29,10 +29,7 @@ export function TopBar({ onMobileMenuClick, creditBalance, user, className }: To
   return (
     <header
       data-testid="app-topbar"
-      className={cn(
-        'flex h-14 shrink-0 items-center gap-2 border-b bg-background px-4',
-        className,
-      )}
+      className={cn('bg-background flex h-14 shrink-0 items-center gap-2 border-b px-4', className)}
     >
       {/* Mobile hamburger */}
       <Button
@@ -56,14 +53,14 @@ export function TopBar({ onMobileMenuClick, creditBalance, user, className }: To
         <Button
           variant="ghost"
           size="sm"
-          className="hidden h-8 gap-2 text-sm text-muted-foreground md:flex"
+          className="text-muted-foreground hidden h-8 gap-2 text-sm md:flex"
           aria-label={t('search_label')}
           onClick={() => setCmdOpen(true)}
           data-testid="cmd-trigger"
         >
           <Icons.Search size={14} />
           <span>{t('search_placeholder')}</span>
-          <kbd className="ml-1 hidden rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground md:inline">
+          <kbd className="bg-muted text-muted-foreground ml-1 hidden rounded px-1.5 py-0.5 font-mono text-[10px] md:inline">
             ⌘K
           </kbd>
         </Button>
@@ -78,12 +75,7 @@ export function TopBar({ onMobileMenuClick, creditBalance, user, className }: To
         )}
 
         {/* Notifications — stub */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
-          aria-label={t('notifications')}
-        >
+        <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={t('notifications')}>
           <Icons.Bell size={16} />
         </Button>
 

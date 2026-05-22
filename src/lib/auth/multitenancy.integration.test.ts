@@ -37,13 +37,7 @@
 import { eq, sql } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
 
-import {
-  contactLists,
-  contacts,
-  memberships,
-  organizations,
-  users,
-} from '@/lib/db/schema';
+import { contactLists, contacts, memberships, organizations, users } from '@/lib/db/schema';
 import { type DbTx, withTestDb } from '@/test/db';
 
 // ── Fixed test UUIDs ────────────────────────────────────────────────────────
@@ -144,9 +138,7 @@ describe('multi-tenant RLS isolation', () => {
         await tx.execute(sql`ALTER TABLE contact_lists FORCE ROW LEVEL SECURITY`);
 
         // 3. Simulate an Org-A request context (mirrors what withOrgContext does)
-        await tx.execute(
-          sql`SELECT set_config('app.current_org_id', ${ORG_A}, true)`,
-        );
+        await tx.execute(sql`SELECT set_config('app.current_org_id', ${ORG_A}, true)`);
 
         // 4. Unrestricted SELECT — RLS policy permits only Org-A rows
         const visible = await tx.select().from(contacts);
@@ -190,15 +182,10 @@ describe('multi-tenant RLS isolation', () => {
         await tx.execute(sql`ALTER TABLE contact_lists FORCE ROW LEVEL SECURITY`);
 
         // Bound to Org A
-        await tx.execute(
-          sql`SELECT set_config('app.current_org_id', ${ORG_A}, true)`,
-        );
+        await tx.execute(sql`SELECT set_config('app.current_org_id', ${ORG_A}, true)`);
 
         // Explicit filter for Org B — should still return 0 rows
-        const rows = await tx
-          .select()
-          .from(contacts)
-          .where(eq(contacts.org_id, ORG_B));
+        const rows = await tx.select().from(contacts).where(eq(contacts.org_id, ORG_B));
 
         expect(rows).toHaveLength(0);
       });
@@ -236,9 +223,7 @@ describe('multi-tenant RLS isolation', () => {
         await tx.execute(sql`ALTER TABLE memberships FORCE ROW LEVEL SECURITY`);
 
         // Explicitly clear the GUC (simulates a request with no org context)
-        await tx.execute(
-          sql`SELECT set_config('app.current_org_id', '', true)`,
-        );
+        await tx.execute(sql`SELECT set_config('app.current_org_id', '', true)`);
 
         // Without a valid org context, the policy USING clause is false
         const rows = await tx.select().from(memberships);
@@ -254,37 +239,32 @@ describe('multi-tenant RLS isolation', () => {
    * Validates the positive case: with the GUC set to Org A, the membership
    * row for User A is visible.
    */
-  it.skipIf(skipWhenNoDb)(
-    'With correct org GUC, membership rows are visible',
-    async () => {
-      await withTestDb(async (tx) => {
-        await seedOrgsAndUser(tx);
+  it.skipIf(skipWhenNoDb)('With correct org GUC, membership rows are visible', async () => {
+    await withTestDb(async (tx) => {
+      await seedOrgsAndUser(tx);
 
-        await tx.insert(memberships).values({
-          org_id: ORG_A,
-          user_id: USER_A,
-          role: 'owner',
-          accepted_at: new Date(),
-        });
-
-        await tx.execute(sql`ALTER TABLE memberships FORCE ROW LEVEL SECURITY`);
-
-        // Set GUC to Org A
-        await tx.execute(
-          sql`SELECT set_config('app.current_org_id', ${ORG_A}, true)`,
-        );
-
-        const rows = await tx.select().from(memberships);
-
-        expect(rows).toHaveLength(1);
-        expect(rows[0]!.user_id).toBe(USER_A);
-        expect(rows[0]!.org_id).toBe(ORG_A);
-
-        // Org B's memberships are NOT visible
-        expect(rows.some((r) => r.org_id === ORG_B)).toBe(false);
+      await tx.insert(memberships).values({
+        org_id: ORG_A,
+        user_id: USER_A,
+        role: 'owner',
+        accepted_at: new Date(),
       });
-    },
-  );
+
+      await tx.execute(sql`ALTER TABLE memberships FORCE ROW LEVEL SECURITY`);
+
+      // Set GUC to Org A
+      await tx.execute(sql`SELECT set_config('app.current_org_id', ${ORG_A}, true)`);
+
+      const rows = await tx.select().from(memberships);
+
+      expect(rows).toHaveLength(1);
+      expect(rows[0]!.user_id).toBe(USER_A);
+      expect(rows[0]!.org_id).toBe(ORG_A);
+
+      // Org B's memberships are NOT visible
+      expect(rows.some((r) => r.org_id === ORG_B)).toBe(false);
+    });
+  });
 
   /**
    * Scenario 3 — Service-role (withSystemContext) reads across orgs
@@ -378,9 +358,7 @@ describe('multi-tenant RLS isolation', () => {
         await tx.execute(sql`ALTER TABLE contact_lists FORCE ROW LEVEL SECURITY`);
 
         // Simulate: PAT bound to Org A — set GUC to ORG_A
-        await tx.execute(
-          sql`SELECT set_config('app.current_org_id', ${ORG_A}, true)`,
-        );
+        await tx.execute(sql`SELECT set_config('app.current_org_id', ${ORG_A}, true)`);
 
         // Attempt to INSERT a contact belonging to Org B (the PAT's non-owner org)
         // RLS WITH CHECK: org_id must equal current_setting('app.current_org_id')::uuid
@@ -414,9 +392,7 @@ describe('multi-tenant RLS isolation', () => {
         await tx.execute(sql`ALTER TABLE contact_lists FORCE ROW LEVEL SECURITY`);
 
         // PAT bound to Org A
-        await tx.execute(
-          sql`SELECT set_config('app.current_org_id', ${ORG_A}, true)`,
-        );
+        await tx.execute(sql`SELECT set_config('app.current_org_id', ${ORG_A}, true)`);
 
         // INSERT into Org A — should succeed
         const [inserted] = await tx
@@ -442,44 +418,39 @@ describe('multi-tenant RLS isolation', () => {
    * bound to Org A, the RLS USING clause prevents the row from being visible
    * in the first place (UPDATE silently affects 0 rows under FORCE RLS).
    */
-  it.skipIf(skipWhenNoDb)(
-    'PAT scoped to Org A cannot UPDATE Org B contacts',
-    async () => {
-      await withTestDb(async (tx) => {
-        await seedOrgsAndUser(tx);
-        const { listBId } = await seedContactLists(tx);
+  it.skipIf(skipWhenNoDb)('PAT scoped to Org A cannot UPDATE Org B contacts', async () => {
+    await withTestDb(async (tx) => {
+      await seedOrgsAndUser(tx);
+      const { listBId } = await seedContactLists(tx);
 
-        // Insert Org B contact while FORCE RLS is NOT yet active (superuser bypass)
-        const [orgBContact] = await tx
-          .insert(contacts)
-          .values({
-            org_id: ORG_B,
-            contact_list_id: listBId,
-            phone_e164: '+39332000777',
-            consent_basis: 'existing_customer',
-          })
-          .returning({ id: contacts.id });
+      // Insert Org B contact while FORCE RLS is NOT yet active (superuser bypass)
+      const [orgBContact] = await tx
+        .insert(contacts)
+        .values({
+          org_id: ORG_B,
+          contact_list_id: listBId,
+          phone_e164: '+39332000777',
+          consent_basis: 'existing_customer',
+        })
+        .returning({ id: contacts.id });
 
-        // Now enable FORCE RLS
-        await tx.execute(sql`ALTER TABLE contacts FORCE ROW LEVEL SECURITY`);
-        await tx.execute(sql`ALTER TABLE contact_lists FORCE ROW LEVEL SECURITY`);
+      // Now enable FORCE RLS
+      await tx.execute(sql`ALTER TABLE contacts FORCE ROW LEVEL SECURITY`);
+      await tx.execute(sql`ALTER TABLE contact_lists FORCE ROW LEVEL SECURITY`);
 
-        // Simulate PAT bound to Org A
-        await tx.execute(
-          sql`SELECT set_config('app.current_org_id', ${ORG_A}, true)`,
-        );
+      // Simulate PAT bound to Org A
+      await tx.execute(sql`SELECT set_config('app.current_org_id', ${ORG_A}, true)`);
 
-        // Attempt to UPDATE the Org B record — USING clause hides it → 0 rows updated
-        const updated = await tx
-          .update(contacts)
-          .set({ first_name: 'Hacked' })
-          .where(eq(contacts.id, orgBContact!.id))
-          .returning({ id: contacts.id });
+      // Attempt to UPDATE the Org B record — USING clause hides it → 0 rows updated
+      const updated = await tx
+        .update(contacts)
+        .set({ first_name: 'Hacked' })
+        .where(eq(contacts.id, orgBContact!.id))
+        .returning({ id: contacts.id });
 
-        expect(updated).toHaveLength(0);
-      });
-    },
-  );
+      expect(updated).toHaveLength(0);
+    });
+  });
 
   /**
    * Scenario 5 — GUC is transaction-local (SET LOCAL prevents bleed-across)
@@ -493,9 +464,7 @@ describe('multi-tenant RLS isolation', () => {
     async () => {
       // First transaction: set GUC and verify it is visible
       await withTestDb(async (tx) => {
-        await tx.execute(
-          sql`SELECT set_config('app.current_org_id', ${ORG_A}, true)`,
-        );
+        await tx.execute(sql`SELECT set_config('app.current_org_id', ${ORG_A}, true)`);
 
         const rows = await tx.execute<{ value: string }>(
           sql`SELECT current_setting('app.current_org_id', true) AS value`,
@@ -540,9 +509,7 @@ describe('multi-tenant RLS isolation', () => {
         await tx.execute(sql`ALTER TABLE memberships FORCE ROW LEVEL SECURITY`);
 
         // Bind to Org B
-        await tx.execute(
-          sql`SELECT set_config('app.current_org_id', ${ORG_B}, true)`,
-        );
+        await tx.execute(sql`SELECT set_config('app.current_org_id', ${ORG_B}, true)`);
 
         const rows = await tx.select().from(memberships);
 

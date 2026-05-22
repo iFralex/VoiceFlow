@@ -16,10 +16,10 @@ export default async function VerifyPage({ searchParams }: VerifyPageProps) {
 
   return (
     <div className="w-full max-w-sm space-y-6 text-center">
-      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+      <div className="bg-primary/10 mx-auto flex h-16 w-16 items-center justify-center rounded-full">
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          className="h-8 w-8 text-primary"
+          className="text-primary h-8 w-8"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -36,10 +36,8 @@ export default async function VerifyPage({ searchParams }: VerifyPageProps) {
 
       <div className="space-y-2">
         <h1 className="text-2xl font-semibold tracking-tight">{t('verify_title')}</h1>
-        <p className="text-sm text-muted-foreground">
-          {email
-            ? t('verify_description', { email })
-            : t('verify_description_generic')}
+        <p className="text-muted-foreground text-sm">
+          {email ? t('verify_description', { email }) : t('verify_description_generic')}
         </p>
       </div>
 

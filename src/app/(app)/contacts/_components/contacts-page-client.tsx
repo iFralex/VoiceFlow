@@ -75,7 +75,7 @@ function ListsTab({ lists }: { lists: SerializedContactList[] }) {
     <div className="rounded-md border">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b bg-muted/50">
+          <tr className="bg-muted/50 border-b">
             <th className="px-4 py-3 text-left font-medium">{t('list_col_name')}</th>
             <th className="px-4 py-3 text-left font-medium">{t('list_col_source')}</th>
             <th className="px-4 py-3 text-right font-medium">{t('list_col_contacts')}</th>
@@ -85,17 +85,17 @@ function ListsTab({ lists }: { lists: SerializedContactList[] }) {
         </thead>
         <tbody>
           {lists.map((list) => (
-            <tr key={list.id} className="border-b last:border-0 hover:bg-muted/30">
+            <tr key={list.id} className="hover:bg-muted/30 border-b last:border-0">
               <td className="px-4 py-3">
                 <Link
                   href={`/contacts/lists/${list.id}`}
-                  className="font-medium text-foreground hover:underline"
+                  className="text-foreground font-medium hover:underline"
                 >
                   {list.name}
                 </Link>
               </td>
-              <td className="px-4 py-3 text-muted-foreground">{sourceLabel(list.source, t)}</td>
-              <td className="px-4 py-3 text-right text-muted-foreground">
+              <td className="text-muted-foreground px-4 py-3">{sourceLabel(list.source, t)}</td>
+              <td className="text-muted-foreground px-4 py-3 text-right">
                 {list.import_status === 'completed'
                   ? list.valid_count.toLocaleString('it-IT')
                   : list.total_count.toLocaleString('it-IT')}
@@ -113,7 +113,7 @@ function ListsTab({ lists }: { lists: SerializedContactList[] }) {
                   />
                 )}
               </td>
-              <td className="px-4 py-3 text-muted-foreground">
+              <td className="text-muted-foreground px-4 py-3">
                 <span className="flex items-center gap-1">
                   <Calendar className="size-3" />
                   {formatDate(list.created_at)}
@@ -173,7 +173,7 @@ export function ContactsPageClient({
               className={[
                 'px-4 py-2 text-sm font-medium transition-colors',
                 isActive
-                  ? 'border-b-2 border-primary text-foreground'
+                  ? 'border-primary text-foreground border-b-2'
                   : 'text-muted-foreground hover:text-foreground',
               ].join(' ')}
             >
@@ -186,9 +186,7 @@ export function ContactsPageClient({
       {/* Tab content */}
       {activeTab === 'lists' && <ListsTab lists={lists} />}
 
-      {activeTab === 'all' && (
-        <ContactsTable contacts={allContacts} listId="" orgId={orgId} />
-      )}
+      {activeTab === 'all' && <ContactsTable contacts={allContacts} listId="" orgId={orgId} />}
 
       {activeTab === 'optout' && (
         <ContactsTable contacts={optOutContacts} listId="" orgId={orgId} />

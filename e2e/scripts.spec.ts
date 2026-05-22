@@ -62,100 +62,99 @@ test.describe('Scripts flow', () => {
     });
   });
 
-  test(
-    'create script from lead-reactivation template → save → edit variable → validate required',
-    async ({ page }) => {
-      // ── 1. Authenticate ──────────────────────────────────────────────────
-      await loginViaGeneratedLink(page, userEmail);
-      if (page.url().includes('onboarding')) {
-        await completeOnboarding(page, `Scripts E2E Org ${Date.now()}`);
-      }
+  test('create script from lead-reactivation template → save → edit variable → validate required', async ({
+    page,
+  }) => {
+    // ── 1. Authenticate ──────────────────────────────────────────────────
+    await loginViaGeneratedLink(page, userEmail);
+    if (page.url().includes('onboarding')) {
+      await completeOnboarding(page, `Scripts E2E Org ${Date.now()}`);
+    }
 
-      // ── 2. Navigate to /scripts ──────────────────────────────────────────
-      await page.goto('/scripts');
-      await page.waitForLoadState('networkidle');
-      await expect(page.getByRole('heading', { name: /script/i }).first()).toBeVisible();
+    // ── 2. Navigate to /scripts ──────────────────────────────────────────
+    await page.goto('/scripts');
+    await page.waitForLoadState('networkidle');
+    await expect(page.getByRole('heading', { name: /script/i }).first()).toBeVisible();
 
-      // Verify template cards are visible (5 templates)
-      await expect(page.getByText(/template disponibili/i)).toBeVisible();
-      await expect(page.getByText('Riattivazione Lead')).toBeVisible();
+    // Verify template cards are visible (5 templates)
+    await expect(page.getByText(/template disponibili/i)).toBeVisible();
+    await expect(page.getByText('Riattivazione Lead')).toBeVisible();
 
-      // ── 3. Click "Crea da questo template" on lead-reactivation ──────────
-      // The lead-reactivation card has a link to /scripts/new?template=lead-reactivation
-      const leadReactivationCard = page
-        .locator('[href="/scripts/new?template=lead-reactivation"]')
-        .first();
-      await expect(leadReactivationCard).toBeVisible();
-      await leadReactivationCard.click();
+    // ── 3. Click "Crea da questo template" on lead-reactivation ──────────
+    // The lead-reactivation card has a link to /scripts/new?template=lead-reactivation
+    const leadReactivationCard = page
+      .locator('[href="/scripts/new?template=lead-reactivation"]')
+      .first();
+    await expect(leadReactivationCard).toBeVisible();
+    await leadReactivationCard.click();
 
-      // ── 4. Now on the wizard, step 2 (variables) is pre-selected ─────────
-      await page.waitForURL('**/scripts/new**', { timeout: 10_000 });
-      await page.waitForLoadState('networkidle');
+    // ── 4. Now on the wizard, step 2 (variables) is pre-selected ─────────
+    await page.waitForURL('**/scripts/new**', { timeout: 10_000 });
+    await page.waitForLoadState('networkidle');
 
-      // Should be on the variables step (step 2) because template= query param is set
-      await expect(page.getByRole('heading', { name: /nuovo script/i })).toBeVisible();
+    // Should be on the variables step (step 2) because template= query param is set
+    await expect(page.getByRole('heading', { name: /nuovo script/i })).toBeVisible();
 
-      // ── 5. Fill in the script name ───────────────────────────────────────
-      await page.getByLabel(/nome script/i).fill('Test Script E2E');
+    // ── 5. Fill in the script name ───────────────────────────────────────
+    await page.getByLabel(/nome script/i).fill('Test Script E2E');
 
-      // ── 6. Fill required variable fields ─────────────────────────────────
-      // dealership_name
-      await page.getByLabel(/dealership_name/i).fill('Concessionaria Test');
+    // ── 6. Fill required variable fields ─────────────────────────────────
+    // dealership_name
+    await page.getByLabel(/dealership_name/i).fill('Concessionaria Test');
 
-      // brand
-      await page.getByLabel(/brand/i).fill('Volkswagen');
+    // brand
+    await page.getByLabel(/brand/i).fill('Volkswagen');
 
-      // salesperson_first_name
-      await page.getByLabel(/salesperson_first_name/i).fill('Marco');
+    // salesperson_first_name
+    await page.getByLabel(/salesperson_first_name/i).fill('Marco');
 
-      // available_slots (array field — first slot input)
-      const slotsInput = page.locator('input[placeholder*="GG/MM"]').first();
-      await slotsInput.fill('15/06 10:00');
+    // available_slots (array field — first slot input)
+    const slotsInput = page.locator('input[placeholder*="GG/MM"]').first();
+    await slotsInput.fill('15/06 10:00');
 
-      // lead_origin_context
-      await page.getByLabel(/lead_origin_context/i).fill('Richiesta info online Golf GTI');
+    // lead_origin_context
+    await page.getByLabel(/lead_origin_context/i).fill('Richiesta info online Golf GTI');
 
-      // ── 7. Verify live preview updates ───────────────────────────────────
-      // The preview pane should now show the filled-in values
-      const previewPane = page.locator('pre').first();
-      await expect(previewPane).toContainText('Concessionaria Test', { timeout: 5_000 });
+    // ── 7. Verify live preview updates ───────────────────────────────────
+    // The preview pane should now show the filled-in values
+    const previewPane = page.locator('pre').first();
+    await expect(previewPane).toContainText('Concessionaria Test', { timeout: 5_000 });
 
-      // ── 8. Save the script ───────────────────────────────────────────────
-      await page.getByRole('button', { name: /salva script/i }).click();
+    // ── 8. Save the script ───────────────────────────────────────────────
+    await page.getByRole('button', { name: /salva script/i }).click();
 
-      // Should redirect to the detail page
-      await page.waitForURL('**/scripts/**', { timeout: 15_000 });
-      const detailUrl = page.url();
-      expect(detailUrl).toMatch(/\/scripts\/[a-z0-9-]+$/);
+    // Should redirect to the detail page
+    await page.waitForURL('**/scripts/**', { timeout: 15_000 });
+    const detailUrl = page.url();
+    expect(detailUrl).toMatch(/\/scripts\/[a-z0-9-]+$/);
 
-      // Detail page should be visible
-      await expect(page.getByRole('heading', { name: /modifica script/i })).toBeVisible();
-      await expect(page.locator('input#script-name')).toHaveValue('Test Script E2E');
+    // Detail page should be visible
+    await expect(page.getByRole('heading', { name: /modifica script/i })).toBeVisible();
+    await expect(page.locator('input#script-name')).toHaveValue('Test Script E2E');
 
-      // ── 9. Edit one variable and save ─────────────────────────────────────
-      await page.getByLabel(/dealership_name/i).clear();
-      await page.getByLabel(/dealership_name/i).fill('Concessionaria Aggiornata');
+    // ── 9. Edit one variable and save ─────────────────────────────────────
+    await page.getByLabel(/dealership_name/i).clear();
+    await page.getByLabel(/dealership_name/i).fill('Concessionaria Aggiornata');
 
-      await page.getByRole('button', { name: /salva modifiche/i }).click();
+    await page.getByRole('button', { name: /salva modifiche/i }).click();
 
-      // Success toast appears
-      await expect(page.getByText(/modifiche salvate/i)).toBeVisible({ timeout: 10_000 });
+    // Success toast appears
+    await expect(page.getByText(/modifiche salvate/i)).toBeVisible({ timeout: 10_000 });
 
-      // The page should still be on the same script detail URL (no redirect on update)
-      expect(page.url()).toBe(detailUrl);
+    // The page should still be on the same script detail URL (no redirect on update)
+    expect(page.url()).toBe(detailUrl);
 
-      // ── 10. Attempt to save with empty dealership_name → form rejects ─────
-      await page.getByLabel(/dealership_name/i).clear();
+    // ── 10. Attempt to save with empty dealership_name → form rejects ─────
+    await page.getByLabel(/dealership_name/i).clear();
 
-      await page.getByRole('button', { name: /salva modifiche/i }).click();
+    await page.getByRole('button', { name: /salva modifiche/i }).click();
 
-      // The client-side validation should show a required field error
-      await expect(page.getByText(/campo obbligatorio/i).first()).toBeVisible({ timeout: 3_000 });
+    // The client-side validation should show a required field error
+    await expect(page.getByText(/campo obbligatorio/i).first()).toBeVisible({ timeout: 3_000 });
 
-      // The URL should remain on the same detail page (no navigation)
-      expect(page.url()).toBe(detailUrl);
-    },
-  );
+    // The URL should remain on the same detail page (no navigation)
+    expect(page.url()).toBe(detailUrl);
+  });
 
   test('attempt to save new script with empty dealership_name → form rejects', async ({ page }) => {
     // ── 1. Authenticate ──────────────────────────────────────────────────

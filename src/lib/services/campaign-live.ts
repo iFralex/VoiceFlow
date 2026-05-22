@@ -74,12 +74,7 @@ export async function getCampaignLiveSnapshot(
           costCents: campaignStats.total_cost_cents,
         })
         .from(campaignStats)
-        .where(
-          and(
-            eq(campaignStats.org_id, orgId),
-            eq(campaignStats.campaign_id, campaignId),
-          ),
-        )
+        .where(and(eq(campaignStats.org_id, orgId), eq(campaignStats.campaign_id, campaignId)))
         .limit(1),
       tx
         .select({
@@ -116,12 +111,8 @@ export async function getCampaignLiveSnapshot(
     for (const r of statusRows) statusCounts[r.status] = r.cnt;
 
     const totalCalls = Object.values(statusCounts).reduce((a, b) => a + b, 0);
-    const completedCalls = TERMINAL_STATUSES.reduce(
-      (sum, s) => sum + (statusCounts[s] ?? 0),
-      0,
-    );
-    const inProgressCalls =
-      (statusCounts['dialing'] ?? 0) + (statusCounts['in_progress'] ?? 0);
+    const completedCalls = TERMINAL_STATUSES.reduce((sum, s) => sum + (statusCounts[s] ?? 0), 0);
+    const inProgressCalls = (statusCounts['dialing'] ?? 0) + (statusCounts['in_progress'] ?? 0);
 
     const recentCalls: CampaignLiveCallRow[] = recentRows.map((r) => {
       const fullName = [r.firstName, r.lastName].filter(Boolean).join(' ').trim();

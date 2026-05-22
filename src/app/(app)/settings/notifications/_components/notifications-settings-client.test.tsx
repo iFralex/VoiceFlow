@@ -49,14 +49,8 @@ describe('NotificationsSettingsClient', () => {
       />,
     );
 
-    expect(screen.getByLabelText(/Report giornaliero/)).toHaveAttribute(
-      'aria-checked',
-      'false',
-    );
-    expect(screen.getByLabelText(/Riepilogo settimanale/)).toHaveAttribute(
-      'aria-checked',
-      'true',
-    );
+    expect(screen.getByLabelText(/Report giornaliero/)).toHaveAttribute('aria-checked', 'false');
+    expect(screen.getByLabelText(/Riepilogo settimanale/)).toHaveAttribute('aria-checked', 'true');
   });
 
   it('calls the action with the toggled value and shows a success toast', async () => {

@@ -61,7 +61,11 @@ const DEFAULT_SIZE = 16;
 const DEFAULT_STROKE_WIDTH = 1.5;
 
 function withDefaults(Icon: LucideIcon): React.FC<LucideProps> {
-  function WrappedIcon({ size = DEFAULT_SIZE, strokeWidth = DEFAULT_STROKE_WIDTH, ...props }: LucideProps) {
+  function WrappedIcon({
+    size = DEFAULT_SIZE,
+    strokeWidth = DEFAULT_STROKE_WIDTH,
+    ...props
+  }: LucideProps) {
     return <Icon size={size} strokeWidth={strokeWidth} {...props} />;
   }
   WrappedIcon.displayName = Icon.displayName ?? Icon.name;

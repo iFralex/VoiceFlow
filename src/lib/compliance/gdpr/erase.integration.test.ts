@@ -42,10 +42,7 @@ vi.mock('@/lib/db/context', async () => ({
   withOrgContext: vi.fn(),
 }));
 
-import {
-  eraseSubject,
-  SubjectErasureConfirmationError,
-} from '@/lib/compliance/gdpr/erase';
+import { eraseSubject, SubjectErasureConfirmationError } from '@/lib/compliance/gdpr/erase';
 import { withOrgContext, withSystemContext } from '@/lib/db/context';
 import {
   auditLog,
@@ -158,10 +155,7 @@ describe('eraseSubject integration', () => {
         await clearOrgContext(tx);
 
         // Contact row: PII scrubbed, phone preserved, deleted_at + tombstone set.
-        const [scrubbed] = await tx
-          .select()
-          .from(contacts)
-          .where(eq(contacts.id, CONTACT));
+        const [scrubbed] = await tx.select().from(contacts).where(eq(contacts.id, CONTACT));
         expect(scrubbed?.first_name).toBeNull();
         expect(scrubbed?.last_name).toBeNull();
         expect(scrubbed?.email).toBeNull();
@@ -172,10 +166,7 @@ describe('eraseSubject integration', () => {
         expect(typeof contactMeta?.['erased_at']).toBe('string');
 
         // Calls metadata is replaced wholesale with the tombstone.
-        const [scrubbedCall] = await tx
-          .select()
-          .from(calls)
-          .where(eq(calls.id, callId));
+        const [scrubbedCall] = await tx.select().from(calls).where(eq(calls.id, callId));
         const callMeta = scrubbedCall?.metadata as Record<string, unknown> | null;
         expect(callMeta?.['gdpr_erasure']).toBe(true);
         expect(callMeta?.['transcript_excerpt']).toBeUndefined();
@@ -184,12 +175,7 @@ describe('eraseSubject integration', () => {
         const optOuts = await tx
           .select()
           .from(optOutRegistry)
-          .where(
-            and(
-              eq(optOutRegistry.org_id, ORG),
-              eq(optOutRegistry.phone_e164, PHONE),
-            ),
-          );
+          .where(and(eq(optOutRegistry.org_id, ORG), eq(optOutRegistry.phone_e164, PHONE)));
         expect(optOuts).toHaveLength(1);
         expect(optOuts[0]?.source).toBe('gdpr_request');
 
@@ -197,12 +183,7 @@ describe('eraseSubject integration', () => {
         const erasureAudit = await tx
           .select()
           .from(auditLog)
-          .where(
-            and(
-              eq(auditLog.org_id, ORG),
-              eq(auditLog.action, 'compliance.gdpr_erasure'),
-            ),
-          );
+          .where(and(eq(auditLog.org_id, ORG), eq(auditLog.action, 'compliance.gdpr_erasure')));
         expect(erasureAudit).toHaveLength(1);
         expect(erasureAudit[0]?.subject_id).toBe(CONTACT);
 

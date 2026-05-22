@@ -1,7 +1,7 @@
 export const rescheduleAppointmentJsonSchema = {
   name: 'reschedule_appointment',
   description:
-    'Invoca questo strumento quando il contatto desidera spostare l\'appuntamento esistente a una data/ora diversa.',
+    "Invoca questo strumento quando il contatto desidera spostare l'appuntamento esistente a una data/ora diversa.",
   parameters: {
     $schema: 'http://json-schema.org/draft-07/schema#',
     type: 'object',
@@ -10,12 +10,12 @@ export const rescheduleAppointmentJsonSchema = {
       new_date: {
         type: 'string',
         format: 'date',
-        description: 'Nuova data dell\'appuntamento in formato ISO 8601 (es. 2024-06-20)',
+        description: "Nuova data dell'appuntamento in formato ISO 8601 (es. 2024-06-20)",
       },
       new_time: {
         type: 'string',
         pattern: '^\\d{2}:\\d{2}$',
-        description: 'Nuova ora dell\'appuntamento in formato HH:MM (es. 14:00)',
+        description: "Nuova ora dell'appuntamento in formato HH:MM (es. 14:00)",
       },
       contact_confirmation_text: {
         type: 'string',

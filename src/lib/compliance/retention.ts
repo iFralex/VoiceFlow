@@ -90,10 +90,7 @@ export interface RetentionThresholds {
  */
 function resolveRecordingDays(orgOverride: number | null | undefined): number {
   if (orgOverride == null) return DEFAULT_RECORDING_RETENTION_DAYS;
-  if (
-    orgOverride < RECORDING_RETENTION_DAYS_MIN ||
-    orgOverride > RECORDING_RETENTION_DAYS_MAX
-  ) {
+  if (orgOverride < RECORDING_RETENTION_DAYS_MIN || orgOverride > RECORDING_RETENTION_DAYS_MAX) {
     return DEFAULT_RECORDING_RETENTION_DAYS;
   }
   return Math.floor(orgOverride);

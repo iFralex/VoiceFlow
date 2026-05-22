@@ -50,13 +50,13 @@ Every delivery is a JSON object with a consistent outer envelope. The `data` fie
 }
 ```
 
-| Field | Type | Description |
-|---|---|---|
-| `id` | string | Stable delivery ID — use as an idempotency key. Format: `<webhookId>:<eventType>:<entityId>`, consistent across retries of the same delivery. |
-| `event` | string | Event type (see below) |
-| `occurred_at` | ISO 8601 string | When the event occurred (UTC) |
-| `org_id` | string (UUID) | Organisation that owns the event |
-| `data` | object | Event-specific payload |
+| Field         | Type            | Description                                                                                                                                   |
+| ------------- | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`          | string          | Stable delivery ID — use as an idempotency key. Format: `<webhookId>:<eventType>:<entityId>`, consistent across retries of the same delivery. |
+| `event`       | string          | Event type (see below)                                                                                                                        |
+| `occurred_at` | ISO 8601 string | When the event occurred (UTC)                                                                                                                 |
+| `org_id`      | string (UUID)   | Organisation that owns the event                                                                                                              |
+| `data`        | object          | Event-specific payload                                                                                                                        |
 
 ---
 
@@ -195,13 +195,13 @@ Fired when the AI classifies a contact as a qualified lead (outcome `interested`
 
 ## Request headers
 
-| Header | Description |
-|---|---|
-| `content-type` | `application/json` |
-| `x-vox-event` | Event type, e.g. `call.completed` |
-| `x-vox-event-id` | Stable delivery ID (same as `envelope.id`) — use as an idempotency key |
-| `x-vox-signature` | `sha256=<hex>` — HMAC-SHA256 of the raw request body |
-| `x-vox-timestamp` | Unix seconds at the time of delivery (for replay-protection checks) |
+| Header            | Description                                                            |
+| ----------------- | ---------------------------------------------------------------------- |
+| `content-type`    | `application/json`                                                     |
+| `x-vox-event`     | Event type, e.g. `call.completed`                                      |
+| `x-vox-event-id`  | Stable delivery ID (same as `envelope.id`) — use as an idempotency key |
+| `x-vox-signature` | `sha256=<hex>` — HMAC-SHA256 of the raw request body                   |
+| `x-vox-timestamp` | Unix seconds at the time of delivery (for replay-protection checks)    |
 
 ---
 
@@ -209,7 +209,7 @@ Fired when the AI classifies a contact as a qualified lead (outcome `interested`
 
 Compute `HMAC-SHA256(rawBody, secret)` and compare the result (prefixed with `sha256=`) against the `x-vox-signature` header. **Always use a constant-time comparison** to prevent timing attacks.
 
-> **Important:** Sign the raw bytes of the request body *before* JSON parsing. Parsers may reformat whitespace and invalidate the signature.
+> **Important:** Sign the raw bytes of the request body _before_ JSON parsing. Parsers may reformat whitespace and invalidate the signature.
 
 ### Node.js
 
@@ -217,10 +217,7 @@ Compute `HMAC-SHA256(rawBody, secret)` and compare the result (prefixed with `sh
 const crypto = require('crypto');
 
 function verifyWebhookSignature(body, secret, signatureHeader) {
-  const expected = 'sha256=' + crypto
-    .createHmac('sha256', secret)
-    .update(body)
-    .digest('hex');
+  const expected = 'sha256=' + crypto.createHmac('sha256', secret).update(body).digest('hex');
 
   const a = Buffer.from(expected, 'utf8');
   const b = Buffer.from(signatureHeader, 'utf8');
@@ -296,12 +293,12 @@ echo json_encode(['ok' => true]);
 If your endpoint returns a non-2xx response or times out (10 s limit), the delivery is retried with exponential backoff:
 
 | Attempt | Delay after previous attempt |
-|---|---|
-| 2 | 1 minute |
-| 3 | 5 minutes |
-| 4 | 15 minutes |
-| 5 | 1 hour |
-| 6 | 6 hours |
+| ------- | ---------------------------- |
+| 2       | 1 minute                     |
+| 3       | 5 minutes                    |
+| 4       | 15 minutes                   |
+| 5       | 1 hour                       |
+| 6       | 6 hours                      |
 
 After 6 consecutive failures the webhook is deactivated automatically (see below). All delivery attempts are visible in **Settings → Integrations → Deliveries**.
 

@@ -106,10 +106,7 @@ export async function reconcilePendingPayments(): Promise<ReconcileResult> {
         reconciled++;
       } else if (session.status === 'expired') {
         await withSystemContext(async (tx) => {
-          await tx
-            .update(payments)
-            .set({ status: 'failed' })
-            .where(eq(payments.id, payment.id));
+          await tx.update(payments).set({ status: 'failed' }).where(eq(payments.id, payment.id));
         });
         reconciled++;
       }
@@ -159,12 +156,7 @@ export async function runLedgerSanityCheck(): Promise<SanityResult> {
         tx
           .select({ total_delta: sum(creditLedger.delta_cents) })
           .from(creditLedger)
-          .where(
-            and(
-              eq(creditLedger.org_id, org_id),
-              gte(creditLedger.created_at, windowStart),
-            ),
-          ),
+          .where(and(eq(creditLedger.org_id, org_id), gte(creditLedger.created_at, windowStart))),
       );
 
       const totalDelta = Math.round(Number(deltaRow?.total_delta ?? 0));

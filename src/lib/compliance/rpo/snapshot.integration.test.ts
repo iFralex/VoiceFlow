@@ -49,7 +49,6 @@ import {
 import { verifyRpoCompliance } from '@/lib/inngest/campaigns/dispatch';
 import { type DbTx as TestDbTx, withTestDb } from '@/test/db';
 
-
 const ORG = 'd0000000-0000-0000-0000-000000000001';
 const LIST = 'd0000000-0000-0000-0000-000000000002';
 const CONTACT_BLOCKED = 'd0000000-0000-0000-0000-000000000010';

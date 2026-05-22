@@ -180,9 +180,8 @@ function setupUpdate(): void {
 describe('POST /api/webhooks/vapi', () => {
   beforeEach(() => {
     vi.resetAllMocks();
-    mockWithSystemContext.mockImplementation(
-      async (fn: (tx: unknown) => Promise<unknown>) =>
-        fn({ insert: mockInsert, update: mockUpdate, select: mockSelect }),
+    mockWithSystemContext.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) =>
+      fn({ insert: mockInsert, update: mockUpdate, select: mockSelect }),
     );
     mockWithOrgContext.mockImplementation(
       async (_orgId: string, fn: (tx: unknown) => Promise<unknown>) =>
@@ -378,11 +377,10 @@ describe('POST /api/webhooks/vapi', () => {
       };
       const res = await POST(makeRequest(payload));
       expect(res.status).toBe(200);
-      expect(mockRecordToolInvocation).toHaveBeenCalledWith(
-        OUR_CALL_ID,
-        'book_appointment',
-        { date: '2026-05-10', time: '10:00' },
-      );
+      expect(mockRecordToolInvocation).toHaveBeenCalledWith(OUR_CALL_ID, 'book_appointment', {
+        date: '2026-05-10',
+        time: '10:00',
+      });
     });
 
     it('skips recording when functionCall is absent', async () => {

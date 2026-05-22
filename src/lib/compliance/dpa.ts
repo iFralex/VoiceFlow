@@ -106,9 +106,7 @@ export async function recordDpaAcceptance(
  * exists (e.g. org pre-dates the DPA gate). Reads from the system-owned
  * `audit_log` via {@link withSystemContext}.
  */
-export async function getLatestDpaAcceptance(
-  orgId: string,
-): Promise<DpaAcceptanceRecord | null> {
+export async function getLatestDpaAcceptance(orgId: string): Promise<DpaAcceptanceRecord | null> {
   return withSystemContext(async (tx) => {
     const rows = await tx
       .select({

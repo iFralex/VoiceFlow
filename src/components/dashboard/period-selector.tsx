@@ -8,13 +8,7 @@ import { cn } from '@/lib/utils/index';
 
 export type DashboardPeriod = 'today' | '7d' | '30d' | 'month' | 'prev_month';
 
-export const DASHBOARD_PERIODS: DashboardPeriod[] = [
-  'today',
-  '7d',
-  '30d',
-  'month',
-  'prev_month',
-];
+export const DASHBOARD_PERIODS: DashboardPeriod[] = ['today', '7d', '30d', 'month', 'prev_month'];
 
 type PeriodSelectorProps = {
   value: DashboardPeriod;
@@ -43,7 +37,7 @@ export function PeriodSelector({ value, className }: PeriodSelectorProps) {
       aria-label={t('period_aria_label')}
       data-slot="period-selector"
       className={cn(
-        'inline-flex items-center gap-1 rounded-lg border border-border bg-card p-1 text-xs',
+        'border-border bg-card inline-flex items-center gap-1 rounded-lg border p-1 text-xs',
         className,
       )}
     >

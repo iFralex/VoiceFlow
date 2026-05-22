@@ -11,9 +11,7 @@ describe('DashboardOnboardingCard', () => {
 
     expect(screen.getByText('Inizia in 3 semplici passi')).toBeInTheDocument();
 
-    const slotSteps = container.querySelectorAll(
-      '[data-slot="dashboard-onboarding-step"]',
-    );
+    const slotSteps = container.querySelectorAll('[data-slot="dashboard-onboarding-step"]');
     expect(slotSteps.length).toBe(3);
 
     const contactsLink = screen.getAllByRole('link', { name: /Carica contatti/i })[0]!;

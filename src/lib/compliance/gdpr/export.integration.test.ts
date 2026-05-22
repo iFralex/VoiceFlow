@@ -201,9 +201,7 @@ describe('buildSubjectExport integration', () => {
         );
 
         // Spot-check the contact JSON round-trips the right phone.
-        const contactJson = JSON.parse(
-          await archive.file('contact.json')!.async('string'),
-        );
+        const contactJson = JSON.parse(await archive.file('contact.json')!.async('string'));
         expect(contactJson.phone_e164).toBe(PHONE);
 
         // Verify the audit row landed.
@@ -211,12 +209,7 @@ describe('buildSubjectExport integration', () => {
         const auditRows = await tx
           .select()
           .from(auditLog)
-          .where(
-            and(
-              eq(auditLog.org_id, ORG),
-              eq(auditLog.action, 'compliance.gdpr_export'),
-            ),
-          );
+          .where(and(eq(auditLog.org_id, ORG), eq(auditLog.action, 'compliance.gdpr_export')));
         expect(auditRows).toHaveLength(1);
         expect(auditRows[0]?.subject_id).toBe(CONTACT);
       });

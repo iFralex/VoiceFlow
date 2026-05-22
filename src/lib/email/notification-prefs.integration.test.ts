@@ -12,12 +12,7 @@
 import { and, eq, isNotNull } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
 
-import {
-  memberships,
-  organizations,
-  userNotificationPreferences,
-  users,
-} from '@/lib/db/schema';
+import { memberships, organizations, userNotificationPreferences, users } from '@/lib/db/schema';
 import { withTestDb } from '@/test/db';
 
 const skipWhenNoDb = !process.env['TEST_DATABASE_URL'];

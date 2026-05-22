@@ -58,7 +58,8 @@ export const csiSurveyJsonSchema = {
     service_type: {
       type: 'string',
       enum: ['sales', 'service'],
-      description: 'Tipo di interazione oggetto del sondaggio: sales (vendita) o service (assistenza)',
+      description:
+        'Tipo di interazione oggetto del sondaggio: sales (vendita) o service (assistenza)',
     },
     last_interaction_date: {
       type: 'string',

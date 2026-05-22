@@ -24,8 +24,7 @@ describe('MarketingPage (landing)', () => {
     // Should have primary and secondary CTA links in the hero area
     const heroCtas = links.filter(
       (l) =>
-        l.getAttribute('href') === '/registrati' ||
-        l.getAttribute('href') === '/come-funziona',
+        l.getAttribute('href') === '/registrati' || l.getAttribute('href') === '/come-funziona',
     );
     expect(heroCtas).toHaveLength(2);
   });

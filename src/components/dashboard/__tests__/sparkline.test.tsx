@@ -35,9 +35,7 @@ describe('Sparkline', () => {
   });
 
   it('exposes an aria-label and role=img when provided', () => {
-    const { container } = render(
-      <Sparkline values={[1, 2, 3]} ariaLabel="trend" />,
-    );
+    const { container } = render(<Sparkline values={[1, 2, 3]} ariaLabel="trend" />);
     const svg = container.querySelector('svg[data-slot="sparkline"]')!;
     expect(svg.getAttribute('aria-label')).toBe('trend');
     expect(svg.getAttribute('role')).toBe('img');

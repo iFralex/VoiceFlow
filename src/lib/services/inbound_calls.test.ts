@@ -51,7 +51,13 @@ vi.mock('@/lib/voice/inbound/lookup', () => ({
 }));
 
 vi.mock('@/lib/db/schema', () => ({
-  calls: { id: 'c_id', org_id: 'c_org_id', direction: 'c_direction', provider_call_id: 'c_pcid', created_at: 'c_created_at' },
+  calls: {
+    id: 'c_id',
+    org_id: 'c_org_id',
+    direction: 'c_direction',
+    provider_call_id: 'c_pcid',
+    created_at: 'c_created_at',
+  },
 }));
 
 vi.mock('drizzle-orm', () => ({
@@ -111,10 +117,7 @@ interface MockTx {
   update: ReturnType<typeof vi.fn>;
 }
 
-function makeTx(opts: {
-  selectRows?: unknown[][];
-  insertResults?: unknown[][];
-}): MockTx {
+function makeTx(opts: { selectRows?: unknown[][]; insertResults?: unknown[][] }): MockTx {
   const selectRowsQueue = [...(opts.selectRows ?? [])];
   const insertResultsQueue = [...(opts.insertResults ?? [])];
   return {
@@ -312,9 +315,7 @@ describe('recordInboundOptout', () => {
     expect(mockMarkOptOutInTx).toHaveBeenCalledTimes(2);
 
     // Each markOptOutInTx call should target a unique org with the inbound IVR source
-    const orgIds = mockMarkOptOutInTx.mock.calls.map(
-      (c) => (c[1] as { orgId: string }).orgId,
-    );
+    const orgIds = mockMarkOptOutInTx.mock.calls.map((c) => (c[1] as { orgId: string }).orgId);
     expect(orgIds.sort()).toEqual(['org-A', 'org-B']);
     for (const call of mockMarkOptOutInTx.mock.calls) {
       expect(call[1]).toEqual(

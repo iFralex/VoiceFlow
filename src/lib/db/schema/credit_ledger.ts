@@ -1,5 +1,14 @@
 import { sql } from 'drizzle-orm';
-import { index, integer, pgEnum, pgTable, text, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
+import {
+  index,
+  integer,
+  pgEnum,
+  pgTable,
+  text,
+  timestamp,
+  unique,
+  uuid,
+} from 'drizzle-orm/pg-core';
 
 import { organizations } from './organizations';
 
@@ -30,12 +39,9 @@ export const creditLedger = pgTable(
     created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    unique('credit_ledger_idempotency_key').on(
-      t.org_id,
-      t.reference_type,
-      t.reference_id,
-      t.entry_type,
-    ).nullsNotDistinct(),
+    unique('credit_ledger_idempotency_key')
+      .on(t.org_id, t.reference_type, t.reference_id, t.entry_type)
+      .nullsNotDistinct(),
     index('credit_ledger_org_created_at_idx').on(t.org_id, t.created_at.desc()),
   ],
 );

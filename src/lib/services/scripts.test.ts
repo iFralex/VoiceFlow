@@ -9,9 +9,11 @@ vi.mock('@/lib/db/audit', () => ({
 }));
 
 vi.mock('node:fs', () => ({
-  readFileSync: vi.fn().mockReturnValue(
-    'Buongiorno, sono {{salesperson_first_name}}, un assistente vocale automatico per {{dealership_name}}, concessionario {{brand}}.',
-  ),
+  readFileSync: vi
+    .fn()
+    .mockReturnValue(
+      'Buongiorno, sono {{salesperson_first_name}}, un assistente vocale automatico per {{dealership_name}}, concessionario {{brand}}.',
+    ),
 }));
 
 vi.mock('@/lib/db/context', () => ({
@@ -73,7 +75,8 @@ const fakeTemplate = {
   slug: 'lead-reactivation',
   name: 'Riattivazione Lead',
   version: 1,
-  system_prompt: 'Sei {{salesperson_first_name}} per {{dealership_name}}, concessionario {{brand}}. Contesto: {{lead_origin_context}}. Slot: {{available_slots}}.',
+  system_prompt:
+    'Sei {{salesperson_first_name}} per {{dealership_name}}, concessionario {{brand}}. Contesto: {{lead_origin_context}}. Slot: {{available_slots}}.',
   variable_schema: {},
   default_voice_id: 'it-IT-placeholder',
   default_language: 'it-IT',
@@ -130,24 +133,36 @@ describe('listScriptsWithTemplates', () => {
   });
 
   it('returns merged script+template rows', async () => {
-    const scriptRow = { id: fakeScript.id, name: fakeScript.name, template_id: fakeScript.template_id, updated_at: fakeScript.updated_at };
+    const scriptRow = {
+      id: fakeScript.id,
+      name: fakeScript.name,
+      template_id: fakeScript.template_id,
+      updated_at: fakeScript.updated_at,
+    };
     const templateRow = { id: fakeTemplate.id, slug: fakeTemplate.slug, name: fakeTemplate.name };
     selectResultQueue.push([scriptRow]); // scripts query (withOrgContext)
     selectResultQueue.push([templateRow]); // scriptTemplates query (withSystemContext)
     const { listScriptsWithTemplates } = await import('./scripts');
 
     const result = await listScriptsWithTemplates('org-1');
-    expect(result).toEqual([{
-      id: fakeScript.id,
-      name: fakeScript.name,
-      template_slug: fakeTemplate.slug,
-      template_name: fakeTemplate.name,
-      updated_at: fakeScript.updated_at,
-    }]);
+    expect(result).toEqual([
+      {
+        id: fakeScript.id,
+        name: fakeScript.name,
+        template_slug: fakeTemplate.slug,
+        template_name: fakeTemplate.name,
+        updated_at: fakeScript.updated_at,
+      },
+    ]);
   });
 
   it('excludes scripts whose template is not found', async () => {
-    const scriptRow = { id: fakeScript.id, name: fakeScript.name, template_id: fakeScript.template_id, updated_at: fakeScript.updated_at };
+    const scriptRow = {
+      id: fakeScript.id,
+      name: fakeScript.name,
+      template_id: fakeScript.template_id,
+      updated_at: fakeScript.updated_at,
+    };
     selectResultQueue.push([scriptRow]); // scripts query
     selectResultQueue.push([]); // templates query returns empty (orphaned script)
     const { listScriptsWithTemplates } = await import('./scripts');
@@ -304,9 +319,7 @@ describe('createScript', () => {
     insertResultQueue.push([{ ...fakeScript, voice_id: 'voice-xyz' }]);
 
     const valuesMock = vi.fn(() => ({
-      returning: vi.fn(() =>
-        Promise.resolve([{ ...fakeScript, voice_id: 'voice-xyz' }]),
-      ),
+      returning: vi.fn(() => Promise.resolve([{ ...fakeScript, voice_id: 'voice-xyz' }])),
     }));
     mockTx.insert.mockReturnValue({ values: valuesMock });
 
@@ -318,9 +331,7 @@ describe('createScript', () => {
       voiceIdOverride: 'voice-xyz',
     });
 
-    expect(valuesMock).toHaveBeenCalledWith(
-      expect.objectContaining({ voice_id: 'voice-xyz' }),
-    );
+    expect(valuesMock).toHaveBeenCalledWith(expect.objectContaining({ voice_id: 'voice-xyz' }));
   });
 });
 
@@ -500,9 +511,7 @@ describe('previewSystemPrompt', () => {
     const result = await previewSystemPrompt('org-1', 'script-1');
 
     // The assembled prompt must start with the AI Act preamble
-    expect(result.systemPrompt).toContain(
-      'assistente vocale automatico',
-    );
+    expect(result.systemPrompt).toContain('assistente vocale automatico');
     // It must contain the interpolated template body
     expect(result.systemPrompt).toContain('AutoRoma');
     expect(result.systemPrompt).toContain('Volkswagen');

@@ -39,7 +39,10 @@ const VALID_SORTS: CampaignResultsPage['sort'][] = [
 function parseStringList(v: string | string[] | undefined): string[] {
   if (v === undefined) return [];
   const raw = Array.isArray(v) ? v.join(',') : v;
-  return raw.split(',').map((s) => s.trim()).filter(Boolean);
+  return raw
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
 }
 
 function parseIntParam(v: string | string[] | undefined, fallback: number): number {

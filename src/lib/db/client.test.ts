@@ -117,7 +117,11 @@ describe('dbForRequest', () => {
     it('propagates errors thrown by fn', async () => {
       const { withOrgContext } = await dbForRequest();
       const boom = new Error('query failed');
-      await expect(withOrgContext(async () => { throw boom; })).rejects.toThrow('query failed');
+      await expect(
+        withOrgContext(async () => {
+          throw boom;
+        }),
+      ).rejects.toThrow('query failed');
     });
 
     it('GUC execute is called before fn body runs', async () => {

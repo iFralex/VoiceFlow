@@ -27,7 +27,9 @@ export async function DpaBanner() {
   try {
     status = await getDpaStatus(orgId);
   } catch (err) {
-    void logger.error('[dpa-banner] failed to resolve status', { error: err instanceof Error ? err.message : String(err) });
+    void logger.error('[dpa-banner] failed to resolve status', {
+      error: err instanceof Error ? err.message : String(err),
+    });
     return null;
   }
   if (status.state === 'current') return null;

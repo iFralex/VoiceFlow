@@ -9,6 +9,7 @@
 Phase 1 ships with two interchangeable voice providers — Vapi (primary) and Retell (fallback) — both accessed through a common `VoiceProvider` interface (`src/lib/voice/types.ts`). The `VOICE_PROVIDER` env var selects the active provider at startup.
 
 Phase 2 will replace the third-party API dependency with a proprietary stack that:
+
 - Routes calls through the Italian SBC directly (spec §17.1)
 - Runs open-source ASR (Whisper-based) on a GPU node for transcription
 - Uses a self-hosted LLM (Mistral or Llama derivative) for real-time response generation

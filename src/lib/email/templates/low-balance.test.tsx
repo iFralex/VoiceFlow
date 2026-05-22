@@ -55,7 +55,11 @@ describe('renderLowBalanceEmail', () => {
 
   it('shows estimated days remaining', async () => {
     const { html } = await renderLowBalanceEmail({ ...baseProps, estimatedDaysRemaining: 2 });
-    const { html: html2 } = await renderLowBalanceEmail({ ...baseProps, locale: 'en', estimatedDaysRemaining: 2 });
+    const { html: html2 } = await renderLowBalanceEmail({
+      ...baseProps,
+      locale: 'en',
+      estimatedDaysRemaining: 2,
+    });
     expect(html).toContain('2 giorni');
     expect(html2).toContain('2 days');
   });

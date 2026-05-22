@@ -28,18 +28,10 @@
 
 // Minimal Supabase client interface used by this stub.
 // Replaced with full @supabase/supabase-js types when that package is added in plan 12.
-export type RealtimeSubscribeStatus =
-  | 'SUBSCRIBED'
-  | 'CHANNEL_ERROR'
-  | 'TIMED_OUT'
-  | 'CLOSED';
+export type RealtimeSubscribeStatus = 'SUBSCRIBED' | 'CHANNEL_ERROR' | 'TIMED_OUT' | 'CLOSED';
 
 export interface RealtimeChannelLike {
-  on(
-    event: string,
-    opts: Record<string, unknown>,
-    handler: (payload: unknown) => void,
-  ): this;
+  on(event: string, opts: Record<string, unknown>, handler: (payload: unknown) => void): this;
   subscribe(callback?: (status: RealtimeSubscribeStatus) => void): this;
 }
 

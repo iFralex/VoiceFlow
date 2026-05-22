@@ -26,7 +26,14 @@ export async function sendInngestEvent(event: InngestEventPayload): Promise<void
   const response = await fetch(`${baseUrl}/e/${eventKey}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify([{ name: event.name, data: event.data, ...(event.id ? { id: event.id } : {}), ...(event.ts !== undefined ? { ts: event.ts } : {}) }]),
+    body: JSON.stringify([
+      {
+        name: event.name,
+        data: event.data,
+        ...(event.id ? { id: event.id } : {}),
+        ...(event.ts !== undefined ? { ts: event.ts } : {}),
+      },
+    ]),
   });
 
   if (!response.ok) {
@@ -48,7 +55,12 @@ export async function sendInngestEvents(events: InngestEventPayload[]): Promise<
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(
-      events.map((e) => ({ name: e.name, data: e.data, ...(e.id ? { id: e.id } : {}), ...(e.ts !== undefined ? { ts: e.ts } : {}) })),
+      events.map((e) => ({
+        name: e.name,
+        data: e.data,
+        ...(e.id ? { id: e.id } : {}),
+        ...(e.ts !== undefined ? { ts: e.ts } : {}),
+      })),
     ),
   });
 

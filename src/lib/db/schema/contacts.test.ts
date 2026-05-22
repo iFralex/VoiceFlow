@@ -59,7 +59,16 @@ describe('contacts schema', () => {
   });
 
   it('nullable optional fields', () => {
-    const nullableFields = ['first_name', 'last_name', 'email', 'consent_evidence', 'opt_out_reason', 'metadata', 'rpo_checked_at', 'deleted_at'];
+    const nullableFields = [
+      'first_name',
+      'last_name',
+      'email',
+      'consent_evidence',
+      'opt_out_reason',
+      'metadata',
+      'rpo_checked_at',
+      'deleted_at',
+    ];
     for (const field of nullableFields) {
       const col = (contacts as unknown as unknown as Tbl)[field]!;
       expect(col.notNull, `${field} should be nullable`).toBeFalsy();

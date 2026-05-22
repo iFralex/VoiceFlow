@@ -240,7 +240,9 @@ describe('getWeeklyStats', () => {
       { status: 'pending_review', checklist: null },
     ];
     const stats = await getWeeklyStats();
-    for (const key of Object.keys(stats.checklistStats) as Array<keyof typeof stats.checklistStats>) {
+    for (const key of Object.keys(stats.checklistStats) as Array<
+      keyof typeof stats.checklistStats
+    >) {
       expect(stats.checklistStats[key].pass).toBe(0);
       expect(stats.checklistStats[key].fail).toBe(0);
     }

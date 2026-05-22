@@ -23,7 +23,13 @@ import crypto from 'node:crypto';
 import { and, eq, isNotNull, sql } from 'drizzle-orm';
 
 import { withSystemContext } from '@/lib/db/context';
-import { memberships, organizations, users, webhookDeliveries, webhooksOutgoing } from '@/lib/db/schema';
+import {
+  memberships,
+  organizations,
+  users,
+  webhookDeliveries,
+  webhooksOutgoing,
+} from '@/lib/db/schema';
 import { sendEmail } from '@/lib/email';
 import { env } from '@/lib/env';
 import { sendInngestEvent } from '@/lib/inngest/client';
@@ -35,11 +41,11 @@ const MAX_FAILURES = 6;
 
 /** Delays between retry attempts in milliseconds (index = attempt - 1). */
 const BACKOFF_DELAYS_MS = [
-  1 * 60 * 1000,       // attempt 1 fails → wait 1m
-  5 * 60 * 1000,       // attempt 2 fails → wait 5m
-  15 * 60 * 1000,      // attempt 3 fails → wait 15m
-  60 * 60 * 1000,      // attempt 4 fails → wait 1h
-  6 * 60 * 60 * 1000,  // attempt 5 fails → wait 6h
+  1 * 60 * 1000, // attempt 1 fails → wait 1m
+  5 * 60 * 1000, // attempt 2 fails → wait 5m
+  15 * 60 * 1000, // attempt 3 fails → wait 15m
+  60 * 60 * 1000, // attempt 4 fails → wait 1h
+  6 * 60 * 60 * 1000, // attempt 5 fails → wait 6h
   24 * 60 * 60 * 1000, // attempt 6 fails → wait 24h (should not reach; deactivated at 6)
 ];
 
@@ -166,7 +172,10 @@ export async function webhookDeliverHandler(data: WebhookDeliverData): Promise<v
   const [updated] = await withSystemContext((tx) =>
     tx
       .update(webhooksOutgoing)
-      .set({ failure_count: sql`${webhooksOutgoing.failure_count} + 1`, last_failure_at: new Date() })
+      .set({
+        failure_count: sql`${webhooksOutgoing.failure_count} + 1`,
+        last_failure_at: new Date(),
+      })
       .where(eq(webhooksOutgoing.id, data.webhookId))
       .returning({ failureCount: webhooksOutgoing.failure_count }),
   );
@@ -189,7 +198,8 @@ export async function webhookDeliverHandler(data: WebhookDeliverData): Promise<v
   }
 
   // Schedule next retry with exponential backoff
-  const delayMs = BACKOFF_DELAYS_MS[attempt - 1] ?? BACKOFF_DELAYS_MS[BACKOFF_DELAYS_MS.length - 1]!;
+  const delayMs =
+    BACKOFF_DELAYS_MS[attempt - 1] ?? BACKOFF_DELAYS_MS[BACKOFF_DELAYS_MS.length - 1]!;
   const nextAttempt = attempt + 1;
 
   await sendInngestEvent({
@@ -209,7 +219,11 @@ export async function webhookDeliverHandler(data: WebhookDeliverData): Promise<v
 // ─── Internal helpers ─────────────────────────────────────────────────────────
 
 function escapeHtml(str: string): string {
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
 
 async function notifyWebhookDisabled(orgId: string, webhookUrl: string): Promise<void> {

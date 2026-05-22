@@ -82,7 +82,7 @@ They are delivered by the `webhook/deliver` Inngest job with exponential backoff
 ### Delivery lifecycle
 
 | Attempt | Delay before retry |
-|---------|--------------------|
+| ------- | ------------------ |
 | 1       | immediate          |
 | 2       | 1 minute           |
 | 3       | 5 minutes          |
@@ -177,7 +177,7 @@ Escalate to the engineering on-call if:
 ### Escalation contacts
 
 | Situation                        | Contact                                   |
-|----------------------------------|-------------------------------------------|
+| -------------------------------- | ----------------------------------------- |
 | Inngest outage                   | status.inngest.com; page on-call engineer |
 | Stripe event backlog > 1 hour    | Stripe Status; page on-call engineer      |
 | Customer's endpoint is incorrect | Contact the org owner; note in audit log  |

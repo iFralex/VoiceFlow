@@ -231,9 +231,9 @@ describe('updateOrganization', () => {
 
   it('throws for invalid VAT in patch', async () => {
     const { updateOrganization } = await import('./organizations');
-    await expect(updateOrganization('org-1', { vat_number: '12345678901' }, 'user-1')).rejects.toThrow(
-      'invalid_vat_number',
-    );
+    await expect(
+      updateOrganization('org-1', { vat_number: '12345678901' }, 'user-1'),
+    ).rejects.toThrow('invalid_vat_number');
   });
 
   it('accepts null VAT (removal) without validation', async () => {
@@ -246,7 +246,9 @@ describe('updateOrganization', () => {
       })),
     });
     const { updateOrganization } = await import('./organizations');
-    await expect(updateOrganization('org-1', { vat_number: null }, 'user-1')).resolves.toBeDefined();
+    await expect(
+      updateOrganization('org-1', { vat_number: null }, 'user-1'),
+    ).resolves.toBeDefined();
   });
 
   it('throws organization_not_found when update returns empty', async () => {

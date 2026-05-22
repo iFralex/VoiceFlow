@@ -18,10 +18,7 @@ export const appointmentConfirmSchema = z.object({
   service_type: z.enum(['test_drive', 'service_appointment', 'delivery'], {
     error: 'Tipo di servizio non valido. Valori ammessi: test_drive, service_appointment, delivery',
   }),
-  vehicle_model: z
-    .string()
-    .max(MAX_LEN, `Massimo ${MAX_LEN} caratteri`)
-    .optional(),
+  vehicle_model: z.string().max(MAX_LEN, `Massimo ${MAX_LEN} caratteri`).optional(),
   salesperson_first_name: z
     .string()
     .min(1, 'Campo obbligatorio')

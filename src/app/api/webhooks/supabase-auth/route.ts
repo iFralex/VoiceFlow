@@ -77,7 +77,11 @@ async function enqueueSuspiciousLoginAlert(
   userAgent: string,
 ): Promise<void> {
   const [user] = await withSystemContext((tx) =>
-    tx.select({ email: users.email, locale: users.locale }).from(users).where(eq(users.id, userId)).limit(1),
+    tx
+      .select({ email: users.email, locale: users.locale })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1),
   );
 
   if (!user) return;
@@ -145,8 +149,7 @@ export async function POST(request: Request): Promise<Response> {
   // When the provider supplies event_id, use it. Otherwise derive a
   // minute-granular fallback so retries within the same minute are
   // deduplicated without blocking genuinely new events in later minutes.
-  const eventId =
-    event.event_id ?? `${event.type}:${userId}:${Math.floor(Date.now() / 60_000)}`;
+  const eventId = event.event_id ?? `${event.type}:${userId}:${Math.floor(Date.now() / 60_000)}`;
 
   // Insert into webhook_events for deduplication.
   // onConflictDoNothing returns empty array when the row already exists.
@@ -174,9 +177,7 @@ export async function POST(request: Request): Promise<Response> {
 
   // Extract IP and user-agent from payload or request headers.
   const ip =
-    event.ip_address ??
-    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
-    '0.0.0.0';
+    event.ip_address ?? request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? '0.0.0.0';
   const userAgent = event.user_agent ?? request.headers.get('user-agent') ?? '';
 
   // Check for new IP+UA fingerprint and record the signin.

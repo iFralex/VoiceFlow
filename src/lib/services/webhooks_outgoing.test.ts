@@ -285,7 +285,10 @@ describe('webhooks_outgoing service', () => {
 
   describe('listDeliveries', () => {
     it('returns deliveries for a valid webhook', async () => {
-      const deliveries = [makeDelivery(), makeDelivery({ id: 'aaaaaaaa-aaaa-4aaa-8aaa-000000000010' })];
+      const deliveries = [
+        makeDelivery(),
+        makeDelivery({ id: 'aaaaaaaa-aaaa-4aaa-8aaa-000000000010' }),
+      ];
       // First select: webhook ownership check
       selectResults.push([{ id: WEBHOOK_ID }]);
       // Second select: deliveries

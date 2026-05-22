@@ -56,7 +56,7 @@ const STRINGS: Record<SuspiciousLoginLocale, Strings> = {
     unknown: 'Sconosciuto',
     safeNotice:
       'Se eri tu, puoi ignorare questa email. Se non riconosci questo accesso, ti consigliamo di proteggere immediatamente il tuo account.',
-    ctaRevoke: 'Non ero io — proteggi l\'account',
+    ctaRevoke: "Non ero io — proteggi l'account",
     ctaNote: 'Cliccando verrà revocata ogni sessione attiva.',
     footerNote:
       'Hai ricevuto questa email perché il tuo account VoiceFlow ha ricevuto un nuovo accesso da un dispositivo sconosciuto. Se hai già verificato che si trattava di te, puoi ignorare questo messaggio.',
@@ -73,8 +73,8 @@ const STRINGS: Record<SuspiciousLoginLocale, Strings> = {
     labelDevice: 'Device',
     unknown: 'Unknown',
     safeNotice:
-      'If this was you, you can ignore this email. If you don\'t recognise this sign-in, we recommend securing your account immediately.',
-    ctaRevoke: 'This wasn\'t me — secure my account',
+      "If this was you, you can ignore this email. If you don't recognise this sign-in, we recommend securing your account immediately.",
+    ctaRevoke: "This wasn't me — secure my account",
     ctaNote: 'Clicking will revoke all active sessions.',
     footerNote:
       'You received this email because your VoiceFlow account had a new sign-in from an unknown device. If you have already verified it was you, you can safely ignore this message.',
@@ -96,8 +96,7 @@ function formatDate(date: Date, locale: SuspiciousLoginLocale): string {
 export function SuspiciousLoginEmail(props: SuspiciousLoginEmailProps) {
   const t = STRINGS[props.locale];
 
-  const locationDisplay =
-    props.city ? `${props.city} (${props.ip})` : props.ip;
+  const locationDisplay = props.city ? `${props.city} (${props.ip})` : props.ip;
 
   return (
     <Html lang={props.locale}>
@@ -128,9 +127,7 @@ export function SuspiciousLoginEmail(props: SuspiciousLoginEmailProps) {
               <tbody>
                 <tr>
                   <td style={styles.detailKey}>{t.labelTime}</td>
-                  <td style={styles.detailValue}>
-                    {formatDate(props.occurredAt, props.locale)}
-                  </td>
+                  <td style={styles.detailValue}>{formatDate(props.occurredAt, props.locale)}</td>
                 </tr>
                 <tr>
                   <td style={styles.detailKey}>{t.labelLocation}</td>
@@ -138,9 +135,7 @@ export function SuspiciousLoginEmail(props: SuspiciousLoginEmailProps) {
                 </tr>
                 <tr>
                   <td style={styles.detailKey}>{t.labelDevice}</td>
-                  <td style={styles.detailValue}>
-                    {props.userAgentSummary || t.unknown}
-                  </td>
+                  <td style={styles.detailValue}>{props.userAgentSummary || t.unknown}</td>
                 </tr>
               </tbody>
             </table>

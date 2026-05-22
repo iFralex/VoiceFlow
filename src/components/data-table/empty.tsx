@@ -22,8 +22,8 @@ export function DataTableEmpty({
           data-slot="data-table-empty"
           className="flex flex-col items-center justify-center gap-2 py-12 text-center"
         >
-          <p className="text-sm font-medium text-foreground">{title}</p>
-          <p className="text-sm text-muted-foreground">{description}</p>
+          <p className="text-foreground text-sm font-medium">{title}</p>
+          <p className="text-muted-foreground text-sm">{description}</p>
           {action}
         </div>
       </TableCell>

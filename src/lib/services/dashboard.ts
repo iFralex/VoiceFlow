@@ -59,7 +59,12 @@ export async function getDashboardData(
   period: DashboardPeriod,
 ): Promise<DashboardData> {
   const range = resolvePeriodRange(period);
-  const cached = await loadDashboardCached(orgId, period, range.start.toISOString(), range.end.toISOString());
+  const cached = await loadDashboardCached(
+    orgId,
+    period,
+    range.start.toISOString(),
+    range.end.toISOString(),
+  );
   return {
     period: { start: range.start, end: range.end, label: period },
     kpis: cached.kpis,
@@ -257,13 +262,7 @@ async function perDayOutcomeCounts(
       failed: sql<number>`count(*) filter (where ${calls.status} in ('failed','no_answer','busy','voicemail'))::int`,
     })
     .from(calls)
-    .where(
-      and(
-        eq(calls.org_id, orgId),
-        gte(calls.created_at, start),
-        lte(calls.created_at, end),
-      ),
-    )
+    .where(and(eq(calls.org_id, orgId), gte(calls.created_at, start), lte(calls.created_at, end)))
     .groupBy(sql`date_trunc('day', ${calls.created_at})`)
     .orderBy(sql`date_trunc('day', ${calls.created_at})`);
 }
@@ -289,13 +288,7 @@ async function perDaySparklines(
       appointmentBooked: sql<number>`count(*) filter (where ${calls.outcome} = 'appointment_booked')::int`,
     })
     .from(calls)
-    .where(
-      and(
-        eq(calls.org_id, orgId),
-        gte(calls.created_at, start),
-        lte(calls.created_at, end),
-      ),
-    )
+    .where(and(eq(calls.org_id, orgId), gte(calls.created_at, start), lte(calls.created_at, end)))
     .groupBy(sql`date_trunc('day', ${calls.created_at})`)
     .orderBy(sql`date_trunc('day', ${calls.created_at})`);
 }
@@ -312,12 +305,7 @@ async function activeCampaignsRows(tx: DbTx, orgId: string): Promise<ActiveCampa
     })
     .from(campaigns)
     .leftJoin(campaignStats, eq(campaignStats.campaign_id, campaigns.id))
-    .where(
-      and(
-        eq(campaigns.org_id, orgId),
-        sql`${campaigns.status} IN ('running','paused')`,
-      ),
-    )
+    .where(and(eq(campaigns.org_id, orgId), sql`${campaigns.status} IN ('running','paused')`))
     .orderBy(desc(campaigns.started_at), desc(campaigns.created_at))
     .limit(5);
 
@@ -356,8 +344,7 @@ async function recentAppointmentsRows(
 
   return rows.map((r) => ({
     id: r.id,
-    contactName:
-      [r.contactFirst, r.contactLast].filter(Boolean).join(' ') || r.contactPhone,
+    contactName: [r.contactFirst, r.contactLast].filter(Boolean).join(' ') || r.contactPhone,
     scheduledAt: r.scheduledAt.toISOString(),
     campaignName: r.campaignName ?? '',
     campaignId: r.campaignId ?? '',

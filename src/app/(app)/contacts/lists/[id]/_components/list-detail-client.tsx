@@ -7,10 +7,7 @@ import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 
-import {
-  getContactListStatus,
-  getImportErrorsUrl,
-} from '@/actions/contacts';
+import { getContactListStatus, getImportErrorsUrl } from '@/actions/contacts';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatusBadge } from '@/components/ui/status-badge';
@@ -54,7 +51,10 @@ interface Props {
 
 const POLL_INTERVAL_MS = 3000;
 
-function sourceLabel(source: SerializedList['source'], t: ReturnType<typeof useTranslations<'contacts'>>): string {
+function sourceLabel(
+  source: SerializedList['source'],
+  t: ReturnType<typeof useTranslations<'contacts'>>,
+): string {
   if (source === 'csv-upload') return t('list_source_csv_upload');
   if (source === 'zapier') return t('list_source_zapier');
   return t('list_source_api');
@@ -100,8 +100,14 @@ export function ListDetailClient({ list, contacts, listId, orgId }: Props) {
         },
         (payload: { new: Record<string, unknown> }) => {
           const newStatus = payload.new['import_status'] as string | null;
-          const newTotal = typeof payload.new['total_count'] === 'number' ? payload.new['total_count'] : listState.total_count;
-          const newValid = typeof payload.new['valid_count'] === 'number' ? payload.new['valid_count'] : listState.valid_count;
+          const newTotal =
+            typeof payload.new['total_count'] === 'number'
+              ? payload.new['total_count']
+              : listState.total_count;
+          const newValid =
+            typeof payload.new['valid_count'] === 'number'
+              ? payload.new['valid_count']
+              : listState.valid_count;
           setListState((prev) => ({
             ...prev,
             import_status: newStatus as SerializedList['import_status'],
@@ -155,7 +161,7 @@ export function ListDetailClient({ list, contacts, listId, orgId }: Props) {
     <div className="space-y-6 p-6">
       {/* Header */}
       <div className="space-y-1">
-        <Button variant="ghost" size="sm" asChild className="-ml-2 mb-2">
+        <Button variant="ghost" size="sm" asChild className="mb-2 -ml-2">
           <Link href="/contacts">
             <ArrowLeft className="mr-1 size-4" />
             {t('list_detail_back')}
@@ -165,7 +171,7 @@ export function ListDetailClient({ list, contacts, listId, orgId }: Props) {
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-1">
             <h1 className="text-2xl font-semibold tracking-tight">{listState.name}</h1>
-            <div className="flex items-center gap-3 text-sm text-muted-foreground">
+            <div className="text-muted-foreground flex items-center gap-3 text-sm">
               <span>{sourceLabel(listState.source, t)}</span>
               <span>·</span>
               <span>
@@ -186,7 +192,13 @@ export function ListDetailClient({ list, contacts, listId, orgId }: Props) {
             <AddContactDialog listId={listId} />
             {status && (
               <StatusBadge
-                status={status === 'parsing' ? 'processing' : status === 'pending' ? 'pending' : status as 'completed' | 'failed'}
+                status={
+                  status === 'parsing'
+                    ? 'processing'
+                    : status === 'pending'
+                      ? 'pending'
+                      : (status as 'completed' | 'failed')
+                }
               />
             )}
           </div>
@@ -204,10 +216,11 @@ export function ListDetailClient({ list, contacts, listId, orgId }: Props) {
             <CardDescription>{t('list_parsing_description')}</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2 text-sm text-muted-foreground">
+            <div className="text-muted-foreground space-y-2 text-sm">
               {listState.total_count > 0 && (
                 <p>
-                  {t('list_valid_contacts')}: {listState.valid_count.toLocaleString('it-IT')} / {listState.total_count.toLocaleString('it-IT')}
+                  {t('list_valid_contacts')}: {listState.valid_count.toLocaleString('it-IT')} /{' '}
+                  {listState.total_count.toLocaleString('it-IT')}
                 </p>
               )}
             </div>
@@ -218,23 +231,18 @@ export function ListDetailClient({ list, contacts, listId, orgId }: Props) {
       {status === 'failed' && (
         <Card className="border-destructive/50">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-destructive">
+            <CardTitle className="text-destructive flex items-center gap-2">
               <AlertCircle className="size-4" />
               {t('list_failed_title')}
             </CardTitle>
             <CardDescription>{t('list_failed_description')}</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={loadingErrors}
-              onClick={handleLoadErrors}
-            >
+            <Button variant="outline" size="sm" disabled={loadingErrors} onClick={handleLoadErrors}>
               {loadingErrors ? t('list_errors_loading') : t('list_errors_download')}
             </Button>
             {errorsUrl && (
-              <p className="mt-2 text-xs text-muted-foreground">
+              <p className="text-muted-foreground mt-2 text-xs">
                 <a href={errorsUrl} target="_blank" rel="noreferrer" className="underline">
                   {errorsUrl}
                 </a>
@@ -246,11 +254,9 @@ export function ListDetailClient({ list, contacts, listId, orgId }: Props) {
 
       {status === 'completed' && (
         <div className="space-y-4">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="text-muted-foreground flex items-center gap-2 text-sm">
             <CheckCircle2 className="size-4 text-green-600" />
-            <span>
-              {t('list_contacts_count', { count: String(listState.valid_count) })}
-            </span>
+            <span>{t('list_contacts_count', { count: String(listState.valid_count) })}</span>
             {listState.total_count > listState.valid_count && (
               <Button
                 variant="ghost"

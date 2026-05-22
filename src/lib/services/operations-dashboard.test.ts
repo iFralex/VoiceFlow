@@ -39,7 +39,10 @@ vi.mock('drizzle-orm', () => ({
   isNull: vi.fn((col: unknown) => ({ isNull: col })),
   isNotNull: vi.fn((col: unknown) => ({ isNotNull: col })),
   count: vi.fn(() => 'COUNT(*)'),
-  sql: Object.assign(vi.fn((strings: TemplateStringsArray) => strings[0]), { raw: vi.fn() }),
+  sql: Object.assign(
+    vi.fn((strings: TemplateStringsArray) => strings[0]),
+    { raw: vi.fn() },
+  ),
 }));
 
 // ── shared mock tx state ──────────────────────────────────────────────────────
@@ -54,7 +57,10 @@ function nextResult(): SelectResult {
 }
 
 const mockGroupBy = vi.fn(() => Promise.resolve(nextResult()));
-const mockWhere = vi.fn(() => ({ groupBy: mockGroupBy, then: (fn: (v: SelectResult) => unknown) => Promise.resolve(nextResult()).then(fn) }));
+const mockWhere = vi.fn(() => ({
+  groupBy: mockGroupBy,
+  then: (fn: (v: SelectResult) => unknown) => Promise.resolve(nextResult()).then(fn),
+}));
 const mockFrom = vi.fn(() => ({ where: mockWhere, groupBy: mockGroupBy }));
 const mockSelect = vi.fn(() => ({ from: mockFrom }));
 
@@ -89,15 +95,15 @@ function setQuerySequence(results: SelectResult[]): void {
 describe('getOperationsDashboardData', () => {
   it('returns zero values when all queries return empty', async () => {
     setQuerySequence([
-      [{ n: 0 }],          // active orgs
-      [{ n: 0 }],          // active campaigns
-      [{ cents: '0' }],    // mrr 30d
-      [{ cents: '0' }],    // credit 24h
-      [],                  // call rows (grouped)
-      [],                  // cli rows (grouped)
-      [{ cents: '0' }],    // stripe volume
-      [{ n: 0 }],          // failed webhooks
-      [{ n: 0 }],          // gdpr requests
+      [{ n: 0 }], // active orgs
+      [{ n: 0 }], // active campaigns
+      [{ cents: '0' }], // mrr 30d
+      [{ cents: '0' }], // credit 24h
+      [], // call rows (grouped)
+      [], // cli rows (grouped)
+      [{ cents: '0' }], // stripe volume
+      [{ n: 0 }], // failed webhooks
+      [{ n: 0 }], // gdpr requests
     ]);
 
     const data = await getOperationsDashboardData();

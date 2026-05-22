@@ -158,7 +158,7 @@ function Header({ call }: { call: SerializedCallDetail }) {
         {call.campaignId ? (
           <Link
             href={`/campaigns/${call.campaignId}`}
-            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm"
           >
             <ArrowLeft className="size-3" />
             {t('back_to_campaign')}
@@ -166,7 +166,7 @@ function Header({ call }: { call: SerializedCallDetail }) {
         ) : (
           <Link
             href="/dashboard"
-            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm"
           >
             <ArrowLeft className="size-3" />
             {t('back_to_dashboard')}
@@ -175,7 +175,7 @@ function Header({ call }: { call: SerializedCallDetail }) {
         <h1 className="text-2xl font-semibold">
           {call.contactName ?? call.contactPhone ?? t('unknown_contact')}
         </h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           {call.contactPhone ?? '—'}
           {call.campaignName ? ` · ${call.campaignName}` : ''}
           {call.scriptName ? ` · ${call.scriptName}` : ''}
@@ -213,8 +213,8 @@ function KpiRow({ call }: { call: SerializedCallDetail }) {
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       {items.map((it) => (
-        <div key={it.label} className="rounded-lg border bg-card p-3">
-          <div className="text-xs text-muted-foreground">{it.label}</div>
+        <div key={it.label} className="bg-card rounded-lg border p-3">
+          <div className="text-muted-foreground text-xs">{it.label}</div>
           <div className="text-base font-semibold tabular-nums">{it.value}</div>
         </div>
       ))}
@@ -226,7 +226,7 @@ function Timeline({ events }: { events: CallTimelineEvent[] }) {
   const t = useTranslations('calls');
   if (events.length === 0) {
     return (
-      <div className="rounded-lg border bg-card p-4 text-sm text-muted-foreground">
+      <div className="bg-card text-muted-foreground rounded-lg border p-4 text-sm">
         {t('timeline_empty')}
       </div>
     );
@@ -241,19 +241,19 @@ function Timeline({ events }: { events: CallTimelineEvent[] }) {
           data-action={event.type}
         >
           <span
-            className="absolute -left-[31px] top-1 size-2 rounded-full bg-foreground/40"
+            className="bg-foreground/40 absolute top-1 -left-[31px] size-2 rounded-full"
             aria-hidden
           />
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <span className="text-sm font-medium">
               <TimelineEventLabel event={event} />
             </span>
-            <span className="text-xs tabular-nums text-muted-foreground">
+            <span className="text-muted-foreground text-xs tabular-nums">
               {formatDateTime(event.timestamp)}
             </span>
           </div>
           {event.type === 'call.tool_invoked' && typeof event.data['tool'] === 'string' && (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               {t('timeline_tool', { name: String(event.data['tool']) })}
             </p>
           )}
@@ -280,7 +280,7 @@ function RecordingTab({ call }: { call: SerializedCallDetail }) {
     return (
       <div className="space-y-4">
         <RecordingPlayer audioUrl={call.recordingUrl} transcript={call.transcript} />
-        <div className="rounded-lg border border-dashed bg-card p-3 text-sm text-muted-foreground">
+        <div className="bg-card text-muted-foreground rounded-lg border border-dashed p-3 text-sm">
           {t('transcript_processing')}
         </div>
       </div>
@@ -293,14 +293,12 @@ function ProcessingPlaceholder({ kind }: { kind: 'recording' | 'transcript' }) {
   const t = useTranslations('calls');
   return (
     <div
-      className="flex items-center gap-3 rounded-lg border border-dashed bg-card p-4 text-sm text-muted-foreground"
+      className="bg-card text-muted-foreground flex items-center gap-3 rounded-lg border border-dashed p-4 text-sm"
       data-slot="processing-placeholder"
       data-kind={kind}
     >
       <RefreshCw className="size-4 animate-spin" aria-hidden />
-      <span>
-        {kind === 'recording' ? t('recording_processing') : t('transcript_processing')}
-      </span>
+      <span>{kind === 'recording' ? t('recording_processing') : t('transcript_processing')}</span>
     </div>
   );
 }
@@ -309,7 +307,7 @@ function DataTab({ call }: { call: SerializedCallDetail }) {
   const json = JSON.stringify(call.metadata, null, 2);
   return (
     <pre
-      className="max-h-[480px] overflow-auto rounded-lg border bg-muted p-3 text-xs"
+      className="bg-muted max-h-[480px] overflow-auto rounded-lg border p-3 text-xs"
       data-slot="call-metadata-json"
     >
       {json}
@@ -321,14 +319,14 @@ function AuditTab({ call }: { call: SerializedCallDetail }) {
   const t = useTranslations('calls');
   if (call.auditEntries === null) {
     return (
-      <div className="rounded-lg border bg-card p-4 text-sm text-muted-foreground">
+      <div className="bg-card text-muted-foreground rounded-lg border p-4 text-sm">
         {t('audit_forbidden')}
       </div>
     );
   }
   if (call.auditEntries.length === 0) {
     return (
-      <div className="rounded-lg border bg-card p-4 text-sm text-muted-foreground">
+      <div className="bg-card text-muted-foreground rounded-lg border p-4 text-sm">
         {t('audit_empty')}
       </div>
     );
@@ -338,21 +336,21 @@ function AuditTab({ call }: { call: SerializedCallDetail }) {
       {call.auditEntries.map((entry) => (
         <li
           key={entry.id}
-          className="rounded-lg border bg-card p-3 text-sm"
+          className="bg-card rounded-lg border p-3 text-sm"
           data-slot="call-audit-entry"
           data-action={entry.action}
         >
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <span className="font-medium">{entry.action}</span>
-            <span className="text-xs tabular-nums text-muted-foreground">
+            <span className="text-muted-foreground text-xs tabular-nums">
               {formatDateTime(entry.createdAt)}
             </span>
           </div>
-          <div className="text-xs text-muted-foreground">
+          <div className="text-muted-foreground text-xs">
             {entry.actorType} {entry.actorUserId ? `· ${entry.actorUserId}` : ''}
           </div>
           {Object.keys(entry.metadata).length > 0 && (
-            <pre className="mt-2 overflow-x-auto rounded bg-muted p-2 text-[11px]">
+            <pre className="bg-muted mt-2 overflow-x-auto rounded p-2 text-[11px]">
               {JSON.stringify(entry.metadata, null, 2)}
             </pre>
           )}

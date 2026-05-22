@@ -28,9 +28,7 @@ export const contactLists = pgTable(
     import_status: importStatusEnum('import_status').notNull().default('pending'),
     created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [
-    index('contact_lists_org_id_idx').on(t.org_id),
-  ],
+  (t) => [index('contact_lists_org_id_idx').on(t.org_id)],
 );
 
 export type ContactList = typeof contactLists.$inferSelect;

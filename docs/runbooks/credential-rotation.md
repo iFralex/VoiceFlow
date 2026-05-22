@@ -11,18 +11,18 @@ leaves the old credential live. Always finish both before closing the change.
 
 ## Rotation Schedule Summary
 
-| Credential                      | Frequency    | Next due (update when rotated) |
-|---------------------------------|--------------|-------------------------------|
-| Stripe API keys                 | 12 months    |                               |
-| Vapi API key                    | 6 months     |                               |
-| Retell API key                  | 6 months     |                               |
-| Supabase service-role key       | 12 months    |                               |
-| Resend API key                  | 12 months    |                               |
-| SBC trunk passwords             | 6 months     |                               |
-| `CRON_SECRET`                   | 12 months    |                               |
-| `INTERNAL_ADMIN_TOKEN`          | 12 months    |                               |
-| `WEBHOOK_SIGNING_SECRET`        | 12 months    |                               |
-| User PATs                       | User-driven  | (see §8)                      |
+| Credential                | Frequency   | Next due (update when rotated) |
+| ------------------------- | ----------- | ------------------------------ |
+| Stripe API keys           | 12 months   |                                |
+| Vapi API key              | 6 months    |                                |
+| Retell API key            | 6 months    |                                |
+| Supabase service-role key | 12 months   |                                |
+| Resend API key            | 12 months   |                                |
+| SBC trunk passwords       | 6 months    |                                |
+| `CRON_SECRET`             | 12 months   |                                |
+| `INTERNAL_ADMIN_TOKEN`    | 12 months   |                                |
+| `WEBHOOK_SIGNING_SECRET`  | 12 months   |                                |
+| User PATs                 | User-driven | (see §8)                       |
 
 ---
 
@@ -283,13 +283,16 @@ For each secret:
 ### Verification
 
 `CRON_SECRET`:
+
 ```bash
 curl -I https://app.voxauto.it/api/cron/retention-purge \
   -H "Authorization: Bearer $CRON_SECRET"
 ```
+
 Expected: `200 OK` (or `204`).
 
 `INTERNAL_ADMIN_TOKEN`:
+
 ```bash
 curl -s https://app.voxauto.it/api/admin/credit-adjustment \
   -H "Content-Type: application/json" \
@@ -297,6 +300,7 @@ curl -s https://app.voxauto.it/api/admin/credit-adjustment \
   -d '{"orgId":"00000000-0000-0000-0000-000000000000","deltaCents":0,"reason":"rotation-test"}' \
   | jq '.ok'
 ```
+
 Expected: `false` (invalid UUID, but 400 not 401 means token was accepted).
 
 `WEBHOOK_SIGNING_SECRET`: trigger a test webhook delivery and confirm the HMAC header

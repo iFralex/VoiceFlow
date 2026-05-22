@@ -45,9 +45,7 @@ const RECOMMENDED_KEY_MAP: Record<string, string> = {
 export function TopupClient({ packages }: TopupClientProps) {
   const t = useTranslations('credit');
   const searchParams = useSearchParams();
-  const [selectedId, setSelectedId] = useState<string | null>(
-    packages[0]?.id ?? null,
-  );
+  const [selectedId, setSelectedId] = useState<string | null>(packages[0]?.id ?? null);
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
@@ -74,7 +72,7 @@ export function TopupClient({ packages }: TopupClientProps) {
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">{t('topup_title')}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{t('topup_subtitle')}</p>
+        <p className="text-muted-foreground mt-1 text-sm">{t('topup_subtitle')}</p>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -90,15 +88,13 @@ export function TopupClient({ packages }: TopupClientProps) {
               onClick={() => setSelectedId(pkg.id)}
               className={cn(
                 'relative flex flex-col rounded-lg border p-5 text-left transition-colors',
-                'hover:border-primary/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                isSelected
-                  ? 'border-primary bg-primary/5 shadow-sm'
-                  : 'border-border bg-card',
+                'hover:border-primary/60 focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-none',
+                isSelected ? 'border-primary bg-primary/5 shadow-sm' : 'border-border bg-card',
               )}
               aria-pressed={isSelected}
             >
               {isSelected && (
-                <span className="absolute right-3 top-3 h-2 w-2 rounded-full bg-primary" />
+                <span className="bg-primary absolute top-3 right-3 h-2 w-2 rounded-full" />
               )}
 
               <span className="text-base font-semibold">{pkg.display_name}</span>
@@ -107,20 +103,20 @@ export function TopupClient({ packages }: TopupClientProps) {
                 {formatPrice(pkg.price_cents)}
               </span>
 
-              <span className="mt-1 text-xs text-muted-foreground">
-                {t('vat_included')}
+              <span className="text-muted-foreground mt-1 text-xs">{t('vat_included')}</span>
+
+              <span className="text-muted-foreground mt-4 text-sm">
+                {t('included_minutes_fmt', {
+                  minutes: pkg.included_minutes.toLocaleString('it-IT'),
+                })}
               </span>
 
-              <span className="mt-4 text-sm text-muted-foreground">
-                {t('included_minutes_fmt', { minutes: pkg.included_minutes.toLocaleString('it-IT') })}
-              </span>
-
-              <span className="mt-1 text-sm font-medium text-primary">
+              <span className="text-primary mt-1 text-sm font-medium">
                 {t('per_minute', { rate: rateLabel })}
               </span>
 
               {recommendedKey && (
-                <span className="mt-3 text-xs text-muted-foreground italic">
+                <span className="text-muted-foreground mt-3 text-xs italic">
                   {t(recommendedKey as Parameters<typeof t>[0])}
                 </span>
               )}

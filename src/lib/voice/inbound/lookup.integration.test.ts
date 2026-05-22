@@ -93,9 +93,30 @@ async function seedThreeOrgsCallingSamePhone(tx: TestDbTx) {
   });
 
   await tx.insert(scripts).values([
-    { id: SCRIPT_A, org_id: ORG_A, template_id: TEMPLATE_ID, name: 'Script A', variables: {}, voice_id: null },
-    { id: SCRIPT_B, org_id: ORG_B, template_id: TEMPLATE_ID, name: 'Script B', variables: {}, voice_id: null },
-    { id: SCRIPT_C, org_id: ORG_C, template_id: TEMPLATE_ID, name: 'Script C', variables: {}, voice_id: null },
+    {
+      id: SCRIPT_A,
+      org_id: ORG_A,
+      template_id: TEMPLATE_ID,
+      name: 'Script A',
+      variables: {},
+      voice_id: null,
+    },
+    {
+      id: SCRIPT_B,
+      org_id: ORG_B,
+      template_id: TEMPLATE_ID,
+      name: 'Script B',
+      variables: {},
+      voice_id: null,
+    },
+    {
+      id: SCRIPT_C,
+      org_id: ORG_C,
+      template_id: TEMPLATE_ID,
+      name: 'Script C',
+      variables: {},
+      voice_id: null,
+    },
   ]);
 
   await tx.insert(contactLists).values([
@@ -136,9 +157,30 @@ async function seedThreeOrgsCallingSamePhone(tx: TestDbTx) {
   ]);
 
   await tx.insert(campaigns).values([
-    { id: CAMPAIGN_A, org_id: ORG_A, contact_list_id: LIST_A, script_id: SCRIPT_A, name: 'Campaign A', status: 'draft' },
-    { id: CAMPAIGN_B, org_id: ORG_B, contact_list_id: LIST_B, script_id: SCRIPT_B, name: 'Campaign B', status: 'draft' },
-    { id: CAMPAIGN_C, org_id: ORG_C, contact_list_id: LIST_C, script_id: SCRIPT_C, name: 'Campaign C', status: 'draft' },
+    {
+      id: CAMPAIGN_A,
+      org_id: ORG_A,
+      contact_list_id: LIST_A,
+      script_id: SCRIPT_A,
+      name: 'Campaign A',
+      status: 'draft',
+    },
+    {
+      id: CAMPAIGN_B,
+      org_id: ORG_B,
+      contact_list_id: LIST_B,
+      script_id: SCRIPT_B,
+      name: 'Campaign B',
+      status: 'draft',
+    },
+    {
+      id: CAMPAIGN_C,
+      org_id: ORG_C,
+      contact_list_id: LIST_C,
+      script_id: SCRIPT_C,
+      name: 'Campaign C',
+      status: 'draft',
+    },
   ]);
 }
 
@@ -165,22 +207,40 @@ async function insertCalls(tx: TestDbTx, specs: InsertCallSpec[]) {
 }
 
 describe('findRecentOutboundCallsToNumber integration', () => {
-  it.skipIf(skipWhenNoDb)('returns calls from every org that dialed the number recently', async () => {
-    await withTestDb(async (tx) => {
-      await seedThreeOrgsCallingSamePhone(tx);
-      await insertCalls(tx, [
-        { orgId: ORG_A, campaignId: CAMPAIGN_A, contactId: CONTACT_A, startedAt: new Date(Date.now() - 60 * 1000) },
-        { orgId: ORG_B, campaignId: CAMPAIGN_B, contactId: CONTACT_B, startedAt: new Date(Date.now() - 2 * 60 * 1000) },
-        { orgId: ORG_C, campaignId: CAMPAIGN_C, contactId: CONTACT_C, startedAt: new Date(Date.now() - 3 * 60 * 1000) },
-      ]);
+  it.skipIf(skipWhenNoDb)(
+    'returns calls from every org that dialed the number recently',
+    async () => {
+      await withTestDb(async (tx) => {
+        await seedThreeOrgsCallingSamePhone(tx);
+        await insertCalls(tx, [
+          {
+            orgId: ORG_A,
+            campaignId: CAMPAIGN_A,
+            contactId: CONTACT_A,
+            startedAt: new Date(Date.now() - 60 * 1000),
+          },
+          {
+            orgId: ORG_B,
+            campaignId: CAMPAIGN_B,
+            contactId: CONTACT_B,
+            startedAt: new Date(Date.now() - 2 * 60 * 1000),
+          },
+          {
+            orgId: ORG_C,
+            campaignId: CAMPAIGN_C,
+            contactId: CONTACT_C,
+            startedAt: new Date(Date.now() - 3 * 60 * 1000),
+          },
+        ]);
 
-      const results = await findRecentOutboundCallsToNumber(TARGET_PHONE, {
-        tx: asProdTx(tx),
+        const results = await findRecentOutboundCallsToNumber(TARGET_PHONE, {
+          tx: asProdTx(tx),
+        });
+        const orgIds = results.map((r) => r.orgId).sort();
+        expect(orgIds).toEqual([ORG_A, ORG_B, ORG_C].sort());
       });
-      const orgIds = results.map((r) => r.orgId).sort();
-      expect(orgIds).toEqual([ORG_A, ORG_B, ORG_C].sort());
-    });
-  });
+    },
+  );
 
   it.skipIf(skipWhenNoDb)('orders results by started_at DESC (most recent first)', async () => {
     await withTestDb(async (tx) => {
@@ -227,7 +287,12 @@ describe('findRecentOutboundCallsToNumber integration', () => {
       const outsideSevenDayWindow = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
       await insertCalls(tx, [
         { orgId: ORG_A, campaignId: CAMPAIGN_A, contactId: CONTACT_A, startedAt: inSevenDayWindow },
-        { orgId: ORG_B, campaignId: CAMPAIGN_B, contactId: CONTACT_B, startedAt: outsideSevenDayWindow },
+        {
+          orgId: ORG_B,
+          campaignId: CAMPAIGN_B,
+          contactId: CONTACT_B,
+          startedAt: outsideSevenDayWindow,
+        },
       ]);
 
       const results = await findRecentOutboundCallsToNumber(TARGET_PHONE, {
@@ -244,8 +309,20 @@ describe('findRecentOutboundCallsToNumber integration', () => {
       await seedThreeOrgsCallingSamePhone(tx);
       const recent = new Date(Date.now() - 5 * 60 * 1000);
       await insertCalls(tx, [
-        { orgId: ORG_A, campaignId: CAMPAIGN_A, contactId: CONTACT_A, startedAt: recent, direction: 'outbound' },
-        { orgId: ORG_B, campaignId: CAMPAIGN_B, contactId: CONTACT_B, startedAt: recent, direction: 'inbound' },
+        {
+          orgId: ORG_A,
+          campaignId: CAMPAIGN_A,
+          contactId: CONTACT_A,
+          startedAt: recent,
+          direction: 'outbound',
+        },
+        {
+          orgId: ORG_B,
+          campaignId: CAMPAIGN_B,
+          contactId: CONTACT_B,
+          startedAt: recent,
+          direction: 'inbound',
+        },
       ]);
 
       const results = await findRecentOutboundCallsToNumber(TARGET_PHONE, {

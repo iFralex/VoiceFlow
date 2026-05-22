@@ -19,9 +19,7 @@ describe('phoneNumberSeedData', () => {
 
   it('spreads landlines across the major Italian metros', () => {
     const regions = new Set(
-      phoneNumberSeedData
-        .filter((p) => p.capabilities?.includes('landline'))
-        .map((p) => p.region),
+      phoneNumberSeedData.filter((p) => p.capabilities?.includes('landline')).map((p) => p.region),
     );
     expect(regions).toContain('milano');
     expect(regions).toContain('roma');

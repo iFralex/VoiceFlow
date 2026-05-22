@@ -1,7 +1,7 @@
 export const confirmAppointmentJsonSchema = {
   name: 'confirm_appointment',
   description:
-    'Invoca questo strumento quando il contatto conferma esplicitamente l\'appuntamento esistente senza richiedere modifiche.',
+    "Invoca questo strumento quando il contatto conferma esplicitamente l'appuntamento esistente senza richiedere modifiche.",
   parameters: {
     $schema: 'http://json-schema.org/draft-07/schema#',
     type: 'object',
@@ -11,7 +11,7 @@ export const confirmAppointmentJsonSchema = {
         type: 'string',
         maxLength: 512,
         description:
-          'Testo esatto pronunciato dal contatto che conferma l\'appuntamento (citazione testuale)',
+          "Testo esatto pronunciato dal contatto che conferma l'appuntamento (citazione testuale)",
       },
     },
     additionalProperties: false,

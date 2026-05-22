@@ -67,9 +67,7 @@ describe('qualifiedLeadEmailHandler', () => {
   it('propagates errors from the dispatcher', async () => {
     vi.mocked(sendQualifiedLeadEmail).mockRejectedValue(new Error('timeout'));
 
-    await expect(qualifiedLeadEmailHandler({ callId: 'c', orgId: 'o' })).rejects.toThrow(
-      'timeout',
-    );
+    await expect(qualifiedLeadEmailHandler({ callId: 'c', orgId: 'o' })).rejects.toThrow('timeout');
   });
 });
 
@@ -108,9 +106,9 @@ describe('campaignCompletedEmailHandler', () => {
   it('propagates errors from the dispatcher', async () => {
     vi.mocked(sendCampaignCompletedEmail).mockRejectedValue(new Error('resend down'));
 
-    await expect(
-      campaignCompletedEmailHandler({ orgId: 'o', campaignId: 'c' }),
-    ).rejects.toThrow('resend down');
+    await expect(campaignCompletedEmailHandler({ orgId: 'o', campaignId: 'c' })).rejects.toThrow(
+      'resend down',
+    );
   });
 });
 
@@ -130,8 +128,8 @@ describe('suspiciousLoginEmailHandler', () => {
   it('propagates errors from the dispatcher', async () => {
     vi.mocked(sendSuspiciousLoginEmail).mockRejectedValue(new Error('send failed'));
 
-    await expect(
-      suspiciousLoginEmailHandler({ userId: 'u', signinId: 's' }),
-    ).rejects.toThrow('send failed');
+    await expect(suspiciousLoginEmailHandler({ userId: 'u', signinId: 's' })).rejects.toThrow(
+      'send failed',
+    );
   });
 });

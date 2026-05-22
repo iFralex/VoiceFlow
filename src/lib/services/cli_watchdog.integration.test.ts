@@ -44,11 +44,7 @@ import {
 } from '@/lib/db/schema';
 import { type DbTx as TestDbTx, withTestDb } from '@/test/db';
 
-import {
-  collectCliMetrics,
-  COOLDOWN_DURATION_DAYS,
-  runWatchdog,
-} from './cli_watchdog';
+import { collectCliMetrics, COOLDOWN_DURATION_DAYS, runWatchdog } from './cli_watchdog';
 
 // ── Fixed UUIDs (9x prefix to avoid collisions with picker test 8x) ─────────
 
@@ -163,8 +159,7 @@ async function seedSpammyTraffic(
 ) {
   for (let i = 0; i < count; i++) {
     const phone = `+393408${String(salt).padStart(3, '0')}${String(i).padStart(4, '0')}`;
-    const contactId =
-      `90000000-0000-0000-0000-0000${String(salt).padStart(4, '0')}${String(i).padStart(4, '0')}`;
+    const contactId = `90000000-0000-0000-0000-0000${String(salt).padStart(4, '0')}${String(i).padStart(4, '0')}`;
     await tx.insert(contacts).values({
       id: contactId,
       org_id: ORG,
@@ -255,118 +250,127 @@ describe('collectCliMetrics integration', () => {
 });
 
 describe('runWatchdog integration', () => {
-  it.skipIf(skipWhenNoDb)('moves a high-score active CLI to cooling_down and inserts history', async () => {
-    await withTestDb(async (tx) => {
-      await seedScaffold(tx);
-      await tx.insert(phoneNumbers).values({
-        id: PHONE_SPAMMY,
-        e164: '+390299990002',
-        org_id: null,
-        provider: 'voiped',
-        status: 'active',
-        region: 'milano',
-        capabilities: ['landline'],
-        daily_call_count: 5,
-        spam_score: '0',
+  it.skipIf(skipWhenNoDb)(
+    'moves a high-score active CLI to cooling_down and inserts history',
+    async () => {
+      await withTestDb(async (tx) => {
+        await seedScaffold(tx);
+        await tx.insert(phoneNumbers).values({
+          id: PHONE_SPAMMY,
+          e164: '+390299990002',
+          org_id: null,
+          provider: 'voiped',
+          status: 'active',
+          region: 'milano',
+          capabilities: ['landline'],
+          daily_call_count: 5,
+          spam_score: '0',
+        });
+        const now = new Date();
+        const recent = new Date(now.getTime() - 60 * 60 * 1000);
+        await seedSpammyTraffic(tx, '+390299990002', 30, recent, 0);
+
+        const result = await runWatchdogInTx(tx, now);
+        const cooled = result.transitions.find((t) => t.to === 'cooling_down');
+        expect(cooled).toBeDefined();
+        expect(cooled!.e164).toBe('+390299990002');
+        expect(cooled!.cooldownsInWindow).toBe(1);
+
+        const after = await tx
+          .select({ status: phoneNumbers.status })
+          .from(phoneNumbers)
+          .where(eq(phoneNumbers.id, PHONE_SPAMMY));
+        expect(after[0]?.status).toBe('cooling_down');
+
+        const history = await tx
+          .select()
+          .from(cliCooldownHistory)
+          .where(eq(cliCooldownHistory.phone_number_id, PHONE_SPAMMY));
+        expect(history).toHaveLength(1);
+        expect(history[0]?.reason).toBe('spam_score_exceeded');
       });
-      const now = new Date();
-      const recent = new Date(now.getTime() - 60 * 60 * 1000);
-      await seedSpammyTraffic(tx, '+390299990002', 30, recent, 0);
+    },
+  );
 
-      const result = await runWatchdogInTx(tx, now);
-      const cooled = result.transitions.find((t) => t.to === 'cooling_down');
-      expect(cooled).toBeDefined();
-      expect(cooled!.e164).toBe('+390299990002');
-      expect(cooled!.cooldownsInWindow).toBe(1);
+  it.skipIf(skipWhenNoDb)(
+    'reactivates a cooling_down CLI whose 7-day window has expired',
+    async () => {
+      await withTestDb(async (tx) => {
+        await seedScaffold(tx);
+        await tx.insert(phoneNumbers).values({
+          id: PHONE_COOLING_OLD,
+          e164: '+390299990003',
+          org_id: null,
+          provider: 'voiped',
+          status: 'cooling_down',
+          region: 'milano',
+          capabilities: ['landline'],
+          daily_call_count: 0,
+          spam_score: '85',
+        });
+        const now = new Date();
+        const cooledLongAgo = new Date(
+          now.getTime() - (COOLDOWN_DURATION_DAYS + 1) * 24 * 60 * 60 * 1000,
+        );
+        await tx.insert(cliCooldownHistory).values({
+          phone_number_id: PHONE_COOLING_OLD,
+          spam_score: '85',
+          started_at: cooledLongAgo,
+        });
 
-      const after = await tx
-        .select({ status: phoneNumbers.status })
-        .from(phoneNumbers)
-        .where(eq(phoneNumbers.id, PHONE_SPAMMY));
-      expect(after[0]?.status).toBe('cooling_down');
+        const result = await runWatchdogInTx(tx, now);
+        const reactivated = result.transitions.find((t) => t.to === 'active');
+        expect(reactivated).toBeDefined();
+        expect(reactivated!.e164).toBe('+390299990003');
 
-      const history = await tx
-        .select()
-        .from(cliCooldownHistory)
-        .where(eq(cliCooldownHistory.phone_number_id, PHONE_SPAMMY));
-      expect(history).toHaveLength(1);
-      expect(history[0]?.reason).toBe('spam_score_exceeded');
-    });
-  });
-
-  it.skipIf(skipWhenNoDb)('reactivates a cooling_down CLI whose 7-day window has expired', async () => {
-    await withTestDb(async (tx) => {
-      await seedScaffold(tx);
-      await tx.insert(phoneNumbers).values({
-        id: PHONE_COOLING_OLD,
-        e164: '+390299990003',
-        org_id: null,
-        provider: 'voiped',
-        status: 'cooling_down',
-        region: 'milano',
-        capabilities: ['landline'],
-        daily_call_count: 0,
-        spam_score: '85',
+        const after = await tx
+          .select({ status: phoneNumbers.status, spam_score: phoneNumbers.spam_score })
+          .from(phoneNumbers)
+          .where(eq(phoneNumbers.id, PHONE_COOLING_OLD));
+        expect(after[0]?.status).toBe('active');
+        expect(Number(after[0]?.spam_score)).toBe(0);
       });
-      const now = new Date();
-      const cooledLongAgo = new Date(
-        now.getTime() - (COOLDOWN_DURATION_DAYS + 1) * 24 * 60 * 60 * 1000,
-      );
-      await tx.insert(cliCooldownHistory).values({
-        phone_number_id: PHONE_COOLING_OLD,
-        spam_score: '85',
-        started_at: cooledLongAgo,
+    },
+  );
+
+  it.skipIf(skipWhenNoDb)(
+    'does not reactivate a cooling_down CLI whose window is still open',
+    async () => {
+      await withTestDb(async (tx) => {
+        await seedScaffold(tx);
+        await tx.insert(phoneNumbers).values({
+          id: PHONE_COOLING_FRESH,
+          e164: '+390299990004',
+          org_id: null,
+          provider: 'voiped',
+          status: 'cooling_down',
+          region: 'milano',
+          capabilities: ['landline'],
+          daily_call_count: 0,
+          spam_score: '85',
+        });
+        const now = new Date();
+        const cooledRecently = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000);
+        await tx.insert(cliCooldownHistory).values({
+          phone_number_id: PHONE_COOLING_FRESH,
+          spam_score: '85',
+          started_at: cooledRecently,
+        });
+
+        const result = await runWatchdogInTx(tx, now);
+        const reactivated = result.transitions.find(
+          (t) => t.e164 === '+390299990004' && t.to === 'active',
+        );
+        expect(reactivated).toBeUndefined();
+
+        const after = await tx
+          .select({ status: phoneNumbers.status })
+          .from(phoneNumbers)
+          .where(eq(phoneNumbers.id, PHONE_COOLING_FRESH));
+        expect(after[0]?.status).toBe('cooling_down');
       });
-
-      const result = await runWatchdogInTx(tx, now);
-      const reactivated = result.transitions.find((t) => t.to === 'active');
-      expect(reactivated).toBeDefined();
-      expect(reactivated!.e164).toBe('+390299990003');
-
-      const after = await tx
-        .select({ status: phoneNumbers.status, spam_score: phoneNumbers.spam_score })
-        .from(phoneNumbers)
-        .where(eq(phoneNumbers.id, PHONE_COOLING_OLD));
-      expect(after[0]?.status).toBe('active');
-      expect(Number(after[0]?.spam_score)).toBe(0);
-    });
-  });
-
-  it.skipIf(skipWhenNoDb)('does not reactivate a cooling_down CLI whose window is still open', async () => {
-    await withTestDb(async (tx) => {
-      await seedScaffold(tx);
-      await tx.insert(phoneNumbers).values({
-        id: PHONE_COOLING_FRESH,
-        e164: '+390299990004',
-        org_id: null,
-        provider: 'voiped',
-        status: 'cooling_down',
-        region: 'milano',
-        capabilities: ['landline'],
-        daily_call_count: 0,
-        spam_score: '85',
-      });
-      const now = new Date();
-      const cooledRecently = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000);
-      await tx.insert(cliCooldownHistory).values({
-        phone_number_id: PHONE_COOLING_FRESH,
-        spam_score: '85',
-        started_at: cooledRecently,
-      });
-
-      const result = await runWatchdogInTx(tx, now);
-      const reactivated = result.transitions.find(
-        (t) => t.e164 === '+390299990004' && t.to === 'active',
-      );
-      expect(reactivated).toBeUndefined();
-
-      const after = await tx
-        .select({ status: phoneNumbers.status })
-        .from(phoneNumbers)
-        .where(eq(phoneNumbers.id, PHONE_COOLING_FRESH));
-      expect(after[0]?.status).toBe('cooling_down');
-    });
-  });
+    },
+  );
 
   it.skipIf(skipWhenNoDb)(
     'retires a CLI whose 3rd cooldown in 30 days is triggered by this run',
@@ -564,4 +568,3 @@ describe('runWatchdog integration', () => {
     },
   );
 });
-

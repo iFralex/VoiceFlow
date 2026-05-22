@@ -109,7 +109,7 @@ function OutcomeBar({
             {count} ({percentage}%)
           </span>
         </div>
-        <div className="h-2 w-full overflow-hidden rounded-sm bg-muted">
+        <div className="bg-muted h-2 w-full overflow-hidden rounded-sm">
           <div
             role="progressbar"
             aria-valuenow={percentage}
@@ -173,7 +173,7 @@ export function PrintReportClient(props: PrintReportClientProps) {
       >
         <Link
           href={`/campaigns/${props.campaign.id}`}
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+          className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm"
         >
           <ArrowLeft className="size-3" />
           {t('print_back_to_campaign')}
@@ -201,11 +201,11 @@ export function PrintReportClient(props: PrintReportClientProps) {
 
       {/* Report header */}
       <header className="print-avoid-break space-y-1">
-        <p className="text-xs uppercase tracking-wide text-muted-foreground">
+        <p className="text-muted-foreground text-xs tracking-wide uppercase">
           {t('print_report_label')}
         </p>
         <h1 className="text-2xl font-semibold tracking-tight">{props.campaign.name}</h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           {t('print_status_label')}: {tStatus(props.campaign.status)}
           {props.campaign.scriptName && (
             <>
@@ -214,7 +214,7 @@ export function PrintReportClient(props: PrintReportClientProps) {
             </>
           )}
         </p>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-muted-foreground text-xs">
           {t('print_generated_at', { date: formatDateTime(props.generatedAtIso) })}
         </p>
       </header>
@@ -228,10 +228,7 @@ export function PrintReportClient(props: PrintReportClientProps) {
             label={t('detail_kpi_completed')}
             value={String(props.totals.completedCalls)}
           />
-          <SummaryCell
-            label={t('detail_kpi_failed')}
-            value={String(props.totals.failedCalls)}
-          />
+          <SummaryCell label={t('detail_kpi_failed')} value={String(props.totals.failedCalls)} />
           <SummaryCell
             label={t('detail_kpi_qualified_leads')}
             value={String(props.totals.qualifiedLeads)}
@@ -250,11 +247,7 @@ export function PrintReportClient(props: PrintReportClientProps) {
           />
           <SummaryCell
             label={t('print_summary_started')}
-            value={
-              props.campaign.startedAtIso
-                ? formatDate(props.campaign.startedAtIso)
-                : '—'
-            }
+            value={props.campaign.startedAtIso ? formatDate(props.campaign.startedAtIso) : '—'}
           />
         </div>
       </section>
@@ -263,7 +256,7 @@ export function PrintReportClient(props: PrintReportClientProps) {
       <section className="print-avoid-break space-y-3">
         <h2 className="text-lg font-semibold">{t('print_outcomes_title')}</h2>
         {totalOutcomes === 0 ? (
-          <p className="text-sm text-muted-foreground">{t('print_outcomes_empty')}</p>
+          <p className="text-muted-foreground text-sm">{t('print_outcomes_empty')}</p>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2">
             <OutcomeBar
@@ -316,21 +309,17 @@ export function PrintReportClient(props: PrintReportClientProps) {
       <section className="space-y-3">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h2 className="text-lg font-semibold">{t('print_appointments_title')}</h2>
-          <span className="text-xs text-muted-foreground">
-            {props.showFullPhones
-              ? t('print_phones_full_notice')
-              : t('print_phones_mask_notice')}
+          <span className="text-muted-foreground text-xs">
+            {props.showFullPhones ? t('print_phones_full_notice') : t('print_phones_mask_notice')}
           </span>
         </div>
 
         {props.topAppointments.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            {t('print_appointments_empty')}
-          </p>
+          <p className="text-muted-foreground text-sm">{t('print_appointments_empty')}</p>
         ) : (
           <table className="w-full border-collapse text-sm">
             <thead>
-              <tr className="border-b text-left text-xs uppercase tracking-wide text-muted-foreground">
+              <tr className="text-muted-foreground border-b text-left text-xs tracking-wide uppercase">
                 <th className="py-2 pr-4 font-medium">{t('print_appt_col_contact')}</th>
                 <th className="py-2 pr-4 font-medium">{t('print_appt_col_phone')}</th>
                 <th className="py-2 pr-4 font-medium">{t('print_appt_col_scheduled')}</th>
@@ -341,13 +330,13 @@ export function PrintReportClient(props: PrintReportClientProps) {
               {props.topAppointments.map((a) => (
                 <tr key={a.id} className="border-b last:border-b-0">
                   <td className="py-2 pr-4 align-top font-medium">{a.contactName}</td>
-                  <td className="py-2 pr-4 align-top font-mono-tabular tabular-nums">
+                  <td className="font-mono-tabular py-2 pr-4 align-top tabular-nums">
                     {renderPhone(a.phoneE164)}
                   </td>
                   <td className="py-2 pr-4 align-top tabular-nums">
                     {formatDateTime(a.scheduledAtIso)}
                   </td>
-                  <td className="py-2 align-top text-muted-foreground">{a.notes ?? '—'}</td>
+                  <td className="text-muted-foreground py-2 align-top">{a.notes ?? '—'}</td>
                 </tr>
               ))}
             </tbody>
@@ -360,8 +349,8 @@ export function PrintReportClient(props: PrintReportClientProps) {
 
 function SummaryCell({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded border bg-card p-3">
-      <p className="text-xs text-muted-foreground">{label}</p>
+    <div className="bg-card rounded border p-3">
+      <p className="text-muted-foreground text-xs">{label}</p>
       <p className="mt-1 text-xl font-semibold tabular-nums">{value}</p>
     </div>
   );

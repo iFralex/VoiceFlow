@@ -145,9 +145,7 @@ describe('setLegalHoldAction', () => {
 
     expect(result.ok).toBe(true);
     expect(result.message).toBe('Hold cleared');
-    expect(mockSetLegalHold).toHaveBeenCalledWith(
-      expect.objectContaining({ untilDate: null }),
-    );
+    expect(mockSetLegalHold).toHaveBeenCalledWith(expect.objectContaining({ untilDate: null }));
   });
 
   it('surfaces ContactNotFoundError as a not-found message', async () => {

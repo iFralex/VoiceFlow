@@ -49,9 +49,7 @@ export class ScriptReferencedByCampaignError extends Error {
  * from the Zod schema) into the `Record<string, string>` format expected by
  * `interpolate`. Arrays are joined with ", "; all other types are stringified.
  */
-function coerceVariablesToStrings(
-  variables: Record<string, unknown>,
-): Record<string, string> {
+function coerceVariablesToStrings(variables: Record<string, unknown>): Record<string, string> {
   const result: Record<string, string> = {};
   for (const [key, value] of Object.entries(variables)) {
     if (Array.isArray(value)) {
@@ -73,8 +71,7 @@ function fillMissingSchemaFields(
   vars: Record<string, string>,
   schema: unknown,
 ): Record<string, string> {
-  const props =
-    (schema as { properties?: Record<string, unknown> } | null)?.properties ?? {};
+  const props = (schema as { properties?: Record<string, unknown> } | null)?.properties ?? {};
   const result = { ...vars };
   for (const key of Object.keys(props)) {
     if (!(key in result)) {
@@ -170,7 +167,15 @@ export async function listScriptsWithTemplates(orgId: string): Promise<
   return scriptRows.flatMap((s) => {
     const tmpl = templateMap.get(s.template_id);
     if (!tmpl) return [];
-    return [{ id: s.id, name: s.name, template_slug: tmpl.slug, template_name: tmpl.name, updated_at: s.updated_at }];
+    return [
+      {
+        id: s.id,
+        name: s.name,
+        template_slug: tmpl.slug,
+        template_name: tmpl.name,
+        updated_at: s.updated_at,
+      },
+    ];
   });
 }
 
@@ -292,10 +297,7 @@ export async function updateScript(
     // the write transaction to keep validation separate from mutation.
     const existing = await getScript(orgId, scriptId);
     if (!existing) throw new Error('script_not_found');
-    await validateVariables(
-      existing.template.slug,
-      patch.variables as Record<string, unknown>,
-    );
+    await validateVariables(existing.template.slug, patch.variables as Record<string, unknown>);
 
     // Compliance check: verify AI Act preamble and first-message disclosure.
     // Fill in empty strings for optional fields absent from user input so that

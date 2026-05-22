@@ -25,7 +25,12 @@ interface Props {
   initialBalance: Balance | null;
 }
 
-export function SuccessClient({ stripeSessionId, paymentId, initialStatus, initialBalance }: Props) {
+export function SuccessClient({
+  stripeSessionId,
+  paymentId,
+  initialStatus,
+  initialBalance,
+}: Props) {
   const t = useTranslations('credit');
 
   const [status, setStatus] = useState<Status>(
@@ -46,7 +51,10 @@ export function SuccessClient({ stripeSessionId, paymentId, initialStatus, initi
   async function fetchBalance() {
     const result = await checkPaymentStatus(stripeSessionId);
     if (result.ok && result.status === 'succeeded') {
-      setBalance({ balanceCents: result.balanceCents ?? 0, remainingMinutes: result.remainingMinutes ?? 0 });
+      setBalance({
+        balanceCents: result.balanceCents ?? 0,
+        remainingMinutes: result.remainingMinutes ?? 0,
+      });
       setStatus('succeeded');
     }
   }
@@ -56,7 +64,11 @@ export function SuccessClient({ stripeSessionId, paymentId, initialStatus, initi
     if (status === 'succeeded' || status === 'failed' || status === 'not_found') return;
 
     // --- Supabase Realtime subscription (primary) ---
-    let channel: ReturnType<typeof getSupabaseBrowserClient>['channel'] extends ((...args: infer A) => infer R) ? R : never;
+    let channel: ReturnType<typeof getSupabaseBrowserClient>['channel'] extends (
+      ...args: infer A
+    ) => infer R
+      ? R
+      : never;
     if (paymentId) {
       const supabase = getSupabaseBrowserClient();
       channel = supabase
@@ -103,7 +115,10 @@ export function SuccessClient({ stripeSessionId, paymentId, initialStatus, initi
       }
       if (result.status === 'succeeded') {
         clearPolling();
-        setBalance({ balanceCents: result.balanceCents ?? 0, remainingMinutes: result.remainingMinutes ?? 0 });
+        setBalance({
+          balanceCents: result.balanceCents ?? 0,
+          remainingMinutes: result.remainingMinutes ?? 0,
+        });
         setStatus('succeeded');
       } else if (result.status === 'failed') {
         clearPolling();
@@ -162,7 +177,7 @@ export function SuccessClient({ stripeSessionId, paymentId, initialStatus, initi
   if (status === 'timeout') {
     return (
       <div className="flex flex-col items-center gap-6 py-16 text-center">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted text-muted-foreground">
+        <div className="bg-muted text-muted-foreground flex h-16 w-16 items-center justify-center rounded-full">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
@@ -194,7 +209,7 @@ export function SuccessClient({ stripeSessionId, paymentId, initialStatus, initi
   if (status === 'failed') {
     return (
       <div className="flex flex-col items-center gap-6 py-16 text-center">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+        <div className="bg-destructive/10 text-destructive flex h-16 w-16 items-center justify-center rounded-full">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
@@ -238,7 +253,7 @@ export function SuccessClient({ stripeSessionId, paymentId, initialStatus, initi
   return (
     <div className="flex flex-col items-center gap-6 py-16 text-center">
       <div
-        className="h-12 w-12 animate-spin rounded-full border-4 border-muted border-t-primary"
+        className="border-muted border-t-primary h-12 w-12 animate-spin rounded-full border-4"
         aria-hidden="true"
       />
       <div className="space-y-2">

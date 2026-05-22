@@ -34,11 +34,11 @@ If PITR is not enabled, upgrade the Supabase plan before the first paying custom
 
 Set these environment variables in Vercel (production and staging):
 
-| Variable | Description |
-|---|---|
-| `BACKUP_B2_KEY_ID` | Backblaze B2 application key ID |
-| `BACKUP_B2_APP_KEY` | Backblaze B2 application key secret |
-| `BACKUP_B2_BUCKET_ID` | B2 bucket ID (not bucket name) |
+| Variable                | Description                                              |
+| ----------------------- | -------------------------------------------------------- |
+| `BACKUP_B2_KEY_ID`      | Backblaze B2 application key ID                          |
+| `BACKUP_B2_APP_KEY`     | Backblaze B2 application key secret                      |
+| `BACKUP_B2_BUCKET_ID`   | B2 bucket ID (not bucket name)                           |
 | `BACKUP_ENCRYPTION_KEY` | 64-char hex string (32 bytes) for AES-256-GCM encryption |
 
 Generate an encryption key:
@@ -64,6 +64,7 @@ curl -H "Authorization: Bearer $CRON_SECRET" \
 ```
 
 Expected response:
+
 ```json
 {
   "ok": true,
@@ -180,6 +181,7 @@ EOF
 ```
 
 The provided backup is a logical snapshot: schema + data. Before restoring to a running Supabase project:
+
 - Run `pnpm db:migrate` on the target database to ensure schema is current.
 - Import data table-by-table respecting FK order (same order as `BACKUP_TABLES` in `src/lib/services/backup.ts`).
 
@@ -239,9 +241,9 @@ Run quarterly (see schedule at top of this document).
    ```
 5. **Verify queryability**: connect the staging app and load the dashboard.
 6. **Record results**:
-   - RTO (time from decision to restored service): ______
-   - RPO (data age at restore point): ______
-   - Issues encountered: ______
+   - RTO (time from decision to restored service): **\_\_**
+   - RPO (data age at restore point): **\_\_**
+   - Issues encountered: **\_\_**
 7. **Update next drill date** in the header of this runbook.
 
 ### Acceptance criteria
@@ -256,9 +258,9 @@ Run quarterly (see schedule at top of this document).
 
 ## 5. Quarterly Schedule
 
-| Drill date | Outcome | RTO | RPO | Notes |
-|---|---|---|---|---|
-| 2026-08-11 | Pending | — | — | First drill |
+| Drill date | Outcome | RTO | RPO | Notes       |
+| ---------- | ------- | --- | --- | ----------- |
+| 2026-08-11 | Pending | —   | —   | First drill |
 
 ---
 

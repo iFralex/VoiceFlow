@@ -49,8 +49,7 @@ export class VapiAdapter implements VoiceProvider {
           {
             type: 'number',
             number: params.transferTargetPhone,
-            message:
-              'Sto trasferendo la chiamata a un operatore umano. Attenda un momento.',
+            message: 'Sto trasferendo la chiamata a un operatore umano. Attenda un momento.',
           },
         ],
       });

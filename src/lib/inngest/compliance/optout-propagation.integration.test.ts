@@ -219,10 +219,7 @@ describe('opt-out propagation integration', () => {
         await clearOrgContext(tx);
 
         // All three in-flight rows now terminal with the opted_out error code.
-        const aborted = await tx
-          .select()
-          .from(calls)
-          .where(eq(calls.contact_id, CONTACT));
+        const aborted = await tx.select().from(calls).where(eq(calls.contact_id, CONTACT));
         const byId = new Map(aborted.map((r) => [r.id, r]));
         for (const id of [pendingId, dialingId, inProgressId]) {
           expect(byId.get(id)?.status).toBe('failed');
@@ -236,16 +233,9 @@ describe('opt-out propagation integration', () => {
         const auditRows = await tx
           .select()
           .from(auditLog)
-          .where(
-            and(
-              eq(auditLog.org_id, ORG),
-              eq(auditLog.action, 'call.skipped'),
-            ),
-          );
+          .where(and(eq(auditLog.org_id, ORG), eq(auditLog.action, 'call.skipped')));
         const skippedIds = auditRows.map((r) => r.subject_id);
-        expect(skippedIds).toEqual(
-          expect.arrayContaining([pendingId, dialingId, inProgressId]),
-        );
+        expect(skippedIds).toEqual(expect.arrayContaining([pendingId, dialingId, inProgressId]));
         expect(skippedIds).not.toContain(completedId);
         for (const row of auditRows) {
           const meta = row.metadata as Record<string, unknown>;
@@ -290,12 +280,7 @@ describe('opt-out propagation integration', () => {
         const auditRows = await tx
           .select()
           .from(auditLog)
-          .where(
-            and(
-              eq(auditLog.org_id, ORG),
-              eq(auditLog.action, 'call.skipped'),
-            ),
-          );
+          .where(and(eq(auditLog.org_id, ORG), eq(auditLog.action, 'call.skipped')));
         // Exactly one skipped audit row — the second delivery saw a terminal
         // status and wrote nothing new.
         expect(auditRows).toHaveLength(1);

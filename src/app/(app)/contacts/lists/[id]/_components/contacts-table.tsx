@@ -27,12 +27,7 @@ import { DataTablePagination } from '@/components/data-table/pagination';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -80,12 +75,17 @@ function MetadataDialog({
   if (!contact) return null;
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        if (!v) onClose();
+      }}
+    >
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>{t('action_view_metadata')}</DialogTitle>
         </DialogHeader>
-        <pre className="max-h-96 overflow-auto rounded bg-muted p-3 text-xs">
+        <pre className="bg-muted max-h-96 overflow-auto rounded p-3 text-xs">
           {JSON.stringify(contact.metadata, null, 2)}
         </pre>
       </DialogContent>
@@ -156,19 +156,14 @@ export function ContactsTable({ contacts, listId: _listId, orgId: _orgId }: Prop
       {
         id: 'name',
         header: t('col_name'),
-        accessorFn: (row) =>
-          [row.first_name, row.last_name].filter(Boolean).join(' ') || '—',
-        cell: ({ getValue }) => (
-          <span className="font-medium">{getValue() as string}</span>
-        ),
+        accessorFn: (row) => [row.first_name, row.last_name].filter(Boolean).join(' ') || '—',
+        cell: ({ getValue }) => <span className="font-medium">{getValue() as string}</span>,
       },
       {
         id: 'phone',
         header: t('col_phone'),
         accessorKey: 'phone_e164',
-        cell: ({ getValue }) => (
-          <span className="font-mono text-sm">{getValue() as string}</span>
-        ),
+        cell: ({ getValue }) => <span className="font-mono text-sm">{getValue() as string}</span>,
       },
       {
         id: 'email',
@@ -176,7 +171,11 @@ export function ContactsTable({ contacts, listId: _listId, orgId: _orgId }: Prop
         accessorKey: 'email',
         cell: ({ getValue }) => {
           const v = getValue() as string | null;
-          return v ? <span className="text-sm">{v}</span> : <span className="text-muted-foreground">—</span>;
+          return v ? (
+            <span className="text-sm">{v}</span>
+          ) : (
+            <span className="text-muted-foreground">—</span>
+          );
         },
       },
       {
@@ -209,10 +208,16 @@ export function ContactsTable({ contacts, listId: _listId, orgId: _orgId }: Prop
         header: '',
         cell: ({ row }) => {
           const contact = row.original;
-          return <ContactRowActions contact={contact} onMetadata={() => {
-            setMetadataContact(contact);
-            setMetadataOpen(true);
-          }} onRefresh={() => router.refresh()} />;
+          return (
+            <ContactRowActions
+              contact={contact}
+              onMetadata={() => {
+                setMetadataContact(contact);
+                setMetadataOpen(true);
+              }}
+              onRefresh={() => router.refresh()}
+            />
+          );
         },
       },
     ],
@@ -304,7 +309,10 @@ export function ContactsTable({ contacts, listId: _listId, orgId: _orgId }: Prop
           className="h-8 w-64"
         />
 
-        <Select value={optOutFilter} onValueChange={(v) => setOptOutFilter(v as typeof optOutFilter)}>
+        <Select
+          value={optOutFilter}
+          onValueChange={(v) => setOptOutFilter(v as typeof optOutFilter)}
+        >
           <SelectTrigger className="h-8 w-36">
             <SelectValue />
           </SelectTrigger>
@@ -347,16 +355,11 @@ export function ContactsTable({ contacts, listId: _listId, orgId: _orgId }: Prop
 
       {/* Bulk action bar */}
       {selectedCount > 0 && (
-        <div className="flex items-center gap-3 rounded-md border bg-muted/50 px-4 py-2">
+        <div className="bg-muted/50 flex items-center gap-3 rounded-md border px-4 py-2">
           <span className="text-sm font-medium">
             {t('bulk_selected', { count: String(selectedCount) })}
           </span>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={isPending}
-            onClick={handleBulkOptOut}
-          >
+          <Button variant="outline" size="sm" disabled={isPending} onClick={handleBulkOptOut}>
             <UserX className="mr-1 size-3" />
             {t('bulk_mark_opt_out')}
           </Button>
@@ -381,7 +384,10 @@ export function ContactsTable({ contacts, listId: _listId, orgId: _orgId }: Prop
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} style={{ width: header.getSize() !== 150 ? header.getSize() : undefined }}>
+                  <TableHead
+                    key={header.id}
+                    style={{ width: header.getSize() !== 150 ? header.getSize() : undefined }}
+                  >
                     {header.isPlaceholder
                       ? null
                       : flexRender(header.column.columnDef.header, header.getContext())}
@@ -393,7 +399,10 @@ export function ContactsTable({ contacts, listId: _listId, orgId: _orgId }: Prop
           <TableBody>
             {table.getRowModel().rows.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
+                <TableCell
+                  colSpan={columns.length}
+                  className="text-muted-foreground h-24 text-center"
+                >
                   {filteredContacts.length === 0 && contacts.length > 0
                     ? t('no_contacts_match')
                     : t('no_contacts_in_list')}
@@ -401,10 +410,7 @@ export function ContactsTable({ contacts, listId: _listId, orgId: _orgId }: Prop
               </TableRow>
             ) : (
               table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() ? 'selected' : undefined}
-                >
+                <TableRow key={row.id} data-state={row.getIsSelected() ? 'selected' : undefined}>
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -479,23 +485,15 @@ function ContactRowActions({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onSelect={onMetadata}>
-          {t('action_view_metadata')}
-        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={onMetadata}>{t('action_view_metadata')}</DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem
-          onSelect={handleOptOut}
-          disabled={contact.opt_out || isPending}
-        >
+        <DropdownMenuItem onSelect={handleOptOut} disabled={contact.opt_out || isPending}>
           {t('action_mark_opt_out')}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <ConfirmDialog
           trigger={
-            <DropdownMenuItem
-              variant="destructive"
-              onSelect={(e) => e.preventDefault()}
-            >
+            <DropdownMenuItem variant="destructive" onSelect={(e) => e.preventDefault()}>
               {t('action_delete')}
             </DropdownMenuItem>
           }

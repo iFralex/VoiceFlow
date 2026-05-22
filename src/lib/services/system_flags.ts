@@ -164,17 +164,14 @@ function readState(value: unknown): SbcHealthState {
   if (!value || typeof value !== 'object') return emptyState();
   const v = value as Record<string, unknown>;
   const recentFailures = Array.isArray(v['recentFailures'])
-    ? (v['recentFailures'] as unknown[]).filter(
-        (x): x is string => typeof x === 'string',
-      )
+    ? (v['recentFailures'] as unknown[]).filter((x): x is string => typeof x === 'string')
     : [];
   const unhealthy = v['unhealthy'] === true;
   return {
     recentFailures,
     unhealthy,
     since: typeof v['since'] === 'string' ? v['since'] : undefined,
-    lastFailureAt:
-      typeof v['lastFailureAt'] === 'string' ? v['lastFailureAt'] : undefined,
+    lastFailureAt: typeof v['lastFailureAt'] === 'string' ? v['lastFailureAt'] : undefined,
     reason: typeof v['reason'] === 'string' ? v['reason'] : undefined,
   };
 }
@@ -315,7 +312,9 @@ export async function isSbcUnhealthy(options: SbcHealthOptions = {}): Promise<bo
         const cleared = await clearStaleSbcUnhealthyFlag(options);
         if (cleared) return false;
       } catch (err) {
-        void logger.error('[system_flags] Lazy stale-flag clear failed', { error: err instanceof Error ? err.message : String(err) });
+        void logger.error('[system_flags] Lazy stale-flag clear failed', {
+          error: err instanceof Error ? err.message : String(err),
+        });
       }
     }
   }
@@ -328,9 +327,7 @@ export async function isSbcUnhealthy(options: SbcHealthOptions = {}): Promise<bo
  *
  * Returns true if the flag was cleared by this call (state changed).
  */
-export async function clearStaleSbcUnhealthyFlag(
-  options: SbcHealthOptions = {},
-): Promise<boolean> {
+export async function clearStaleSbcUnhealthyFlag(options: SbcHealthOptions = {}): Promise<boolean> {
   const now = options.now ?? new Date();
   const run = async (tx: DbTx): Promise<boolean> => {
     // Take the same advisory lock the record-* helpers use so a stale-flag

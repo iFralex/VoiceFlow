@@ -85,9 +85,7 @@ export async function deleteTestUser(userId: string): Promise<void> {
  */
 export async function generateMagicLink(
   email: string,
-  {
-    redirectTo = 'http://localhost:3000/auth/callback',
-  }: { redirectTo?: string } = {},
+  { redirectTo = 'http://localhost:3000/auth/callback' }: { redirectTo?: string } = {},
 ): Promise<string> {
   const res = await fetch(`${SUPABASE_URL}/auth/v1/admin/generate_link`, {
     method: 'POST',

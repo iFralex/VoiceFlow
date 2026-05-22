@@ -81,9 +81,9 @@ describe('sendEmail', () => {
       data: null,
       error: { message: 'bad request', name: 'validation_error', statusCode: 422 },
     });
-    await expect(
-      sendEmail({ to: 'user@example.com', subject: 's', html: 'h' }),
-    ).rejects.toThrow(/Resend send failed/);
+    await expect(sendEmail({ to: 'user@example.com', subject: 's', html: 'h' })).rejects.toThrow(
+      /Resend send failed/,
+    );
   });
 
   it('no-ops without throwing when API key is missing', async () => {

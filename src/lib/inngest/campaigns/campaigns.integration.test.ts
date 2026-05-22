@@ -152,12 +152,9 @@ function makeSelectChain(data: any[]): any {
   const self: Record<string, unknown> = {};
 
   // Thenable — makes `await selectChain` work without .limit()
-  self['then'] = (
-    resolve: (val: unknown) => void,
-    reject?: (err: unknown) => void,
-  ) => Promise.resolve(data).then(resolve, reject);
-  self['catch'] = (reject: (err: unknown) => void) =>
-    Promise.resolve(data).catch(reject);
+  self['then'] = (resolve: (val: unknown) => void, reject?: (err: unknown) => void) =>
+    Promise.resolve(data).then(resolve, reject);
+  self['catch'] = (reject: (err: unknown) => void) => Promise.resolve(data).catch(reject);
 
   // Chainable methods return self so additional chains work
   self['from'] = vi.fn(() => self);
@@ -189,7 +186,9 @@ function buildMockTx(selectQueue: any[][] = []) {
       set: vi.fn(() => ({
         where: vi.fn(() => {
           const rows = [{ id: 'updated-id' }];
-          const p = Promise.resolve(rows) as Promise<{ id: string }[]> & { returning: () => Promise<{ id: string }[]> };
+          const p = Promise.resolve(rows) as Promise<{ id: string }[]> & {
+            returning: () => Promise<{ id: string }[]>;
+          };
           p.returning = () => Promise.resolve(rows);
           return p;
         }),
@@ -225,9 +224,7 @@ function useMockTx(selectQueue: any[][] = []) {
     Promise.resolve(fn(tx)),
   );
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  vi.mocked(withSystemContext).mockImplementation((fn: any) =>
-    Promise.resolve(fn(tx)),
-  );
+  vi.mocked(withSystemContext).mockImplementation((fn: any) => Promise.resolve(fn(tx)));
   return tx;
 }
 
@@ -551,7 +548,9 @@ describe('scheduleRetryIfNeeded — retry policy', () => {
 
     const makeWhere = () => {
       const rows = [{ id: CALL }];
-      const p = Promise.resolve(rows) as Promise<{ id: string }[]> & { returning: () => Promise<{ id: string }[]> };
+      const p = Promise.resolve(rows) as Promise<{ id: string }[]> & {
+        returning: () => Promise<{ id: string }[]>;
+      };
       p.returning = () => Promise.resolve(rows);
       return p;
     };
@@ -559,7 +558,12 @@ describe('scheduleRetryIfNeeded — retry policy', () => {
     vi.mocked(withOrgContext).mockImplementation(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (_: string, fn: any) =>
-        Promise.resolve(fn({ update: vi.fn(() => ({ set: mockUpdateSet })), select: vi.fn(() => makeSelectChain([])) })),
+        Promise.resolve(
+          fn({
+            update: vi.fn(() => ({ set: mockUpdateSet })),
+            select: vi.fn(() => makeSelectChain([])),
+          }),
+        ),
     );
 
     await scheduleRetryIfNeeded(CALL);
@@ -616,7 +620,9 @@ describe('scheduleRetryIfNeeded — retry policy', () => {
 
     const makeWhere2 = () => {
       const rows = [{ id: CALL }];
-      const p = Promise.resolve(rows) as Promise<{ id: string }[]> & { returning: () => Promise<{ id: string }[]> };
+      const p = Promise.resolve(rows) as Promise<{ id: string }[]> & {
+        returning: () => Promise<{ id: string }[]>;
+      };
       p.returning = () => Promise.resolve(rows);
       return p;
     };
@@ -624,7 +630,12 @@ describe('scheduleRetryIfNeeded — retry policy', () => {
     vi.mocked(withOrgContext).mockImplementation(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (_: string, fn: any) =>
-        Promise.resolve(fn({ update: vi.fn(() => ({ set: mockUpdateSet })), select: vi.fn(() => makeSelectChain([])) })),
+        Promise.resolve(
+          fn({
+            update: vi.fn(() => ({ set: mockUpdateSet })),
+            select: vi.fn(() => makeSelectChain([])),
+          }),
+        ),
     );
 
     await scheduleRetryIfNeeded(CALL);
@@ -667,9 +678,7 @@ describe('launchCampaign — insufficient credit', () => {
   it('does not emit Inngest event when reserveForCampaign throws', async () => {
     // Configure credit mock to throw
     const { reserveForCampaign } = await import('@/lib/services/credit');
-    vi.mocked(reserveForCampaign).mockRejectedValueOnce(
-      new Error('insufficient_credit'),
-    );
+    vi.mocked(reserveForCampaign).mockRejectedValueOnce(new Error('insufficient_credit'));
 
     // Select queue:
     // 1. getCampaign → campaign row (status=draft)
@@ -685,9 +694,7 @@ describe('launchCampaign — insufficient credit', () => {
       [{ total: 5 }], // countEligibleContacts: eligible count
     ]);
 
-    await expect(launchCampaign(ORG, 'user-1', CAMPAIGN)).rejects.toThrow(
-      'insufficient_credit',
-    );
+    await expect(launchCampaign(ORG, 'user-1', CAMPAIGN)).rejects.toThrow('insufficient_credit');
 
     // Inngest event must NOT be sent when credit reservation fails
     expect(sendInngestEvent).not.toHaveBeenCalled();
@@ -702,9 +709,7 @@ describe('launchCampaign — insufficient credit', () => {
       [{ total: 0 }], // eligible count → zero!
     ]);
 
-    await expect(launchCampaign(ORG, 'user-1', CAMPAIGN)).rejects.toThrow(
-      'no_eligible_contacts',
-    );
+    await expect(launchCampaign(ORG, 'user-1', CAMPAIGN)).rejects.toThrow('no_eligible_contacts');
 
     expect(sendInngestEvent).not.toHaveBeenCalled();
   });
@@ -847,9 +852,7 @@ describe('DB: campaignLaunchedHandler — 50 contacts create 50 pending calls', 
         const [sentEvents] = vi.mocked(sendInngestEvents).mock.calls[0]!;
         expect((sentEvents as unknown[]).length).toBe(CONTACT_COUNT);
         expect(
-          (sentEvents as { name: string }[]).every(
-            (e) => e.name === CAMPAIGN_DISPATCH_CALL_EVENT,
-          ),
+          (sentEvents as { name: string }[]).every((e) => e.name === CAMPAIGN_DISPATCH_CALL_EVENT),
         ).toBe(true);
       });
     },
@@ -863,59 +866,56 @@ describe('DB: verifyContactStillEligible — real DB eligibility re-check', () =
     vi.clearAllMocks();
   });
 
-  it.skipIf(skipWhenNoDb)(
-    'throws ContactNotEligibleError when contact has opted out',
-    async () => {
-      await withTestDb(async (tx) => {
-        vi.mocked(withOrgContext).mockImplementation(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (_: string, fn: any) => Promise.resolve(fn(tx)),
-        );
+  it.skipIf(skipWhenNoDb)('throws ContactNotEligibleError when contact has opted out', async () => {
+    await withTestDb(async (tx) => {
+      vi.mocked(withOrgContext).mockImplementation(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (_: string, fn: any) => Promise.resolve(fn(tx)),
+      );
 
-        // Seed org + contact
-        await tx.insert(organizations).values({
-          id: ORG,
-          name: 'Eligibility Test Org',
-          country: 'IT',
-          timezone: 'Europe/Rome',
-        });
-
-        await tx.insert(scriptTemplates).values({
-          id: TEMPLATE,
-          slug: 'lead-reactivation',
-          version: 92,
-          name: 'Eligibility Test Template',
-          system_prompt: 'Test.',
-        });
-        await tx.insert(scripts).values({
-          id: SCRIPT,
-          org_id: ORG,
-          template_id: TEMPLATE,
-          name: 'Eligibility Script',
-        });
-        await tx.insert(contactLists).values({
-          id: LIST,
-          org_id: ORG,
-          name: 'Eligibility List',
-          source: 'csv-upload',
-          total_count: 1,
-          valid_count: 1,
-        });
-        await tx.insert(contacts).values({
-          id: CONTACT,
-          org_id: ORG,
-          contact_list_id: LIST,
-          phone_e164: '+393331234567',
-          consent_basis: 'existing_customer',
-          opt_out: true, // opted out!
-        });
-
-        await expect(
-          verifyContactStillEligible(ORG, CONTACT),
-        ).rejects.toThrow(ContactNotEligibleError);
+      // Seed org + contact
+      await tx.insert(organizations).values({
+        id: ORG,
+        name: 'Eligibility Test Org',
+        country: 'IT',
+        timezone: 'Europe/Rome',
       });
-    },
-  );
+
+      await tx.insert(scriptTemplates).values({
+        id: TEMPLATE,
+        slug: 'lead-reactivation',
+        version: 92,
+        name: 'Eligibility Test Template',
+        system_prompt: 'Test.',
+      });
+      await tx.insert(scripts).values({
+        id: SCRIPT,
+        org_id: ORG,
+        template_id: TEMPLATE,
+        name: 'Eligibility Script',
+      });
+      await tx.insert(contactLists).values({
+        id: LIST,
+        org_id: ORG,
+        name: 'Eligibility List',
+        source: 'csv-upload',
+        total_count: 1,
+        valid_count: 1,
+      });
+      await tx.insert(contacts).values({
+        id: CONTACT,
+        org_id: ORG,
+        contact_list_id: LIST,
+        phone_e164: '+393331234567',
+        consent_basis: 'existing_customer',
+        opt_out: true, // opted out!
+      });
+
+      await expect(verifyContactStillEligible(ORG, CONTACT)).rejects.toThrow(
+        ContactNotEligibleError,
+      );
+    });
+  });
 
   it.skipIf(skipWhenNoDb)(
     'throws ContactNotEligibleError when contact has been soft-deleted',
@@ -962,65 +962,60 @@ describe('DB: verifyContactStillEligible — real DB eligibility re-check', () =
           deleted_at: new Date(), // soft-deleted!
         });
 
-        await expect(
-          verifyContactStillEligible(ORG, CONTACT),
-        ).rejects.toThrow(ContactNotEligibleError);
-      });
-    },
-  );
-
-  it.skipIf(skipWhenNoDb)(
-    'passes without error for an active, eligible contact',
-    async () => {
-      await withTestDb(async (tx) => {
-        vi.mocked(withOrgContext).mockImplementation(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (_: string, fn: any) => Promise.resolve(fn(tx)),
+        await expect(verifyContactStillEligible(ORG, CONTACT)).rejects.toThrow(
+          ContactNotEligibleError,
         );
-
-        await tx.insert(organizations).values({
-          id: ORG,
-          name: 'Active Test Org',
-          country: 'IT',
-          timezone: 'Europe/Rome',
-        });
-        await tx.insert(scriptTemplates).values({
-          id: TEMPLATE,
-          slug: 'lead-reactivation',
-          version: 94,
-          name: 'Active Test Template',
-          system_prompt: 'Test.',
-        });
-        await tx.insert(scripts).values({
-          id: SCRIPT,
-          org_id: ORG,
-          template_id: TEMPLATE,
-          name: 'Active Script',
-        });
-        await tx.insert(contactLists).values({
-          id: LIST,
-          org_id: ORG,
-          name: 'Active List',
-          source: 'csv-upload',
-          total_count: 1,
-          valid_count: 1,
-        });
-        await tx.insert(contacts).values({
-          id: CONTACT,
-          org_id: ORG,
-          contact_list_id: LIST,
-          phone_e164: '+393331111111',
-          consent_basis: 'existing_customer',
-          opt_out: false,
-          deleted_at: null,
-          rpo_status: 'clear',
-        });
-
-        // Must NOT throw
-        await expect(
-          verifyContactStillEligible(ORG, CONTACT),
-        ).resolves.toBeUndefined();
       });
     },
   );
+
+  it.skipIf(skipWhenNoDb)('passes without error for an active, eligible contact', async () => {
+    await withTestDb(async (tx) => {
+      vi.mocked(withOrgContext).mockImplementation(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (_: string, fn: any) => Promise.resolve(fn(tx)),
+      );
+
+      await tx.insert(organizations).values({
+        id: ORG,
+        name: 'Active Test Org',
+        country: 'IT',
+        timezone: 'Europe/Rome',
+      });
+      await tx.insert(scriptTemplates).values({
+        id: TEMPLATE,
+        slug: 'lead-reactivation',
+        version: 94,
+        name: 'Active Test Template',
+        system_prompt: 'Test.',
+      });
+      await tx.insert(scripts).values({
+        id: SCRIPT,
+        org_id: ORG,
+        template_id: TEMPLATE,
+        name: 'Active Script',
+      });
+      await tx.insert(contactLists).values({
+        id: LIST,
+        org_id: ORG,
+        name: 'Active List',
+        source: 'csv-upload',
+        total_count: 1,
+        valid_count: 1,
+      });
+      await tx.insert(contacts).values({
+        id: CONTACT,
+        org_id: ORG,
+        contact_list_id: LIST,
+        phone_e164: '+393331111111',
+        consent_basis: 'existing_customer',
+        opt_out: false,
+        deleted_at: null,
+        rpo_status: 'clear',
+      });
+
+      // Must NOT throw
+      await expect(verifyContactStillEligible(ORG, CONTACT)).resolves.toBeUndefined();
+    });
+  });
 });

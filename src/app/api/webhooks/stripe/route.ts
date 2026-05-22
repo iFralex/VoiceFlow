@@ -30,8 +30,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session):
   // Fetch invoice URL outside the transaction (Stripe API call)
   let invoiceUrl: string | null = null;
   if (session.invoice) {
-    const invoiceId =
-      typeof session.invoice === 'string' ? session.invoice : session.invoice.id;
+    const invoiceId = typeof session.invoice === 'string' ? session.invoice : session.invoice.id;
     try {
       const invoice = await stripe.invoices.retrieve(invoiceId);
       invoiceUrl = invoice.hosted_invoice_url ?? null;
@@ -156,10 +155,7 @@ async function handleChargeRefunded(charge: Stripe.Charge): Promise<void> {
   );
 
   await withSystemContext(async (tx) => {
-    await tx
-      .update(payments)
-      .set({ status: 'refunded' })
-      .where(eq(payments.id, payment.id));
+    await tx.update(payments).set({ status: 'refunded' }).where(eq(payments.id, payment.id));
   });
 }
 
@@ -257,10 +253,7 @@ export async function POST(request: Request): Promise<Response> {
         .update(webhookEvents)
         .set({ processed_at: new Date() })
         .where(
-          and(
-            eq(webhookEvents.provider, 'stripe'),
-            eq(webhookEvents.provider_event_id, event.id),
-          ),
+          and(eq(webhookEvents.provider, 'stripe'), eq(webhookEvents.provider_event_id, event.id)),
         );
     });
   } catch (err) {
@@ -273,10 +266,7 @@ export async function POST(request: Request): Promise<Response> {
         .update(webhookEvents)
         .set({ error: processingError })
         .where(
-          and(
-            eq(webhookEvents.provider, 'stripe'),
-            eq(webhookEvents.provider_event_id, event.id),
-          ),
+          and(eq(webhookEvents.provider, 'stripe'), eq(webhookEvents.provider_event_id, event.id)),
         );
     });
   }

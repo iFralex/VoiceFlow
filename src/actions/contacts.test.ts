@@ -439,11 +439,17 @@ describe('exportContactsCsv', () => {
     mockRequireCapability.mockResolvedValue(undefined);
     mockSendInngestEvent.mockResolvedValue(undefined);
     mockRecordAudit.mockResolvedValue(undefined);
-    mockWithOrgContext.mockImplementation(async (_orgId: unknown, fn: (tx: unknown) => Promise<unknown>) => fn({}));
+    mockWithOrgContext.mockImplementation(
+      async (_orgId: unknown, fn: (tx: unknown) => Promise<unknown>) => fn({}),
+    );
 
     // Default: 3 contacts, fits inline limit
     mockListContacts.mockResolvedValue({
-      items: [makeContact('+393401111111'), makeContact('+393402222222'), makeContact('+393403333333')],
+      items: [
+        makeContact('+393401111111'),
+        makeContact('+393402222222'),
+        makeContact('+393403333333'),
+      ],
       nextCursor: undefined,
     });
     mockContactsToCsv.mockReturnValue('phone_e164,first_name\n+393401111111,Mario');
@@ -490,7 +496,9 @@ describe('exportContactsCsv', () => {
   it('defers to Inngest when there are more than inline limit rows', async () => {
     // Simulate nextCursor being set (more rows exist)
     mockListContacts.mockResolvedValue({
-      items: Array.from({ length: 100 }, (_, i) => makeContact(`+3934000000${i.toString().padStart(2, '0')}`)),
+      items: Array.from({ length: 100 }, (_, i) =>
+        makeContact(`+3934000000${i.toString().padStart(2, '0')}`),
+      ),
       nextCursor: 'some-cursor',
     });
 

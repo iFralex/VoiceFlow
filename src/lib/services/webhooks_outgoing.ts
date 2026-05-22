@@ -146,10 +146,7 @@ export async function listDeliveries(
       const cursorId = page.cursor.slice(sepIdx + 1);
       cursorCondition = or(
         lt(webhookDeliveries.delivered_at, cursorDate),
-        and(
-          eq(webhookDeliveries.delivered_at, cursorDate),
-          lt(webhookDeliveries.id, cursorId),
-        ),
+        and(eq(webhookDeliveries.delivered_at, cursorDate), lt(webhookDeliveries.id, cursorId)),
       );
     }
 
@@ -190,9 +187,7 @@ export async function replayDelivery(
       })
       .from(webhookDeliveries)
       .innerJoin(webhooksOutgoing, eq(webhookDeliveries.webhook_id, webhooksOutgoing.id))
-      .where(
-        and(eq(webhookDeliveries.id, deliveryId), eq(webhooksOutgoing.org_id, orgId)),
-      );
+      .where(and(eq(webhookDeliveries.id, deliveryId), eq(webhooksOutgoing.org_id, orgId)));
 
     if (!row) throw new Error('delivery_not_found');
     if (!row.webhookActive) throw new Error('webhook_not_active');

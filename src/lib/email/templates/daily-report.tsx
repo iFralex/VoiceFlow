@@ -87,8 +87,7 @@ const STRINGS: Record<DailyReportLocale, Strings> = {
     preview: (date, total) => `Report giornaliero — ${date} — ${total} chiamate`,
     subject: (date, total) => `Report giornaliero — ${date} — ${total} chiamate`,
     greeting: (name) => `Ciao ${name},`,
-    intro: (date, org) =>
-      `Ecco il riepilogo delle attività di ${org} del ${date}.`,
+    intro: (date, org) => `Ecco il riepilogo delle attività di ${org} del ${date}.`,
     kpisHeading: 'Riepilogo della giornata',
     kpiCallsCompleted: 'Chiamate completate',
     kpiQualifiedLeads: 'Lead qualificati',
@@ -205,9 +204,7 @@ export function DailyReportEmail(props: DailyReportEmailProps) {
                         {formatNumber(c.completed, props.locale)} /{' '}
                         {formatNumber(c.total, props.locale)}
                       </td>
-                      <td style={styles.td}>
-                        {formatNumber(c.appointmentsBooked, props.locale)}
-                      </td>
+                      <td style={styles.td}>{formatNumber(c.appointmentsBooked, props.locale)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -237,9 +234,7 @@ export function DailyReportEmail(props: DailyReportEmailProps) {
                     <tr key={a.id}>
                       <td style={styles.td}>{a.contactName}</td>
                       <td style={styles.td}>{a.campaignName}</td>
-                      <td style={styles.td}>
-                        {formatDateTime(a.scheduledAt, props.locale)}
-                      </td>
+                      <td style={styles.td}>{formatDateTime(a.scheduledAt, props.locale)}</td>
                     </tr>
                   ))}
                 </tbody>

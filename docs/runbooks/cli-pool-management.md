@@ -146,14 +146,14 @@ spam score that the watchdog cares about).
 
 ### Flags
 
-| Flag             | Required | Description                                                           |
-|------------------|----------|-----------------------------------------------------------------------|
-| `--e164`         | yes      | E.164-formatted DID (`+` then 8–15 digits).                           |
-| `--provider`     | yes      | One of `voiped`, `twilio`, `telnyx` (matches `phone_provider` enum).  |
-| `--vapi-id`      | yes      | Vapi `phoneNumberId` captured during BYO-trunk import.                |
-| `--region`       | no       | Region slug (e.g. `milano`). Mobile DIDs typically pass no region.    |
-| `--capabilities` | no       | Comma-separated list (e.g. `landline` or `mobile,sms`).               |
-| `--org-id`       | no       | UUID of an org for dedicated assignment (Task 12). Default: shared.   |
+| Flag             | Required | Description                                                          |
+| ---------------- | -------- | -------------------------------------------------------------------- |
+| `--e164`         | yes      | E.164-formatted DID (`+` then 8–15 digits).                          |
+| `--provider`     | yes      | One of `voiped`, `twilio`, `telnyx` (matches `phone_provider` enum). |
+| `--vapi-id`      | yes      | Vapi `phoneNumberId` captured during BYO-trunk import.               |
+| `--region`       | no       | Region slug (e.g. `milano`). Mobile DIDs typically pass no region.   |
+| `--capabilities` | no       | Comma-separated list (e.g. `landline` or `mobile,sms`).              |
+| `--org-id`       | no       | UUID of an org for dedicated assignment (Task 12). Default: shared.  |
 
 ## Updating an existing CLI
 

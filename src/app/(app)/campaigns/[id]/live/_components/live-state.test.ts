@@ -42,7 +42,9 @@ const baseSnapshot: CampaignLiveSnapshot = {
   ],
 };
 
-function call(partial: Partial<CallRecord> & { id: string; status: CallRecord['status'] }): CallRecord {
+function call(
+  partial: Partial<CallRecord> & { id: string; status: CallRecord['status'] },
+): CallRecord {
   return {
     contactName: '',
     phoneE164: null,
@@ -70,11 +72,7 @@ describe('initialStateFromSnapshot', () => {
 describe('applyCall — INSERT', () => {
   it('increments totalCalls and inProgressCalls when an active call appears', () => {
     const s = initialStateFromSnapshot(baseSnapshot);
-    const next = applyCall(
-      s,
-      call({ id: 'c', status: 'dialing' }),
-      'INSERT',
-    );
+    const next = applyCall(s, call({ id: 'c', status: 'dialing' }), 'INSERT');
     expect(next.totalCalls).toBe(11);
     expect(next.inProgressCalls).toBe(3);
     expect(next.completedCalls).toBe(3);
@@ -82,11 +80,7 @@ describe('applyCall — INSERT', () => {
 
   it('counts a brand-new completed call towards completedCalls', () => {
     const s = initialStateFromSnapshot(baseSnapshot);
-    const next = applyCall(
-      s,
-      call({ id: 'c', status: 'completed', costCents: 75 }),
-      'INSERT',
-    );
+    const next = applyCall(s, call({ id: 'c', status: 'completed', costCents: 75 }), 'INSERT');
     expect(next.totalCalls).toBe(11);
     expect(next.completedCalls).toBe(4);
     expect(next.costCents).toBe(575);

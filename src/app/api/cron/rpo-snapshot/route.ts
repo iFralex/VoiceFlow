@@ -159,7 +159,14 @@ export async function runRpoSnapshot(clientOverride?: RpoClient): Promise<RpoSna
     });
   });
 
-  return { chunks, totalChecked, totalBlocked, totalContactsUpdated, totalNewlyBlockedContacts, errors };
+  return {
+    chunks,
+    totalChecked,
+    totalBlocked,
+    totalContactsUpdated,
+    totalNewlyBlockedContacts,
+    errors,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -299,9 +306,7 @@ async function emitRpoBlockEvents(phones: string[], checkedAt: Date): Promise<nu
         phone_e164: contacts.phone_e164,
       })
       .from(contacts)
-      .where(
-        and(inArray(contacts.phone_e164, phones), isNull(contacts.deleted_at)),
-      );
+      .where(and(inArray(contacts.phone_e164, phones), isNull(contacts.deleted_at)));
 
     if (rows.length === 0) return rows;
 

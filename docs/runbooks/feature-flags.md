@@ -4,14 +4,14 @@ Feature flags are managed in [PostHog](https://eu.posthog.com) under the **Voice
 
 ## Available Flags
 
-| Key | Default | Purpose |
-|-----|---------|---------|
-| `voice.proprietary-stack` | off | Phase 2 canary — proprietary voice stack |
-| `internal.test_call` | on (staging), off (prod) | Gates the test-call endpoint (plan 08) |
-| `dashboard.cmd-k-search` | on | ⌘K global search widget; quick kill-switch |
-| `compliance.aiact-monthly-audit` | on | Monthly AI Act compliance audit cron |
-| `email.weekly-summary` | on | Weekly email digest; disable on Mondays if overrun |
-| `internal.disclosure-failures-page` | off | Disclosure-failures admin page; off until QA mature |
+| Key                                 | Default                  | Purpose                                             |
+| ----------------------------------- | ------------------------ | --------------------------------------------------- |
+| `voice.proprietary-stack`           | off                      | Phase 2 canary — proprietary voice stack            |
+| `internal.test_call`                | on (staging), off (prod) | Gates the test-call endpoint (plan 08)              |
+| `dashboard.cmd-k-search`            | on                       | ⌘K global search widget; quick kill-switch          |
+| `compliance.aiact-monthly-audit`    | on                       | Monthly AI Act compliance audit cron                |
+| `email.weekly-summary`              | on                       | Weekly email digest; disable on Mondays if overrun  |
+| `internal.disclosure-failures-page` | off                      | Disclosure-failures admin page; off until QA mature |
 
 ## How to Flip a Flag
 

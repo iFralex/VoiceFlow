@@ -19,7 +19,13 @@ import type {
 } from '@/lib/inngest/contacts/events';
 import { contactsToCsv } from '@/lib/inngest/contacts/export';
 import { getContactList } from '@/lib/services/contact_lists';
-import { bulkMarkOptOut, listContacts, markOptOut, softDeleteContact, upsertContact } from '@/lib/services/contacts';
+import {
+  bulkMarkOptOut,
+  listContacts,
+  markOptOut,
+  softDeleteContact,
+  upsertContact,
+} from '@/lib/services/contacts';
 import type { RpoStatus } from '@/lib/services/contacts';
 import { CSV_UPLOADS_BUCKET } from '@/lib/storage/signed';
 import { supabaseAdmin } from '@/lib/supabase/admin';
@@ -106,9 +112,9 @@ export async function triggerContactsImport(input: TriggerInput): Promise<Action
  * Returns the current import status and counts for a contact list.
  * Used as a polling fallback when the Realtime subscription is not available.
  */
-export async function getContactListStatus(listId: string): Promise<
-  ActionResult & { status?: string | null; totalCount?: number; validCount?: number }
-> {
+export async function getContactListStatus(
+  listId: string,
+): Promise<ActionResult & { status?: string | null; totalCount?: number; validCount?: number }> {
   try {
     const { orgId } = await getAuthContext();
     const list = await getContactList(orgId, listId);
@@ -137,7 +143,8 @@ export async function markContactOptOut(
   input: z.infer<typeof optOutSchema>,
 ): Promise<ActionResult> {
   const parsed = optOutSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? 'validation_error' };
+  if (!parsed.success)
+    return { ok: false, message: parsed.error.issues[0]?.message ?? 'validation_error' };
   try {
     const { orgId } = await getAuthContext();
     await requireCapability('contacts.upload');
@@ -155,9 +162,12 @@ const deleteContactSchema = z.object({ contactId: z.string().uuid() });
 /**
  * Soft-deletes a contact (sets deleted_at).
  */
-export async function deleteContact(input: z.infer<typeof deleteContactSchema>): Promise<ActionResult> {
+export async function deleteContact(
+  input: z.infer<typeof deleteContactSchema>,
+): Promise<ActionResult> {
   const parsed = deleteContactSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? 'validation_error' };
+  if (!parsed.success)
+    return { ok: false, message: parsed.error.issues[0]?.message ?? 'validation_error' };
   try {
     const { orgId, userId } = await getAuthContext();
     await requireCapability('contacts.delete');
@@ -169,7 +179,10 @@ export async function deleteContact(input: z.infer<typeof deleteContactSchema>):
 }
 
 const bulkOptOutSchema = z.object({
-  contacts: z.array(z.object({ contactId: z.string().uuid(), phoneE164: z.string().min(1) })).min(1).max(500),
+  contacts: z
+    .array(z.object({ contactId: z.string().uuid(), phoneE164: z.string().min(1) }))
+    .min(1)
+    .max(500),
 });
 
 /**
@@ -179,7 +192,8 @@ export async function bulkMarkContactsOptOut(
   input: z.infer<typeof bulkOptOutSchema>,
 ): Promise<ActionResult> {
   const parsed = bulkOptOutSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? 'validation_error' };
+  if (!parsed.success)
+    return { ok: false, message: parsed.error.issues[0]?.message ?? 'validation_error' };
   try {
     const { orgId } = await getAuthContext();
     await requireCapability('contacts.upload');
@@ -203,13 +217,12 @@ export async function bulkDeleteContacts(
   input: z.infer<typeof bulkDeleteSchema>,
 ): Promise<ActionResult> {
   const parsed = bulkDeleteSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? 'validation_error' };
+  if (!parsed.success)
+    return { ok: false, message: parsed.error.issues[0]?.message ?? 'validation_error' };
   try {
     const { orgId, userId } = await getAuthContext();
     await requireCapability('contacts.delete');
-    await Promise.all(
-      parsed.data.contactIds.map((id) => softDeleteContact(orgId, userId, id)),
-    );
+    await Promise.all(parsed.data.contactIds.map((id) => softDeleteContact(orgId, userId, id)));
     return { ok: true };
   } catch (e) {
     return { ok: false, message: e instanceof Error ? e.message : 'error' };
@@ -236,7 +249,8 @@ export async function addManualContact(
   input: z.input<typeof addManualContactSchema>,
 ): Promise<ActionResult & { inserted?: boolean }> {
   const parsed = addManualContactSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? 'validation_error' };
+  if (!parsed.success)
+    return { ok: false, message: parsed.error.issues[0]?.message ?? 'validation_error' };
 
   const e164 = normaliseToE164(parsed.data.phone);
   if (!e164) return { ok: false, message: 'phone_invalid' };
@@ -267,7 +281,10 @@ export async function addManualContact(
 }
 
 const importDncSchema = z.object({
-  csvText: z.string().min(1).max(5 * 1024 * 1024), // 5 MB text limit
+  csvText: z
+    .string()
+    .min(1)
+    .max(5 * 1024 * 1024), // 5 MB text limit
 });
 
 /**
@@ -279,7 +296,8 @@ export async function importDncList(
   input: z.infer<typeof importDncSchema>,
 ): Promise<ActionResult & { processedCount?: number; invalidCount?: number }> {
   const parsed = importDncSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? 'validation_error' };
+  if (!parsed.success)
+    return { ok: false, message: parsed.error.issues[0]?.message ?? 'validation_error' };
 
   try {
     const { orgId, userId } = await getAuthContext();

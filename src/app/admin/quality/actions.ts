@@ -46,7 +46,8 @@ export async function updateQaReviewFormAction(formData: FormData): Promise<void
   const status: QaReviewStatus = statusRaw;
 
   const rawNote = formData.get('note');
-  const note = typeof rawNote === 'string' && rawNote.length > 0 ? rawNote.slice(0, MAX_NOTE_LENGTH) : null;
+  const note =
+    typeof rawNote === 'string' && rawNote.length > 0 ? rawNote.slice(0, MAX_NOTE_LENGTH) : null;
 
   const rawReviewer = formData.get('reviewer');
   const reviewedBy =

@@ -27,14 +27,14 @@ import JSZip from 'jszip';
 
 import { recordAudit } from '@/lib/db/audit';
 import { withOrgContext, withSystemContext } from '@/lib/db/context';
-import {
-  appointments,
-  auditLog,
-  calls,
-  contacts,
-  optOutRegistry,
+import { appointments, auditLog, calls, contacts, optOutRegistry } from '@/lib/db/schema';
+import type {
+  Appointment,
+  AuditLogEntry,
+  Call,
+  Contact,
+  OptOutRegistryEntry,
 } from '@/lib/db/schema';
-import type { Appointment, AuditLogEntry, Call, Contact, OptOutRegistryEntry } from '@/lib/db/schema';
 import { CSV_UPLOADS_BUCKET } from '@/lib/storage/signed';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { CALL_MEDIA_BUCKET } from '@/lib/voice/persistence';
@@ -80,10 +80,7 @@ function looksLikeEmail(s: string): boolean {
   return s.includes('@');
 }
 
-async function downloadStorageObject(
-  bucket: string,
-  path: string,
-): Promise<Buffer | null> {
+async function downloadStorageObject(bucket: string, path: string): Promise<Buffer | null> {
   const { data, error } = await supabaseAdmin.storage.from(bucket).download(path);
   if (error || !data) return null;
   const arrayBuffer = await data.arrayBuffer();
@@ -104,10 +101,7 @@ interface SubjectData {
  * table has no RLS policy so we read it via `withSystemContext` and filter
  * on `org_id` explicitly.
  */
-async function collectSubjectData(
-  orgId: string,
-  identifier: string,
-): Promise<SubjectData> {
+async function collectSubjectData(orgId: string, identifier: string): Promise<SubjectData> {
   const subject = await withOrgContext(orgId, async (tx) => {
     // Filter `deleted_at IS NULL` to match `resolveSubject` in erase.ts. After
     // an Article 17 erasure the contact row is tombstoned (PII scrubbed,
@@ -154,10 +148,7 @@ async function collectSubjectData(
       .select()
       .from(optOutRegistry)
       .where(
-        and(
-          eq(optOutRegistry.org_id, orgId),
-          eq(optOutRegistry.phone_e164, contact.phone_e164),
-        ),
+        and(eq(optOutRegistry.org_id, orgId), eq(optOutRegistry.phone_e164, contact.phone_e164)),
       );
 
     return { contact, callRows, apptRows, optOutRows };

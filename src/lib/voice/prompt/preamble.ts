@@ -47,10 +47,7 @@ const MIN_PREAMBLE_PREFIX_LENGTH = 200;
  *
  * Throws `ComplianceVerificationError` if either check fails.
  */
-export function verifyComplianceOrThrow(
-  systemPrompt: string,
-  firstMessage: string,
-): void {
+export function verifyComplianceOrThrow(systemPrompt: string, firstMessage: string): void {
   const preamblePrefix = AI_ACT_PREAMBLE_IT.slice(0, MIN_PREAMBLE_PREFIX_LENGTH);
   if (!systemPrompt.startsWith(preamblePrefix)) {
     throw new ComplianceVerificationError(
@@ -76,10 +73,7 @@ const ESCAPED_PLACEHOLDER_RE = /\{\{/g;
  * - Sanitizes each value: strips control characters, caps to 256 chars,
  *   and escapes any `{{` sequences to prevent secondary interpolation.
  */
-export function interpolate(
-  template: string,
-  variables: Record<string, string>,
-): string {
+export function interpolate(template: string, variables: Record<string, string>): string {
   // Collect all placeholder names from the template
   const found = new Set<string>();
   let m: RegExpExecArray | null;

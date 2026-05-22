@@ -86,14 +86,11 @@ export function DataTable<TData>({
   toolbar,
   showPagination = true,
 }: DataTableProps<TData>) {
-  const [sorting, setSorting] = React.useState<SortingState>(
-    externalState?.sorting ?? [],
-  );
+  const [sorting, setSorting] = React.useState<SortingState>(externalState?.sorting ?? []);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     externalState?.columnFilters ?? [],
   );
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({});
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [pagination, setPagination] = React.useState<PaginationState>(
     externalState?.pagination ?? { pageIndex: 0, pageSize: 20 },
   );
@@ -105,31 +102,38 @@ export function DataTable<TData>({
   const effectivePagination = externalState?.pagination ?? pagination;
 
   const handleSortingChange: OnChangeFn<SortingState> = (updater) => {
-    const next =
-      typeof updater === 'function' ? updater(effectiveSorting) : updater;
+    const next = typeof updater === 'function' ? updater(effectiveSorting) : updater;
     setSorting(next);
     if (onStateChange) {
-      onStateChange({ pagination: effectivePagination, sorting: next, columnFilters: effectiveColumnFilters });
+      onStateChange({
+        pagination: effectivePagination,
+        sorting: next,
+        columnFilters: effectiveColumnFilters,
+      });
     }
   };
 
-  const handleColumnFiltersChange: OnChangeFn<ColumnFiltersState> = (
-    updater,
-  ) => {
-    const next =
-      typeof updater === 'function' ? updater(effectiveColumnFilters) : updater;
+  const handleColumnFiltersChange: OnChangeFn<ColumnFiltersState> = (updater) => {
+    const next = typeof updater === 'function' ? updater(effectiveColumnFilters) : updater;
     setColumnFilters(next);
     if (onStateChange) {
-      onStateChange({ pagination: effectivePagination, sorting: effectiveSorting, columnFilters: next });
+      onStateChange({
+        pagination: effectivePagination,
+        sorting: effectiveSorting,
+        columnFilters: next,
+      });
     }
   };
 
   const handlePaginationChange: OnChangeFn<PaginationState> = (updater) => {
-    const next =
-      typeof updater === 'function' ? updater(effectivePagination) : updater;
+    const next = typeof updater === 'function' ? updater(effectivePagination) : updater;
     setPagination(next);
     if (onStateChange) {
-      onStateChange({ pagination: next, sorting: effectiveSorting, columnFilters: effectiveColumnFilters });
+      onStateChange({
+        pagination: next,
+        sorting: effectiveSorting,
+        columnFilters: effectiveColumnFilters,
+      });
     }
   };
 
@@ -153,18 +157,18 @@ export function DataTable<TData>({
     onColumnVisibilityChange: setColumnVisibility,
     onPaginationChange: handlePaginationChange,
     getCoreRowModel: getCoreRowModel(),
-    ...(rowCount === undefined ? {
-      getPaginationRowModel: getPaginationRowModel(),
-      getSortedRowModel: getSortedRowModel(),
-      getFilteredRowModel: getFilteredRowModel(),
-    } : {}),
+    ...(rowCount === undefined
+      ? {
+          getPaginationRowModel: getPaginationRowModel(),
+          getSortedRowModel: getSortedRowModel(),
+          getFilteredRowModel: getFilteredRowModel(),
+        }
+      : {}),
   });
 
   return (
     <div className="flex flex-col gap-3">
-      {toolbar !== undefined && (
-        <DataTableToolbar table={table}>{toolbar}</DataTableToolbar>
-      )}
+      {toolbar !== undefined && <DataTableToolbar table={table}>{toolbar}</DataTableToolbar>}
 
       <div className="rounded-md border">
         <Table>
@@ -175,10 +179,7 @@ export function DataTable<TData>({
                   <TableHead key={header.id} style={{ width: header.getSize() }}>
                     {header.isPlaceholder
                       ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
+                      : flexRender(header.column.columnDef.header, header.getContext())}
                   </TableHead>
                 ))}
               </TableRow>
@@ -188,10 +189,7 @@ export function DataTable<TData>({
             {isLoading ? (
               <DataTableSkeleton columnCount={columns.length} rowCount={5} />
             ) : error ? (
-              <DataTableError
-                columnCount={columns.length}
-                message={error}
-              />
+              <DataTableError columnCount={columns.length} message={error} />
             ) : table.getRowModel().rows.length === 0 ? (
               <DataTableEmpty
                 columnCount={columns.length}
@@ -201,16 +199,10 @@ export function DataTable<TData>({
               />
             ) : (
               table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() ? 'selected' : undefined}
-                >
+                <TableRow key={row.id} data-state={row.getIsSelected() ? 'selected' : undefined}>
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
                 </TableRow>

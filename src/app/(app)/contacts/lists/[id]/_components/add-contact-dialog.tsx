@@ -39,7 +39,9 @@ export function AddContactDialog({ listId }: Props) {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
-  const [consentBasis, setConsentBasis] = useState<'consent' | 'legitimate_interest' | 'existing_customer'>('consent');
+  const [consentBasis, setConsentBasis] = useState<
+    'consent' | 'legitimate_interest' | 'existing_customer'
+  >('consent');
   const [consentEvidence, setConsentEvidence] = useState('');
   const [phoneError, setPhoneError] = useState('');
 
@@ -116,9 +118,7 @@ export function AddContactDialog({ listId }: Props) {
               placeholder={t('add_contact_phone_placeholder')}
               required
             />
-            {phoneError && (
-              <p className="text-xs text-destructive">{phoneError}</p>
-            )}
+            {phoneError && <p className="text-destructive text-xs">{phoneError}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -154,14 +154,21 @@ export function AddContactDialog({ listId }: Props) {
 
           <div className="space-y-1">
             <Label htmlFor="add-consent-basis">{t('consent_basis_label')}</Label>
-            <Select value={consentBasis} onValueChange={(v) => setConsentBasis(v as typeof consentBasis)}>
+            <Select
+              value={consentBasis}
+              onValueChange={(v) => setConsentBasis(v as typeof consentBasis)}
+            >
               <SelectTrigger id="add-consent-basis">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="consent">{t('consent_basis_consent')}</SelectItem>
-                <SelectItem value="legitimate_interest">{t('consent_basis_legitimate_interest')}</SelectItem>
-                <SelectItem value="existing_customer">{t('consent_basis_existing_customer')}</SelectItem>
+                <SelectItem value="legitimate_interest">
+                  {t('consent_basis_legitimate_interest')}
+                </SelectItem>
+                <SelectItem value="existing_customer">
+                  {t('consent_basis_existing_customer')}
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>

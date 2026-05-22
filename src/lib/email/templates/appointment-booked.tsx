@@ -51,8 +51,7 @@ const STRINGS: Record<AppointmentBookedLocale, Strings> = {
     preview: (contact, date) => `Appuntamento fissato — ${contact} il ${date}`,
     subject: (contact, date) => `Appuntamento fissato — ${contact} il ${date}`,
     greeting: (name) => `Ciao ${name},`,
-    intro: (contact) =>
-      `L'AI ha fissato un nuovo appuntamento con ${contact}. Ecco i dettagli.`,
+    intro: (contact) => `L'AI ha fissato un nuovo appuntamento con ${contact}. Ecco i dettagli.`,
     heroDate: 'Data e ora',
     heroService: 'Tipo di servizio',
     heroServiceFallback: 'Non specificato',
@@ -142,9 +141,7 @@ export function AppointmentBookedEmail(props: AppointmentBookedEmailProps) {
                   {t.transcriptHeading}
                 </Heading>
                 <Text style={styles.transcriptPrefix}>{t.transcriptPrefix}</Text>
-                <Text style={styles.transcriptQuote}>
-                  &ldquo;{props.transcriptSnippet}&rdquo;
-                </Text>
+                <Text style={styles.transcriptQuote}>&ldquo;{props.transcriptSnippet}&rdquo;</Text>
               </Section>
             </>
           )}

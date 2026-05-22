@@ -97,7 +97,9 @@ vi.mock('drizzle-orm', () => ({
   lte: (col: unknown, val: unknown) => ({ type: 'lte', col, val }),
   gte: (col: unknown, val: unknown) => ({ type: 'gte', col, val }),
   desc: (col: unknown) => ({ type: 'desc', col }),
-  sql: Object.assign((strings: TemplateStringsArray) => strings.join(''), { raw: (s: string) => s }),
+  sql: Object.assign((strings: TemplateStringsArray) => strings.join(''), {
+    raw: (s: string) => s,
+  }),
   sum: (col: unknown) => ({ type: 'sum', col }),
 }));
 
@@ -164,9 +166,8 @@ function makeRequest(secret?: string): Request {
 describe('GET /api/cron/credit-reconciliation', () => {
   beforeEach(() => {
     vi.resetAllMocks();
-    mockWithSystemContext.mockImplementation(
-      async (fn: (tx: unknown) => Promise<unknown>) =>
-        fn({ select: mockSelect, selectDistinct: mockSelectDistinct, update: mockUpdate }),
+    mockWithSystemContext.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) =>
+      fn({ select: mockSelect, selectDistinct: mockSelectDistinct, update: mockUpdate }),
     );
     mockTopUp.mockResolvedValue(undefined);
     mockRecordAudit.mockResolvedValue(undefined);
@@ -229,9 +230,8 @@ describe('reconcilePendingPayments', () => {
 
   beforeEach(() => {
     vi.resetAllMocks();
-    mockWithSystemContext.mockImplementation(
-      async (fn: (tx: unknown) => Promise<unknown>) =>
-        fn({ select: mockSelect, selectDistinct: mockSelectDistinct, update: mockUpdate }),
+    mockWithSystemContext.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) =>
+      fn({ select: mockSelect, selectDistinct: mockSelectDistinct, update: mockUpdate }),
     );
     mockTopUp.mockResolvedValue(undefined);
     mockRecordAudit.mockResolvedValue(undefined);
@@ -290,9 +290,7 @@ describe('reconcilePendingPayments', () => {
         })),
       }),
     );
-    mockWithSystemContext.mockImplementationOnce(async (fn) =>
-      fn({ update: makeUpdateMock() }),
-    );
+    mockWithSystemContext.mockImplementationOnce(async (fn) => fn({ update: makeUpdateMock() }));
 
     mockStripeSessionsRetrieve.mockResolvedValue({ status: 'expired' });
 
@@ -365,9 +363,8 @@ describe('reconcilePendingPayments', () => {
 describe('runLedgerSanityCheck', () => {
   beforeEach(() => {
     vi.resetAllMocks();
-    mockWithSystemContext.mockImplementation(
-      async (fn: (tx: unknown) => Promise<unknown>) =>
-        fn({ select: mockSelect, selectDistinct: mockSelectDistinct, update: mockUpdate }),
+    mockWithSystemContext.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) =>
+      fn({ select: mockSelect, selectDistinct: mockSelectDistinct, update: mockUpdate }),
     );
   });
 

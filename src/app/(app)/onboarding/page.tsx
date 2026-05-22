@@ -10,7 +10,14 @@ import { z } from 'zod';
 import { createOrganizationAndOnboard } from '@/actions/onboarding';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { toastResult } from '@/lib/utils/action-toast';
 
@@ -59,7 +66,7 @@ export default function OnboardingPage() {
     <div className="mx-auto max-w-lg space-y-8">
       <div className="space-y-1">
         <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
-        <p className="text-sm text-muted-foreground">{t('description')}</p>
+        <p className="text-muted-foreground text-sm">{t('description')}</p>
       </div>
 
       <Form {...form}>
@@ -120,7 +127,7 @@ export default function OnboardingPage() {
             control={form.control}
             name="dpaAccepted"
             render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+              <FormItem className="flex flex-row items-start space-y-0 space-x-3 rounded-md border p-4">
                 <FormControl>
                   <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                 </FormControl>

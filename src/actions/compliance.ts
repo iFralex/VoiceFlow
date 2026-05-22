@@ -11,10 +11,7 @@ import {
   SubjectErasureConfirmationError,
   SubjectNotFoundError as ErasureSubjectNotFoundError,
 } from '@/lib/compliance/gdpr/erase';
-import {
-  buildSubjectExport,
-  SubjectNotFoundError,
-} from '@/lib/compliance/gdpr/export';
+import { buildSubjectExport, SubjectNotFoundError } from '@/lib/compliance/gdpr/export';
 import { withSystemContext } from '@/lib/db/context';
 import { auditLog, users } from '@/lib/db/schema';
 import { sendEmail } from '@/lib/email';
@@ -76,7 +73,11 @@ export async function requestSubjectExport(
 
     // Look up requester email so we can send the link as a backup channel.
     const [requester] = await withSystemContext(async (tx) =>
-      tx.select({ email: users.email, fullName: users.full_name }).from(users).where(eq(users.id, userId)).limit(1),
+      tx
+        .select({ email: users.email, fullName: users.full_name })
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1),
     );
 
     if (requester?.email) {
@@ -99,7 +100,9 @@ export async function requestSubjectExport(
           html,
         });
       } catch (e) {
-        void logger.error('[requestSubjectExport] email send failed', { error: e instanceof Error ? e.message : String(e) });
+        void logger.error('[requestSubjectExport] email send failed', {
+          error: e instanceof Error ? e.message : String(e),
+        });
       }
     }
 
@@ -263,7 +266,7 @@ export async function listGdprHistory(
         action: e.action as GdprHistoryEntryAction,
         createdAt: e.createdAt.toISOString(),
         actorUserId: e.actorUserId,
-        actorEmail: e.actorUserId ? actorEmailById.get(e.actorUserId) ?? null : null,
+        actorEmail: e.actorUserId ? (actorEmailById.get(e.actorUserId) ?? null) : null,
         subjectId: e.subjectId,
         metadata: (e.metadata ?? null) as Record<string, unknown> | null,
       }));
@@ -294,9 +297,7 @@ export async function acceptCurrentDpaVersion(): Promise<
 
     const h = await headers();
     const ip =
-      h.get('x-forwarded-for')?.split(',')[0]?.trim() ??
-      h.get('x-real-ip')?.trim() ??
-      null;
+      h.get('x-forwarded-for')?.split(',')[0]?.trim() ?? h.get('x-real-ip')?.trim() ?? null;
     const userAgent = h.get('user-agent') ?? null;
 
     await recordDpaAcceptance({ orgId, userId, ip, userAgent });

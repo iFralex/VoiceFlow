@@ -5,9 +5,7 @@ vi.mock('@/lib/email', () => ({
 }));
 
 vi.mock('@/lib/db/context', () => ({
-  withOrgContext: vi.fn(
-    async (_orgId: string, fn: (tx: unknown) => Promise<unknown>) => fn({}),
-  ),
+  withOrgContext: vi.fn(async (_orgId: string, fn: (tx: unknown) => Promise<unknown>) => fn({})),
   withSystemContext: vi.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn({})),
 }));
 
@@ -88,15 +86,9 @@ describe('computeYesterdayRange', () => {
 describe('runDailyReport', () => {
   function buildBaseDeps() {
     return {
-      listActiveOrgs: vi.fn<(...args: unknown[]) => Promise<typeof ORG_A[]>>(
-        async () => [ORG_A],
-      ),
-      buildData: vi.fn(async (orgId: string, orgName: string) =>
-        makeData({ orgId, orgName }),
-      ),
-      listRecipients: vi.fn<
-        (...args: unknown[]) => Promise<DailyReportRecipient[]>
-      >(async () => [
+      listActiveOrgs: vi.fn<(...args: unknown[]) => Promise<(typeof ORG_A)[]>>(async () => [ORG_A]),
+      buildData: vi.fn(async (orgId: string, orgName: string) => makeData({ orgId, orgName })),
+      listRecipients: vi.fn<(...args: unknown[]) => Promise<DailyReportRecipient[]>>(async () => [
         {
           userId: 'u1',
           email: 'owner@example.com',
@@ -304,12 +296,7 @@ describe('buildDailyReportData', () => {
       },
     ];
 
-    const queueOfResults: unknown[][] = [
-      [aggregateRow],
-      [apptRow],
-      topRows,
-      apptRows,
-    ];
+    const queueOfResults: unknown[][] = [[aggregateRow], [apptRow], topRows, apptRows];
 
     const tx = makeStubTx(queueOfResults);
     const dbContext = await import('@/lib/db/context');

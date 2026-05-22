@@ -30,8 +30,9 @@ export default async function NewScriptPage({ searchParams }: PageProps) {
   const tScripts = await serverT('scripts');
 
   const templates: TemplateInfo[] = TEMPLATE_DEFINITIONS.map((def) => {
-    const descKey =
-      `template_${def.slug.replace(/-/g, '_')}_desc` as Parameters<typeof tScripts>[0];
+    const descKey = `template_${def.slug.replace(/-/g, '_')}_desc` as Parameters<
+      typeof tScripts
+    >[0];
 
     return {
       slug: def.slug,

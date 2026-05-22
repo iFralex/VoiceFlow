@@ -10,10 +10,7 @@ import { logger } from '@/lib/observability/logger';
  * Uses a single aggregate query for efficiency, then upserts the result.
  * Idempotent: re-running yields the same row.
  */
-export async function aggregateOneCampaign(
-  campaignId: string,
-  orgId: string,
-): Promise<void> {
+export async function aggregateOneCampaign(campaignId: string, orgId: string): Promise<void> {
   const now = new Date();
 
   const [stats] = await withSystemContext(async (tx) =>

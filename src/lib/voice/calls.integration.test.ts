@@ -84,11 +84,7 @@ import {
   scripts,
 } from '@/lib/db/schema';
 import { sendInngestEvent } from '@/lib/inngest/client';
-import {
-  CALL_CLASSIFY_EVENT,
-  classifyAndFinaliseCall,
-  dispatchCall,
-} from '@/lib/services/calls';
+import { CALL_CLASSIFY_EVENT, classifyAndFinaliseCall, dispatchCall } from '@/lib/services/calls';
 import { getVoiceProvider } from '@/lib/voice/factory';
 import { AI_ACT_PREAMBLE_IT } from '@/lib/voice/prompt/preamble';
 import type { VoiceProvider } from '@/lib/voice/types';
@@ -396,7 +392,11 @@ describe('classifyAndFinaliseCall — classifier gating', () => {
   });
 
   it('does NOT emit call/classify when the call record is not found', async () => {
-    const mockTx = buildMockTx([[/* empty — call not found */]]);
+    const mockTx = buildMockTx([
+      [
+        /* empty — call not found */
+      ],
+    ]);
     vi.mocked(withSystemContext).mockImplementationOnce((fn) => fn(mockTx));
 
     await classifyAndFinaliseCall('nonexistent-call-id');

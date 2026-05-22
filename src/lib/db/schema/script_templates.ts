@@ -11,7 +11,9 @@ export const scriptTemplates = pgTable(
     name: text('name').notNull(),
     version: integer('version').notNull().default(1),
     system_prompt: text('system_prompt').notNull(),
-    variable_schema: jsonb('variable_schema').notNull().default(sql`'{}'::jsonb`),
+    variable_schema: jsonb('variable_schema')
+      .notNull()
+      .default(sql`'{}'::jsonb`),
     default_voice_id: text('default_voice_id'),
     default_language: text('default_language').notNull().default('it-IT'),
     published_at: timestamp('published_at', { withTimezone: true }),

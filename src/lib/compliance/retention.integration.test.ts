@@ -39,12 +39,7 @@ vi.mock('@/lib/db/context', async () => ({
 
 import { runRetentionPurge } from '@/app/api/cron/retention-purge/route';
 import { withOrgContext, withSystemContext } from '@/lib/db/context';
-import {
-  calls,
-  contactLists,
-  contacts,
-  organizations,
-} from '@/lib/db/schema';
+import { calls, contactLists, contacts, organizations } from '@/lib/db/schema';
 import { type DbTx as TestDbTx, withTestDb } from '@/test/db';
 
 const ORG = 'a1000000-0000-0000-0000-000000000001';
@@ -177,10 +172,7 @@ describe('runRetentionPurge integration — legal hold', () => {
         await clearOrgContext(tx);
 
         // Held contact still exists.
-        const survivors = await tx
-          .select()
-          .from(contacts)
-          .where(eq(contacts.org_id, ORG));
+        const survivors = await tx.select().from(contacts).where(eq(contacts.org_id, ORG));
         const survivorIds = survivors.map((c) => c.id);
         expect(survivorIds).toContain(CONTACT_HELD);
         expect(survivorIds).not.toContain(CONTACT_PURGEABLE);
@@ -188,19 +180,14 @@ describe('runRetentionPurge integration — legal hold', () => {
 
         // Held contact's call still has its recording / transcript paths
         // because the purge skipped its rows.
-        const heldCalls = await tx
-          .select()
-          .from(calls)
-          .where(eq(calls.contact_id, CONTACT_HELD));
+        const heldCalls = await tx.select().from(calls).where(eq(calls.contact_id, CONTACT_HELD));
         expect(heldCalls).toHaveLength(1);
         expect(heldCalls[0]?.recording_path).toBe(`${ORG}/held-rec.mp3`);
         expect(heldCalls[0]?.transcript_path).toBe(`${ORG}/held-tx.json`);
 
         // Storage `.remove()` was invoked but with the held paths excluded —
         // the held call's paths must never reach the storage layer.
-        const allRemovedPaths = mockRemove.mock.calls.flatMap(
-          ([paths]) => paths as string[],
-        );
+        const allRemovedPaths = mockRemove.mock.calls.flatMap(([paths]) => paths as string[]);
         expect(allRemovedPaths).not.toContain(`${ORG}/held-rec.mp3`);
         expect(allRemovedPaths).not.toContain(`${ORG}/held-tx.json`);
       });

@@ -29,28 +29,19 @@ export function EmptyState({
   return (
     <div
       data-slot="empty-state"
-      className={cn(
-        'flex flex-col items-center justify-center gap-4 py-16 text-center',
-        className,
-      )}
+      className={cn('flex flex-col items-center justify-center gap-4 py-16 text-center', className)}
     >
       {illustration && (
-        <div
-          data-slot="empty-state-illustration"
-          className="text-muted-foreground/40"
-          aria-hidden
-        >
+        <div data-slot="empty-state-illustration" className="text-muted-foreground/40" aria-hidden>
           {illustration}
         </div>
       )}
       <div className="flex flex-col gap-1">
-        <p className="text-sm font-semibold text-foreground">{title}</p>
-        {description && (
-          <p className="text-sm text-muted-foreground">{description}</p>
-        )}
+        <p className="text-foreground text-sm font-semibold">{title}</p>
+        {description && <p className="text-muted-foreground text-sm">{description}</p>}
       </div>
-      {action && (
-        action.href ? (
+      {action &&
+        (action.href ? (
           <Button asChild variant="outline" size="sm">
             <Link href={action.href}>{action.label}</Link>
           </Button>
@@ -58,8 +49,7 @@ export function EmptyState({
           <Button variant="outline" size="sm" onClick={action.onClick}>
             {action.label}
           </Button>
-        )
-      )}
+        ))}
     </div>
   );
 }

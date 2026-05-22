@@ -124,7 +124,14 @@ export async function runDatabaseBackup(): Promise<BackupResult> {
     const filename = `voxauto-backup-${timestamp}.ndjson.gz.enc`;
     const sha1 = createHash('sha1').update(payload).digest('hex');
 
-    await uploadToB2(filename, payload, sha1, BACKUP_B2_KEY_ID, BACKUP_B2_APP_KEY, BACKUP_B2_BUCKET_ID);
+    await uploadToB2(
+      filename,
+      payload,
+      sha1,
+      BACKUP_B2_KEY_ID,
+      BACKUP_B2_APP_KEY,
+      BACKUP_B2_BUCKET_ID,
+    );
 
     void logger.info('[backup] daily backup completed', {
       filename,
@@ -185,8 +192,7 @@ async function uploadToB2(
   if (!urlRes.ok) {
     throw new Error(`B2 get_upload_url failed: ${urlRes.status} ${await urlRes.text()}`);
   }
-  const { uploadUrl, authorizationToken: uploadToken } =
-    (await urlRes.json()) as B2UploadUrlResult;
+  const { uploadUrl, authorizationToken: uploadToken } = (await urlRes.json()) as B2UploadUrlResult;
 
   const uploadRes = await fetch(uploadUrl, {
     method: 'POST',

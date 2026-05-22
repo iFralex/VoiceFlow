@@ -132,9 +132,7 @@ function buildMockTxFactory(opts: FixtureOpts) {
           calls.updateCallSet = s;
           return {
             where: vi.fn(() => ({
-              returning: vi.fn(() =>
-                Promise.resolve(flipReturningIds.map((id) => ({ id }))),
-              ),
+              returning: vi.fn(() => Promise.resolve(flipReturningIds.map((id) => ({ id })))),
             })),
           };
         }),
@@ -248,9 +246,7 @@ describe('complianceOptOutRegisteredHandler', () => {
     }>;
     expect(events).toHaveLength(1);
     expect(events[0]?.name).toBe(CAMPAIGN_CONTACT_OPTED_OUT_EVENT);
-    expect(events[0]?.id).toBe(
-      'contact-opted-out-camp-A-+393331234567-inbound_ivr',
-    );
+    expect(events[0]?.id).toBe('contact-opted-out-camp-A-+393331234567-inbound_ivr');
     expect(events[0]?.data).toMatchObject({
       orgId: 'org-1',
       campaignId: 'camp-A',
@@ -261,10 +257,7 @@ describe('complianceOptOutRegisteredHandler', () => {
       cancelledActiveCount: 0,
     });
 
-    expect(mockCheckAndFinaliseCampaignCompletion).toHaveBeenCalledWith(
-      'org-1',
-      'camp-A',
-    );
+    expect(mockCheckAndFinaliseCampaignCompletion).toHaveBeenCalledWith('org-1', 'camp-A');
   });
 
   it('cancels dialing/in_progress calls at the voice provider before flipping locally', async () => {
@@ -403,9 +396,7 @@ describe('complianceOptOutRegisteredHandler', () => {
     });
 
     expect(mockCheckAndFinaliseCampaignCompletion).toHaveBeenCalledTimes(2);
-    const finaliseArgs = mockCheckAndFinaliseCampaignCompletion.mock.calls
-      .map((c) => c[1])
-      .sort();
+    const finaliseArgs = mockCheckAndFinaliseCampaignCompletion.mock.calls.map((c) => c[1]).sort();
     expect(finaliseArgs).toEqual(['camp-A', 'camp-B']);
   });
 
@@ -472,9 +463,7 @@ describe('complianceOptOutRegisteredHandler', () => {
   it('finalisation failures are logged and swallowed', async () => {
     const loggerErrSpy = vi.mocked(logger.error);
     loggerErrSpy.mockClear();
-    mockCheckAndFinaliseCampaignCompletion.mockRejectedValueOnce(
-      new Error('boom'),
-    );
+    mockCheckAndFinaliseCampaignCompletion.mockRejectedValueOnce(new Error('boom'));
 
     buildMockTxFactory({
       contactRows: [{ id: 'contact-1' }],
