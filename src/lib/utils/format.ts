@@ -37,6 +37,30 @@ export function formatPhone(phone: string): string {
 }
 
 /**
+ * Truncates an E.164 phone number to its last 4 digits, prefixed by ellipsis.
+ * Returns "—" for null/undefined input.
+ */
+export function maskPhoneLast4(phone: string | null | undefined): string {
+  if (!phone) return '—';
+  const digits = phone.replace(/\D/g, '');
+  if (digits.length < 4) return phone;
+  return `••• ${digits.slice(-4)}`;
+}
+
+/** Formats a billable-seconds total as `Hh Mm Ss` (omitting empty parts). */
+export function formatBilledDuration(totalSeconds: number): string {
+  if (totalSeconds <= 0) return '0s';
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  const parts: string[] = [];
+  if (hours > 0) parts.push(`${hours}h`);
+  if (minutes > 0) parts.push(`${minutes}m`);
+  if (seconds > 0) parts.push(`${seconds}s`);
+  return parts.join(' ') || '0s';
+}
+
+/**
  * Formats a duration in seconds as "Xm Ys", "Xm", or "Zs".
  * formatDuration(83) → "1m 23s"
  * formatDuration(45) → "45s"

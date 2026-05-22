@@ -7,7 +7,7 @@ import { useTranslations } from 'next-intl';
 import * as React from 'react';
 
 import { Button } from '@/components/ui/button';
-import { maskPhoneLast4 } from '@/lib/services/campaign-print-report';
+import { maskPhoneLast4 } from '@/lib/utils/format';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 

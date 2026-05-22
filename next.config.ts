@@ -13,6 +13,7 @@ import './src/lib/env';
 const requestConfigPath = path.resolve('./src/i18n/request.ts');
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: ['postgres'],
   webpack(config) {
     config.resolve.alias = {
       ...config.resolve.alias,
