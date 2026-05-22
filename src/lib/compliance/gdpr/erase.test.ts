@@ -65,6 +65,9 @@ vi.mock('@/lib/db/schema', () => ({
     recording_path: 'l_recording_path',
     transcript_path: 'l_transcript_path',
   },
+  qaReviews: {
+    call_id: 'qr_call_id',
+  },
 }));
 
 vi.mock('drizzle-orm', () => ({
@@ -72,6 +75,7 @@ vi.mock('drizzle-orm', () => ({
   or: (...args: unknown[]) => ({ type: 'or', args }),
   eq: (col: unknown, val: unknown) => ({ type: 'eq', col, val }),
   isNull: (col: unknown) => ({ type: 'isNull', col }),
+  inArray: (col: unknown, vals: unknown) => ({ type: 'inArray', col, vals }),
 }));
 
 // ─── Imports after mocks ─────────────────────────────────────────────────────
@@ -147,6 +151,9 @@ function buildTx(state: TxState): unknown {
         },
       };
     }),
+    delete: vi.fn(() => ({
+      where: vi.fn(() => Promise.resolve(undefined)),
+    })),
   };
 }
 
