@@ -50,11 +50,11 @@ const {
 });
 
 vi.mock('@/lib/stripe/client', () => ({
-  stripe: {
+  getStripe: () => ({
     webhooks: { constructEvent: mockConstructEvent },
     checkout: { sessions: { list: mockCheckoutSessionsList } },
     invoices: { retrieve: mockInvoicesRetrieve },
-  },
+  }),
 }));
 
 vi.mock('@/lib/db/context', () => ({

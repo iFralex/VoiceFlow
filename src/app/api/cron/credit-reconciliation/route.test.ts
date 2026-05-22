@@ -58,10 +58,10 @@ vi.mock('@/lib/services/credit', () => ({
 }));
 
 vi.mock('@/lib/stripe/client', () => ({
-  stripe: {
+  getStripe: () => ({
     checkout: { sessions: { retrieve: mockStripeSessionsRetrieve } },
     invoices: { retrieve: mockStripeInvoicesRetrieve },
-  },
+  }),
 }));
 
 vi.mock('@/lib/env', () => ({

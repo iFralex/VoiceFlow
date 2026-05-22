@@ -96,9 +96,9 @@ vi.mock('@/lib/db/schema', () => ({
 }));
 
 vi.mock('@/lib/stripe', () => ({
-  stripe: {
+  getStripe: () => ({
     checkout: { sessions: { create: (...args: unknown[]) => mockStripeSessionCreate(...args) } },
-  },
+  }),
   getOrCreateCustomerForOrg: (...args: unknown[]) => mockGetOrCreateCustomer(...args),
 }));
 
