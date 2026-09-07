@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useTransition } from 'react';
 
 import { deleteScriptAction } from '@/actions/scripts';
@@ -43,14 +43,15 @@ type Props = {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function formatDate(iso: string): string {
-  return new Intl.DateTimeFormat('it-IT', { dateStyle: 'medium' }).format(new Date(iso));
+function formatDate(iso: string, locale: string): string {
+  return new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(new Date(iso));
 }
 
 // ─── Sub-component: script table row ─────────────────────────────────────────
 
 function ScriptRow({ script, onDeleted }: { script: SerializedScript; onDeleted: () => void }) {
   const t = useTranslations('scripts');
+  const locale = useLocale();
   const [isPending, startTransition] = useTransition();
 
   function handleDelete() {
@@ -69,7 +70,7 @@ function ScriptRow({ script, onDeleted }: { script: SerializedScript; onDeleted:
           {script.template_name}
         </span>
       </td>
-      <td className="text-muted-foreground px-4 py-3">{formatDate(script.updated_at)}</td>
+      <td className="text-muted-foreground px-4 py-3">{formatDate(script.updated_at, locale)}</td>
       <td className="px-4 py-3 text-right">
         <div className="flex items-center justify-end gap-2">
           <Button asChild variant="ghost" size="sm">

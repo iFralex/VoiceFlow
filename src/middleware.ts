@@ -16,6 +16,8 @@ import { type NextRequest, NextResponse } from 'next/server';
 function isPublicPath(pathname: string): boolean {
   return (
     pathname === '/' ||
+    pathname === '/logo.svg' ||
+    pathname === '/icon.svg' ||
     pathname.startsWith('/login') ||
     pathname.startsWith('/signup') ||
     pathname.startsWith('/verify') ||

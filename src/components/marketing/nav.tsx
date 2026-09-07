@@ -1,10 +1,10 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
-import { Icons } from '@/components/ui/icon';
 
 export function MarketingNav() {
   const t = useTranslations('common');
@@ -21,7 +21,7 @@ export function MarketingNav() {
           className="flex items-center gap-2 font-semibold"
           aria-label="VoiceFlow home"
         >
-          <Icons.Phone size={20} className="text-primary" />
+          <Image src="/logo.svg" alt="" width={24} height={24} priority />
           <span className="text-base">VoiceFlow</span>
         </Link>
 

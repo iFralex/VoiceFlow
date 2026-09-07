@@ -3,7 +3,7 @@
 import { Calendar, Megaphone, MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import * as React from 'react';
 
 import {
@@ -55,16 +55,16 @@ interface Props {
 // Helpers
 // ---------------------------------------------------------------------------
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('it-IT', {
+function formatDate(iso: string, locale: string): string {
+  return new Date(iso).toLocaleDateString(locale, {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
   });
 }
 
-function formatCents(cents: number): string {
-  return (cents / 100).toLocaleString('it-IT', {
+function formatCents(cents: number, locale: string): string {
+  return (cents / 100).toLocaleString(locale, {
     style: 'currency',
     currency: 'EUR',
     minimumFractionDigits: 2,
@@ -191,6 +191,7 @@ function CampaignRowActions({ campaign }: { campaign: SerializedCampaign }) {
 
 function CampaignsTable({ campaigns }: { campaigns: SerializedCampaign[] }) {
   const t = useTranslations('campaigns');
+  const locale = useLocale();
 
   return (
     <div className="rounded-md border">
@@ -232,21 +233,23 @@ function CampaignsTable({ campaigns }: { campaigns: SerializedCampaign[] }) {
                 {campaign.status === 'draft' || campaign.status === 'scheduled' ? (
                   campaign.estimatedMaxCents != null ? (
                     <span className="text-xs">
-                      {t('cost_estimated', { cost: formatCents(campaign.estimatedMaxCents) })}
+                      {t('cost_estimated', {
+                        cost: formatCents(campaign.estimatedMaxCents, locale),
+                      })}
                     </span>
                   ) : (
                     <span className="text-muted-foreground/50 text-xs">—</span>
                   )
                 ) : (
                   <span className="text-xs">
-                    {t('cost_actual', { cost: formatCents(campaign.actualCents) })}
+                    {t('cost_actual', { cost: formatCents(campaign.actualCents, locale) })}
                   </span>
                 )}
               </td>
               <td className="text-muted-foreground px-4 py-3">
                 <span className="flex items-center gap-1">
                   <Calendar className="size-3" />
-                  {formatDate(campaign.createdAt)}
+                  {formatDate(campaign.createdAt, locale)}
                 </span>
               </td>
               <td className="px-4 py-3">

@@ -3,7 +3,7 @@
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import * as React from 'react';
 
 import { exportCampaignResults } from '@/actions/campaigns';
@@ -74,9 +74,9 @@ export interface CampaignResultsClientProps {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function formatCents(cents: number | null): string {
+function formatCents(cents: number | null, locale: string): string {
   if (cents == null) return '—';
-  return (cents / 100).toLocaleString('it-IT', {
+  return (cents / 100).toLocaleString(locale, {
     style: 'currency',
     currency: 'EUR',
     minimumFractionDigits: 2,
@@ -91,9 +91,9 @@ function formatDuration(seconds: number | null): string {
   return s === 0 ? `${m}m` : `${m}m ${s}s`;
 }
 
-function formatDateTime(iso: string | null): string {
+function formatDateTime(iso: string | null, locale: string): string {
   if (!iso) return '—';
-  return new Date(iso).toLocaleString('it-IT', {
+  return new Date(iso).toLocaleString(locale, {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -165,6 +165,7 @@ export function CampaignResultsClient({
 }: CampaignResultsClientProps) {
   const t = useTranslations('campaigns');
   const tt = useTranslations('table');
+  const locale = useLocale();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -477,10 +478,10 @@ export function CampaignResultsClient({
                     {formatDuration(r.billableSeconds)}
                   </TableCell>
                   <TableCell className="text-right tabular-nums">
-                    {formatCents(r.costCents)}
+                    {formatCents(r.costCents, locale)}
                   </TableCell>
                   <TableCell className="text-xs whitespace-nowrap">
-                    {formatDateTime(r.startedAtIso ?? r.createdAtIso)}
+                    {formatDateTime(r.startedAtIso ?? r.createdAtIso, locale)}
                   </TableCell>
                   <TableCell className="text-right">
                     <Link

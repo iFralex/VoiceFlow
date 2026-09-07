@@ -86,6 +86,8 @@ describe('middleware', () => {
   describe('public paths bypass auth', () => {
     const publicPaths = [
       '/',
+      '/logo.svg',
+      '/icon.svg',
       '/login',
       '/signup',
       '/verify',

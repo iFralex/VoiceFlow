@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import * as React from 'react';
@@ -44,7 +45,7 @@ export function Sidebar({
         >
           {!collapsed && (
             <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
-              <Icons.Phone size={20} className="text-primary" />
+              <Image src="/logo.svg" alt="" width={22} height={22} priority />
               <span className="text-sm">VoiceFlow</span>
             </Link>
           )}

@@ -132,7 +132,7 @@ This architecture deliberately has no Kubernetes, no message broker beyond Innge
 
 The stack is chosen for one criterion above all others: how quickly can one person build, ship, and operate it.
 
-**Frontend framework: Next.js 15 (App Router) with React 19.** Server components handle the data-heavy dashboard pages with zero client-side fetch logic; client components handle the interactive bits (CSV uploader, campaign wizard, live status). The same framework provides the API layer (Route Handlers) and Server Actions for mutations, eliminating the frontend/backend split entirely.
+**Frontend framework: Next.js 16 (App Router) with React 19.** Server components handle the data-heavy dashboard pages with zero client-side fetch logic; client components handle the interactive bits (CSV uploader, campaign wizard, live status). The same framework provides the API layer (Route Handlers) and Server Actions for mutations, eliminating the frontend/backend split entirely.
 
 **Hosting: Vercel.** Zero-config deployment, automatic preview environments per branch, edge functions where they help (auth middleware) and Node.js functions where they don't (long-running webhook processors). The cost at this scale is negligible compared to the engineering hours saved.
 
